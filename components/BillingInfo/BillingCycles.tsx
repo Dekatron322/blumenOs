@@ -12,8 +12,22 @@ import { BillingPeriod, fetchBillingPeriods } from "lib/redux/billingPeriodsSlic
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { clearFeeders, fetchFeeders } from "lib/redux/feedersSlice"
-import { ArrowLeft, Filter, X } from "lucide-react"
+import { ArrowLeft, Filter, PlusIcon, X } from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import { CreateBillingPeriodModal } from "components/ui/Modal/create-billing-period-modal"
+
+// Check if user has specific privilege
+const hasPrivilege = (user: any, key: string, action?: string): boolean => {
+  if (!user?.privileges) return false
+
+  const privilege = user.privileges.find((p: any) => p.key === key)
+  if (!privilege) return false
+
+  if (action) {
+    return privilege.actions.includes(action)
+  }
+  return true
+}
 
 const CyclesIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -324,9 +338,16 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
   const { billingPeriods, loading, error, success } = useAppSelector((state) => state.billingPeriods)
   const { areaOffices } = useAppSelector((state) => state.areaOffices)
   const { feeders } = useAppSelector((state) => state.feeders)
+  const { user } = useAppSelector((state) => state.auth)
+
+  // Check if user has write access to billing-postpaid
+  const canWriteBillingPostpaid = !!user?.privileges?.some(
+    (p) => p.key === "billing-postpaid" && p.actions?.includes("W")
+  )
 
   // Separate state for all available billing periods (for filter dropdown)
   const [allBillingPeriods, setAllBillingPeriods] = useState<BillingPeriod[]>([])
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
   // Fetch area offices and feeders on component mount for filter dropdowns
   useEffect(() => {
@@ -898,14 +919,27 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
                 </button>
 
                 {/* Hide/Show Filters button - Desktop only (2xl and above) */}
-                <button
-                  type="button"
-                  onClick={() => setShowDesktopFilters((prev) => !prev)}
-                  className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
-                >
-                  {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
-                  {showDesktopFilters ? "Hide filters" : "Show filters"}
-                </button>
+                <div className="flex items-center gap-2">
+                  {canWriteBillingPostpaid ? (
+                    <ButtonModule
+                      variant="outline"
+                      size="sm"
+                      icon={<PlusIcon size={14} />}
+                      iconPosition="start"
+                      onClick={() => setIsCreateModalOpen(true)}
+                    >
+                      Add Billing Cycles
+                    </ButtonModule>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => setShowDesktopFilters((prev) => !prev)}
+                    className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+                  >
+                    {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
+                    {showDesktopFilters ? "Hide filters" : "Show filters"}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1087,6 +1121,9 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
         getActiveFilterCount={getActiveFilterCount}
         billingPeriodOptions={billingPeriodOptions}
       />
+
+      {/* Create Billing Period Modal */}
+      <CreateBillingPeriodModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
     </>
   )
 }

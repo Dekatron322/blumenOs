@@ -36,6 +36,23 @@ export interface BillingPeriodsResponse {
   hasPrevious: boolean
 }
 
+export interface CreateCurrentBillingPeriodResponse {
+  isSuccess: boolean
+  message: string
+  data: BillingPeriod
+}
+
+export interface CreatePastBillingPeriodRequest {
+  year: number
+  month: number
+}
+
+export interface CreatePastBillingPeriodResponse {
+  isSuccess: boolean
+  message: string
+  data: BillingPeriod
+}
+
 // Request parameters interface
 export interface BillingPeriodsRequestParams {
   pageNumber: number
@@ -67,6 +84,16 @@ interface BillingPeriodState {
   currentBillingPeriod: BillingPeriod | null
   currentBillingPeriodLoading: boolean
   currentBillingPeriodError: string | null
+
+  // Create current billing period state
+  createCurrentBillingPeriodLoading: boolean
+  createCurrentBillingPeriodError: string | null
+  createCurrentBillingPeriodSuccess: boolean
+
+  // Create past billing period state
+  createPastBillingPeriodLoading: boolean
+  createPastBillingPeriodError: string | null
+  createPastBillingPeriodSuccess: boolean
 }
 
 // Initial state
@@ -86,6 +113,12 @@ const initialState: BillingPeriodState = {
   currentBillingPeriod: null,
   currentBillingPeriodLoading: false,
   currentBillingPeriodError: null,
+  createCurrentBillingPeriodLoading: false,
+  createCurrentBillingPeriodError: null,
+  createCurrentBillingPeriodSuccess: false,
+  createPastBillingPeriodLoading: false,
+  createPastBillingPeriodError: null,
+  createPastBillingPeriodSuccess: false,
 }
 
 // Async thunk for fetching billing periods
@@ -124,6 +157,63 @@ export const fetchBillingPeriods = createAsyncThunk(
   }
 )
 
+// Async thunk for creating current billing period
+export const createCurrentBillingPeriod = createAsyncThunk(
+  "billingPeriods/createCurrentBillingPeriod",
+  async (_, { rejectWithValue }) => {
+    try {
+      console.log("Creating current billing period")
+
+      const response = await api.post<CreateCurrentBillingPeriodResponse>(
+        buildApiUrl(API_ENDPOINTS.BILLING_PERIODS.CREATE_CURRENT_BILLING_PERIOD)
+      )
+
+      console.log("Create current billing period API response:", response.data)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to create current billing period")
+      }
+
+      return response.data
+    } catch (error: any) {
+      console.error("Create current billing period API error:", error)
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to create current billing period")
+      }
+      return rejectWithValue(error.message || "Network error during current billing period creation")
+    }
+  }
+)
+
+// Async thunk for creating past billing period
+export const createPastBillingPeriod = createAsyncThunk(
+  "billingPeriods/createPastBillingPeriod",
+  async (request: CreatePastBillingPeriodRequest, { rejectWithValue }) => {
+    try {
+      console.log("Creating past billing period with request:", request)
+
+      const response = await api.post<CreatePastBillingPeriodResponse>(
+        buildApiUrl(API_ENDPOINTS.BILLING_PERIODS.CREATE_PAST_BILLING_PERIOD),
+        request
+      )
+
+      console.log("Create past billing period API response:", response.data)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to create past billing period")
+      }
+
+      return response.data
+    } catch (error: any) {
+      console.error("Create past billing period API error:", error)
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to create past billing period")
+      }
+      return rejectWithValue(error.message || "Network error during past billing period creation")
+    }
+  }
+)
+
 // Billing periods slice
 const billingPeriodsSlice = createSlice({
   name: "billingPeriods",
@@ -156,6 +246,22 @@ const billingPeriodsSlice = createSlice({
     clearError: (state) => {
       state.error = null
       state.currentBillingPeriodError = null
+      state.createCurrentBillingPeriodError = null
+      state.createPastBillingPeriodError = null
+    },
+
+    // Clear create current billing period state
+    clearCreateCurrentBillingPeriodState: (state) => {
+      state.createCurrentBillingPeriodLoading = false
+      state.createCurrentBillingPeriodError = null
+      state.createCurrentBillingPeriodSuccess = false
+    },
+
+    // Clear create past billing period state
+    clearCreatePastBillingPeriodState: (state) => {
+      state.createPastBillingPeriodLoading = false
+      state.createPastBillingPeriodError = null
+      state.createPastBillingPeriodSuccess = false
     },
 
     // Reset billing periods state
@@ -175,6 +281,12 @@ const billingPeriodsSlice = createSlice({
       state.currentBillingPeriod = null
       state.currentBillingPeriodLoading = false
       state.currentBillingPeriodError = null
+      state.createCurrentBillingPeriodLoading = false
+      state.createCurrentBillingPeriodError = null
+      state.createCurrentBillingPeriodSuccess = false
+      state.createPastBillingPeriodLoading = false
+      state.createPastBillingPeriodError = null
+      state.createPastBillingPeriodSuccess = false
     },
   },
   extraReducers: (builder) => {
@@ -205,10 +317,59 @@ const billingPeriodsSlice = createSlice({
         state.success = false
         state.billingPeriods = []
       })
+      // Create current billing period cases
+      .addCase(createCurrentBillingPeriod.pending, (state) => {
+        state.createCurrentBillingPeriodLoading = true
+        state.createCurrentBillingPeriodError = null
+        state.createCurrentBillingPeriodSuccess = false
+      })
+      .addCase(
+        createCurrentBillingPeriod.fulfilled,
+        (state, action: PayloadAction<CreateCurrentBillingPeriodResponse>) => {
+          state.createCurrentBillingPeriodLoading = false
+          state.createCurrentBillingPeriodSuccess = true
+          state.createCurrentBillingPeriodError = null
+          // Add the new billing period to the beginning of the list
+          state.billingPeriods.unshift(action.payload.data)
+          // Update current billing period
+          state.currentBillingPeriod = action.payload.data
+        }
+      )
+      .addCase(createCurrentBillingPeriod.rejected, (state, action) => {
+        state.createCurrentBillingPeriodLoading = false
+        state.createCurrentBillingPeriodError = (action.payload as string) || "Failed to create current billing period"
+        state.createCurrentBillingPeriodSuccess = false
+      })
+      // Create past billing period cases
+      .addCase(createPastBillingPeriod.pending, (state) => {
+        state.createPastBillingPeriodLoading = true
+        state.createPastBillingPeriodError = null
+        state.createPastBillingPeriodSuccess = false
+      })
+      .addCase(createPastBillingPeriod.fulfilled, (state, action: PayloadAction<CreatePastBillingPeriodResponse>) => {
+        state.createPastBillingPeriodLoading = false
+        state.createPastBillingPeriodSuccess = true
+        state.createPastBillingPeriodError = null
+        // Add the new billing period to the beginning of the list
+        state.billingPeriods.unshift(action.payload.data)
+        // Update current billing period
+        state.currentBillingPeriod = action.payload.data
+      })
+      .addCase(createPastBillingPeriod.rejected, (state, action) => {
+        state.createPastBillingPeriodLoading = false
+        state.createPastBillingPeriodError = (action.payload as string) || "Failed to create past billing period"
+        state.createPastBillingPeriodSuccess = false
+      })
   },
 })
 
-export const { clearBillingPeriodsState, clearCurrentBillingPeriodState, clearError, resetBillingPeriodsState } =
-  billingPeriodsSlice.actions
+export const {
+  clearBillingPeriodsState,
+  clearCurrentBillingPeriodState,
+  clearError,
+  clearCreateCurrentBillingPeriodState,
+  clearCreatePastBillingPeriodState,
+  resetBillingPeriodsState,
+} = billingPeriodsSlice.actions
 
 export default billingPeriodsSlice.reducer
