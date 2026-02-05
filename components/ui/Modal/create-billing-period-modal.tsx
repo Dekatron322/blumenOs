@@ -151,7 +151,7 @@ export const CreateBillingPeriodModal: React.FC<CreateBillingPeriodModalProps> =
                   <MdCalendarToday className="text-2xl text-white" />
                   <h3 className="text-lg font-semibold text-white">Create Billing Period</h3>
                 </div>
-                <p className="mt-1 text-sm text-white/70">Create current month's billing period</p>
+                <p className="mt-1 text-sm text-white/70">Create current month&apos;s billing period</p>
               </div>
               <motion.button
                 onClick={handleClose}
@@ -204,8 +204,8 @@ export const CreateBillingPeriodModal: React.FC<CreateBillingPeriodModalProps> =
                       <div>
                         <h4 className="font-semibold text-blue-900">About This Action</h4>
                         <p className="mt-1 text-sm text-blue-700">
-                          This will create the current month's billing period if it doesn't exist. If a billing period
-                          for the current month already exists, it will return the existing one.
+                          This will create the current month&apos;s billing period if it doesn&apos;t exist. If a
+                          billing period for the current month already exists, it will return the existing one.
                         </p>
                       </div>
                     </div>
