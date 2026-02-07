@@ -5,8 +5,14 @@ import { useDispatch, useSelector } from "react-redux"
 import { motion } from "framer-motion"
 
 import { HiChevronDown, HiChevronUp } from "react-icons/hi"
+import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
 import { AppDispatch, RootState } from "lib/redux/store"
-import { CashRemittanceRecord, CashRemittanceStatus, fetchCashRemittanceRecords } from "lib/redux/cashRemittanceSlice"
+import {
+  CashRemittanceRecord,
+  CashRemittanceStatus,
+  fetchCashRemittanceRecords,
+  setPagination,
+} from "lib/redux/cashRemittanceSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import CashRemittanceModal from "components/ui/Modal/cash-remittance-modal"
 import ReceiptUploadModal from "components/ui/Modal/receipt-upload-modal"
@@ -30,7 +36,7 @@ const CashRemittance = () => {
   const [selectedRecordForReceipt, setSelectedRecordForReceipt] = useState<CashRemittanceRecord | null>(null)
 
   // Get cash remittance data from Redux store
-  const { records, recordsLoading, recordsError, recordsSuccess } = useSelector(
+  const { records, recordsLoading, recordsError, recordsSuccess, pagination } = useSelector(
     (state: RootState) => state.cashRemittance
   )
   const { agent } = useSelector((state: RootState) => state.auth)
@@ -40,7 +46,7 @@ const CashRemittance = () => {
   }
 
   // Fetch cash remittance records with date range
-  const fetchRecords = async (start?: string, end?: string) => {
+  const fetchRecords = async (start?: string, end?: string, pageNumber?: number, pageSize?: number) => {
     try {
       const startUtc = start || startDate || getMonthStart().toISOString()
       const endUtc = end || endDate || getMonthEnd().toISOString()
@@ -49,6 +55,8 @@ const CashRemittance = () => {
         fetchCashRemittanceRecords({
           startUtc: startUtc,
           endUtc: endUtc,
+          pageNumber: pageNumber || pagination.currentPage,
+          pageSize: pageSize || pagination.pageSize,
         })
       ).unwrap()
     } catch (error) {
@@ -112,6 +120,43 @@ const CashRemittance = () => {
   // Format date for input field
   const formatDateForInput = (dateString: string) => {
     return new Date(dateString).toISOString().split("T")[0]
+  }
+
+  // Pagination handlers
+  const changePage = (page: number) => {
+    if (page > 0 && page <= pagination.totalPages) {
+      dispatch(setPagination({ page, pageSize: pagination.pageSize }))
+      fetchRecords(startDate, endDate, page, pagination.pageSize)
+    }
+  }
+
+  const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newPageSize = Number(event.target.value)
+    dispatch(setPagination({ page: 1, pageSize: newPageSize }))
+    fetchRecords(startDate, endDate, 1, newPageSize)
+  }
+
+  const getPageItems = (): (number | string)[] => {
+    const total = pagination.totalPages
+    const items: (number | string)[] = []
+
+    if (total <= 5) {
+      // If total pages is 5 or less, show all pages
+      for (let i = 1; i <= total; i++) {
+        items.push(i)
+      }
+    } else {
+      // Always show first 3 pages, ellipsis, and last 2 pages
+      for (let i = 1; i <= 3; i++) {
+        items.push(i)
+      }
+      items.push("...")
+      for (let i = total - 1; i <= total; i++) {
+        items.push(i)
+      }
+    }
+
+    return items
   }
 
   // Date Filter Component
@@ -624,6 +669,78 @@ const CashRemittance = () => {
               ) : (
                 filteredRecords.map((record, index) => <RecordCard key={record.id} record={record} index={index} />)
               )}
+            </div>
+          )}
+
+          {/* Pagination Controls */}
+          {!recordsLoading && !recordsError && pagination.totalPages > 1 && (
+            <div className="mt-4 flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <span>
+                  Showing {(pagination.currentPage - 1) * pagination.pageSize + 1} to{" "}
+                  {Math.min(pagination.currentPage * pagination.pageSize, pagination.totalCount)} of{" "}
+                  {pagination.totalCount} records
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 text-sm">
+                  <span className="text-gray-600">Show rows</span>
+                  <select
+                    value={pagination.pageSize}
+                    onChange={handleRowsChange}
+                    className="rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => changePage(pagination.currentPage - 1)}
+                    disabled={pagination.currentPage === 1}
+                    className={`rounded p-1 ${
+                      pagination.currentPage === 1
+                        ? "cursor-not-allowed text-gray-400"
+                        : "text-gray-600 hover:bg-gray-100"
+                    }`}
+                  >
+                    <BiSolidLeftArrow className="size-4" />
+                  </button>
+
+                  {getPageItems().map((item, index) => (
+                    <button
+                      key={index}
+                      onClick={() => typeof item === "number" && changePage(item)}
+                      disabled={typeof item !== "number"}
+                      className={`rounded px-2 py-1 text-sm ${
+                        typeof item === "number" && item === pagination.currentPage
+                          ? "bg-blue-600 text-white"
+                          : typeof item === "number"
+                          ? "text-gray-600 hover:bg-gray-100"
+                          : "cursor-default text-gray-400"
+                      }`}
+                    >
+                      {item}
+                    </button>
+                  ))}
+
+                  <button
+                    onClick={() => changePage(pagination.currentPage + 1)}
+                    disabled={pagination.currentPage === pagination.totalPages}
+                    className={`rounded p-1 ${
+                      pagination.currentPage === pagination.totalPages
+                        ? "cursor-not-allowed text-gray-400"
+                        : "text-gray-600 hover:bg-gray-100"
+                    }`}
+                  >
+                    <BiSolidRightArrow className="size-4" />
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>

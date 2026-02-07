@@ -387,6 +387,18 @@ export interface CsvUploadFailuresResponse {
   hasPrevious: boolean
 }
 
+// Download CSV interfaces
+export interface DownloadCsvRequest {
+  id: number
+}
+
+export interface DownloadCsvResponse {
+  // This will be a blob/file download, so the response type might be different
+  // For now, we'll keep it simple and handle as a blob
+  data: Blob
+  fileName: string
+}
+
 export interface BulkUploadData {
   queued: boolean
   preview: BulkUploadPreview
@@ -618,6 +630,12 @@ interface FileManagementState {
     hasNext: boolean
     hasPrevious: boolean
   } | null
+
+  // Download CSV state
+  downloadCsvLoading: boolean
+  downloadCsvError: string | null
+  downloadCsvSuccess: boolean
+  downloadCsvResponse: DownloadCsvResponse | null
 }
 
 // Initial state
@@ -782,6 +800,12 @@ const initialState: FileManagementState = {
   csvUploadFailuresResponse: null,
   csvUploadFailures: [],
   csvUploadFailuresPagination: null,
+
+  // Download CSV state
+  downloadCsvLoading: false,
+  downloadCsvError: null,
+  downloadCsvSuccess: false,
+  downloadCsvResponse: null,
 }
 
 // Async thunks
@@ -1195,6 +1219,37 @@ export const fetchCsvUploadFailures = createAsyncThunk(
   }
 )
 
+// Download CSV async thunk
+export const downloadCsv = createAsyncThunk(
+  "fileManagement/downloadCsv",
+  async (request: DownloadCsvRequest, { rejectWithValue }) => {
+    try {
+      const endpoint = buildEndpointWithParams(API_ENDPOINTS.FILE_MANAGEMENT.DOWNLOAD_CSV_JOBS, { id: request.id })
+      const response = await api.get(endpoint, {
+        responseType: "blob", // Important for file downloads
+      })
+
+      // Extract filename from Content-Disposition header if available
+      const contentDisposition = response.headers["content-disposition"]
+      let fileName = `csv-job-${request.id}.csv`
+
+      if (contentDisposition) {
+        const fileNameMatch = contentDisposition.match(/filename="?([^";]+)"?/)
+        if (fileNameMatch && fileNameMatch[1]) {
+          fileName = fileNameMatch[1]
+        }
+      }
+
+      return {
+        data: response.data,
+        fileName: fileName,
+      } as DownloadCsvResponse
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to download CSV")
+    }
+  }
+)
+
 // Helper function to replace path parameters in endpoint
 const buildEndpointWithParams = (
   endpoint: string,
@@ -1376,6 +1431,13 @@ const fileManagementSlice = createSlice({
       state.csvUploadFailuresResponse = null
       state.csvUploadFailures = []
       state.csvUploadFailuresPagination = null
+    },
+    // Reset Download CSV state
+    resetDownloadCsvState: (state) => {
+      state.downloadCsvLoading = false
+      state.downloadCsvError = null
+      state.downloadCsvSuccess = false
+      state.downloadCsvResponse = null
     },
     // Reset all file management state
     resetFileManagementState: (state) => {
@@ -1946,6 +2008,23 @@ const fileManagementSlice = createSlice({
         state.csvUploadFailuresError = action.payload as string
         state.csvUploadFailuresSuccess = false
       })
+
+      // Download CSV reducers
+      .addCase(downloadCsv.pending, (state) => {
+        state.downloadCsvLoading = true
+        state.downloadCsvError = null
+        state.downloadCsvSuccess = false
+      })
+      .addCase(downloadCsv.fulfilled, (state, action) => {
+        state.downloadCsvLoading = false
+        state.downloadCsvSuccess = true
+        state.downloadCsvResponse = action.payload
+      })
+      .addCase(downloadCsv.rejected, (state, action) => {
+        state.downloadCsvLoading = false
+        state.downloadCsvError = action.payload as string
+        state.downloadCsvSuccess = false
+      })
   },
 })
 
@@ -1977,6 +2056,7 @@ export const {
   resetPostpaidEstimatedConsumptionBulkUploadState,
   resetCsvJobsState,
   resetCsvUploadFailuresState,
+  resetDownloadCsvState,
 } = fileManagementSlice.actions
 
 export default fileManagementSlice.reducer

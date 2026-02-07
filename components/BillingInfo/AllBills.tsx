@@ -46,6 +46,9 @@ interface PostpaidBill {
   areaOfficeName?: string
   consumptionKwh?: number
   tariffPerKwh?: number
+  openingBalance?: number
+  netAreas?: number
+  closingBalance?: number
 }
 
 interface Bill {
@@ -62,6 +65,10 @@ interface Bill {
   location: string
   consumption: string
   tariff: string
+  openingBalance: string
+  netAreas: string
+  closingBalance: string
+  energyKwh: string
 }
 
 interface AllBillsProps {
@@ -257,7 +264,7 @@ const LoadingSkeleton = () => {
         <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
           <thead>
             <tr>
-              {[...Array(9)].map((_, i) => (
+              {[...Array(10)].map((_, i) => (
                 <th key={i} className="whitespace-nowrap border-b p-3 sm:p-4">
                   <div className="h-4 w-24 rounded bg-gray-200"></div>
                 </th>
@@ -267,7 +274,7 @@ const LoadingSkeleton = () => {
           <tbody>
             {[...Array(5)].map((_, rowIndex) => (
               <tr key={rowIndex}>
-                {[...Array(9)].map((_, cellIndex) => (
+                {[...Array(10)].map((_, cellIndex) => (
                   <td key={cellIndex} className="whitespace-nowrap border-b px-3 py-2 sm:px-4 sm:py-3">
                     <div className="h-4 w-full rounded bg-gray-200"></div>
                   </td>
@@ -2090,7 +2097,11 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
         customerType,
         location,
         consumption,
-        tariff: `₦${apiBill.tariffPerKwh || 0}/kWh`,
+        tariff: `₦${apiBill.tariffPerKwh || 0.0}/kWh`,
+        openingBalance: `₦${(apiBill.openingBalance || 0.0).toLocaleString()}`,
+        netAreas: `₦${(apiBill.netArrears || 0.0).toLocaleString()}`,
+        closingBalance: `₦${(apiBill.closingBalance || 0.0).toLocaleString()}`,
+        energyKwh: `${apiBill.consumptionKwh || 0.0} kWh`,
       } as Bill
     })
   }
@@ -2271,7 +2282,7 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
               >
-                <table className="w-full min-w-[1000px] border-separate border-spacing-0 text-left">
+                <table className="w-full min-w-[1200px] border-separate border-spacing-0 text-left">
                   <thead>
                     <tr>
                       <th
@@ -2295,7 +2306,47 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
                         onClick={() => toggleSort("amount")}
                       >
                         <div className="flex items-center gap-2">
-                          Amount <RxCaretSort />
+                          Bill Amount <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("openingBalance")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Opening Balance <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("netAreas")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Net Areas <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("closingBalance")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Closing Balance <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("energyKwh")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Energy kWh <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("issueDate")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Date Created <RxCaretSort />
                         </div>
                       </th>
                       <th
@@ -2304,38 +2355,6 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
                       >
                         <div className="flex items-center gap-2">
                           Status <RxCaretSort />
-                        </div>
-                      </th>
-                      <th
-                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                        onClick={() => toggleSort("dueDate")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Due Date <RxCaretSort />
-                        </div>
-                      </th>
-                      <th
-                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                        onClick={() => toggleSort("customerType")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Customer Type <RxCaretSort />
-                        </div>
-                      </th>
-                      <th
-                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                        onClick={() => toggleSort("location")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Location <RxCaretSort />
-                        </div>
-                      </th>
-                      <th
-                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                        onClick={() => toggleSort("consumption")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Consumption <RxCaretSort />
                         </div>
                       </th>
                       <th className="shadow-[ -4px_0_8px_-2px_rgba(0,0,0,0.1)] sticky right-0 z-10 whitespace-nowrap border-b bg-white p-4 text-sm">
@@ -2371,6 +2390,19 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
                         <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-semibold text-gray-900">
                           {formatCurrency(bill.amount)}
                         </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-semibold text-gray-900">
+                          {formatCurrency(bill.openingBalance)}
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-semibold text-gray-900">
+                          {formatCurrency(bill.netAreas)}
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-semibold text-gray-900">
+                          {formatCurrency(bill.closingBalance)}
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">{bill.energyKwh}</td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                          {formatDate(bill.issueDate)}
+                        </td>
                         <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
                           <motion.div
                             style={getStatusStyle(bill.status)}
@@ -2386,31 +2418,6 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
                             ></span>
                             {Object.values(BillStatus)[bill.status] || "Unknown"}
                           </motion.div>
-                        </td>
-                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                          {formatDate(bill.dueDate)}
-                        </td>
-                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                          <motion.div
-                            style={getCustomerTypeStyle(bill.customerType)}
-                            className="inline-flex items-center justify-center rounded-full px-3 py-1.5 text-xs font-medium"
-                            whileHover={{ scale: 1.05 }}
-                            transition={{ duration: 0.1 }}
-                          >
-                            {bill.customerType}
-                          </motion.div>
-                        </td>
-                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                          <div className="flex items-center gap-2">
-                            <MapIcon />
-                            {bill.location}
-                          </div>
-                        </td>
-                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                          <div>
-                            <div className="font-medium">{bill.consumption}</div>
-                            <div className="text-xs text-gray-500">{bill.tariff}</div>
-                          </div>
                         </td>
                         <td className="shadow-[ -4px_0_8px_-2px_rgba(0,0,0,0.1)] sticky right-0 z-10 whitespace-nowrap border-b bg-white px-4 py-2 text-sm shadow-md">
                           <div className="flex items-center gap-2">

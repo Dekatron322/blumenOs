@@ -64,6 +64,12 @@ export interface CashRemittanceRecord {
 
 // Interface for Cash Remittance Records Response
 export interface CashRemittanceRecordsResponse {
+  hasPrevious: boolean
+  hasNext: boolean
+  pageSize: number
+  currentPage: number
+  totalPages: number
+  totalCount: number
   isSuccess: boolean
   message: string
   data: CashRemittanceRecord[]
@@ -104,6 +110,8 @@ export interface AddReceiptResponse {
 export interface CashRemittanceRequestParams {
   startUtc: string
   endUtc: string
+  pageNumber?: number
+  pageSize?: number
 }
 
 // Cash Remittance State
@@ -119,6 +127,16 @@ interface CashRemittanceState {
   recordsLoading: boolean
   recordsError: string | null
   recordsSuccess: boolean
+
+  // Pagination state
+  pagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
 
   // Add record state
   addRecordLoading: boolean
@@ -142,6 +160,15 @@ const initialState: CashRemittanceState = {
   recordsLoading: false,
   recordsError: null,
   recordsSuccess: false,
+
+  pagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 1,
+    pageSize: 10,
+    hasNext: false,
+    hasPrevious: false,
+  },
 
   addRecordLoading: false,
   addRecordError: null,
@@ -192,12 +219,14 @@ export const fetchCashRemittanceRecords = createAsyncThunk(
   "cashRemittance/fetchRecords",
   async (params: CashRemittanceRequestParams, { rejectWithValue }) => {
     try {
-      const { startUtc, endUtc } = params
+      const { startUtc, endUtc, pageNumber = 1, pageSize = 10 } = params
 
       const response = await api.get<CashRemittanceRecordsResponse>(buildApiUrl(API_ENDPOINTS.CASH_REMITTANCE.GET), {
         params: {
           startUtc,
           endUtc,
+          PageNumber: pageNumber,
+          PageSize: pageSize,
         },
       })
 
@@ -209,7 +238,7 @@ export const fetchCashRemittanceRecords = createAsyncThunk(
         return rejectWithValue("Cash remittance records data not found")
       }
 
-      return response.data.data
+      return response.data
     } catch (error: any) {
       if (error.response?.data) {
         return rejectWithValue(error.response.data.message || "Failed to fetch cash remittance records")
@@ -318,6 +347,12 @@ const cashRemittanceSlice = createSlice({
       state.addReceiptError = null
     },
 
+    // Set pagination
+    setPagination: (state, action) => {
+      state.pagination.currentPage = action.payload.page
+      state.pagination.pageSize = action.payload.pageSize
+    },
+
     // Reset cash remittance state
     resetCashRemittanceState: (state) => {
       state.summary = null
@@ -328,6 +363,14 @@ const cashRemittanceSlice = createSlice({
       state.recordsLoading = false
       state.recordsError = null
       state.recordsSuccess = false
+      state.pagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
       state.addRecordLoading = false
       state.addRecordError = null
       state.addRecordSuccess = false
@@ -363,11 +406,19 @@ const cashRemittanceSlice = createSlice({
         state.recordsError = null
         state.recordsSuccess = false
       })
-      .addCase(fetchCashRemittanceRecords.fulfilled, (state, action: PayloadAction<CashRemittanceRecord[]>) => {
+      .addCase(fetchCashRemittanceRecords.fulfilled, (state, action: PayloadAction<CashRemittanceRecordsResponse>) => {
         state.recordsLoading = false
         state.recordsSuccess = true
         state.recordsError = null
-        state.records = action.payload
+        state.records = action.payload.data
+        state.pagination = {
+          totalCount: action.payload.totalCount,
+          totalPages: action.payload.totalPages,
+          currentPage: action.payload.currentPage,
+          pageSize: action.payload.pageSize,
+          hasNext: action.payload.hasNext,
+          hasPrevious: action.payload.hasPrevious,
+        }
       })
       .addCase(fetchCashRemittanceRecords.rejected, (state, action) => {
         state.recordsLoading = false
@@ -418,7 +469,14 @@ const cashRemittanceSlice = createSlice({
   },
 })
 
-export const { clearSummary, clearRecords, clearAddRecord, clearAddReceipt, clearError, resetCashRemittanceState } =
-  cashRemittanceSlice.actions
+export const {
+  clearSummary,
+  clearRecords,
+  clearAddRecord,
+  clearAddReceipt,
+  clearError,
+  resetCashRemittanceState,
+  setPagination,
+} = cashRemittanceSlice.actions
 
 export default cashRemittanceSlice.reducer

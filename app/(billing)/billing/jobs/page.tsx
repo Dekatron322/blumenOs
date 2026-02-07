@@ -980,7 +980,7 @@ const BillingJobs: React.FC = () => {
     const items: (number | string)[] = []
 
     if (total <= 4) {
-      for (let i = 1; i <= total; i += 1) {
+      for (let i = 1; i <= total; i++) {
         items.push(i)
       }
       return items
@@ -999,6 +999,9 @@ const BillingJobs: React.FC = () => {
     items.push(1, "...", total - 2, total - 1, total)
     return items
   }
+
+  // Check if any job is currently running
+  const hasRunningJob = billingJobs.some((job) => job.status === 1)
 
   if (billingJobsLoading) return <LoadingSkeleton />
   if (billingJobsError) return <div className="p-4 text-red-500">Error loading jobs: {billingJobsError}</div>
@@ -1035,6 +1038,7 @@ const BillingJobs: React.FC = () => {
                   size="md"
                   icon={<PlusIcon />}
                   onClick={() => setIsAddJobModalOpen(true)}
+                  disabled={hasRunningJob}
                 >
                   Start Bill Generation
                 </ButtonModule>
