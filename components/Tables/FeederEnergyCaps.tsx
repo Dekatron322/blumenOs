@@ -754,6 +754,12 @@ const FeederEnergyCaps: React.FC = () => {
     }).format(amount)
   }
 
+  // Function to get feeder name by ID
+  const getFeederName = (feederId: number) => {
+    const feeder = feeders.find((f) => f.id === feederId)
+    return feeder ? feeder.name : `FEEDER-${feederId}`
+  }
+
   const getPageItems = (): (number | string)[] => {
     const total = totalPages
     const current = pagination.currentPage
@@ -989,7 +995,9 @@ const FeederEnergyCaps: React.FC = () => {
                   <tbody>
                     {feederEnergyCaps.map((energyCap: FeederEnergyCap, index: number) => (
                       <tr key={energyCap.id}>
-                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm">FEEDER-{energyCap.feederId}</td>
+                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                          {getFeederName(energyCap.feederId)}
+                        </td>
                         <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">{energyCap.period}</td>
                         <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                           {energyCap.energyCapKwh.toLocaleString()} kWh

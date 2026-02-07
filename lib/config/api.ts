@@ -241,6 +241,7 @@ export const API_ENDPOINTS = {
     DISTRIBUTION_SUBSTATION_BULK_UPLOAD: "/assets/distribution-substations/bulk/import",
     ADJUSTMENT_BULK_UPLOAD: "/billing/postpaid/bills/bulk/adjustments",
     POSTPAID_ESTIMATED_CONSUMPTION_BULK_UPLOAD: "/billing/postpaid/estimated-consumptions/bulk/import",
+    DOWNLOAD_CSV_JOBS: "/system/csv-jobs/{id}/cistomer-setup/result",
   },
 
   METER_CAPTURE: {
@@ -282,6 +283,7 @@ export const API_ENDPOINTS = {
     METER_READINGS: "/billing/postpaid/meter-readings",
     FINALIZE_SINGLE_BILL: "/billing/postpaid/{id}/finalize",
     ADJUSTMENTS: "/billing/postpaid/bills/adjustments",
+    DOWNLOAD_AR: "/billing/postpaid/ar/csv",
   },
 
   BILLING_PERIODS: {
@@ -461,6 +463,7 @@ export const API_ENDPOINTS = {
     VERIFY_TOKEN_HISTORY: "/meters/{id}/prepaid/histories/verify-token",
     UPDATE_METER_PHASE: "/meters/{id}/phase",
     CHANGE_TECHNICAL_CONFIG: "/meters/{id}/technical-config",
+    CHANGE_TARIFF: "/meters/{id}/ti",
   },
 
   METER_BRANDS: {

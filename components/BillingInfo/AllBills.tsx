@@ -1,6 +1,6 @@
 "use client"
 
-import React, { Suspense, useEffect, useRef, useState } from "react"
+import React, { Suspense, useEffect, useRef, useState, useCallback } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
@@ -13,9 +13,10 @@ import { clearFeeders, fetchFeeders } from "lib/redux/feedersSlice"
 import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import { MapIcon, UserIcon } from "components/Icons/Icons"
-import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
+import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X, Printer } from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { VscEye } from "react-icons/vsc"
+import PostpaidBillDetailsModal from "components/ui/Modal/postpaid-bill-modal"
 
 export enum BillStatus {
   Draft = 0,
@@ -45,6 +46,9 @@ interface PostpaidBill {
   areaOfficeName?: string
   consumptionKwh?: number
   tariffPerKwh?: number
+  openingBalance?: number
+  netAreas?: number
+  closingBalance?: number
 }
 
 interface Bill {
@@ -61,6 +65,10 @@ interface Bill {
   location: string
   consumption: string
   tariff: string
+  openingBalance: string
+  netAreas: string
+  closingBalance: string
+  energyKwh: string
 }
 
 interface AllBillsProps {
@@ -256,7 +264,7 @@ const LoadingSkeleton = () => {
         <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
           <thead>
             <tr>
-              {[...Array(9)].map((_, i) => (
+              {[...Array(10)].map((_, i) => (
                 <th key={i} className="whitespace-nowrap border-b p-3 sm:p-4">
                   <div className="h-4 w-24 rounded bg-gray-200"></div>
                 </th>
@@ -266,7 +274,7 @@ const LoadingSkeleton = () => {
           <tbody>
             {[...Array(5)].map((_, rowIndex) => (
               <tr key={rowIndex}>
-                {[...Array(9)].map((_, cellIndex) => (
+                {[...Array(10)].map((_, cellIndex) => (
                   <td key={cellIndex} className="whitespace-nowrap border-b px-3 py-2 sm:px-4 sm:py-3">
                     <div className="h-4 w-full rounded bg-gray-200"></div>
                   </td>
@@ -548,6 +556,10 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(true)
   const [isSortExpanded, setIsSortExpanded] = useState(false)
+
+  // State for PostpaidBillDetailsModal
+  const [isBillModalOpen, setIsBillModalOpen] = useState(false)
+  const [modalBill, setModalBill] = useState<PostpaidBill | null>(null)
 
   // Local state for filters to avoid too many Redux dispatches
   const [localFilters, setLocalFilters] = useState({
@@ -897,6 +909,1112 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
     router.push(`/billing/bills/update/${billId}`)
   }
 
+  const handlePrintBills = () => {
+    // Get the first 10 bills (or all bills if less than 10)
+    const billsToPrint = bills.slice(0, 10)
+
+    if (billsToPrint.length === 0) {
+      alert("No bills available to print")
+      return
+    }
+
+    // Create a new window for printing
+    const printWindow = window.open("", "_blank")
+    if (!printWindow) {
+      alert("Please allow pop-ups to print bills")
+      return
+    }
+
+    // Helper functions for formatting
+    const formatCurrency = (amount: number) => {
+      return new Intl.NumberFormat("en-NG", {
+        style: "currency",
+        currency: "NGN",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(amount)
+    }
+
+    const formatDate = (dateString: string) => {
+      return new Date(dateString).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    }
+
+    const formatShortDate = (dateString: string) => {
+      return new Date(dateString).toLocaleDateString("en-US", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    }
+
+    const getCustomerStatusLabel = (code?: string | null) => {
+      switch (code) {
+        case "02":
+          return "Active"
+        case "04":
+          return "Suspended"
+        case "05":
+          return "PPM"
+        case "07":
+          return "Inactive"
+        default:
+          return code || "Unknown"
+      }
+    }
+
+    // Generate barcode data URL for the account number
+    const generateBarcodeDataURL = (accountNumber: string) => {
+      const canvas = document.createElement("canvas")
+      const ctx = canvas.getContext("2d")
+      if (!ctx) return ""
+
+      const value = String(accountNumber || "")
+
+      // Canvas sizing for crisp lines
+      const width = 220
+      const height = 60
+      canvas.width = width
+      canvas.height = height
+
+      // Background
+      ctx.fillStyle = "#FFFFFF"
+      ctx.fillRect(0, 0, width, height)
+
+      // Basic hash from the value to vary bar patterns
+      let hash = 0
+      for (let i = 0; i < value.length; i++) {
+        hash = (hash * 31 + value.charCodeAt(i)) >>> 0
+      }
+
+      const barWidth = 2
+      const totalBars = Math.floor(width / barWidth)
+
+      for (let i = 0; i < totalBars; i++) {
+        // Derive a pseudo-random pattern from the hash and index
+        const bit = (hash >> i % 32) & 1
+        if (bit === 1) {
+          ctx.fillStyle = "#000000"
+          ctx.fillRect(i * barWidth, 4, barWidth, height - 16)
+        }
+      }
+
+      // Draw the human-readable value below the bars
+      ctx.fillStyle = "#000000"
+      ctx.font = "10px Arial"
+      ctx.textAlign = "center"
+      ctx.textBaseline = "bottom"
+      ctx.fillText(value, width / 2, height - 2)
+
+      return canvas.toDataURL()
+    }
+
+    const billsHtml = billsToPrint
+      .map((bill, index) => {
+        const pageBreak = index < billsToPrint.length - 1 ? '<div style="page-break-after: always;"></div>' : ""
+        const barcodeDataURL = generateBarcodeDataURL(bill.customerAccountNumber)
+
+        return `
+        <div class="a5-container">
+          <div class="relative flex-1 overflow-y-auto print:overflow-visible">
+            <div class="a5-content relative z-10 p-8 print:p-4">
+              <div class="w-full print:p-0">
+                <!-- Header - A5 Optimized -->
+                <div class="a5-header mb-3 flex items-center justify-between print:mb-2">
+                  <div class="w-24 text-center print:w-20">
+                    <img src="/kad.svg" alt="KAD-ELEC Logo" class="h-10 print:hidden" />
+                  </div>
+
+                  <div class="flex flex-1 justify-center">
+                    <img src="${barcodeDataURL}" alt="Barcode for ${
+                      bill.customerAccountNumber
+                    }" class="h-12 w-40 print:h-10 print:w-36" />
+                  </div>
+
+                  <div class="w-24 text-center print:w-20">
+                    <h1 class="mb-1 text-[9pt] font-bold text-gray-900 print:hidden">KAD-ELEC.</h1>
+                    <div class="bg-[#6EAD2A] p-1 text-xs font-semibold text-white print:bg-white print:py-0.5 print:text-[7pt] print:text-black">
+                      #${bill.customerAccountNumber}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Billing Information -->
+                <div class="a5-section">
+                  <div class="print:bg-white print:text-black flex w-full items-center justify-center bg-[#004B23] p-1.5 text-xs font-semibold text-white">
+                    <p></p>
+                  </div>
+
+                  <div class="print-no-border flex w-full border border-gray-300 bg-white text-[8pt] print:text-[7pt]">
+                    <div class="print-no-border-r w-3/5 space-y-0.5 border-r border-gray-300">
+                      <div class="print-bg-light-green print-white-text flex w-full items-center justify-between bg-[#6CAD2B] px-2 py-1 font-semibold">
+                        <p class="print-hide-label"></p>
+                        <div class="flex items-center justify-center bg-white px-4 text-center print:flex-grow print:justify-end">
+                          <p class="print-show-value text-black">
+                            ${bill.areaOfficeName || "-"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div class="space-y-2 px-2 ">
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Bill #:</span>
+                          <span class="print-show-value px-2 font-semibold">${bill.id}</span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Bill Month:</span>
+                          <span class="print-show-value px-2 font-semibold">${bill.name || bill.period}</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Customer Account:</span>
+                          <span class="print-show-value px-2 font-semibold">${bill.customerAccountNumber}</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Account Name:</span>
+                          <span class="print-show-value px-2 font-semibold">${bill.customerName}</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Address:</span>
+                          <span class="print-show-value px-2 font-semibold">-</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Phone Number:</span>
+                          <span class="print-show-value px-2 font-semibold">-</span>
+                        </div>
+                        <div class=" flex justify-between">
+                          <span class="print-hide-label font-semibold">City:</span>
+                          <span class="print-show-value px-2 font-semibold">-</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="w-2/5 space-y-0.5">
+                      <div class="print-white-text flex w-full items-center justify-between bg-[#008001] px-2 py-1 font-semibold print:bg-white print:text-black">
+                        <p class="print:invisible"></p>
+                        <div class="flex items-center justify-center bg-white px-4 print:flex-grow print:justify-end">
+                          <p class="print-show-value text-[7pt] text-black">-</p>
+                        </div>
+                      </div>
+
+                      <div class="space-y-2 px-2">
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">State:</span>
+                          <span class="print-show-value px-2 font-semibold">-</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">11KV Feeder:</span>
+                          <span class="print-show-value px-2 font-semibold">${bill.feederName || "-"}</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">33KV Feeder:</span>
+                          <span class="print-show-value px-2 font-semibold">-</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">DT Name:</span>
+                          <span class="print-show-value px-2 font-semibold">-</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Sales Rep:</span>
+                          <span class="print-show-value px-2 font-semibold">-</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Meter:</span>
+                          <span class="print-show-value px-2 font-semibold">-</span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Multiplier:</span>
+                          <span class="print-show-value px-2 font-semibold">1.0</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Billing Charges -->
+                <div class="a5-section -mt-2">
+                  <div class="print-bg-green print-white-text flex w-full items-center justify-center bg-[#004B23] p-1.5 text-xs font-semibold text-white print:bg-white print:text-black">
+                    <p class="print:invisible"></p>
+                  </div>
+
+                  <div class="print-no-border flex w-full border border-gray-300 bg-white text-[8pt] print:text-[7pt]">
+                    <div class="print-no-border-r w-3/5 space-y-0.5 border-r border-gray-300">
+                      <div class="print-bg-light-green print-white-text flex w-full items-center justify-between bg-[#6CAD2B] px-2 py-1 font-semibold">
+                        <p class="print-hide-label">CHARGES</p>
+                        <p class="print-hide-label">TOTAL</p>
+                      </div>
+
+                      <div class="space-y-2 px-2 ">
+                        <div class="mt-2 flex justify-between">
+                          <span class="print-hide-label font-semibold">Last Payment Date:</span>
+                          <span class="print-show-value px-2 font-semibold">
+                            ${formatShortDate(bill.createdAt || new Date().toISOString())}
+                          </span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Last Payment Amount:</span>
+                          <span class="print-show-value px-2 font-semibold">₦0.00</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">ADC:</span>
+                          <span class="print-show-value px-2 font-semibold">-</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Present Reading:</span>
+                          <span class="print-show-value px-2 font-semibold">-</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Previous Reading:</span>
+                          <span class="print-show-value px-2 font-semibold">-</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Consumption:</span>
+                          <span class="print-show-value px-2 font-semibold">${bill.consumptionKwh || 0}kwh</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Tariff Rate:</span>
+                          <span class="print-show-value px-2 font-semibold">${bill.tariffPerKwh || 0}</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Tariff Class:</span>
+                          <span class="print-show-value px-2 font-semibold">-</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="w-2/5 space-y-0.5">
+                      <div class="print-white-text flex w-full items-center justify-between bg-[#008001] px-2 py-1 font-semibold print:bg-white print:text-black">
+                        <p class="print-hide-label">CHARGES</p>
+                        <p class="print-hide-label">TOTAL</p>
+                      </div>
+
+                      <div class="space-y-2 px-2 ">
+                        <div class="mt-2 flex justify-between">
+                          <span class="print-hide-label font-semibold">Status Code:</span>
+                          <span class="print-show-value px-2 font-semibold">Active</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Opening Balance:</span>
+                          <span class="print-show-value px-2 font-semibold">₦0.00</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Adjustment:</span>
+                          <span class="print-show-value px-2 font-semibold">₦0.00</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Total Payment Amt:</span>
+                          <span class="print-show-value px-2 font-semibold">${formatCurrency(bill.totalDue)}</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Net Arrears:</span>
+                          <span class="print-show-value px-2 font-semibold">₦0.00</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Energy Charged:</span>
+                          <span class="print-show-value px-2 font-semibold">${formatCurrency(bill.totalDue)}</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Fixed Charge:</span>
+                          <span class="print-show-value px-2 font-semibold">₦0.00</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">VAT:</span>
+                          <span class="print-show-value px-2 font-semibold">₦0.00</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Total Due -->
+                <div class="print-no-border flex w-full border border-gray-300">
+                  <div class="print-bg-light-green w-3/5 bg-[#6CAD2B]">
+                    <div class="px-2 py-1.5">&nbsp;</div>
+                  </div>
+
+                  <div class="w-2/5 bg-[#E1E1E1]">
+                    <div class="print-white-text flex w-full items-center justify-between bg-[#008001] px-2 py-1.5 font-semibold print:bg-white print:text-black">
+                      <p class="text-[8pt] print:invisible"></p>
+                      <div class="flex items-center justify-center bg-white px-4 print:-mt-5 print:flex-grow print:justify-end">
+                        <p class="print-show-value text-[8pt] font-bold text-black">
+                          ${formatCurrency(bill.totalDue)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Payment Notice -->
+                <div class="flex">
+                  <div class="a5-small-text print-no-border mb-3 mt-1 w-[60%] border border-gray-300 p-2 text-[6pt] print:text-[5pt]">
+                    <p class=" font-semibold print:text-[5pt]">IMPORTANT PAYMENT INFORMATION</p>
+                    <p class="font-semibold print:text-[5pt]">
+                      PAY ON OR BEFORE DUE DATE TO AVOID DISCONNECTION | PAY AT ANY OF OUR OFFICES OR TO OUR SALES REPS USING OUR POSes OR ALTERNATIVE PAYMENT CHANNELS | <b>ALWAYS DEMAND FOR RECEIPT AFTER PAYMENT IS MADE</b>
+                    </p>
+                  </div>
+                  <div class="w-[40%]"></div>
+                </div>
+
+                <!-- Summary Section -->
+                <div class="a5-small-text print-no-border flex w-full border border-gray-300 bg-white text-[7pt]">
+                  <div class="print-no-border-r w-2/3 border-r border-gray-300">
+                    <div class="print-bg-light-green print-white-text flex w-full items-center justify-between bg-[#6CAD2B] px-2 py-1 font-semibold">
+                      <p class="print:invisible"></p>
+                      <div class="flex items-center justify-center bg-white px-4 py-0.5 print:flex-grow print:justify-end">
+                        <p class="print-show-value text-black">
+                          ${bill.areaOfficeName || "-"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 px-2">
+                      <div class="space-y-2">
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Bill #:</span>
+                          <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                            ${bill.id}
+                          </span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Bill Month:</span>
+                          <span class="print-show-value px-2 font-semibold print:text-[5pt]">${
+                            bill.name || bill.period
+                          }</span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Customer Account:</span>
+                          <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                            ${bill.customerAccountNumber}
+                          </span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Account Name:</span>
+                          <span class="print-show-value px-2 text-right font-semibold print:text-[5pt]">
+                            ${bill.customerName}
+                          </span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Address:</span>
+                          <span class="print-show-value px-2 text-right font-semibold print:text-[5pt]">
+                            -
+                          </span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Consumption:</span>
+                          <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                            ${bill.consumptionKwh || 0}kwh
+                          </span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Opening Balance:</span>
+                          <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                            ₦0.00
+                          </span>
+                        </div>
+                      </div>
+
+                      <div class="space-y-2 pl-2">
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Adjustment:</span>
+                          <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                            ₦0.00
+                          </span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Total Payments:</span>
+                          <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                            ${formatCurrency(bill.totalDue)}
+                          </span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Net Arrears:</span>
+                          <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                            ₦0.00
+                          </span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Meter:</span>
+                          <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                            -
+                          </span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Tariff:</span>
+                          <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                            -
+                          </span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Rate:</span>
+                          <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                            ${bill.tariffPerKwh || 0}
+                          </span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">ADC</span>
+                          <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                            -
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="w-1/3">
+                    <div
+                      class="print-white-text flex w-full items-center justify-between bg-[#008001] px-2 py-1 font-semibold print:bg-white print:text-black"
+                      style="background-color: #008001"
+                    >
+                      <p class="print-hide-label">SERVICE CENTER:</p>
+                      <div class="flex items-center justify-center bg-white px-4 py-0.5 print:flex-grow print:justify-end">
+                        <p class="print-show-value text-black">-</p>
+                      </div>
+                    </div>
+
+                    <div class="space-y-2 px-2 ">
+                      <div class="flex justify-between">
+                        <span class="print-hide-label font-semibold">Present Reading:</span>
+                        <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                          -
+                        </span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="print-hide-label font-semibold">Previous Reading:</span>
+                        <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                          -
+                        </span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="print-hide-label font-semibold">Fixed Charge:</span>
+                        <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                          ₦0.00
+                        </span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="print-hide-label font-semibold">Current Bill:</span>
+                        <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                          ${formatCurrency(bill.totalDue)}
+                        </span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="print-hide-label font-semibold">VAT:</span>
+                        <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                          ₦0.00
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Footer Total -->
+                <div class="print-no-border flex w-full border border-gray-300 ">
+                  <div class="print-bg-light-green w-2/3 bg-[#6CAD2B]">
+                    <div class="px-2 py-1">&nbsp;</div>
+                  </div>
+
+                  <div class="w-1/3 bg-[#E1E1E1]">
+                    <div
+                      class="print-white-text flex w-full items-center justify-between bg-[#008001]  px-6 py-1 font-semibold print:-m-3 print:bg-white print:text-black"
+                      style="background-color: #008001"
+                    >
+                      <p class="text-[8pt] print:invisible"></p>
+                      <div class="flex items-center justify-center bg-white  print:flex-grow print:justify-end">
+                        <p class="print-show-value text-[8pt] font-bold text-black">
+                          ${formatCurrency(bill.totalDue)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+               
+                
+            </div>
+          </div>
+        </div>
+        ${pageBreak}
+      `
+      })
+      .join("")
+
+    // Complete HTML document with print styles matching the modal exactly
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Print Bills - KAD-ELEC</title>
+        <style>
+          /* Exact same print styles as the modal */
+          @media print {
+            @page {
+              size: A5;
+              margin: 0;
+            }
+
+            body {
+              margin: 0;
+              padding: 0;
+              width: 420pt;
+              height: 595pt;
+              background: white;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+
+            .print-hide {
+              display: none !important;
+            }
+
+            .a5-container {
+              width: 420pt !important;
+              height: 595pt !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              box-shadow: none !important;
+              background: white !important;
+            }
+
+            .a5-content {
+              padding: 10pt !important;
+              font-size: 8pt !important;
+            }
+
+            .a5-small-text {
+              font-size: 7pt !important;
+            }
+
+            .a5-header {
+              height: 30pt !important;
+            }
+
+            .a5-section {
+              margin-bottom: 8pt !important;
+            }
+
+            .a5-grid {
+              display: grid !important;
+              grid-template-columns: 1fr 1fr !important;
+              gap: 4pt !important;
+            }
+
+            .a5-col {
+              padding: 4pt !important;
+            }
+
+            .force-black-white {
+              color: black !important;
+              background-color: white !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+
+            .print-bg-green {
+              background-color: white !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+
+            .print-bg-light-green {
+              background-color: white !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+
+            .print-white-text {
+              color: black !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+
+            .print-hide-label {
+              display: none !important;
+            }
+
+            .print-show-value {
+              display: block !important;
+              text-align: right !important;
+              font-weight: normal !important;
+              justify-content: flex-end !important;
+              margin-left: auto !important;
+              width: 100% !important;
+            }
+
+            .print-show-value > * {
+              text-align: right !important;
+              justify-content: flex-end !important;
+            }
+
+            .bg-white .print-show-value {
+              text-align: right !important;
+              justify-content: flex-end !important;
+              margin-left: auto !important;
+              width: 100% !important;
+            }
+
+            [style*="background-color"] {
+              background-color: white !important;
+            }
+
+            .print-no-border {
+              border: none !important;
+            }
+
+            .print-no-border-r {
+              border-right: none !important;
+            }
+
+            .print-no-border-t {
+              border-top: none !important;
+            }
+
+            .print-no-border-b {
+              border-bottom: none !important;
+            }
+
+            .print-no-border-l {
+              border-left: none !important;
+            }
+          }
+
+          /* Screen styles for preview */
+          body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+          }
+
+          .a5-container {
+            width: 420pt;
+            height: 595pt;
+            margin: 0 auto 20px auto;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            page-break-inside: avoid;
+          }
+
+          .a5-content {
+            padding: 10pt;
+            font-size: 8pt;
+          }
+
+          .a5-small-text {
+            font-size: 7pt;
+          }
+
+          .a5-header {
+            height: 30pt;
+          }
+
+          .a5-section {
+            margin-bottom: 8pt;
+          }
+
+          .flex {
+            display: flex;
+          }
+
+          .items-center {
+            align-items: center;
+          }
+
+          .justify-between {
+            justify-content: space-between;
+          }
+
+          .justify-center {
+            justify-content: center;
+          }
+
+          .w-full {
+            width: 100%;
+          }
+
+          .flex-1 {
+            flex: 1;
+          }
+
+          .w-24 {
+            width: 6rem;
+          }
+
+          .w-20 {
+            width: 5rem;
+          }
+
+          .w-40 {
+            width: 10rem;
+          }
+
+          .w-36 {
+            width: 9rem;
+          }
+
+          .w-3\\/5 {
+            width: 60%;
+          }
+
+          .w-2\\/5 {
+            width: 40%;
+          }
+
+          .w-2\\/3 {
+            width: 66.666%;
+          }
+
+          .w-1\\/3 {
+            width: 33.333%;
+          }
+
+          .w-60\\% {
+            width: 60%;
+          }
+
+          .w-40\\% {
+            width: 40%;
+          }
+
+          .h-10 {
+            height: 2.5rem;
+          }
+
+          .h-12 {
+            height: 3rem;
+          }
+
+          .bg-white {
+            background-color: white;
+          }
+
+          .bg-\\[\\#6CAD2B\\] {
+            background-color: #6CAD2B;
+          }
+
+          .bg-\\[\\#004B23\\] {
+            background-color: #004B23;
+          }
+
+          .bg-\\[\\#008001\\] {
+            background-color: #008001;
+          }
+
+          .bg-\\[\\#E1E1E1\\] {
+            background-color: #E1E1E1;
+          }
+
+          .bg-gray-200 {
+            background-color: #e5e7eb;
+          }
+
+          .text-white {
+            color: white;
+          }
+
+          .text-black {
+            color: black;
+          }
+
+          .text-gray-900 {
+            color: #111827;
+          }
+
+          .text-gray-600 {
+            color: #4b5563;
+          }
+
+          .text-xs {
+            font-size: 0.75rem;
+          }
+
+          .text-sm {
+            font-size: 0.875rem;
+          }
+
+          .text-\\[7pt\\] {
+            font-size: 7pt;
+          }
+
+          .text-\\[8pt\\] {
+            font-size: 8pt;
+          }
+
+          .text-\\[9pt\\] {
+            font-size: 9pt;
+          }
+
+          .text-\\[5pt\\] {
+            font-size: 5pt;
+          }
+
+          .text-\\[6pt\\] {
+            font-size: 6pt;
+          }
+
+          .font-bold {
+            font-weight: bold;
+          }
+
+          .font-semibold {
+            font-weight: 600;
+          }
+
+          .font-mono {
+            font-family: monospace;
+          }
+
+          .border {
+            border: 1px solid #d1d5db;
+          }
+
+          .border-gray-300 {
+            border-color: #d1d5db;
+          }
+
+          .border-r {
+            border-right: 1px solid #d1d5db;
+          }
+
+          .border-t {
+            border-top: 1px solid #d1d5db;
+          }
+
+          .p-1 {
+            padding: 0.25rem;
+          }
+
+          .p-1\\.5 {
+            padding: 0.375rem;
+          }
+
+          .p-2 {
+            padding: 0.5rem;
+          }
+
+          .p-4 {
+            padding: 1rem;
+          }
+
+          .p-8 {
+            padding: 2rem;
+          }
+
+          .py-0\\.5 {
+            padding-top: 0.125rem;
+            padding-bottom: 0.125rem;
+          }
+
+          .py-1 {
+            padding-top: 0.25rem;
+            padding-bottom: 0.25rem;
+          }
+
+          .py-1\\.5 {
+            padding-top: 0.375rem;
+            padding-bottom: 0.375rem;
+          }
+
+          .py-2 {
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+          }
+
+          .pt-1 {
+            padding-top: 0.25rem;
+          }
+
+          .pt-4 {
+            padding-top: 1rem;
+          }
+
+          .px-2 {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+          }
+
+          .px-4 {
+            padding-left: 1rem;
+            padding-right: 1rem;
+          }
+
+          .mb-1 {
+            margin-bottom: 0.25rem;
+          }
+
+          .mb-2 {
+            margin-bottom: 0.5rem;
+          }
+
+          .mb-4 {
+            margin-bottom: 1rem;
+          }
+
+          .mb-6 {
+            margin-bottom: 1.5rem;
+          }
+
+          .mt-1 {
+            margin-top: 0.25rem;
+          }
+
+          .mt-2 {
+            margin-top: 0.5rem;
+          }
+
+          .mt-3 {
+            margin-top: 0.75rem;
+          }
+
+          .mt-4 {
+            margin-top: 1rem;
+          }
+
+          .space-y-0\\.5 > * + * {
+            margin-top: 0.125rem;
+          }
+
+          .space-y-2 > * + * {
+            margin-top: 0.5rem;
+          }
+
+          .gap-2 {
+            gap: 0.5rem;
+          }
+
+          .gap-4 {
+            gap: 1rem;
+          }
+
+          .text-center {
+            text-align: center;
+          }
+
+          .text-right {
+            text-align: right;
+          }
+
+          .hidden {
+            display: none;
+          }
+
+          .print\\:hidden {
+            display: none;
+          }
+
+          .print\\:mb-2 {
+            margin-bottom: 0.5rem;
+          }
+
+          .print\\:w-20 {
+            width: 5rem;
+          }
+
+          .print\\:w-36 {
+            width: 9rem;
+          }
+
+          .print\\:h-10 {
+            height: 2.5rem;
+          }
+
+          .print\\:py-0\\.5 {
+            padding-top: 0.125rem;
+            padding-bottom: 0.125rem;
+          }
+
+          .print\\:text-\\[7pt\\] {
+            font-size: 7pt;
+          }
+
+          .print\\:text-black {
+            color: black;
+          }
+
+          .print\\:bg-white {
+            background-color: white;
+          }
+
+          .print\\:flex-grow {
+            flex-grow: 1;
+          }
+
+          .print\\:justify-end {
+            justify-content: flex-end;
+          }
+
+          .print\\:-mt-5 {
+            margin-top: -1.25rem;
+          }
+
+          .print\\:overflow-visible {
+            overflow: visible;
+          }
+
+          .print\\:rounded-none {
+            border-radius: 0;
+          }
+
+          .print\\:shadow-none {
+            box-shadow: none;
+          }
+
+          .print\\:w-\\[420px\\] {
+            width: 420px;
+          }
+
+          .print\\:h-\\[595px\\] {
+            height: 595px;
+          }
+
+          .print\\:max-w-none {
+            max-width: none;
+          }
+
+          .print\\:bg-white {
+            background-color: white;
+          }
+
+          .print\\:backdrop-blur-0 {
+            backdrop-filter: blur(0);
+          }
+
+          .grid {
+            display: grid;
+          }
+
+          .grid-cols-2 {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+
+          .pl-2 {
+            padding-left: 0.5rem;
+          }
+
+          .-m-3 {
+            margin: -0.75rem;
+          }
+        </style>
+      </head>
+      <body>
+        ${billsHtml}
+      </body>
+      </html>
+    `
+
+    // Write the HTML to the new window
+    printWindow.document.write(htmlContent)
+    printWindow.document.close()
+    console.log(htmlContent)
+
+    // Wait for the content to load, then print
+    printWindow.onload = () => {
+      setTimeout(() => {
+        printWindow.print()
+        printWindow.close()
+      }, 500)
+    }
+  }
+
   const formatDate = (dateString: string) => {
     try {
       const date = new Date(dateString)
@@ -979,7 +2097,11 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
         customerType,
         location,
         consumption,
-        tariff: `₦${apiBill.tariffPerKwh || 0}/kWh`,
+        tariff: `₦${apiBill.tariffPerKwh || 0.0}/kWh`,
+        openingBalance: `₦${(apiBill.openingBalance || 0.0).toLocaleString()}`,
+        netAreas: `₦${(apiBill.netArrears || 0.0).toLocaleString()}`,
+        closingBalance: `₦${(apiBill.closingBalance || 0.0).toLocaleString()}`,
+        energyKwh: `${apiBill.consumptionKwh || 0.0} kWh`,
       } as Bill
     })
   }
@@ -1122,6 +2244,17 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
                   </span>
                 )}
               </button>
+
+              {/* Print Bills button */}
+              <button
+                type="button"
+                onClick={handlePrintBills}
+                disabled={bills.length === 0}
+                className="flex items-center gap-2 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4"
+              >
+                <Printer className="size-4" />
+                Print Bills (1-10)
+              </button>
             </div>
           </motion.div>
 
@@ -1149,7 +2282,7 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
               >
-                <table className="w-full min-w-[1000px] border-separate border-spacing-0 text-left">
+                <table className="w-full min-w-[1200px] border-separate border-spacing-0 text-left">
                   <thead>
                     <tr>
                       <th
@@ -1173,7 +2306,47 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
                         onClick={() => toggleSort("amount")}
                       >
                         <div className="flex items-center gap-2">
-                          Amount <RxCaretSort />
+                          Bill Amount <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("openingBalance")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Opening Balance <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("netAreas")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Net Areas <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("closingBalance")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Closing Balance <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("energyKwh")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Energy kWh <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("issueDate")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Date Created <RxCaretSort />
                         </div>
                       </th>
                       <th
@@ -1182,38 +2355,6 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
                       >
                         <div className="flex items-center gap-2">
                           Status <RxCaretSort />
-                        </div>
-                      </th>
-                      <th
-                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                        onClick={() => toggleSort("dueDate")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Due Date <RxCaretSort />
-                        </div>
-                      </th>
-                      <th
-                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                        onClick={() => toggleSort("customerType")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Customer Type <RxCaretSort />
-                        </div>
-                      </th>
-                      <th
-                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                        onClick={() => toggleSort("location")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Location <RxCaretSort />
-                        </div>
-                      </th>
-                      <th
-                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                        onClick={() => toggleSort("consumption")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Consumption <RxCaretSort />
                         </div>
                       </th>
                       <th className="shadow-[ -4px_0_8px_-2px_rgba(0,0,0,0.1)] sticky right-0 z-10 whitespace-nowrap border-b bg-white p-4 text-sm">
@@ -1249,6 +2390,19 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
                         <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-semibold text-gray-900">
                           {formatCurrency(bill.amount)}
                         </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-semibold text-gray-900">
+                          {formatCurrency(bill.openingBalance)}
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-semibold text-gray-900">
+                          {formatCurrency(bill.netAreas)}
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-semibold text-gray-900">
+                          {formatCurrency(bill.closingBalance)}
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">{bill.energyKwh}</td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                          {formatDate(bill.issueDate)}
+                        </td>
                         <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
                           <motion.div
                             style={getStatusStyle(bill.status)}
@@ -1264,31 +2418,6 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
                             ></span>
                             {Object.values(BillStatus)[bill.status] || "Unknown"}
                           </motion.div>
-                        </td>
-                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                          {formatDate(bill.dueDate)}
-                        </td>
-                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                          <motion.div
-                            style={getCustomerTypeStyle(bill.customerType)}
-                            className="inline-flex items-center justify-center rounded-full px-3 py-1.5 text-xs font-medium"
-                            whileHover={{ scale: 1.05 }}
-                            transition={{ duration: 0.1 }}
-                          >
-                            {bill.customerType}
-                          </motion.div>
-                        </td>
-                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                          <div className="flex items-center gap-2">
-                            <MapIcon />
-                            {bill.location}
-                          </div>
-                        </td>
-                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                          <div>
-                            <div className="font-medium">{bill.consumption}</div>
-                            <div className="text-xs text-gray-500">{bill.tariff}</div>
-                          </div>
                         </td>
                         <td className="shadow-[ -4px_0_8px_-2px_rgba(0,0,0,0.1)] sticky right-0 z-10 whitespace-nowrap border-b bg-white px-4 py-2 text-sm shadow-md">
                           <div className="flex items-center gap-2">

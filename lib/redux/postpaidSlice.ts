@@ -512,6 +512,21 @@ export interface VendorSummaryReportResponse {
   data: VendorSummaryReportData
 }
 
+// Download AR Interfaces
+export interface DownloadARRequestParams {
+  billingPeriodId: number
+  areaOfficeId?: number
+  feederId?: number
+  distributionSubstationId?: number
+  isMd?: boolean
+}
+
+export interface DownloadARResponse {
+  isSuccess: boolean
+  message: string
+  data: string // CSV file content or download URL
+}
+
 // Adjustments Interfaces
 export interface Adjustment {
   id: number
@@ -715,6 +730,13 @@ interface PostpaidBillingState {
   vendorSummaryReportError: string | null
   vendorSummaryReportSuccess: boolean
 
+  // Download AR state
+  downloadARLoading: boolean
+  downloadARError: string | null
+  downloadARSuccess: boolean
+  downloadARMessage: string | null
+  downloadARData: string | null
+
   // Search/filter state
   filters: {
     period?: string
@@ -859,6 +881,11 @@ const initialState: PostpaidBillingState = {
   vendorSummaryReportLoading: false,
   vendorSummaryReportError: null,
   vendorSummaryReportSuccess: false,
+  downloadARLoading: false,
+  downloadARError: null,
+  downloadARSuccess: false,
+  downloadARMessage: null,
+  downloadARData: null,
   filters: {},
   billingJobsFilters: {},
 }
@@ -1458,6 +1485,37 @@ export const fetchVendorSummaryReport = createAsyncThunk(
   }
 )
 
+// Download AR Async Thunk
+export const downloadAR = createAsyncThunk(
+  "postpaidBilling/downloadAR",
+  async (params: DownloadARRequestParams, { rejectWithValue }) => {
+    try {
+      const { billingPeriodId, areaOfficeId, feederId, distributionSubstationId, isMd } = params
+
+      const response = await api.get<DownloadARResponse>(buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.DOWNLOAD_AR), {
+        params: {
+          BillingPeriodId: billingPeriodId,
+          ...(areaOfficeId && { AreaOfficeId: areaOfficeId }),
+          ...(feederId && { FeederId: feederId }),
+          ...(distributionSubstationId && { DistributionSubstationId: distributionSubstationId }),
+          ...(isMd !== undefined && { IsMd: isMd }),
+        },
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to download AR report")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to download AR report")
+      }
+      return rejectWithValue(error.message || "Network error during AR report download")
+    }
+  }
+)
+
 // Postpaid billing slice
 const postpaidSlice = createSlice({
   name: "postpaidBilling",
@@ -1671,6 +1729,15 @@ const postpaidSlice = createSlice({
       state.vendorSummaryReportError = null
       state.vendorSummaryReportSuccess = false
       state.vendorSummaryReport = null
+    },
+
+    // Clear download AR status
+    clearDownloadARStatus: (state) => {
+      state.downloadARLoading = false
+      state.downloadARError = null
+      state.downloadARSuccess = false
+      state.downloadARMessage = null
+      state.downloadARData = null
     },
 
     // Reset billing state
@@ -2401,6 +2468,28 @@ const postpaidSlice = createSlice({
         state.vendorSummaryReportSuccess = false
         state.vendorSummaryReport = null
       })
+      // Download AR cases
+      .addCase(downloadAR.pending, (state) => {
+        state.downloadARLoading = true
+        state.downloadARError = null
+        state.downloadARSuccess = false
+        state.downloadARMessage = null
+        state.downloadARData = null
+      })
+      .addCase(downloadAR.fulfilled, (state, action: PayloadAction<DownloadARResponse>) => {
+        state.downloadARLoading = false
+        state.downloadARSuccess = true
+        state.downloadARMessage = action.payload.message || "AR report downloaded successfully"
+        state.downloadARData = action.payload.data
+        state.downloadARError = null
+      })
+      .addCase(downloadAR.rejected, (state, action) => {
+        state.downloadARLoading = false
+        state.downloadARError = (action.payload as string) || "Failed to download AR report"
+        state.downloadARSuccess = false
+        state.downloadARMessage = null
+        state.downloadARData = null
+      })
   },
 })
 
@@ -2425,6 +2514,7 @@ export const {
   clearFinalizeSingleBillStatus,
   clearAdjustmentsStatus,
   clearVendorSummaryReportStatus,
+  clearDownloadARStatus,
   resetBillingState,
   setPagination,
   setBillingJobsPagination,
