@@ -1,1049 +1,974 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>KAD-ELEC Invoice - A5 Format</title>
-    <style>
-      @page {
-        size: A5;
-        margin: 0;
-      }
 
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      body {
-        margin: 0;
-        padding: 0;
-        width: 420pt;
-        height: 595pt;
-        background: white;
-        font-family: Arial, sans-serif;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-
-      .a5-container {
-        width: 420pt !important;
-        height: 595pt !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        box-shadow: none !important;
-        background: white !important;
-      }
-
-      .a5-content {
-        padding: 16pt !important;
-        font-size: 8pt !important;
-      }
-
-      .a5-small-text {
-        font-size: 7pt !important;
-      }
-
-      .a5-header {
-        height: 30pt !important;
-      }
-
-      .a5-section {
-        margin-bottom: 8pt !important;
-      }
-
-      .a5-grid {
-        display: grid !important;
-        grid-template-columns: 1fr 1fr !important;
-        gap: 4pt !important;
-      }
-
-      .a5-col {
-        padding: 4pt !important;
-      }
-
-      .print-hide {
-        display: none !important;
-      }
-
-      .print-bg-green {
-        background-color: white !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-
-      .print-bg-light-green {
-        background-color: white !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-
-      .print-white-text {
-        color: black !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-
-      .print-hide-label {
-        display: none !important;
-      }
-
-      .print-show-value {
-        display: block !important;
-        text-align: right !important;
-        font-weight: normal !important;
-        justify-content: flex-end !important;
-        margin-left: auto !important;
-        width: 100% !important;
-      }
-
-      .print-show-value > * {
-        text-align: right !important;
-        justify-content: flex-end !important;
-      }
-
-      .bg-white .print-show-value {
-        text-align: right !important;
-        justify-content: flex-end !important;
-        margin-left: auto !important;
-        width: 100% !important;
-      }
-
-      [style*="background-color"] {
-        background-color: white !important;
-      }
-
-      .print-no-border {
-        border: none !important;
-      }
-
-      .print-no-border-r {
-        border-right: none !important;
-      }
-
-      .print-no-border-t {
-        border-top: none !important;
-      }
-
-      .print-no-border-b {
-        border-bottom: none !important;
-      }
-
-      .print-no-border-l {
-        border-left: none !important;
-      }
-
-      /* Regular (non-print) styles for screen viewing */
-      @media not print {
-        body {
-          width: 100%;
-          height: 100vh;
-          padding: 20px;
-          background: #f5f5f5;
-        }
-
-        .a5-container {
-          width: 420pt !important;
-          height: 595pt !important;
-          margin: 0 auto !important;
-          padding: 0 !important;
-          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
-          background: white !important;
-          overflow: hidden;
-        }
-
-        .print-hide {
-          display: block !important;
-        }
-
-        .print-hide-label {
-          display: inline !important;
-        }
-
-        .print-show-value {
-          display: inline !important;
-          text-align: right !important;
-        }
-
-        .print-bg-green {
-          background-color: transparent !important;
-        }
-
-        .print-bg-light-green {
-          background-color: transparent !important;
-        }
-
-        .print-white-text {
-          color: black !important;
-        }
-
-        /* .print-no-border {
-          border: 1px solid #d1d5db !important;
-        } */
-
-        /* .print-no-border-r {
-          border-right: 1px solid #d1d5db !important;
-        } */
-
-        [style*="background-color"] {
-          background-color: inherit !important;
-        }
-      }
-
-      .header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 6pt;
-      }
-
-      .logo-section {
-        width: 24pt;
-        text-align: center;
-      }
-
-      .logo {
-        height: 10pt;
-      }
-
-      .barcode-section {
-        flex: 1;
-        display: flex;
-        justify-content: center;
-      }
-
-      .barcode {
-        height: 10pt;
-        width: 36pt;
-        border: 1px solid #ddd;
-        background: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 5pt;
-      }
-
-      .account-section {
-        width: 24pt;
-        text-align: center;
-      }
-
-      .company-name {
-        font-size: 7pt;
-        font-weight: bold;
-        height: 8px;
-        margin-bottom: 1pt;
-        color: #333;
-      }
-
-      .account-number {
-        background: #6ead2a;
-        color: white;
-        padding: 0.5pt 1pt;
-        font-weight: bold;
-        font-size: 5pt;
-        border-radius: 1pt;
-      }
-
-      .section-header {
-        display: flex;
-        width: 100%;
-        align-items: center;
-        justify-content: center;
-        background: transparent;
-        padding: 8pt;
-        font-size: 6pt;
-        font-weight: bold;
-        color: white;
-        height: 20px;
-      }
-
-      .billing-info {
-        display: flex;
-        width: 100%;
-        margin-top: 10px;
-        border: 1px solid #d1d5db;
-        background: white;
-        font-size: 7pt;
-      }
-
-      .billing-info-left {
-        width: 60%;
-        border-right: 1px solid #d1d5db;
-      }
-
-      .billing-info-right {
-        width: 40%;
-      }
-
-      .sub-header {
-        display: flex;
-        width: 100%;
-        align-items: center;
-        justify-content: space-between;
-        background: transparent;
-        padding: 1pt 2pt;
-        font-weight: bold;
-        height: 20px;
-        font-size: 6pt;
-      }
-
-      .sub-header p {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 50%;
-      }
-
-      .sub-header-right {
-        display: flex;
-        width: 100%;
-        align-items: center;
-        justify-content: space-between;
-        padding: 1pt 2pt;
-        font-weight: bold;
-        height: 20px;
-        font-size: 6pt;
-      }
-
-      .sub-header-right p {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 50%;
-      }
-
-      .info-content {
-        padding: 2pt;
-      }
-
-      .info-row {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 1pt;
-        padding-top: 12px;
-      }
-
-      .info-label {
-        font-weight: bold;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 100%;
-      }
-
-      .info-value {
-        font-weight: bold;
-      }
-
-      .white-bg {
-        background: white;
-        padding: 0 4pt;
-        text-align: right;
-        flex-grow: 1;
-        justify-content: flex-end;
-      }
-
-      .charges-grid {
-        display: flex;
-        width: 100%;
-        border: 1px solid #d1d5db;
-        background: white;
-        font-size: 7pt;
-      }
-
-      .charges-left {
-        width: 60%;
-        border-right: 1px solid #d1d5db;
-      }
-
-      .charges-right {
-        width: 40%;
-      }
-
-      .total-due-section {
-        display: flex;
-        width: 100%;
-        border: 1px solid #d1d5db;
-      }
-
-      .total-due-left {
-        width: 60%;
-        background: #6cad2b;
-        padding: 1.5pt;
-      }
-
-      .total-due-right {
-        width: 40%;
-      }
-
-      .total-due-amount {
-        display: flex;
-        width: 100%;
-        align-items: center;
-        justify-content: space-between;
-        background: #008001;
-        padding: 1.5pt 6pt;
-        font-weight: bold;
-        font-size: 6pt;
-      }
-
-      .total-amount {
-        font-size: 7pt;
-        font-weight: bold;
-        color: black;
-      }
-
-      .payment-notice {
-        display: flex;
-        margin-bottom: 30px;
-      }
-
-      .payment-notice-content {
-        width: 60%;
-        border: 1px solid #d1d5db;
-        padding: 2pt;
-        font-size: 5pt;
-        padding-top: 14px;
-      }
-
-      .payment-notice-title {
-        font-weight: bold;
-        margin-bottom: 1pt;
-        font-size: 5pt;
-      }
-
-      .payment-notice-text {
-        font-weight: bold;
-        line-height: 1.2;
-        white-space: normal;
-        overflow: visible;
-        word-wrap: break-word;
-        font-size: 5pt;
-      }
-
-      .summary-section {
-        display: flex;
-        width: 100%;
-        border: 1px solid #d1d5db;
-        background: white;
-        font-size: 5pt;
-        margin-bottom: 4pt;
-      }
-
-      .summary-left {
-        width: 66.67%;
-        border-right: 1px solid #d1d5db;
-      }
-
-      .summary-right {
-        width: 33.33%;
-      }
-
-      .summary-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 2pt;
-        padding: 2pt;
-      }
-
-      .final-amount-section {
-        display: flex;
-        width: 100%;
-        border: 1px solid #d1d5db;
-        margin-bottom: 4pt;
-      }
-
-      .final-amount-left {
-        width: 66.67%;
-        background: #6cad2b;
-        padding: 1pt;
-      }
-
-      .final-amount-right {
-        width: 33.33%;
-      }
-
-      .final-amount {
-        display: flex;
-        width: 100%;
-        align-items: center;
-        justify-content: space-between;
-        background: #008001;
-        padding: 1pt 6pt;
-        font-weight: bold;
-        font-size: 5pt;
-      }
-
-      .footer {
-        border-top: 1px solid #d1d5db;
-        padding-top: 2pt;
-        text-align: center;
-        font-size: 4pt;
-        color: #666;
-        margin-top: 3pt;
-      }
-
-      .footer-line {
-        margin-bottom: 1pt;
-      }
-
-      /* Utility classes */
-      .space-y-2 > * + * {
-        margin-top: 0.5rem;
-      }
-
-      .space-y-1 > * + * {
-        margin-top: 0.25rem;
-      }
-
-      .space-y-3 > * + * {
-        margin-top: 0.75rem;
-      }
-
-      /* Print-compatible spacing classes */
-      .space-y-2-pt > * + * {
-        margin-top: 2pt;
-      }
-
-      .space-y-1-pt > * + * {
-        margin-top: 1pt;
-      }
-
-      .space-y-3-pt > * + * {
-        margin-top: 3pt;
-      }
-
-      /* Download button styles */
-      .download-btn {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #6ead2a;
-        color: white;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 6px;
-        font-size: 14px;
-        font-weight: bold;
-        cursor: pointer;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        transition: all 0.3s ease;
-        z-index: 1000;
-      }
-
-      .download-btn:hover {
-        background: #5a9b24;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-      }
-
-      .download-btn:active {
-        transform: translateY(0);
-      }
-
-      .download-btn.print-hide {
-        display: block !important;
-      }
-
-      @media print {
-        .download-btn {
-          display: none !important;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <!-- Download PDF Button -->
-    <button class="download-btn" onclick="downloadPDF()">📄 Download PDF</button>
-
-    <div class="a5-container">
-      <div class="a5-content">
-        <!-- Header - A5 Optimized -->
-        <div class="header">
-          <div class="logo-section">
-            <img src="/kad.svg" alt="KAD-ELEC Logo" class="logo print-hide" />
-          </div>
-
-          <div class="barcode-section">
-            <div class="barcode" id="barcode">
-              <!-- Barcode will be generated here -->
-            </div>
-          </div>
-
-          <div class="account-section">
-            <h1 class="company-name print-hide"></h1>
-            <div class="account-number" id="accountNumber">#1234567890</div>
-          </div>
-        </div>
-
-        <div class="a5-section">
-          <div class="section-header print-bg-green print-white-text">
-            <p class="print-hide"></p>
-          </div>
-
-          <div class="billing-info print-no-border">
-            <div class="billing-info-left print-no-border-r">
-              <div class="sub-header print-bg-light-green print-white-text">
-                <p class="print-hide-label"></p>
-                <div class="white-bg">
-                  <p class="print-show-value" id="areaOffice">Area Office</p>
-                </div>
-              </div>
-
-              <div class="info-content">
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="billId">INV-2024-001</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="billMonth">November 2024</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="customerAccount">1234567890</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="accountName">John Doe</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="address">123 Main Street, Kaduna</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="phoneNumber">08012345678</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="city">Kaduna</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="billing-info-right">
-              <div class="sub-header-right print-white-text">
-                <p class="print-hide-label"></p>
-                <div class="white-bg">
-                  <p class="print-show-value" id="serviceCenter">Service Center</p>
-                </div>
-              </div>
-
-              <div class="info-content">
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="state">Kaduna State</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="feeder11kv">FEEDER-A</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="feeder33kv">SUBSTATION-1</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="dtName">DT-001</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="salesRep">Ahmed Mohammed</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="meter">MTR123456</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value">1.0</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="a5-section">
-          <div class="section-header print-bg-green print-white-text">
-            <p class="print-hide"></p>
-          </div>
-
-          <div class="charges-grid print-no-border">
-            <div class="charges-left print-no-border-r">
-              <div class="info-content">
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="lastPaymentDate">Oct 15, 2024</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="lastPaymentAmount">₦5,000.00</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="adc">150</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="presentReading">1,250</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="previousReading">1,000</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="consumption">250kwh</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="tariffRate">₦25.50</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="tariffClass">R2</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="charges-right">
-              <div class="info-content">
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="statusCode">Active</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="openingBalance">₦2,000.00</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="adjustment">₦0.00</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="totalPayment">₦6,375.00</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="netArrears">₦0.00</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="energyCharged">₦6,375.00</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="fixedCharge">₦500.00</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="vat">₦956.25</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="total-due-section print-no-border">
-          <div class="total-due-left print-bg-light-green"></div>
-          <div class="total-due-right">
-            <div class="total-due-amount print-white-text" style="background-color: #008001">
-              <p class="print-hide"></p>
-              <div class="white-bg" style="padding: 0.5pt; margin-top: -2pt">
-                <p class="print-show-value total-amount" id="totalDue">₦7,331.25</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="payment-notice">
-          <div class="payment-notice-content print-no-border a5-small-text">
-            <p class="payment-notice-title">IMPORTANT PAYMENT INFORMATION</p>
-            <p class="payment-notice-text">
-              PAY ON OR BEFORE DUE DATE 11/15/2025 TO AVOID DISCONNECTION | PAY AT ANY OF OUR OFFICES OR TO OUR SALES
-              REPS USING OUR POSes OR ALTERNATIVE PAYMENT CHANNELS |
-              <b>ALWAYS DEMAND FOR RECEIPT AFTER PAYMENT IS MADE</b>
-            </p>
-          </div>
-          <div style="width: 40%"></div>
-        </div>
-
-        <div class="summary-section print-no-border a5-small-text">
-          <div class="summary-left print-no-border-r">
-            <div class="sub-header print-bg-light-green print-white-text">
-              <p class="print-hide-label"></p>
-              <div class="white-bg">
-                <p class="print-show-value" id="summaryAreaOffice">TUDUN WADA</p>
-              </div>
-            </div>
-
-            <div class="summary-grid">
-              <div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="summaryBillId" style="font-size: 5pt"
-                    >INV-2024-001</span
-                  >
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="summaryBillMonth" style="font-size: 5pt"
-                    >November 2024</span
-                  >
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="summaryCustomerAccount" style="font-size: 5pt"
-                    >1234567890</span
-                  >
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="summaryAccountName" style="font-size: 5pt"
-                    >John Doe</span
-                  >
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="summaryAddress" style="font-size: 5pt"
-                    >123 Main Street</span
-                  >
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="summaryConsumption" style="font-size: 5pt">250kwh</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="summaryOpeningBalance" style="font-size: 5pt"
-                    >₦2,000.00</span
-                  >
-                </div>
-              </div>
-
-              <div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="summaryAdjustment" style="font-size: 5pt">₦0.00</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="summaryTotalPayments" style="font-size: 5pt"
-                    >₦6,375.00</span
-                  >
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="summaryNetArrears" style="font-size: 5pt">₦0.00</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="summaryMeter" style="font-size: 5pt">MTR123456</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="summaryTariff" style="font-size: 5pt">R2</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="summaryRate" style="font-size: 5pt">₦25.50</span>
-                </div>
-                <div class="info-row">
-                  <span class="print-hide-label info-label"></span>
-                  <span class="print-show-value info-value" id="summaryAdc" style="font-size: 5pt">150</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="summary-right">
-            <div class="sub-header-right print-white-text" style="background-color: #008001">
-              <p class="print-hide-label"></p>
-              <div class="white-bg">
-                <p class="print-show-value" id="summaryServiceCenter">TUDUN WADA</p>
-              </div>
-            </div>
-
-            <div class="info-content">
-              <div class="info-row">
-                <span class="print-hide-label info-label"></span>
-                <span class="print-show-value info-value" id="summaryPresentReading" style="font-size: 5pt">1,250</span>
-              </div>
-              <div class="info-row">
-                <span class="print-hide-label info-label"></span>
-                <span class="print-show-value info-value" id="summaryPreviousReading" style="font-size: 5pt"
-                  >1,000</span
-                >
-              </div>
-              <div class="info-row">
-                <span class="print-hide-label info-label"></span>
-                <span class="print-show-value info-value" id="summaryFixedCharge" style="font-size: 5pt">₦500.00</span>
-              </div>
-              <div class="info-row">
-                <span class="print-hide-label info-label"></span>
-                <span class="print-show-value info-value" id="summaryCurrentBill" style="font-size: 5pt"
-                  >₦6,375.00</span
-                >
-              </div>
-              <div class="info-row">
-                <span class="print-hide-label info-label"></span>
-                <span class="print-show-value info-value" id="summaryVat" style="font-size: 5pt">₦956.25</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="final-amount-section print-no-border">
-          <div class="final-amount-left print-bg-light-green"></div>
-          <div class="final-amount-right">
-            <div class="final-amount print-white-text" style="background-color: #008001; margin: -3pt">
-              <p class="print-hide"></p>
-              <div class="white-bg">
-                <p class="print-show-value total-amount" id="finalAmount">₦7,331.25</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- <div class="footer print-no-border-t">
-          <div class="footer-line">
-            KADUNA ELECTRICITY DISTRIBUTION COMPANY | Customer Service: 0700 225 5332 | www.kadunaelectric.com
-          </div>
-          <div class="footer-line">
-            This is a computer generated invoice | Invoice Date: <span id="invoiceDate">Nov 1, 2024</span>
-          </div>
-        </div> -->
-      </div>
-    </div>
-
-    <script>
-      // Generate simple barcode
-      function generateBarcode() {
-        const accountNumber = document.getElementById("accountNumber").textContent.replace("#", "")
-        const barcodeElement = document.getElementById("barcode")
-
-        // Create a simple barcode pattern
-        let hash = 0
-        for (let i = 0; i < accountNumber.length; i++) {
-          hash = (hash * 31 + accountNumber.charCodeAt(i)) >>> 0
-        }
-
-        const barWidth = 1
-        const totalBars = 20
-        let barcodeHTML = ""
-
-        for (let i = 0; i < totalBars; i++) {
-          const bit = (hash >> i % 32) & 1
-          if (bit === 1) {
-            barcodeHTML += `<span style="display: inline-block; width: ${barWidth}px; height: 15px; background: black; margin: 0 0.5px;"></span>`
-          } else {
-            barcodeHTML += `<span style="display: inline-block; width: ${barWidth}px; height: 15px; background: white; margin: 0 0.5px;"></span>`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Print Bills - KAD-ELEC</title>
+        <style>
+          /* Exact same print styles as the modal */
+          @media print {
+            @page {
+              size: A5;
+              margin: 0;
+            }
+
+            body {
+              margin: 0;
+              padding: 0;
+              width: 420pt;
+              height: 595pt;
+              background: white;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+
+            .print-hide {
+              display: none !important;
+            }
+
+            .a5-container {
+              width: 420pt !important;
+              height: 595pt !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              box-shadow: none !important;
+              background: white !important;
+            }
+
+            .a5-content {
+              padding: 10pt !important;
+              font-size: 8pt !important;
+            }
+
+            .a5-small-text {
+              font-size: 7pt !important;
+            }
+
+            .a5-header {
+              height: 30pt !important;
+            }
+
+            .a5-section {
+              margin-bottom: 8pt !important;
+            }
+
+            .a5-grid {
+              display: grid !important;
+              grid-template-columns: 1fr 1fr !important;
+              gap: 4pt !important;
+            }
+
+            .a5-col {
+              padding: 4pt !important;
+            }
+
+            .force-black-white {
+              color: black !important;
+              background-color: white !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+
+            .print-bg-green {
+              background-color: white !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+
+            .print-bg-light-green {
+              background-color: white !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+
+            .print-white-text {
+              color: black !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+
+            .print-hide-label {
+              display: none !important;
+            }
+
+            .print-show-value {
+              display: block !important;
+              text-align: right !important;
+              font-weight: normal !important;
+              justify-content: flex-end !important;
+              margin-left: auto !important;
+              width: 100% !important;
+            }
+
+            .print-show-value > * {
+              text-align: right !important;
+              justify-content: flex-end !important;
+            }
+
+            .bg-white .print-show-value {
+              text-align: right !important;
+              justify-content: flex-end !important;
+              margin-left: auto !important;
+              width: 100% !important;
+            }
+
+            [style*="background-color"] {
+              background-color: white !important;
+            }
+
+            .print-no-border {
+              border: none !important;
+            }
+
+            .print-no-border-r {
+              border-right: none !important;
+            }
+
+            .print-no-border-t {
+              border-top: none !important;
+            }
+
+            .print-no-border-b {
+              border-bottom: none !important;
+            }
+
+            .print-no-border-l {
+              border-left: none !important;
+            }
           }
-        }
 
-        barcodeHTML += `<div style="text-align: center; font-size: 4px; margin-top: 1px;">${accountNumber}</div>`
-        barcodeElement.innerHTML = barcodeHTML
-      }
+          /* Screen styles for preview */
+          body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+          }
 
-      // Format currency
-      function formatCurrency(amount) {
-        return new Intl.NumberFormat("en-NG", {
-          style: "currency",
-          currency: "NGN",
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        }).format(amount)
-      }
+          .a5-container {
+            width: 420pt;
+            height: 595pt;
+            margin: 0 auto 20px auto;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            page-break-inside: avoid;
+          }
 
-      // Format date
-      function formatDate(dateString) {
-        return new Date(dateString).toLocaleDateString("en-US", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        })
-      }
+          .a5-content {
+            padding: 10pt;
+            font-size: 8pt;
+          }
 
-      // Update invoice with data (you can modify this function to accept real data)
-      function updateInvoice(data) {
-        // Update all fields with provided data
-        if (data.accountNumber) {
-          document.getElementById("accountNumber").textContent = "#" + data.accountNumber
-          document.getElementById("customerAccount").textContent = data.accountNumber
-          document.getElementById("summaryCustomerAccount").textContent = data.accountNumber
-        }
+          .a5-small-text {
+            font-size: 7pt;
+          }
 
-        if (data.accountName) {
-          document.getElementById("accountName").textContent = data.accountName
-          document.getElementById("summaryAccountName").textContent = data.accountName
-        }
+          .a5-header {
+            height: 30pt;
+          }
 
-        if (data.totalDue) {
-          const formattedAmount = formatCurrency(data.totalDue)
-          document.getElementById("totalDue").textContent = formattedAmount
-          document.getElementById("finalAmount").textContent = formattedAmount
-        }
+          .a5-section {
+            margin-bottom: 8pt;
+          }
 
-        // Update other fields as needed
-        // Add more field updates based on your data structure
+          .flex {
+            display: flex;
+          }
 
-        // Regenerate barcode with new account number
-        generateBarcode()
-      }
+          .items-center {
+            align-items: center;
+          }
 
-      // Initialize barcode on page load
-      document.addEventListener("DOMContentLoaded", function () {
-        generateBarcode()
+          .justify-between {
+            justify-content: space-between;
+          }
 
-        // Set current date
-        const today = new Date()
-        document.getElementById("invoiceDate").textContent = formatDate(today.toISOString())
-      })
+          .justify-center {
+            justify-content: center;
+          }
 
-      // Download PDF function
-      function downloadPDF() {
-        // Get account number for filename
-        const accountNumber = document.getElementById("accountNumber").textContent.replace("#", "").trim()
-        const billId = document.getElementById("billId").textContent.trim()
-        const filename = `Invoice_${billId}_${accountNumber}.pdf`
+          .w-full {
+            width: 100%;
+          }
 
-        // Show loading state
-        const button = document.querySelector(".download-btn")
-        const originalText = button.innerHTML
-        button.innerHTML = "⏳ Generating PDF..."
-        button.disabled = true
+          .flex-1 {
+            flex: 1;
+          }
 
-        // Use window.print() to trigger print dialog
-        // The user can then choose "Save as PDF"
-        setTimeout(() => {
-          window.print()
+          .w-24 {
+            width: 6rem;
+          }
 
-          // Reset button after print dialog closes
-          setTimeout(() => {
-            button.innerHTML = originalText
-            button.disabled = false
-          }, 1000)
-        }, 500)
-      }
+          .w-20 {
+            width: 5rem;
+          }
 
-      // Add keyboard shortcut for PDF download (Ctrl+P or Cmd+P)
-      document.addEventListener("keydown", function (e) {
-        if ((e.ctrlKey || e.metaKey) && e.key === "p") {
-          e.preventDefault()
-          downloadPDF()
-        }
-      })
+          .w-40 {
+            width: 10rem;
+          }
 
-      // Example usage:
-      // updateInvoice({
-      //     accountNumber: '1234567890',
-      //     accountName: 'John Doe',
-      //     totalDue: 7331.25
-      // });
-    </script>
-  </body>
-</html>
+          .w-36 {
+            width: 9rem;
+          }
+
+          .w-3\/5 {
+            width: 60%;
+          }
+
+          .w-2\/5 {
+            width: 40%;
+          }
+
+          .w-2\/3 {
+            width: 66.666%;
+          }
+
+          .w-1\/3 {
+            width: 33.333%;
+          }
+
+          .w-60\% {
+            width: 60%;
+          }
+
+          .w-40\% {
+            width: 40%;
+          }
+
+          .h-10 {
+            height: 2.5rem;
+          }
+
+          .h-12 {
+            height: 3rem;
+          }
+
+          .bg-white {
+            background-color: white;
+          }
+
+          .bg-\[\#6CAD2B\] {
+            background-color: #6CAD2B;
+          }
+
+          .bg-\[\#004B23\] {
+            background-color: #004B23;
+          }
+
+          .bg-\[\#008001\] {
+            background-color: #008001;
+          }
+
+          .bg-\[\#E1E1E1\] {
+            background-color: #E1E1E1;
+          }
+
+          .bg-gray-200 {
+            background-color: #e5e7eb;
+          }
+
+          .text-white {
+            color: white;
+          }
+
+          .text-black {
+            color: black;
+          }
+
+          .text-gray-900 {
+            color: #111827;
+          }
+
+          .text-gray-600 {
+            color: #4b5563;
+          }
+
+          .text-xs {
+            font-size: 0.75rem;
+          }
+
+          .text-sm {
+            font-size: 0.875rem;
+          }
+
+          .text-\[7pt\] {
+            font-size: 7pt;
+          }
+
+          .text-\[8pt\] {
+            font-size: 8pt;
+          }
+
+          .text-\[9pt\] {
+            font-size: 9pt;
+          }
+
+          .text-\[5pt\] {
+            font-size: 5pt;
+          }
+
+          .text-\[6pt\] {
+            font-size: 6pt;
+          }
+
+          .font-bold {
+            font-weight: bold;
+          }
+
+          .font-semibold {
+            font-weight: 600;
+          }
+
+          .font-mono {
+            font-family: monospace;
+          }
+
+          .border {
+            border: 1px solid #d1d5db;
+          }
+
+          .border-gray-300 {
+            border-color: #d1d5db;
+          }
+
+          .border-r {
+            border-right: 1px solid #d1d5db;
+          }
+
+          .border-t {
+            border-top: 1px solid #d1d5db;
+          }
+
+          .p-1 {
+            padding: 0.25rem;
+          }
+
+          .p-1\.5 {
+            padding: 0.375rem;
+          }
+
+          .p-2 {
+            padding: 0.5rem;
+          }
+
+          .p-4 {
+            padding: 1rem;
+          }
+
+          .p-8 {
+            padding: 2rem;
+          }
+
+          .py-0\.5 {
+            padding-top: 0.125rem;
+            padding-bottom: 0.125rem;
+          }
+
+          .py-1 {
+            padding-top: 0.25rem;
+            padding-bottom: 0.25rem;
+          }
+
+          .py-1\.5 {
+            padding-top: 0.375rem;
+            padding-bottom: 0.375rem;
+          }
+
+          .py-2 {
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+          }
+
+          .pt-1 {
+            padding-top: 0.25rem;
+          }
+
+          .pt-4 {
+            padding-top: 1rem;
+          }
+
+          .px-2 {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+          }
+
+          .px-4 {
+            padding-left: 1rem;
+            padding-right: 1rem;
+          }
+
+          .mb-1 {
+            margin-bottom: 0.25rem;
+          }
+
+          .mb-2 {
+            margin-bottom: 0.5rem;
+          }
+
+          .mb-4 {
+            margin-bottom: 1rem;
+          }
+
+          .mb-6 {
+            margin-bottom: 1.5rem;
+          }
+
+          .mt-1 {
+            margin-top: 0.25rem;
+          }
+
+          .mt-2 {
+            margin-top: 0.5rem;
+          }
+
+          .mt-3 {
+            margin-top: 0.75rem;
+          }
+
+          .mt-4 {
+            margin-top: 1rem;
+          }
+
+          .space-y-0\.5 > * + * {
+            margin-top: 0.125rem;
+          }
+
+          .space-y-2 > * + * {
+            margin-top: 0.5rem;
+          }
+
+          .gap-2 {
+            gap: 0.5rem;
+          }
+
+          .gap-4 {
+            gap: 1rem;
+          }
+
+          .text-center {
+            text-align: center;
+          }
+
+          .text-right {
+            text-align: right;
+          }
+
+          .hidden {
+            display: none;
+          }
+
+          .print\:hidden {
+            display: none;
+          }
+
+          .print\:mb-2 {
+            margin-bottom: 0.5rem;
+          }
+
+          .print\:w-20 {
+            width: 5rem;
+          }
+
+          .print\:w-36 {
+            width: 9rem;
+          }
+
+          .print\:h-10 {
+            height: 2.5rem;
+          }
+
+          .print\:py-0\.5 {
+            padding-top: 0.125rem;
+            padding-bottom: 0.125rem;
+          }
+
+          .print\:text-\[7pt\] {
+            font-size: 7pt;
+          }
+
+          .print\:text-black {
+            color: black;
+          }
+
+          .print\:bg-white {
+            background-color: white;
+          }
+
+          .print\:flex-grow {
+            flex-grow: 1;
+          }
+
+          .print\:justify-end {
+            justify-content: flex-end;
+          }
+
+          .print\:-mt-5 {
+            margin-top: -1.25rem;
+          }
+
+          .print\:overflow-visible {
+            overflow: visible;
+          }
+
+          .print\:rounded-none {
+            border-radius: 0;
+          }
+
+          .print\:shadow-none {
+            box-shadow: none;
+          }
+
+          .print\:w-\[420px\] {
+            width: 420px;
+          }
+
+          .print\:h-\[595px\] {
+            height: 595px;
+          }
+
+          .print\:max-w-none {
+            max-width: none;
+          }
+
+          .print\:bg-white {
+            background-color: white;
+          }
+
+          .print\:backdrop-blur-0 {
+            backdrop-filter: blur(0);
+          }
+
+          .grid {
+            display: grid;
+          }
+
+          .grid-cols-2 {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+
+          .pl-2 {
+            padding-left: 0.5rem;
+          }
+
+          .-m-3 {
+            margin: -0.75rem;
+          }
+        </style>
+      </head>
+      <body>
+        
+        <div class="a5-container">
+          <div class="relative flex-1 overflow-y-auto print:overflow-visible">
+            <div class="a5-content relative z-10 p-8 print:p-2">
+              <div class="w-full print:p-0">
+                <!-- Header - A5 Optimized -->
+                <div class="a5-header  flex items-center justify-between " style="margin-top: -2rem;">
+                  <div class="w-24 text-center print:w-20">
+                    <img src="/kad.svg" alt="KAD-ELEC Logo" class="h-10 print:hidden" />
+                  </div>
+
+                  <div class="flex flex-1 justify-center">
+                    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANwAAAA8CAYAAAANHtQDAAAIEElEQVR4AeyZR4gUTxTG31tzzhnMYsSLCGsOeFgwHBQDoqKCYkBEVPRgziIiehA9iYLxYEBUENOCETGLKIaDWTFhzvvf7zU1u9P/HZ3p2R5nd7/F6qp69ep196/n41WVGTn8IwESSBmBDOEfCZBAyghQcClDzRuRgAgFx18BCaSQQIaqiqpGbqmq1leNrp2DqmeP1Y9lV/XmqUbXzj9Wrer5+8dVPbuqV/vHXV81elw1vr6q56fq1fHG+5ufqhdP1audf6xatWA/Vc+u6tXxzleN9lctuK/q2VW92sVXjfTNpBrdN2PuRTXarur1VaPrXNc//lP1/P1Oqp5d1av9466vGj2uGl9f1fNT9ep44/3NjxnOEWJNAikgQMGlADJvQQKOAAXnSLAmgRQQoOBSAJm3IAFHgIIzEryQQGoIUHCp4cy7kIARoOAMAy8kkBoCFFxqOPMuJGAEKDjDwAsJBCWQ2DwKLjFe9CaBpAhQcEnh42QSSIwABZcYL3qTQFIEKLik8HEyCSRGgIJLjFfx9ubbhU6AggsdMW9AAnkEKLg8FmyRQOgEKLjQEfMGJJBHgILLY8EWCYROoNgKLnRyvAEJBCBAwQWAxikkEJQABReUHOeRQAACFFwAaJxCAkEJUHBByXFesSUQ5otRcGHSZWwS8BGg4HxA2CWBMAlQcGHSZWwS8BGg4HxA2CWBMAlQcGHS/fex+QRpRoCCS7MPwscp3gQouOL9ffl2aUaAgkuzD8LHKd4EKLji/X35dmlGoAgJLs3I8XFIIAABCi4ANE4hgaAEKLig5DiPBAIQoOACQOMUEghKgIILSo7zihCB9HlUCi59vgWfpAQQoOBKwEfmK6YPAQoufb4Fn6QEEKDgSsBH5iumDwEKLn2+RXxPQq8iTYCCK9Kfjw9f1Ahk5OTkCIp7cLQLKv7xWP1Y9oJiwub8Y9XwQfGPw5a/+Mdd3/kk2nfzXB3vfPj9+PHDmGIu+ii/fv2K2GBH+f37t9kwnr/A7vrwQ3F9V8OG4uI6u7+GDwrsiIs2CvooaKOgjYK2K4n4Y27+4mI4m+v7azceq3b+/nFnd7V/3PX94/H2nZ+r4433Nz9mOEeokOoHDx5IrVq15Nu3bxbxy5cvMnjwYKlevbpkZWXJ27dvzb5v3z5p06aN1K9fX7Zv3242XBYtWiQNGjSQ1q1by/Xr12GSAwcOSL169SJl//79AqFNmzZNWrVqJV26dJGjR4+ar7ssWbJExowZ47oyd+5c8+3Zs6dcuXLF7E+fPo3ERHz4YGDz5s3Svn176dChg6xfvx4mlkIiQMEVEkiEyc7Oth//hw8f0LWyYcMGadSokbx8+VKaNWsmGzdulPfv38ukSZPk0KFDcvLkSZk8ebJ8/PhRzp49K4cPH5a7d+/KvHnzZMaMGRbjwoULMn/+fIGYUQYMGCDHjx+X+/fvy+3btwX3cL6YcObMGVm4cCGaViAwCPzOnTsCka5cudLsEHSvXr0icRcvXixv3ryRBQsWyOnTp+X8+fOyYsUKefbsmfnzkjyBfyq45B8/vSJcvHhR8MPO/1QQ4ahRo6R8+fIybtw4OXbsmNy6dUs6deokLVu2lHbt2gmyzqVLlwRCGTZsmFStWlVGjhwpJ06ckO/fv8vly5ct5K5du+Tdu3dSunRpadKkiaxbt07KlCljGREx4YsMOn78eFmzZo3NcZefP3/Ko0eP5MWLFyZ42K9du2bZePfu3XLv3j0pV66cZU68Q40aNaRSpUpSuXJlEyT8WZInQMElzzASYdasWdK1a9dIHw1kISwx0UaNZdzjx49tKQcbSp06dSwDPnz4UGrXrg2TlCpVSurWrSuvXr2yDPPkyRP5+vWrZGZmWubBkhMF4yNGjJBVq1ZJ2bJlLXNiWdq2bVuLg0vTpk0FS9p+/fpZhoPwYcezvH79WjIyMmTq1Kmydu1awbPgHSDQ6dOn29IW94Q/S/IEKLjkGf4xQrVq1QT7ODh9/vzZhIYM9unTJ5isoI0fOuzOFwNo16xZU5CJsAyEKCDqrVu3YtiyUrdu3SwbzpkzRw4ePCinTp2S58+fy969e20e9nabNm0yoUL8EPuECRNsCYv92Z49e2Ts2LG2LMVyF4GxvMW+EzWyHcQPO0vyBCi45Bn+MQIEgX0ZnLBn69y5sx1GZGdn2wEKloBot8k9QMHYkSNHBNkF+zns+VTVsgzEghMzLD2xHMV+rE+fPgIxTZkyBeHtoAOiady4sWWqKlWq2JIR2Q1LWjghm1WoUAFNO1TZuXOntbHPQyZDFsW+rnfv3rJlyxZbZpoDL4VCgIIrFIyxg8yePdv2YC1atLDTRhyGNGzY0PZY+FF37NhRli5dKjitHDhwoGApiBPC0aNHC04Lsa9atmyZDBo0yPZ8WEIOHz5cli9fLshWffv2FVW1AmENGTJEUHr06CHNmze3vSJiIet1795dsnJPSnHIgr0ZsiXauB8OR3Aws2PHDnvemTNnWkxVtcOd2G/4b0aK6l0puBC+HDIRhILQEBcOJW7cuCHnzp0THEbAjiN7ZCtkrokTJ8Jk+7bVq1fbsT0OMTJz92sYGDp0qNy8eVOuXr1qp5jIXNu2bRPcJ3/B8hP+KP379xf4oA1x4b8esLxEDAgWdogdz4RsiudAlsWBS/6YaCMW/FmSJ0DBJc8wrggVK1b8nx9OG3HQ4R+Ar6pGmVVVILQoY4KdguIiBPaZqFnCJ0DBhc+YdyCBCAEKLoKCDRIIn8B/AAAA//9w0zO3AAAABklEQVQDANOq2WPSLesbAAAAAElFTkSuQmCC" alt="Barcode for 1000524852" class="h-12 w-40 print:h-10 print:w-36" />
+                  </div>
+
+                  <div class="w-24 text-center print:w-20">
+                    <h1 class=" text-[9pt] font-bold text-gray-900 print:hidden">KAD-ELEC.</h1>
+                    <div style="padding-top: 18px;" class="bg-[#6EAD2A]  p-1 text-xs font-semibold text-white print:bg-white print:py-0.5 print:text-[7pt] print:text-black">
+                      #1000524852
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Billing Information -->
+                <div class="a5-section" style="margin-top: -4px;">
+                  <div class="print:bg-white print:text-black flex w-full items-center justify-center bg-[#004B23] p-1.5 text-xs font-semibold text-white">
+                    <p></p>
+                  </div>
+
+                  <div class="print-no-border  flex w-full border border-gray-300 bg-white text-[8pt] print:text-[7pt]">
+                    <div class="print-no-border-r w-3/5 space-y-0.5 border-r border-gray-300">
+                      <div class="print-bg-light-green print-white-text flex w-full items-center justify-between  px-2  font-semibold">
+                        <p class="print-hide-label"></p>
+                        <div style="display: flex; align-items: center; justify-content: center; background-color: white; margin-top: 8px; padding-right: 34px; text-align: center; flex-grow: 1; justify-content: flex-end;" class="print:flex-grow print:justify-end">
+                          <p style="color: black;" class="print-show-value text-black">
+                            BARNAWA
+                          </p>
+                        </div>
+                      </div>
+
+                      <div class="space-y-1 px-2" style="display: flex; flex-direction: column; gap: 9px; margin-top: 6px;">
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Bill #:</span>
+                          <span class="print-show-value px-2 font-semibold">23</span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Bill Month:</span>
+                          <span class="print-show-value px-2 font-semibold">January, 2026</span>
+                        </div>
+                        <div class="flex justify-between" style="margin-top: 4px;">
+                          <span class="print-hide-label font-semibold">Customer Account:</span>
+                          <span class="print-show-value px-2 font-semibold">1000524852</span>
+                        </div>
+                        <div class="flex justify-between" style="margin-top: 4px;">
+                          <span class="print-hide-label font-semibold">Account Name:</span>
+                          <span class="print-show-value px-2 font-semibold">Test customer</span>
+                        </div>
+                        <div class="flex justify-between" style="margin-top: 4px;">
+                          <span class="print-hide-label font-semibold">Address:</span>
+                          <span class="print-show-value px-2 font-semibold">test address</span>
+                        </div>
+                        <div class="flex justify-between" style="margin-top: 4px;">
+                          <span class="print-hide-label font-semibold">Phone Number:</span>
+                          <span class="print-show-value px-2 font-semibold">08129859405</span>
+                        </div>
+                        <div class=" flex justify-between">
+                          <span class="print-hide-label font-semibold">City:</span>
+                          <span class="print-show-value px-2 font-semibold">Kawo</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="w-2/5 space-y-0.5">
+                      <div class="print-white-text flex w-full items-center justify-between bg-[#008001] px-2 py-1 font-semibold print:bg-white print:text-black">
+                        <p class="print:invisible"></p>
+                        <div class="flex items-center justify-center bg-white  print:flex-grow print:justify-end" style="padding-right: 24px; margin-top: 4px;">
+                          <p class="print-show-value text-[7pt] text-black">testing</p>
+                        </div>
+                      </div>
+
+                      <div class="pl-2" style="display: flex; flex-direction: column; gap: 9px; ">
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">State:</span>
+                          <span class="print-show-value px-2 font-semibold">Kaduna</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">11KV Feeder:</span>
+                          <span class="print-show-value px-2 font-semibold">11KV KACHIA</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">33KV Feeder:</span>
+                          <span class="print-show-value px-2 font-semibold">33KV KACHIA</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">DT Name:</span>
+                          <span class="print-show-value px-2 font-semibold">1KV KACHIA</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Sales Rep:</span>
+                          <span class="print-show-value px-2 font-semibold">Shinga</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Meter:</span>
+                          <span class="print-show-value px-2 font-semibold">test meter</span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Multiplier:</span>
+                          <span class="print-show-value px-2 font-semibold">1.0</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Billing Charges -->
+                <div class="a5-section " style="margin-top: -10px;">
+                  <div class="print-bg-green print-white-text flex w-full items-center justify-center bg-[#004B23] p-1.5 text-xs font-semibold text-white print:bg-white print:text-black">
+                    <p class="print:invisible"></p>
+                  </div>
+
+                  <div class="print-no-border flex w-full border border-gray-300 bg-white text-[8pt] print:text-[7pt]">
+                    <div class="print-no-border-r w-3/5 space-y-0.5 border-r border-gray-300">
+                      <div class="print-bg-light-green print-white-text flex w-full items-center justify-between bg-[#6CAD2B] px-2 py-1 font-semibold">
+                        <p class="print-hide-label">CHARGES</p>
+                        <p class="print-hide-label">TOTAL</p>
+                      </div>
+
+                      <div class="space-y-1 px-2" style="display: flex; flex-direction: column; gap: 9px; margin-top: 10px;">
+                        <div class="mt-2 flex justify-between">
+                          <span class="print-hide-label font-semibold">Last Payment Date:</span>
+                          <span class="print-show-value px-2 font-semibold">
+                            Jan 21, 2026
+                          </span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Last Payment Amount:</span>
+                          <span class="print-show-value px-2 font-semibold">₦0.00</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">ADC:</span>
+                          <span class="print-show-value px-2 font-semibold">test adc</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Present Reading:</span>
+                          <span class="print-show-value px-2 font-semibold">0.00</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Previous Reading:</span>
+                          <span class="print-show-value px-2 font-semibold">0.00</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Consumption:</span>
+                          <span class="print-show-value px-2 font-semibold">177kwh</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Tariff Rate:</span>
+                          <span class="print-show-value px-2 font-semibold">209.5</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Tariff Class:</span>
+                          <span class="print-show-value px-2 font-semibold">A2</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="w-2/5 space-y-0.5">
+                      <div class="print-white-text flex w-full items-center justify-between bg-[#008001] px-2 py-1 font-semibold print:bg-white print:text-black">
+                        <p class="print-hide-label">CHARGES</p>
+                        <p class="print-hide-label">TOTAL</p>
+                      </div>
+
+                      <div class="pl-2" style="display: flex; flex-direction: column; gap: 9px; margin-top: 8px;">
+                        <div class="mt-2 flex justify-between">
+                          <span class="print-hide-label font-semibold">Status Code:</span>
+                          <span class="print-show-value px-2 font-semibold">Active</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Opening Balance:</span>
+                          <span class="print-show-value px-2 font-semibold">₦0.00</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Adjustment:</span>
+                          <span class="print-show-value px-2 font-semibold">₦0.00</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Total Payment Amt:</span>
+                          <span class="print-show-value px-2 font-semibold">₦37,081.50</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Net Arrears:</span>
+                          <span class="print-show-value px-2 font-semibold">₦0.00</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Energy Charged:</span>
+                          <span class="print-show-value px-2 font-semibold">₦37,081.50</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">Fixed Charge:</span>
+                          <span class="print-show-value px-2 font-semibold">₦0.00</span>
+                        </div>
+                        <div class="mt-1 flex justify-between">
+                          <span class="print-hide-label font-semibold">VAT:</span>
+                          <span class="print-show-value px-2 font-semibold">₦0.00</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Total Due -->
+                <div class="print-no-border flex w-full border border-gray-300" >
+                  <div class="print-bg-light-green w-3/5 bg-[#6CAD2B]">
+                    <div class="px-2 ">&nbsp;</div>
+                  </div>
+
+                  <div class="w-2/5 ">
+                    <div class="print-white-text flex w-full items-center justify-between  px-2  font-semibold print:bg-white print:text-black" style="margin-top: 4px;">
+                      <p class="text-[8pt] print:invisible"></p>
+                      <div class="flex items-center justify-center bg-white px-4 print:-mt-5 print:flex-grow print:justify-end">
+                        <p class="print-show-value text-[8pt] font-bold text-black" style=" padding-right: 8px;">
+                          ₦37,081.50
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Payment Notice -->
+                <div style="display: flex; margin-top: 8px;" >
+                  <div style="font-size: 7pt; border: none; margin-top: 0.25rem; width: 50%; border: 1px solid #d1d5db;  font-size: 6pt;" class="print-no-border">
+                    <p style="font-weight: 600; font-size: 5pt;" class="print:text-[5pt]">IMPORTANT PAYMENT INFORMATION</p>
+                    <p style="font-weight: 600; font-size: 5pt;" class="print:text-[5pt]">
+                      PAY ON OR BEFORE DUE DATE TO AVOID DISCONNECTION | PAY AT ANY OF OUR OFFICES OR TO OUR SALES REPS USING OUR POSes OR ALTERNATIVE PAYMENT CHANNELS | <b>ALWAYS DEMAND FOR RECEIPT AFTER PAYMENT IS MADE</b>
+                    </p>
+                  </div>
+                  <div style="width: 50%;"></div>
+                </div>
+
+                <!-- Summary Section -->
+                <div class="a5-small-text print-no-border flex w-full border border-gray-300 bg-white text-[7pt]">
+                  <div class="print-no-border-r w-2/3 border-r border-gray-300">
+                    <div style="display: flex; width: 100%; align-items: center; justify-content: space-between; background-color: #6CAD2B;  font-weight: 600;" class="print-bg-light-green print-white-text">
+                      <p style="visibility: hidden;" class="print:invisible"></p>
+                      <div style="display: flex; align-items: center; justify-content: center; background-color: white; flex-grow: 1; justify-content: flex-end;" class="print:flex-grow print:justify-end; ">
+                        <p style="color: black; padding-top: 20px; padding-right: 26px;" class="print-show-value text-black">
+                          BARNAWA
+                        </p>
+                      </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 px-2">
+                      <div class="space-y-1 px-2" style="display: flex; flex-direction: column; gap: 7px; margin-top: 4px;">
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Bill #:</span>
+                          <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                            23
+                          </span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Bill Month:</span>
+                          <span class="print-show-value px-2 font-semibold print:text-[5pt]">January, 2026</span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Customer Account:</span>
+                          <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                            1000524852
+                          </span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Account Name:</span>
+                          <span class="print-show-value px-2 text-right font-semibold print:text-[5pt]">
+                            Test customer
+                          </span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Address:</span>
+                          <span class="print-show-value px-2 text-right font-semibold print:text-[5pt]">
+                            test address
+                          </span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Consumption:</span>
+                          <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                            177kwh
+                          </span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Opening Balance:</span>
+                          <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                            ₦0.00
+                          </span>
+                        </div>
+                      </div>
+
+                      <div class="space-y-1 pl-2" style="display: flex; flex-direction: column; gap: 7px; margin-top: 4px;">
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Adjustment:</span>
+                          <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                            ₦0.00
+                          </span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Total Payments:</span>
+                          <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                            ₦37,081.50
+                          </span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Net Arrears:</span>
+                          <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                            ₦0.00
+                          </span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Meter:</span>
+                          <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                            00000000000
+                          </span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Tariff:</span>
+                          <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                            0.00
+                          </span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">Rate:</span>
+                          <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                            209.5
+                          </span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="print-hide-label font-semibold">ADC</span>
+                          <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                            test adc
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="w-1/3">
+                    <div
+                      class="print-white-text flex w-full items-center justify-between bg-[#008001] px-2 py-1 font-semibold print:bg-white print:text-black"
+                      style="background-color: #008001"
+                    >
+                      <p class="print-hide-label">SERVICE CENTER:</p>
+                      <div class="flex items-center justify-center bg-white px-4 py-0.5 print:flex-grow print:justify-end">
+                        <p class="print-show-value text-black" style="padding-top: 14px; padding-right: 14px;">Barnawa</p>
+                      </div>
+                    </div>
+
+                    <div class="pl-2" style="display: flex; flex-direction: column; gap: 7px;">
+                      <div class="flex justify-between">
+                        <span class="print-hide-label font-semibold">Present Reading:</span>
+                        <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                         0.00
+                        </span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="print-hide-label font-semibold">Previous Reading:</span>
+                        <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                          0.00
+                        </span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="print-hide-label font-semibold">Fixed Charge:</span>
+                        <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                          ₦0.00
+                        </span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="print-hide-label font-semibold">Current Bill:</span>
+                        <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                          ₦37,081.50
+                        </span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="print-hide-label font-semibold">VAT:</span>
+                        <span class="print-show-value px-2 font-semibold print:text-[5pt]">
+                          ₦0.00
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Footer Total -->
+                <div class="print-no-border flex w-full border border-gray-300 ">
+                  <div class="print-bg-light-green w-2/3 bg-[#6CAD2B]">
+                    <div class="px-2 py-1">&nbsp;</div>
+                  </div>
+
+                  <div class="w-1/3 bg-[#E1E1E1]" style="margin-top: -8px;">
+                    <div
+                      class="print-white-text flex w-full items-center justify-between bg-[#008001]  px-6 py-1 font-semibold print:-m-3 print:bg-white print:text-black"
+                      style="background-color: #008001"
+                    >
+                      <p class="text-[8pt] print:invisible"></p>
+                      <div class="flex items-center justify-center bg-white  print:flex-grow print:justify-end">
+                        <p class="print-show-value text-[8pt] font-bold text-black" style="padding-right: 18px;">
+                          ₦37,081.50
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+               
+                
+            </div>
+          </div>
+        </div>
+        
+      
+      </body>
+      </html>
+    
