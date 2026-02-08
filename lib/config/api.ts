@@ -241,7 +241,7 @@ export const API_ENDPOINTS = {
     DISTRIBUTION_SUBSTATION_BULK_UPLOAD: "/assets/distribution-substations/bulk/import",
     ADJUSTMENT_BULK_UPLOAD: "/billing/postpaid/bills/bulk/adjustments",
     POSTPAID_ESTIMATED_CONSUMPTION_BULK_UPLOAD: "/billing/postpaid/estimated-consumptions/bulk/import",
-    DOWNLOAD_CSV_JOBS: "/system/csv-jobs/{id}/cistomer-setup/result",
+    DOWNLOAD_CSV_JOBS: "/system/csv-jobs/{id}/customer-setup/result",
   },
 
   METER_CAPTURE: {

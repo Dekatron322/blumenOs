@@ -2,7 +2,7 @@
 import React, { useCallback, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import { AlertCircle, FileIcon, Filter, RefreshCw } from "lucide-react"
+import { AlertCircle, Download, FileIcon, Filter, RefreshCw } from "lucide-react"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos } from "react-icons/md"
 
 import { ButtonModule } from "components/ui/Button/Button"
@@ -11,7 +11,7 @@ import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { SearchModule } from "components/ui/Search/search-module"
 
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { CsvJobsParams, fetchCsvJobs } from "lib/redux/fileManagementSlice"
+import { CsvJobsParams, downloadCsv, fetchCsvJobs } from "lib/redux/fileManagementSlice"
 import { VscCloudUpload, VscEye } from "react-icons/vsc"
 import CsvUploadFailuresModal from "components/ui/Modal/CsvUploadFailuresModal"
 
@@ -133,9 +133,8 @@ const LoadingSkeleton = () => {
 
 const BulkUploads: React.FC = () => {
   const dispatch = useAppDispatch()
-  const { csvJobs, csvJobsLoading, csvJobsError, csvJobsSuccess, csvJobsPagination } = useAppSelector(
-    (state) => state.fileManagement
-  )
+  const { csvJobs, csvJobsLoading, csvJobsError, csvJobsSuccess, csvJobsPagination, downloadCsvLoading } =
+    useAppSelector((state) => state.fileManagement)
 
   const router = useRouter()
 
@@ -189,6 +188,27 @@ const BulkUploads: React.FC = () => {
     // This only triggers a table refresh by incrementing the refresh key
     setTableRefreshKey((prev) => prev + 1)
   }, [])
+
+  const handleDownloadCsv = async (job: any) => {
+    try {
+      const result = await dispatch(downloadCsv({ id: job.id }))
+      if (downloadCsv.fulfilled.match(result)) {
+        // Create a blob URL and trigger download
+        const blob = result.payload.data
+        const fileName = result.payload.fileName
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement("a")
+        link.href = url
+        link.download = fileName
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+      }
+    } catch (error) {
+      console.error("Download failed:", error)
+    }
+  }
 
   // Keep the existing refresh handler for other purposes if needed
   const handleRefreshData = useCallback(() => {
@@ -589,17 +609,29 @@ const BulkUploads: React.FC = () => {
                               </div>
                             </td>
                             <td className="border-b p-3 text-sm">
-                              {job.failedRows > 0 && (
+                              <div className="flex gap-2">
+                                {job.failedRows > 0 && (
+                                  <ButtonModule
+                                    variant="outline"
+                                    size="sm"
+                                    icon={<VscEye />}
+                                    onClick={() => handleViewFailures(job)}
+                                    className="whitespace-nowrap"
+                                  >
+                                    View Failures
+                                  </ButtonModule>
+                                )}
                                 <ButtonModule
                                   variant="outline"
                                   size="sm"
-                                  icon={<VscEye />}
-                                  onClick={() => handleViewFailures(job)}
+                                  icon={<Download className="h-4 w-4" />}
+                                  onClick={() => handleDownloadCsv(job)}
                                   className="whitespace-nowrap"
+                                  disabled={downloadCsvLoading}
                                 >
-                                  View Failures
+                                  {downloadCsvLoading ? "Downloading..." : "Download"}
                                 </ButtonModule>
-                              )}
+                              </div>
                             </td>
                           </tr>
                         ))

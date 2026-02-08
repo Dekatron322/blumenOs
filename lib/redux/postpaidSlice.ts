@@ -1,7 +1,8 @@
 // src/lib/redux/postpaidSlice.ts
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit"
+import axios from "axios"
 import { api } from "./authSlice"
-import { API_ENDPOINTS, buildApiUrl } from "lib/config/api"
+import { API_CONFIG, API_ENDPOINTS, buildApiUrl } from "lib/config/api"
 
 // Interfaces for Postpaid Billing
 export interface LedgerEntry {
@@ -515,6 +516,7 @@ export interface VendorSummaryReportResponse {
 // Download AR Interfaces
 export interface DownloadARRequestParams {
   billingPeriodId: number
+  billingPeriodName?: string // Add billing period name for filename generation
   areaOfficeId?: number
   feederId?: number
   distributionSubstationId?: number
@@ -524,7 +526,12 @@ export interface DownloadARRequestParams {
 export interface DownloadARResponse {
   isSuccess: boolean
   message: string
-  data: string // CSV file content or download URL
+  data: {
+    blob: Blob
+    filename: string
+    headers: any
+    contentDisposition: string | null
+  }
 }
 
 // Adjustments Interfaces
@@ -735,7 +742,12 @@ interface PostpaidBillingState {
   downloadARError: string | null
   downloadARSuccess: boolean
   downloadARMessage: string | null
-  downloadARData: string | null
+  downloadARData: {
+    blob: Blob
+    filename: string
+    headers: any
+    contentDisposition: string | null
+  } | null
 
   // Search/filter state
   filters: {
@@ -1485,14 +1497,13 @@ export const fetchVendorSummaryReport = createAsyncThunk(
   }
 )
 
-// Download AR Async Thunk
 export const downloadAR = createAsyncThunk(
   "postpaidBilling/downloadAR",
   async (params: DownloadARRequestParams, { rejectWithValue }) => {
     try {
-      const { billingPeriodId, areaOfficeId, feederId, distributionSubstationId, isMd } = params
+      const { billingPeriodId, billingPeriodName, areaOfficeId, feederId, distributionSubstationId, isMd } = params
 
-      const response = await api.get<DownloadARResponse>(buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.DOWNLOAD_AR), {
+      const response = await api.get(buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.DOWNLOAD_AR), {
         params: {
           BillingPeriodId: billingPeriodId,
           ...(areaOfficeId && { AreaOfficeId: areaOfficeId }),
@@ -1500,13 +1511,59 @@ export const downloadAR = createAsyncThunk(
           ...(distributionSubstationId && { DistributionSubstationId: distributionSubstationId }),
           ...(isMd !== undefined && { IsMd: isMd }),
         },
+        responseType: "blob", // Important: Handle the response as a blob (file)
+        // Add custom headers to ensure we get all response headers
+        headers: {
+          Accept: "text/csv, application/json, */*",
+        },
+        // Ensure we can access response headers
+        withCredentials: true,
+        // Override transformResponse to capture headers
+        transformResponse: [
+          (data, headers) => {
+            console.log("TransformResponse headers:", headers)
+            return data
+          },
+        ],
       })
 
-      if (!response.data.isSuccess) {
-        return rejectWithValue(response.data.message || "Failed to download AR report")
+      // Generate filename dynamically based on billing period name
+      let filename = "AR_Report.csv" // fallback
+
+      if (billingPeriodName) {
+        // Format filename based on billing period name
+        const formattedName = billingPeriodName.toUpperCase().replace(/\s+/g, " ")
+        filename = `${formattedName} BILLING AR.csv`
+        console.log("Generated dynamic filename:", filename)
+      } else {
+        // Fall back to a generic filename based on the billing period ID
+        filename = `BILLING_PERIOD_${billingPeriodId}_AR.csv`
+        console.log("Using fallback filename:", filename)
       }
 
-      return response.data
+      // Create a blob from the response data
+      const blob = new Blob([response.data], { type: "text/csv" })
+
+      // Create download link and trigger download with the correct filename
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+
+      return {
+        isSuccess: true,
+        message: `AR report downloaded successfully as: ${filename}`,
+        data: {
+          blob: response.data,
+          filename: filename,
+          headers: response.headers,
+          contentDisposition: response.headers["content-disposition"] || null,
+        },
+      }
     } catch (error: any) {
       if (error.response?.data) {
         return rejectWithValue(error.response.data.message || "Failed to download AR report")

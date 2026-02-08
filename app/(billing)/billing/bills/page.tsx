@@ -9,12 +9,13 @@ import StartBillingRun from "components/ui/Modal/start-billing-run"
 import { ButtonModule } from "components/ui/Button/Button"
 import { Download, PlayIcon, X } from "lucide-react"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { clearDownloadARStatus, downloadAR } from "lib/redux/postpaidSlice"
+import { clearDownloadARStatus, downloadAR, DownloadARRequestParams } from "lib/redux/postpaidSlice"
 import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
 import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { fetchFeeders } from "lib/redux/feedersSlice"
 import { fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import { notify } from "components/ui/Notification/Notification"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -350,39 +351,36 @@ export default function MeteringDashboard() {
 
   const handleDownloadAR = async () => {
     if (!selectedBillingPeriod) {
-      alert("Please select a billing period")
+      notify("warning", "Please select a billing period")
       return
     }
 
-    const params = {
+    // Find the billing period name from the billing periods data
+    const billingPeriod = billingPeriods?.find((period) => period.id.toString() === selectedBillingPeriod)
+    const billingPeriodName = billingPeriod?.displayName || billingPeriod?.periodKey
+
+    const params: DownloadARRequestParams = {
       billingPeriodId: parseInt(selectedBillingPeriod),
+      billingPeriodName: billingPeriodName, // Pass the billing period name
       ...(selectedAreaOffice && { areaOfficeId: parseInt(selectedAreaOffice) }),
       ...(selectedFeeder && { feederId: parseInt(selectedFeeder) }),
-      ...(selectedDistributionSubstation && { distributionSubstationId: parseInt(selectedDistributionSubstation) }),
-      isMd,
+      ...(selectedDistributionSubstation && {
+        distributionSubstationId: parseInt(selectedDistributionSubstation),
+      }),
+      isMd: isMd,
     }
 
     try {
       const result = await dispatch(downloadAR(params)).unwrap()
 
-      // If the response contains CSV data, create and download the file
-      if (result.data) {
-        const blob = new Blob([result.data], { type: "text/csv" })
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement("a")
-        a.href = url
-        a.download = `ar_report_${new Date().toISOString().split("T")[0]}.csv`
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(url)
-        document.body.removeChild(a)
+      // Log the response to see what filename was used
+      console.log("Download completed with filename:", result.data.filename)
 
-        // Close modal and show success message
-        setIsDownloadARModalOpen(false)
-        alert(result.message || "AR report downloaded successfully")
-      }
+      // Close modal and show success message with the actual filename
+      setIsDownloadARModalOpen(false)
+      notify("success", result.message)
     } catch (error: any) {
-      alert(error || "Failed to download AR report")
+      notify("error", error || "Failed to download AR report")
     }
   }
 
@@ -428,7 +426,7 @@ export default function MeteringDashboard() {
                   variant="outline"
                   size="md"
                   className="mt-2"
-                  icon={<PlayIcon />}
+                  icon={<Download className="h-4 w-4" />}
                   onClick={() => setIsDownloadARModalOpen(true)}
                 >
                   Download AR

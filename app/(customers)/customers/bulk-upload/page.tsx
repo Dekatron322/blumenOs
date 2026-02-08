@@ -632,7 +632,7 @@ const BulkUploads: React.FC = () => {
                                 <ButtonModule
                                   variant="outline"
                                   size="sm"
-                                  icon={<Download />}
+                                  icon={<Download className="h-4 w-4" />}
                                   onClick={() => handleDownloadCsv(job)}
                                   className="whitespace-nowrap"
                                   disabled={downloadCsvLoading}
