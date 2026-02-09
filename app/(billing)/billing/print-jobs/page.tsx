@@ -18,15 +18,15 @@ import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
   clearSingleBillingPrintStatus,
   fetchPrintingJobs,
-  PrintingJobsRequestParams,
   markAsReadyToPrint,
   MarkAsReadyToPrintRequest,
+  PrintingJobsRequestParams,
   singleBillingPrint,
   SingleBillingPrintRequest,
 } from "lib/redux/postpaidSlice"
 import { fetchFeeders } from "lib/redux/feedersSlice"
 import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
-import { fetchCustomers, Customer } from "lib/redux/customerSlice"
+import { Customer, fetchCustomers } from "lib/redux/customerSlice"
 import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
 import { BillingJobRunStatus } from "lib/types/billing"
