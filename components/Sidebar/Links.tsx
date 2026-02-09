@@ -122,6 +122,7 @@ export const allLinks: LinkItem[] = [
         requiredActions: ["W"],
       },
       { name: "Bulk Uploads", href: "/billing/bulk-upload", privilegeKey: "billing-postpaid", requiredActions: ["R"] },
+      { name: "Print Jobs", href: "/billing/print-jobs", privilegeKey: "billing-postpaid", requiredActions: ["R"] },
       { name: "Adjustments", href: "/billing/adjustments", privilegeKey: "billing-postpaid", requiredActions: ["R"] },
 
       {

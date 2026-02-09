@@ -1,7 +1,8 @@
 // src/lib/redux/postpaidSlice.ts
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit"
+import axios from "axios"
 import { api } from "./authSlice"
-import { API_ENDPOINTS, buildApiUrl } from "lib/config/api"
+import { API_CONFIG, API_ENDPOINTS, buildApiUrl } from "lib/config/api"
 
 // Interfaces for Postpaid Billing
 export interface LedgerEntry {
@@ -515,6 +516,7 @@ export interface VendorSummaryReportResponse {
 // Download AR Interfaces
 export interface DownloadARRequestParams {
   billingPeriodId: number
+  billingPeriodName?: string // Add billing period name for filename generation
   areaOfficeId?: number
   feederId?: number
   distributionSubstationId?: number
@@ -524,7 +526,95 @@ export interface DownloadARRequestParams {
 export interface DownloadARResponse {
   isSuccess: boolean
   message: string
-  data: string // CSV file content or download URL
+  data: {
+    blob: Blob
+    filename: string
+    headers: any
+    contentDisposition: string | null
+  }
+}
+
+// Printing Jobs Interfaces
+export interface PrintingJobFile {
+  fileName: string
+  key: string
+  url: string
+  groupName: string
+  groupId: number
+  partNumber: number
+  billCount: number
+}
+
+export interface PrintingJob {
+  id: number
+  billingPeriodId: number
+  period: string
+  groupBy: number
+  feederId: number
+  feederName: string
+  areaOfficeId: number
+  areaOfficeName: string
+  distributionSubstationId: number
+  distributionSubstationName: string
+  provinceId: number
+  provinceName: string
+  isMd: boolean
+  maxBillsPerFile: number
+  status: number
+  totalBills: number
+  processedBills: number
+  fileCount: number
+  zipUrl: string
+  zipKey: string
+  requestedAtUtc: string
+  startedAtUtc: string
+  completedAtUtc: string
+  lastError: string
+  files: PrintingJobFile[]
+}
+
+export interface PrintingJobsResponse {
+  isSuccess: boolean
+  message: string
+  data: PrintingJob[]
+  totalCount: number
+  totalPages: number
+  currentPage: number
+  pageSize: number
+  hasNext: boolean
+  hasPrevious: boolean
+}
+
+export interface PrintingJobsRequestParams {
+  pageNumber: number
+  pageSize: number
+  billingPeriodId?: number
+  groupBy?: number
+  feederId?: number
+  areaOfficeId?: number
+  distributionSubstationId?: number
+  provinceId?: number
+  isMd?: boolean
+}
+
+// Mark as Ready to Print Interfaces
+export interface MarkAsReadyToPrintRequest {
+  billingPeriodId: number
+  customerAccountNumbers: string[]
+  feederId?: number
+  distributionSubstationId?: number
+  areaOfficeId?: number
+  isMd?: boolean
+  statusCode?: string
+  billStatus?: number
+}
+
+export interface MarkAsReadyToPrintResponse {
+  isSuccess: boolean
+  message: string
+  data: {
+    updated: number
+  }
 }
 
 // Adjustments Interfaces
@@ -568,6 +658,57 @@ export interface AdjustmentsRequestParams {
   areaOfficeId?: number
   csvBulkInsertionJobId?: number
   status?: number
+}
+
+// Single Billing Print Interfaces
+export interface SingleBillingPrintRequest {
+  billingPeriodId: number
+  feederId?: number
+  areaOfficeId?: number
+  distributionSubstationId?: number
+  provinceId?: number
+  isMd?: boolean
+  groupBy?: number
+  maxBillsPerFile?: number
+}
+
+export interface SingleBillingPrintFile {
+  fileName: string
+  key: string
+}
+
+export interface SingleBillingPrintResponseData {
+  id: number
+  billingPeriodId: number
+  period: string
+  groupBy: number
+  feederId: number
+  feederName: string
+  areaOfficeId: number
+  areaOfficeName: string
+  distributionSubstationId: number
+  distributionSubstationName: string
+  provinceId: number
+  provinceName: string
+  isMd: boolean
+  maxBillsPerFile: number
+  status: number
+  totalBills: number
+  processedBills: number
+  fileCount: number
+  zipUrl: string
+  zipKey: string
+  requestedAtUtc: string
+  startedAtUtc: string
+  completedAtUtc: string
+  lastError: string
+  files: SingleBillingPrintFile[]
+}
+
+export interface SingleBillingPrintResponse {
+  isSuccess: boolean
+  message: string
+  data: SingleBillingPrintResponseData
 }
 
 // Postpaid Billing State
@@ -735,7 +876,48 @@ interface PostpaidBillingState {
   downloadARError: string | null
   downloadARSuccess: boolean
   downloadARMessage: string | null
-  downloadARData: string | null
+  downloadARData: {
+    blob: Blob
+    filename: string
+    headers: any
+    contentDisposition: string | null
+  } | null
+
+  // Download Print Job state
+  downloadPrintJobLoading: boolean
+  downloadPrintJobError: string | null
+  downloadPrintJobSuccess: boolean
+  downloadPrintJobMessage: string | null
+
+  // Printing Jobs state
+  printingJobs: PrintingJob[]
+  printingJobsLoading: boolean
+  printingJobsError: string | null
+  printingJobsSuccess: boolean
+  printingJobsPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
+
+  // Mark as Ready to Print state
+  markAsReadyToPrintLoading: boolean
+  markAsReadyToPrintError: string | null
+  markAsReadyToPrintSuccess: boolean
+  markAsReadyToPrintMessage: string | null
+  markAsReadyToPrintData: {
+    updated: number
+  } | null
+
+  // Single Billing Print state
+  singleBillingPrintLoading: boolean
+  singleBillingPrintError: string | null
+  singleBillingPrintSuccess: boolean
+  singleBillingPrintMessage: string | null
+  singleBillingPrintData: SingleBillingPrintResponseData | null
 
   // Search/filter state
   filters: {
@@ -886,6 +1068,34 @@ const initialState: PostpaidBillingState = {
   downloadARSuccess: false,
   downloadARMessage: null,
   downloadARData: null,
+
+  // Download Print Job state
+  downloadPrintJobLoading: false,
+  downloadPrintJobError: null,
+  downloadPrintJobSuccess: false,
+  downloadPrintJobMessage: null,
+  printingJobs: [],
+  printingJobsLoading: false,
+  printingJobsError: null,
+  printingJobsSuccess: false,
+  printingJobsPagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 1,
+    pageSize: 10,
+    hasNext: false,
+    hasPrevious: false,
+  },
+  markAsReadyToPrintLoading: false,
+  markAsReadyToPrintError: null,
+  markAsReadyToPrintSuccess: false,
+  markAsReadyToPrintMessage: null,
+  markAsReadyToPrintData: null,
+  singleBillingPrintLoading: false,
+  singleBillingPrintError: null,
+  singleBillingPrintSuccess: false,
+  singleBillingPrintMessage: null,
+  singleBillingPrintData: null,
   filters: {},
   billingJobsFilters: {},
 }
@@ -1485,14 +1695,13 @@ export const fetchVendorSummaryReport = createAsyncThunk(
   }
 )
 
-// Download AR Async Thunk
 export const downloadAR = createAsyncThunk(
   "postpaidBilling/downloadAR",
   async (params: DownloadARRequestParams, { rejectWithValue }) => {
     try {
-      const { billingPeriodId, areaOfficeId, feederId, distributionSubstationId, isMd } = params
+      const { billingPeriodId, billingPeriodName, areaOfficeId, feederId, distributionSubstationId, isMd } = params
 
-      const response = await api.get<DownloadARResponse>(buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.DOWNLOAD_AR), {
+      const response = await api.get(buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.DOWNLOAD_AR), {
         params: {
           BillingPeriodId: billingPeriodId,
           ...(areaOfficeId && { AreaOfficeId: areaOfficeId }),
@@ -1500,18 +1709,222 @@ export const downloadAR = createAsyncThunk(
           ...(distributionSubstationId && { DistributionSubstationId: distributionSubstationId }),
           ...(isMd !== undefined && { IsMd: isMd }),
         },
+        responseType: "blob", // Important: Handle the response as a blob (file)
+        // Add custom headers to ensure we get all response headers
+        headers: {
+          Accept: "text/csv, application/json, */*",
+        },
+        // Ensure we can access response headers
+        withCredentials: true,
+        // Override transformResponse to capture headers
+        transformResponse: [
+          (data, headers) => {
+            console.log("TransformResponse headers:", headers)
+            return data
+          },
+        ],
       })
 
-      if (!response.data.isSuccess) {
-        return rejectWithValue(response.data.message || "Failed to download AR report")
+      // Generate filename dynamically based on billing period name
+      let filename = "AR_Report.csv" // fallback
+
+      if (billingPeriodName) {
+        // Format filename based on billing period name
+        const formattedName = billingPeriodName.toUpperCase().replace(/\s+/g, " ")
+        filename = `${formattedName} BILLING AR.csv`
+        console.log("Generated dynamic filename:", filename)
+      } else {
+        // Fall back to a generic filename based on the billing period ID
+        filename = `BILLING_PERIOD_${billingPeriodId}_AR.csv`
+        console.log("Using fallback filename:", filename)
       }
 
-      return response.data
+      // Create a blob from the response data
+      const blob = new Blob([response.data], { type: "text/csv" })
+
+      // Create download link and trigger download with the correct filename
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+
+      return {
+        isSuccess: true,
+        message: `AR report downloaded successfully as: ${filename}`,
+        data: {
+          blob: response.data,
+          filename: filename,
+          headers: response.headers,
+          contentDisposition: response.headers["content-disposition"] || null,
+        },
+      }
     } catch (error: any) {
       if (error.response?.data) {
         return rejectWithValue(error.response.data.message || "Failed to download AR report")
       }
       return rejectWithValue(error.message || "Network error during AR report download")
+    }
+  }
+)
+
+// Download Print Job Async Thunk
+export const downloadPrintJob = createAsyncThunk(
+  "postpaidBilling/downloadPrintJob",
+  async (jobId: number, { rejectWithValue }) => {
+    try {
+      const response = await api.get(
+        buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.DOWNLOAD_PRINT_JOB.replace("{id}", jobId.toString())),
+        {
+          responseType: "blob", // Important for file downloads
+        }
+      )
+
+      // Extract filename from Content-Disposition header if available
+      const contentDisposition = response.headers["content-disposition"]
+      let filename = `print-job-${jobId}.zip`
+
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/)
+        if (filenameMatch) {
+          filename = filenameMatch[1]
+        }
+      }
+
+      // Create a blob from the response data
+      const blob = new Blob([response.data], { type: "application/zip" })
+
+      // Create download link and trigger download with the correct filename
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+
+      // Clean up the blob URL
+      window.URL.revokeObjectURL(url)
+
+      return {
+        isSuccess: true,
+        message: `Print job downloaded successfully as: ${filename}`,
+        data: {
+          blob: response.data,
+          filename: filename,
+          headers: response.headers,
+          contentDisposition: contentDisposition || null,
+        },
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to download print job")
+      }
+      return rejectWithValue(error.message || "Network error during print job download")
+    }
+  }
+)
+
+// Fetch Printing Jobs Async Thunk
+export const fetchPrintingJobs = createAsyncThunk(
+  "postpaidBilling/fetchPrintingJobs",
+  async (params: PrintingJobsRequestParams, { rejectWithValue }) => {
+    try {
+      const {
+        pageNumber,
+        pageSize,
+        billingPeriodId,
+        groupBy,
+        feederId,
+        areaOfficeId,
+        distributionSubstationId,
+        provinceId,
+        isMd,
+      } = params
+
+      const response = await api.get<PrintingJobsResponse>(
+        buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.POSTPAID_BILL_PRINT),
+        {
+          params: {
+            PageNumber: pageNumber,
+            PageSize: pageSize,
+            ...(billingPeriodId && { BillingPeriodId: billingPeriodId }),
+            ...(groupBy !== undefined && { GroupBy: groupBy }),
+            ...(feederId && { FeederId: feederId }),
+            ...(areaOfficeId && { AreaOfficeId: areaOfficeId }),
+            ...(distributionSubstationId && { DistributionSubstationId: distributionSubstationId }),
+            ...(provinceId && { ProvinceId: provinceId }),
+            ...(isMd !== undefined && { IsMd: isMd }),
+          },
+        }
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch printing jobs")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch printing jobs")
+      }
+      return rejectWithValue(error.message || "Network error during printing jobs fetch")
+    }
+  }
+)
+
+// Mark as Ready to Print Async Thunk
+export const markAsReadyToPrint = createAsyncThunk(
+  "postpaidBilling/markAsReadyToPrint",
+  async (requestData: MarkAsReadyToPrintRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<MarkAsReadyToPrintResponse>(
+        buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.MARK_AS_READY_TO_PRINT),
+        requestData
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to mark bills as ready to print")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to mark bills as ready to print")
+      }
+      return rejectWithValue(error.message || "Network error during mark as ready to print")
+    }
+  }
+)
+
+// Single Billing Print Async Thunk
+export const singleBillingPrint = createAsyncThunk(
+  "postpaidBilling/singleBillingPrint",
+  async (requestData: SingleBillingPrintRequest, { rejectWithValue }) => {
+    try {
+      console.log("Starting single billing print with request:", requestData)
+
+      const response = await api.post<SingleBillingPrintResponse>(
+        buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.SINGLE_BILLING_PRINT),
+        requestData
+      )
+
+      console.log("Single billing print API response:", response.data)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to queue single billing print job")
+      }
+
+      return response.data
+    } catch (error: any) {
+      console.error("Single billing print API error:", error)
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to queue single billing print job")
+      }
+      return rejectWithValue(error.message || "Network error during single billing print")
     }
   }
 )
@@ -1740,6 +2153,40 @@ const postpaidSlice = createSlice({
       state.downloadARData = null
     },
 
+    // Clear printing jobs status
+    clearPrintingJobsStatus: (state) => {
+      state.printingJobsLoading = false
+      state.printingJobsError = null
+      state.printingJobsSuccess = false
+      state.printingJobs = []
+      state.printingJobsPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
+    },
+
+    // Clear mark as ready to print status
+    clearMarkAsReadyToPrintStatus: (state) => {
+      state.markAsReadyToPrintLoading = false
+      state.markAsReadyToPrintError = null
+      state.markAsReadyToPrintSuccess = false
+      state.markAsReadyToPrintMessage = null
+      state.markAsReadyToPrintData = null
+    },
+
+    // Clear single billing print status
+    clearSingleBillingPrintStatus: (state) => {
+      state.singleBillingPrintLoading = false
+      state.singleBillingPrintError = null
+      state.singleBillingPrintSuccess = false
+      state.singleBillingPrintMessage = null
+      state.singleBillingPrintData = null
+    },
+
     // Reset billing state
     resetBillingState: (state) => {
       state.bills = []
@@ -1862,6 +2309,28 @@ const postpaidSlice = createSlice({
       state.vendorSummaryReportSuccess = false
       state.filters = {}
       state.billingJobsFilters = {}
+      state.printingJobs = []
+      state.printingJobsLoading = false
+      state.printingJobsError = null
+      state.printingJobsSuccess = false
+      state.printingJobsPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
+      state.markAsReadyToPrintLoading = false
+      state.markAsReadyToPrintError = null
+      state.markAsReadyToPrintSuccess = false
+      state.markAsReadyToPrintMessage = null
+      state.markAsReadyToPrintData = null
+      state.singleBillingPrintLoading = false
+      state.singleBillingPrintError = null
+      state.singleBillingPrintSuccess = false
+      state.singleBillingPrintMessage = null
+      state.singleBillingPrintData = null
     },
 
     // Set pagination
@@ -1892,6 +2361,12 @@ const postpaidSlice = createSlice({
     setAdjustmentsPagination: (state, action: PayloadAction<{ page: number; pageSize: number }>) => {
       state.adjustmentsPagination.currentPage = action.payload.page
       state.adjustmentsPagination.pageSize = action.payload.pageSize
+    },
+
+    // Set printing jobs pagination
+    setPrintingJobsPagination: (state, action: PayloadAction<{ page: number; pageSize: number }>) => {
+      state.printingJobsPagination.currentPage = action.payload.page
+      state.printingJobsPagination.pageSize = action.payload.pageSize
     },
 
     // Set filters
@@ -2490,6 +2965,101 @@ const postpaidSlice = createSlice({
         state.downloadARMessage = null
         state.downloadARData = null
       })
+      // Download Print Job cases
+      .addCase(downloadPrintJob.pending, (state) => {
+        state.downloadPrintJobLoading = true
+        state.downloadPrintJobError = null
+        state.downloadPrintJobSuccess = false
+        state.downloadPrintJobMessage = null
+      })
+      .addCase(downloadPrintJob.fulfilled, (state, action) => {
+        state.downloadPrintJobLoading = false
+        state.downloadPrintJobSuccess = true
+        state.downloadPrintJobMessage = action.payload.message || "Print job downloaded successfully"
+        state.downloadPrintJobError = null
+      })
+      .addCase(downloadPrintJob.rejected, (state, action) => {
+        state.downloadPrintJobLoading = false
+        state.downloadPrintJobError = (action.payload as string) || "Failed to download print job"
+        state.downloadPrintJobSuccess = false
+        state.downloadPrintJobMessage = null
+      })
+      // Fetch printing jobs cases
+      .addCase(fetchPrintingJobs.pending, (state) => {
+        state.printingJobsLoading = true
+        state.printingJobsError = null
+        state.printingJobsSuccess = false
+      })
+      .addCase(fetchPrintingJobs.fulfilled, (state, action: PayloadAction<PrintingJobsResponse>) => {
+        state.printingJobsLoading = false
+        state.printingJobsSuccess = true
+        state.printingJobs = action.payload.data
+        state.printingJobsPagination = {
+          totalCount: action.payload.totalCount,
+          totalPages: action.payload.totalPages,
+          currentPage: action.payload.currentPage,
+          pageSize: action.payload.pageSize,
+          hasNext: action.payload.hasNext,
+          hasPrevious: action.payload.hasPrevious,
+        }
+        state.printingJobsError = null
+      })
+      .addCase(fetchPrintingJobs.rejected, (state, action) => {
+        state.printingJobsLoading = false
+        state.printingJobsError = (action.payload as string) || "Failed to fetch printing jobs"
+        state.printingJobsSuccess = false
+        state.printingJobs = []
+        state.printingJobsPagination = {
+          totalCount: 0,
+          totalPages: 0,
+          currentPage: 1,
+          pageSize: 10,
+          hasNext: false,
+          hasPrevious: false,
+        }
+      })
+      // Mark as Ready to Print cases
+      .addCase(markAsReadyToPrint.pending, (state) => {
+        state.markAsReadyToPrintLoading = true
+        state.markAsReadyToPrintError = null
+        state.markAsReadyToPrintSuccess = false
+        state.markAsReadyToPrintMessage = null
+        state.markAsReadyToPrintData = null
+      })
+      .addCase(markAsReadyToPrint.fulfilled, (state, action: PayloadAction<MarkAsReadyToPrintResponse>) => {
+        state.markAsReadyToPrintLoading = false
+        state.markAsReadyToPrintSuccess = true
+        state.markAsReadyToPrintMessage = action.payload.message
+        state.markAsReadyToPrintData = action.payload.data
+      })
+      .addCase(markAsReadyToPrint.rejected, (state, action) => {
+        state.markAsReadyToPrintLoading = false
+        state.markAsReadyToPrintError = (action.payload as string) || "Failed to mark bills as ready to print"
+        state.markAsReadyToPrintSuccess = false
+        state.markAsReadyToPrintMessage = null
+        state.markAsReadyToPrintData = null
+      })
+      // Single Billing Print cases
+      .addCase(singleBillingPrint.pending, (state) => {
+        state.singleBillingPrintLoading = true
+        state.singleBillingPrintError = null
+        state.singleBillingPrintSuccess = false
+        state.singleBillingPrintMessage = null
+        state.singleBillingPrintData = null
+      })
+      .addCase(singleBillingPrint.fulfilled, (state, action: PayloadAction<SingleBillingPrintResponse>) => {
+        state.singleBillingPrintLoading = false
+        state.singleBillingPrintSuccess = true
+        state.singleBillingPrintMessage = action.payload.message
+        state.singleBillingPrintData = action.payload.data
+      })
+      .addCase(singleBillingPrint.rejected, (state, action) => {
+        state.singleBillingPrintLoading = false
+        state.singleBillingPrintError = (action.payload as string) || "Failed to queue single billing print job"
+        state.singleBillingPrintSuccess = false
+        state.singleBillingPrintMessage = null
+        state.singleBillingPrintData = null
+      })
   },
 })
 
@@ -2515,12 +3085,16 @@ export const {
   clearAdjustmentsStatus,
   clearVendorSummaryReportStatus,
   clearDownloadARStatus,
+  clearPrintingJobsStatus,
+  clearMarkAsReadyToPrintStatus,
+  clearSingleBillingPrintStatus,
   resetBillingState,
   setPagination,
   setBillingJobsPagination,
   setChangeRequestsPagination,
   setChangeRequestsByBillingJobPagination,
   setAdjustmentsPagination,
+  setPrintingJobsPagination,
   setFilters,
   setBillingJobsFilters,
   clearFilters,
