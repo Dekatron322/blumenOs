@@ -242,6 +242,7 @@ export const API_ENDPOINTS = {
     ADJUSTMENT_BULK_UPLOAD: "/billing/postpaid/bills/bulk/adjustments",
     POSTPAID_ESTIMATED_CONSUMPTION_BULK_UPLOAD: "/billing/postpaid/estimated-consumptions/bulk/import",
     DOWNLOAD_CSV_JOBS: "/system/csv-jobs/{id}/customer-setup/result",
+    PRINT_BULK_UPLOAD: "/billing/postpaid/print/batch/upload",
   },
 
   METER_CAPTURE: {
@@ -284,6 +285,10 @@ export const API_ENDPOINTS = {
     FINALIZE_SINGLE_BILL: "/billing/postpaid/{id}/finalize",
     ADJUSTMENTS: "/billing/postpaid/bills/adjustments",
     DOWNLOAD_AR: "/billing/postpaid/ar/csv",
+    POSTPAID_BILL_PRINT: "/billing/postpaid/print/batch",
+    MARK_AS_READY_TO_PRINT: "/billing/postpaid/ready-to-print",
+    SINGLE_BILLING_PRINT: "/billing/postpaid/print/batch",
+    DOWNLOAD_PRINT_JOB: "/billing/postpaid/print-jobs/{id}/download",
   },
 
   BILLING_PERIODS: {

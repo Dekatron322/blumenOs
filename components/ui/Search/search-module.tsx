@@ -26,6 +26,8 @@ interface SearchModuleProps {
   }[]
 
   bgClassName?: string
+
+  disabled?: boolean
 }
 
 export const SearchModule: React.FC<SearchModuleProps> = ({
@@ -43,6 +45,7 @@ export const SearchModule: React.FC<SearchModuleProps> = ({
     { value: "phone", label: "Phone" },
   ],
   bgClassName = "bg-[#f9f9f9]",
+  disabled = false,
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -113,21 +116,28 @@ export const SearchModule: React.FC<SearchModuleProps> = ({
           type="text"
           id="search"
           placeholder={placeholder}
-          className="h-[50px] w-full bg-transparent outline-none"
+          className="h-[50px] w-full bg-transparent outline-none disabled:opacity-50"
           value={value}
           onChange={onChange}
+          disabled={disabled}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && onSearch) {
+            if (e.key === "Enter" && onSearch && !disabled) {
               onSearch()
             }
           }}
         />
-        {value && onCancel && <RxCross2 onClick={onCancel} style={{ cursor: "pointer" }} />}
+        {value && onCancel && (
+          <RxCross2
+            onClick={disabled ? undefined : onCancel}
+            style={{ cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.5 : 1 }}
+          />
+        )}
         {onSearch && (
           <button
             type="button"
-            onClick={onSearch}
-            className="rounded bg-[#004B23] px-3 py-1 text-xs text-white transition-colors hover:bg-[#003d1c]"
+            onClick={disabled ? undefined : onSearch}
+            disabled={disabled}
+            className="rounded bg-[#004B23] px-3 py-1 text-xs text-white transition-colors hover:bg-[#003d1c] disabled:cursor-not-allowed disabled:opacity-50"
           >
             Search
           </button>

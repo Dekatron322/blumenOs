@@ -274,6 +274,42 @@ export interface PostpaidEstimatedConsumptionBulkUploadResponse {
   data: BulkUploadJob
 }
 
+// Print Bulk Upload interfaces
+export interface PrintBulkUploadRequest {
+  billingPeriodId: number
+  fileId: number
+  groupBy: number
+  maxBillsPerFile: number
+}
+
+export interface PrintBulkUploadResponse {
+  isSuccess: boolean
+  message: string
+  data: {
+    id: number
+    jobType: number
+    status: number
+    requestedByUserId: number
+    requestedAtUtc: string
+    fileName: string
+    fileKey: string
+    fileUrl: string
+    fileSize: number
+    totalRows: number
+    processedRows: number
+    succeededRows: number
+    failedRows: number
+    lastProcessedRow: number
+    retryCount: number
+    startedAtUtc: string
+    completedAtUtc: string
+    lastError: string
+    errorBlobKey: string
+    payloadJson: string
+    canDownloadResult: boolean
+  }
+}
+
 export interface BulkUploadPreview {
   fileId: number
   fileName: string
@@ -601,6 +637,12 @@ interface FileManagementState {
   postpaidEstimatedConsumptionBulkUploadSuccess: boolean
   postpaidEstimatedConsumptionBulkUploadResponse: PostpaidEstimatedConsumptionBulkUploadResponse | null
 
+  // Print Bulk Upload state
+  printBulkUploadLoading: boolean
+  printBulkUploadError: string | null
+  printBulkUploadSuccess: boolean
+  printBulkUploadResponse: PrintBulkUploadResponse | null
+
   // CSV Jobs state
   csvJobsLoading: boolean
   csvJobsError: string | null
@@ -784,6 +826,12 @@ const initialState: FileManagementState = {
   postpaidEstimatedConsumptionBulkUploadError: null,
   postpaidEstimatedConsumptionBulkUploadSuccess: false,
   postpaidEstimatedConsumptionBulkUploadResponse: null,
+
+  // Print Bulk Upload state
+  printBulkUploadLoading: false,
+  printBulkUploadError: null,
+  printBulkUploadSuccess: false,
+  printBulkUploadResponse: null,
 
   // CSV Jobs state
   csvJobsLoading: false,
@@ -1167,6 +1215,21 @@ export const processPostpaidEstimatedConsumptionBulkUpload = createAsyncThunk(
   }
 )
 
+export const processPrintBulkUpload = createAsyncThunk(
+  "fileManagement/processPrintBulkUpload",
+  async (request: PrintBulkUploadRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<PrintBulkUploadResponse>(
+        buildApiUrl(API_ENDPOINTS.FILE_MANAGEMENT.PRINT_BULK_UPLOAD),
+        request
+      )
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to process print bulk upload")
+    }
+  }
+)
+
 // CSV Jobs async thunk
 export const fetchCsvJobs = createAsyncThunk(
   "fileManagement/fetchCsvJobs",
@@ -1414,6 +1477,12 @@ const fileManagementSlice = createSlice({
       state.postpaidEstimatedConsumptionBulkUploadSuccess = false
       state.postpaidEstimatedConsumptionBulkUploadResponse = null
     },
+    resetPrintBulkUploadState: (state) => {
+      state.printBulkUploadLoading = false
+      state.printBulkUploadError = null
+      state.printBulkUploadSuccess = false
+      state.printBulkUploadResponse = null
+    },
     // Reset CSV Jobs state
     resetCsvJobsState: (state) => {
       state.csvJobsLoading = false
@@ -1538,6 +1607,10 @@ const fileManagementSlice = createSlice({
       state.postpaidEstimatedConsumptionBulkUploadError = null
       state.postpaidEstimatedConsumptionBulkUploadSuccess = false
       state.postpaidEstimatedConsumptionBulkUploadResponse = null
+      state.printBulkUploadLoading = false
+      state.printBulkUploadError = null
+      state.printBulkUploadSuccess = false
+      state.printBulkUploadResponse = null
       state.csvJobsLoading = false
       state.csvJobsError = null
       state.csvJobsSuccess = false
@@ -1955,6 +2028,23 @@ const fileManagementSlice = createSlice({
         state.postpaidEstimatedConsumptionBulkUploadLoading = false
         state.postpaidEstimatedConsumptionBulkUploadError = action.payload as string
         state.postpaidEstimatedConsumptionBulkUploadSuccess = false
+      })
+
+      // Print Bulk Upload reducers
+      .addCase(processPrintBulkUpload.pending, (state) => {
+        state.printBulkUploadLoading = true
+        state.printBulkUploadError = null
+        state.printBulkUploadSuccess = false
+      })
+      .addCase(processPrintBulkUpload.fulfilled, (state, action) => {
+        state.printBulkUploadLoading = false
+        state.printBulkUploadSuccess = true
+        state.printBulkUploadResponse = action.payload
+      })
+      .addCase(processPrintBulkUpload.rejected, (state, action) => {
+        state.printBulkUploadLoading = false
+        state.printBulkUploadError = action.payload as string
+        state.printBulkUploadSuccess = false
       })
 
       // CSV Jobs reducers
