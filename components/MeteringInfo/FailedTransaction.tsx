@@ -508,7 +508,7 @@ const FailedTransactionTable: React.FC<FailedTransactionTableProps> = ({ pageSiz
   const [showRetryReceiptModal, setShowRetryReceiptModal] = useState(false)
   const [transactionToRetry, setTransactionToRetry] = useState<FailedPayment | null>(null)
   const [receiptModalData, setReceiptModalData] = useState<any>(null)
-  const [selectedTransaction, setSelectedTransaction] = useState<FailedPayment | null>(null)
+  const [expandedRowId, setExpandedRowId] = useState<string | null>(null)
 
   const dispatch = useAppDispatch()
   const {
@@ -613,6 +613,17 @@ const FailedTransactionTable: React.FC<FailedTransactionTableProps> = ({ pageSiz
   }
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
+
+  const toggleRowExpansion = (index: number) => {
+    console.log("=== TOGGLE ROW EXPANSION ===")
+    console.log("Clicked row index:", index)
+    console.log("Current expandedRowId:", expandedRowId)
+    const shouldClose = expandedRowId === index.toString()
+    console.log("Should close current:", shouldClose)
+    const newExpandedId = shouldClose ? null : index.toString()
+    console.log("New expandedRowId will be:", newExpandedId)
+    setExpandedRowId(newExpandedId)
+  }
 
   // Enhanced status color function with better contrast
   const getStatusStyle = (status: string) => {
@@ -949,14 +960,17 @@ const FailedTransactionTable: React.FC<FailedTransactionTableProps> = ({ pageSiz
                         </tr>
                       </thead>
                       <tbody>
-                        <AnimatePresence>
-                          {failedPayments.map((transaction, index) => (
-                            <React.Fragment key={transaction.requestId}>
+                        {failedPayments.map((transaction, index) => {
+                          console.log("Transaction data:", transaction)
+                          const isExpanded = expandedRowId === index.toString()
+                          const uniqueKey = `${transaction.paymentReference}-${index}`
+
+                          return (
+                            <React.Fragment key={uniqueKey}>
                               <motion.tr
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.3, delay: index * 0.05 }}
-                                exit={{ opacity: 0, y: -10 }}
                                 className="hover:bg-gray-50"
                               >
                                 <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">
@@ -998,20 +1012,15 @@ const FailedTransactionTable: React.FC<FailedTransactionTableProps> = ({ pageSiz
                                 <td className="flex items-center gap-2 border-b px-4 py-2 text-sm">
                                   <motion.button
                                     className="inline-flex items-center justify-center rounded-md border border-gray-300 p-1 text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
-                                    onClick={() =>
-                                      setSelectedTransaction(
-                                        selectedTransaction?.requestId === transaction.requestId ? null : transaction
-                                      )
-                                    }
+                                    onClick={() => {
+                                      console.log("Button clicked, row index:", index)
+                                      toggleRowExpansion(index)
+                                    }}
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
-                                    title={
-                                      selectedTransaction?.requestId === transaction.requestId
-                                        ? "Hide details"
-                                        : "View details"
-                                    }
+                                    title={expandedRowId === index.toString() ? "Hide details" : "View details"}
                                   >
-                                    {selectedTransaction?.requestId === transaction.requestId ? (
+                                    {expandedRowId === index.toString() ? (
                                       <VscChevronUp className="size-4" />
                                     ) : (
                                       <VscChevronDown className="size-4" />
@@ -1020,146 +1029,123 @@ const FailedTransactionTable: React.FC<FailedTransactionTableProps> = ({ pageSiz
                                 </td>
                               </motion.tr>
 
-                              <AnimatePresence>
-                                {selectedTransaction?.requestId === transaction.requestId && (
-                                  <motion.tr
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: "auto" }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    transition={{ duration: 0.3 }}
-                                  >
-                                    <td colSpan={8} className="border-b bg-gray-50 p-0">
-                                      <motion.div
-                                        className="p-6"
-                                        initial={{ opacity: 0, y: -20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -20 }}
-                                        transition={{ duration: 0.2 }}
-                                      >
-                                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                                          <div className="space-y-4">
-                                            <div>
-                                              <h4 className="text-sm font-semibold text-gray-900">
-                                                Payment Information
-                                              </h4>
-                                              <div className="mt-2 space-y-2">
-                                                <div className="flex justify-between text-sm">
-                                                  <span className="text-gray-500">Payment Reference:</span>
-                                                  <span className="font-medium">
-                                                    {selectedTransaction.paymentReference}
-                                                  </span>
-                                                </div>
-                                                <div className="flex justify-between text-sm">
-                                                  <span className="text-gray-500">Status:</span>
-                                                  <Badge
-                                                    variant="status"
-                                                    style={getStatusStyle(selectedTransaction.paymentStatus)}
-                                                    className="font-medium"
-                                                  >
-                                                    {selectedTransaction.paymentStatus}
-                                                  </Badge>
-                                                </div>
-                                                <div className="flex justify-between text-sm">
-                                                  <span className="text-gray-500">Channel:</span>
-                                                  <Badge
-                                                    variant="channel"
-                                                    style={getChannelStyle(selectedTransaction.paymentChannel)}
-                                                    className="font-medium"
-                                                  >
-                                                    {selectedTransaction.paymentChannel}
-                                                  </Badge>
-                                                </div>
+                              {isExpanded && (
+                                <motion.tr
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: "auto" }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  transition={{ duration: 0.3 }}
+                                  className="hover:bg-gray-50"
+                                >
+                                  <td colSpan={8} className="border-b bg-gray-50 p-0">
+                                    <motion.div
+                                      className="p-6"
+                                      initial={{ opacity: 0, y: -20 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      transition={{ duration: 0.2 }}
+                                    >
+                                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                                        <div className="space-y-4">
+                                          <div>
+                                            <h4 className="text-sm font-semibold text-gray-900">Payment Information</h4>
+                                            <div className="mt-2 space-y-2">
+                                              <div className="flex justify-between text-sm">
+                                                <span className="text-gray-500">Payment Reference:</span>
+                                                <span className="font-medium">{transaction.paymentReference}</span>
                                               </div>
-                                            </div>
-                                          </div>
-
-                                          <div className="space-y-4">
-                                            <div>
-                                              <h4 className="text-sm font-semibold text-gray-900">Financial Details</h4>
-                                              <div className="mt-2 space-y-2">
-                                                <div className="flex justify-between text-sm">
-                                                  <span className="text-gray-500">Amount:</span>
-                                                  <span className="font-medium">
-                                                    {formatCurrency(selectedTransaction.amount)}
-                                                  </span>
-                                                </div>
-                                                <div className="flex justify-between text-sm">
-                                                  <span className="text-gray-500">Meter Number:</span>
-                                                  <span className="font-medium">{selectedTransaction.drn}</span>
-                                                </div>
-
-                                                <div className="flex justify-between text-sm">
-                                                  <span className="text-gray-500">Account Number:</span>
-                                                  <span className="font-medium">
-                                                    {selectedTransaction.customerAccountNumber}
-                                                  </span>
-                                                </div>
+                                              <div className="flex justify-between text-sm">
+                                                <span className="text-gray-500">Status:</span>
+                                                <Badge
+                                                  variant="status"
+                                                  style={getStatusStyle(transaction.paymentStatus)}
+                                                  className="font-medium"
+                                                >
+                                                  {transaction.paymentStatus}
+                                                </Badge>
                                               </div>
-                                            </div>
-                                          </div>
-
-                                          <div className="space-y-4">
-                                            <div>
-                                              <h4 className="text-sm font-semibold text-gray-900">Attempt Details</h4>
-                                              <div className="mt-2 space-y-2">
-                                                <div className="flex justify-between text-sm">
-                                                  <span className="text-gray-500">Attempt Count:</span>
-                                                  <span className="font-medium">
-                                                    {selectedTransaction.attemptCount} /{" "}
-                                                    {selectedTransaction.maxAttempts}
-                                                  </span>
-                                                </div>
-                                                <div className="flex justify-between text-sm">
-                                                  <span className="text-gray-500">Last Attempt:</span>
-                                                  <span className="font-medium">
-                                                    {new Date(selectedTransaction.lastAttemptAtUtc).toLocaleString()}
-                                                  </span>
-                                                </div>
-                                                <div className="flex justify-between text-sm">
-                                                  <span className="text-gray-500">Completed At:</span>
-                                                  <span className="font-medium">
-                                                    {selectedTransaction.completedAtUtc
-                                                      ? new Date(selectedTransaction.completedAtUtc).toLocaleString()
-                                                      : "N/A"}
-                                                  </span>
-                                                </div>
-                                                {/* <div className="flex justify-between text-sm">
-                                                  <span className="text-gray-500">Error Code:</span>
-                                                  <span className="font-medium">
-                                                    {selectedTransaction.errorCode || "N/A"}
-                                                  </span>
-                                                </div> */}
+                                              <div className="flex justify-between text-sm">
+                                                <span className="text-gray-500">Channel:</span>
+                                                <Badge
+                                                  variant="channel"
+                                                  style={getChannelStyle(transaction.paymentChannel)}
+                                                  className="font-medium"
+                                                >
+                                                  {transaction.paymentChannel}
+                                                </Badge>
                                               </div>
                                             </div>
                                           </div>
                                         </div>
 
-                                        <div className="mt-6 flex justify-end gap-3">
-                                          <ButtonModule
-                                            size="sm"
-                                            variant="primary"
-                                            onClick={() => handleRetryPayment(selectedTransaction)}
-                                            icon={<VscRefresh />}
-                                            disabled={retryFailedPaymentLoading}
-                                          >
-                                            {retryFailedPaymentLoading ? "Retrying..." : "Retry"}
-                                          </ButtonModule>
-                                          {/* <ButtonModule
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() => handleViewReceipt(selectedTransaction)}
-                                          >
-                                            View Receipt
-                                          </ButtonModule> */}
+                                        <div className="space-y-4">
+                                          <div>
+                                            <h4 className="text-sm font-semibold text-gray-900">Financial Details</h4>
+                                            <div className="mt-2 space-y-2">
+                                              <div className="flex justify-between text-sm">
+                                                <span className="text-gray-500">Amount:</span>
+                                                <span className="font-medium">
+                                                  {formatCurrency(transaction.amount)}
+                                                </span>
+                                              </div>
+                                              <div className="flex justify-between text-sm">
+                                                <span className="text-gray-500">Meter Number:</span>
+                                                <span className="font-medium">{transaction.drn}</span>
+                                              </div>
+                                              <div className="flex justify-between text-sm">
+                                                <span className="text-gray-500">Account Number:</span>
+                                                <span className="font-medium">{transaction.customerAccountNumber}</span>
+                                              </div>
+                                            </div>
+                                          </div>
                                         </div>
-                                      </motion.div>
-                                    </td>
-                                  </motion.tr>
-                                )}
-                              </AnimatePresence>
+
+                                        <div className="space-y-4">
+                                          <div>
+                                            <h4 className="text-sm font-semibold text-gray-900">Attempt Details</h4>
+                                            <div className="mt-2 space-y-2">
+                                              <div className="flex justify-between text-sm">
+                                                <span className="text-gray-500">Attempt Count:</span>
+                                                <span className="font-medium">
+                                                  {transaction.attemptCount} / {transaction.maxAttempts}
+                                                </span>
+                                              </div>
+                                              <div className="flex justify-between text-sm">
+                                                <span className="text-gray-500">Last Attempt:</span>
+                                                <span className="font-medium">
+                                                  {new Date(transaction.lastAttemptAtUtc).toLocaleString()}
+                                                </span>
+                                              </div>
+                                              <div className="flex justify-between text-sm">
+                                                <span className="text-gray-500">Completed At:</span>
+                                                <span className="font-medium">
+                                                  {transaction.completedAtUtc
+                                                    ? new Date(transaction.completedAtUtc).toLocaleString()
+                                                    : "N/A"}
+                                                </span>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      <div className="mt-6 flex justify-end gap-3">
+                                        <ButtonModule
+                                          size="sm"
+                                          variant="primary"
+                                          onClick={() => handleRetryPayment(transaction)}
+                                          icon={<VscRefresh />}
+                                          disabled={retryFailedPaymentLoading}
+                                        >
+                                          {retryFailedPaymentLoading ? "Retrying..." : "Retry"}
+                                        </ButtonModule>
+                                      </div>
+                                    </motion.div>
+                                  </td>
+                                </motion.tr>
+                              )}
                             </React.Fragment>
-                          ))}
-                        </AnimatePresence>
+                          )
+                        })}
                       </tbody>
                     </table>
                   </motion.div>

@@ -19,6 +19,7 @@ import {
   Key,
   MapPin,
   NetworkIcon,
+  Power,
   PowerOff,
   Receipt,
   RefreshCw,
@@ -31,6 +32,8 @@ import DashboardNav from "components/Navbar/DashboardNav"
 
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
+  activateMeter,
+  type ActivateMeterRequest,
   changeTariff,
   type ChangeTariffRequest,
   changeTechnicalConfig,
@@ -39,6 +42,8 @@ import {
   clearCurrentMeter,
   clearTamper,
   clearTamperData,
+  deactivateMeter,
+  type DeactivateMeterRequest,
   fetchClearTamperHistory,
   fetchMeterDetail,
   fetchMeterHistory,
@@ -68,6 +73,8 @@ import SetControlModal from "components/ui/Modal/set-control-modal"
 import ChangePhaseModal from "components/ui/Modal/change-phase-modal"
 import ChangeTechnicalConfigModal from "components/ui/Modal/change-technical-config-modal"
 import ChangeTIModal from "components/ui/Modal/change-ti-modal"
+import ActivateMeterModal from "components/ui/Modal/activate-meter-modal"
+import DeactivateMeterModal from "components/ui/Modal/deactivate-meter-modal"
 import {
   CalendarOutlineIcon,
   ExportOutlineIcon,
@@ -584,6 +591,8 @@ const MeterBasicInfoTab = ({
       | "changePhase"
       | "changeTechnicalConfig"
       | "changeTI"
+      | "activate"
+      | "deactivate"
   ) => void
   router: ReturnType<typeof useRouter>
 }) => {
@@ -802,7 +811,7 @@ const MeterBasicInfoTab = ({
             </div>
           </motion.div>
           {/* Quick Actions */}
-          {canUpdate && (
+          {canUpdate && meter.meterType === 1 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -907,6 +916,27 @@ const MeterBasicInfoTab = ({
                   <RefreshCw className="size-4" />
                   Change TI
                 </ButtonModule>
+                {meter?.status === 1 ? (
+                  <ButtonModule
+                    variant="danger"
+                    size="md"
+                    className="w-full justify-start gap-3 text-sm"
+                    onClick={() => openModal("deactivate")}
+                  >
+                    <PowerOff className="size-4" />
+                    Deactivate Meter
+                  </ButtonModule>
+                ) : (
+                  <ButtonModule
+                    variant="primary"
+                    size="md"
+                    className="w-full justify-start gap-3 text-sm"
+                    onClick={() => openModal("activate")}
+                  >
+                    <Power className="size-4" />
+                    Activate Meter
+                  </ButtonModule>
+                )}
               </div>
             </motion.div>
           )}
@@ -1354,6 +1384,12 @@ const MeterDetailsPage = () => {
     changeTariffLoading,
     changeTariffError,
     changeTariffData,
+    activateMeterLoading,
+    activateMeterError,
+    activateMeterData,
+    deactivateMeterLoading,
+    deactivateMeterError,
+    deactivateMeterData,
   } = useAppSelector((state) => state.meters)
 
   // Get current user to check privileges
@@ -1385,6 +1421,8 @@ const MeterDetailsPage = () => {
     | "changePhase"
     | "changeTechnicalConfig"
     | "changeTI"
+    | "activate"
+    | "deactivate"
     | null
   >(null)
   const [isMobileTabMenuOpen, setIsMobileTabMenuOpen] = useState(false)
@@ -1445,6 +1483,8 @@ const MeterDetailsPage = () => {
       | "changePhase"
       | "changeTechnicalConfig"
       | "changeTI"
+      | "activate"
+      | "deactivate"
   ) => setActiveModal(modalType)
 
   const handleUpdateSuccess = () => {
@@ -1514,6 +1554,20 @@ const MeterDetailsPage = () => {
     if (meter) {
       await dispatch(changeTariff({ id: meter.id, data: tiData })).unwrap()
       closeAllModals()
+    }
+  }
+
+  const handleActivateMeter = async (activateData: ActivateMeterRequest) => {
+    if (meter) {
+      await dispatch(activateMeter({ id: meter.id, data: activateData })).unwrap()
+      handleUpdateSuccess()
+    }
+  }
+
+  const handleDeactivateMeter = async (deactivateData: DeactivateMeterRequest) => {
+    if (meter) {
+      await dispatch(deactivateMeter({ id: meter.id, data: deactivateData })).unwrap()
+      handleUpdateSuccess()
     }
   }
 
@@ -1937,90 +1991,94 @@ const MeterDetailsPage = () => {
                               <Info className="size-5" />
                               <span>Basic Info</span>
                             </button>
-                            <button
-                              onClick={() => {
-                                setActiveTab("prepaid-credit-history")
-                                setIsMobileTabMenuOpen(false)
-                              }}
-                              className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
-                                activeTab === "prepaid-credit-history"
-                                  ? "bg-[#004B23] text-white"
-                                  : "text-gray-700 hover:bg-gray-50"
-                              }`}
-                            >
-                              <CreditCard className="size-5" />
-                              <span>Prepaid Credit History</span>
-                            </button>
-                            <button
-                              onClick={() => {
-                                setActiveTab("clear-tamper-history")
-                                setIsMobileTabMenuOpen(false)
-                              }}
-                              className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
-                                activeTab === "clear-tamper-history"
-                                  ? "bg-[#004B23] text-white"
-                                  : "text-gray-700 hover:bg-gray-50"
-                              }`}
-                            >
-                              <Shield className="size-5" />
-                              <span>Clear Tamper History</span>
-                            </button>
-                            <button
-                              onClick={() => {
-                                setActiveTab("clear-credit-history")
-                                setIsMobileTabMenuOpen(false)
-                              }}
-                              className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
-                                activeTab === "clear-credit-history"
-                                  ? "bg-[#004B23] text-white"
-                                  : "text-gray-700 hover:bg-gray-50"
-                              }`}
-                            >
-                              <RefreshCw className="size-5" />
-                              <span>Clear Credit History</span>
-                            </button>
-                            <button
-                              onClick={() => {
-                                setActiveTab("key-change-history")
-                                setIsMobileTabMenuOpen(false)
-                              }}
-                              className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
-                                activeTab === "key-change-history"
-                                  ? "bg-[#004B23] text-white"
-                                  : "text-gray-700 hover:bg-gray-50"
-                              }`}
-                            >
-                              <Key className="size-5" />
-                              <span>Key Change History</span>
-                            </button>
-                            <button
-                              onClick={() => {
-                                setActiveTab("set-control-history")
-                                setIsMobileTabMenuOpen(false)
-                              }}
-                              className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
-                                activeTab === "set-control-history"
-                                  ? "bg-[#004B23] text-white"
-                                  : "text-gray-700 hover:bg-gray-50"
-                              }`}
-                            >
-                              <Settings className="size-5" />
-                              <span>Set Control History</span>
-                            </button>
-                            <button
-                              onClick={() => {
-                                setActiveTab("meter-history")
-                                setIsMobileTabMenuOpen(false)
-                              }}
-                              className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
-                                activeTab === "meter-history"
-                                  ? "bg-[#004B23] text-white"
-                                  : "text-gray-700 hover:bg-gray-50"
-                              }`}
-                            >
-                              <HistoryIcon className="size-5" />
-                              <span>Meter History</span>
-                            </button>
+                            {meter.meterType === 1 && (
+                              <>
+                                <button
+                                  onClick={() => {
+                                    setActiveTab("prepaid-credit-history")
+                                    setIsMobileTabMenuOpen(false)
+                                  }}
+                                  className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
+                                    activeTab === "prepaid-credit-history"
+                                      ? "bg-[#004B23] text-white"
+                                      : "text-gray-700 hover:bg-gray-50"
+                                  }`}
+                                >
+                                  <CreditCard className="size-5" />
+                                  <span>Prepaid Credit History</span>
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setActiveTab("clear-tamper-history")
+                                    setIsMobileTabMenuOpen(false)
+                                  }}
+                                  className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
+                                    activeTab === "clear-tamper-history"
+                                      ? "bg-[#004B23] text-white"
+                                      : "text-gray-700 hover:bg-gray-50"
+                                  }`}
+                                >
+                                  <Shield className="size-5" />
+                                  <span>Clear Tamper History</span>
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setActiveTab("clear-credit-history")
+                                    setIsMobileTabMenuOpen(false)
+                                  }}
+                                  className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
+                                    activeTab === "clear-credit-history"
+                                      ? "bg-[#004B23] text-white"
+                                      : "text-gray-700 hover:bg-gray-50"
+                                  }`}
+                                >
+                                  <RefreshCw className="size-5" />
+                                  <span>Clear Credit History</span>
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setActiveTab("key-change-history")
+                                    setIsMobileTabMenuOpen(false)
+                                  }}
+                                  className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
+                                    activeTab === "key-change-history"
+                                      ? "bg-[#004B23] text-white"
+                                      : "text-gray-700 hover:bg-gray-50"
+                                  }`}
+                                >
+                                  <Key className="size-5" />
+                                  <span>Key Change History</span>
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setActiveTab("set-control-history")
+                                    setIsMobileTabMenuOpen(false)
+                                  }}
+                                  className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
+                                    activeTab === "set-control-history"
+                                      ? "bg-[#004B23] text-white"
+                                      : "text-gray-700 hover:bg-gray-50"
+                                  }`}
+                                >
+                                  <Settings className="size-5" />
+                                  <span>Set Control History</span>
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setActiveTab("meter-history")
+                                    setIsMobileTabMenuOpen(false)
+                                  }}
+                                  className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
+                                    activeTab === "meter-history"
+                                      ? "bg-[#004B23] text-white"
+                                      : "text-gray-700 hover:bg-gray-50"
+                                  }`}
+                                >
+                                  <HistoryIcon className="size-5" />
+                                  <span>Meter History</span>
+                                </button>
+                              </>
+                            )}
                           </div>
                         )}
                       </div>
@@ -2038,72 +2096,87 @@ const MeterDetailsPage = () => {
                             <Info className="size-5" />
                             <span>Basic Info</span>
                           </button>
-                          <button
-                            onClick={() => setActiveTab("prepaid-credit-history")}
-                            className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
-                              activeTab === "prepaid-credit-history"
-                                ? "bg-[#004B23] text-white"
-                                : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
-                            }`}
-                          >
-                            <CreditCard className="size-5" />
-                            <span>Prepaid Credit History</span>
-                          </button>
-                          <button
-                            onClick={() => setActiveTab("clear-tamper-history")}
-                            className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
-                              activeTab === "clear-tamper-history"
-                                ? "bg-[#004B23] text-white"
-                                : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
-                            }`}
-                          >
-                            <Shield className="size-5" />
-                            <span>Clear Tamper History</span>
-                          </button>
-                          <button
-                            onClick={() => setActiveTab("clear-credit-history")}
-                            className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
-                              activeTab === "clear-credit-history"
-                                ? "bg-[#004B23] text-white"
-                                : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
-                            }`}
-                          >
-                            <RefreshCw className="size-5" />
-                            <span>Clear Credit History</span>
-                          </button>
-                          <button
-                            onClick={() => setActiveTab("key-change-history")}
-                            className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
-                              activeTab === "key-change-history"
-                                ? "bg-[#004B23] text-white"
-                                : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
-                            }`}
-                          >
-                            <Key className="size-5" />
-                            <span>Key Change History</span>
-                          </button>
-                          <button
-                            onClick={() => setActiveTab("set-control-history")}
-                            className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
-                              activeTab === "set-control-history"
-                                ? "bg-[#004B23] text-white"
-                                : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
-                            }`}
-                          >
-                            <Settings className="size-5" />
-                            <span>Set Control History</span>
-                          </button>
-                          <button
-                            onClick={() => setActiveTab("meter-history")}
-                            className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
-                              activeTab === "meter-history"
-                                ? "bg-[#004B23] text-white"
-                                : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
-                            }`}
-                          >
-                            <HistoryIcon className="size-5" />
-                            <span>Meter History</span>
-                          </button>
+                          {meter.meterType === 1 && (
+                            <>
+                              <button
+                                onClick={() => setActiveTab("prepaid-credit-history")}
+                                className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
+                                  activeTab === "prepaid-credit-history"
+                                    ? "bg-[#004B23] text-white"
+                                    : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
+                                }`}
+                              >
+                                <CreditCard className="size-5" />
+                                <span>Prepaid Credit History</span>
+                              </button>
+                              <button
+                                onClick={() => setActiveTab("clear-tamper-history")}
+                                className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
+                                  activeTab === "clear-tamper-history"
+                                    ? "bg-[#004B23] text-white"
+                                    : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
+                                }`}
+                              >
+                                <Shield className="size-5" />
+                                <span>Clear Tamper History</span>
+                              </button>
+                              <button
+                                onClick={() => setActiveTab("clear-credit-history")}
+                                className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
+                                  activeTab === "clear-credit-history"
+                                    ? "bg-[#004B23] text-white"
+                                    : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
+                                }`}
+                              >
+                                <RefreshCw className="size-5" />
+                                <span>Clear Credit History</span>
+                              </button>
+                              <button
+                                onClick={() => setActiveTab("key-change-history")}
+                                className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
+                                  activeTab === "key-change-history"
+                                    ? "bg-[#004B23] text-white"
+                                    : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
+                                }`}
+                              >
+                                <Key className="size-5" />
+                                <span>Key Change History</span>
+                              </button>
+                              <button
+                                onClick={() => setActiveTab("set-control-history")}
+                                className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
+                                  activeTab === "set-control-history"
+                                    ? "bg-[#004B23] text-white"
+                                    : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
+                                }`}
+                              >
+                                <Settings className="size-5" />
+                                <span>Set Control History</span>
+                              </button>
+                              <button
+                                onClick={() => setActiveTab("meter-history")}
+                                className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
+                                  activeTab === "meter-history"
+                                    ? "bg-[#004B23] text-white"
+                                    : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
+                                }`}
+                              >
+                                <HistoryIcon className="size-5" />
+                                <span>Meter History</span>
+                              </button>
+                              <button
+                                onClick={() => setActiveTab("meter-history")}
+                                className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
+                                  activeTab === "meter-history"
+                                    ? "bg-[#004B23] text-white"
+                                    : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
+                                }`}
+                              >
+                                <HistoryIcon className="size-5" />
+                                <span>Activate</span>
+                              </button>
+                            </>
+                          )}
                         </nav>
                       </div>
                     </div>
@@ -2210,6 +2283,26 @@ const MeterDetailsPage = () => {
         currentTI={meter.ti}
         errorMessage={changeTariffError || undefined}
         successMessage={changeTariffData ? "TI changed successfully!" : undefined}
+      />
+
+      <ActivateMeterModal
+        isOpen={activeModal === "activate"}
+        onRequestClose={closeAllModals}
+        onConfirm={handleActivateMeter}
+        loading={activateMeterLoading}
+        meterId={meter.id}
+        errorMessage={activateMeterError || undefined}
+        successMessage={activateMeterData ? "Meter activated successfully!" : undefined}
+      />
+
+      <DeactivateMeterModal
+        isOpen={activeModal === "deactivate"}
+        onRequestClose={closeAllModals}
+        onConfirm={handleDeactivateMeter}
+        loading={deactivateMeterLoading}
+        meterId={meter.id}
+        errorMessage={deactivateMeterError || undefined}
+        successMessage={deactivateMeterData ? "Meter deactivated successfully!" : undefined}
       />
     </section>
   )

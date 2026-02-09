@@ -469,6 +469,8 @@ export const API_ENDPOINTS = {
     UPDATE_METER_PHASE: "/meters/{id}/phase",
     CHANGE_TECHNICAL_CONFIG: "/meters/{id}/technical-config",
     CHANGE_TARIFF: "/meters/{id}/ti",
+    ACTIVATE: "/meters/{id}/activate",
+    DEACTIVATE: "/meters/{id}/deactivate",
   },
 
   METER_BRANDS: {

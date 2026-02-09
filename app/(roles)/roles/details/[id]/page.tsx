@@ -642,7 +642,7 @@ const RoleDetailsPage = () => {
 
                     {!currentRole.isSystem && canUpdate && (
                       <ButtonModule
-                        variant="primary"
+                        variant="outline"
                         size="sm"
                         className="flex items-center gap-2"
                         onClick={handleEditRole}
@@ -668,7 +668,7 @@ const RoleDetailsPage = () => {
 
                     {!currentRole.isSystem && canUpdate && (
                       <ButtonModule
-                        variant="primary"
+                        variant="outlineBlue"
                         size="sm"
                         className="flex items-center gap-2"
                         onClick={handleManagePermissions}
@@ -681,7 +681,7 @@ const RoleDetailsPage = () => {
 
                     {!currentRole.isSystem && canUpdate && (
                       <ButtonModule
-                        variant="danger"
+                        variant="outlinePurple"
                         size="sm"
                         className="flex items-center gap-2"
                         onClick={handleDeleteRole}
@@ -774,7 +774,7 @@ const RoleDetailsPage = () => {
                     <div className="space-y-3">
                       {!currentRole.isSystem && canUpdate && (
                         <ButtonModule
-                          variant="primary"
+                          variant="outline"
                           className="w-full justify-start gap-3"
                           onClick={handleEditRole}
                           disabled={activeAction === "edit"}
@@ -786,7 +786,7 @@ const RoleDetailsPage = () => {
 
                       {!currentRole.isSystem && canUpdate && (
                         <ButtonModule
-                          variant="primary"
+                          variant="outlineBlue"
                           className="w-full justify-start gap-3"
                           onClick={handleManagePermissions}
                           disabled={activeAction === "permissions"}
@@ -809,7 +809,7 @@ const RoleDetailsPage = () => {
                       )} */}
 
                       <ButtonModule
-                        variant="secondary"
+                        variant="outlinePurple"
                         className="w-full justify-start gap-3"
                         onClick={() => router.push(`/assign/${currentRole.id}`)}
                       >
@@ -819,7 +819,7 @@ const RoleDetailsPage = () => {
 
                       {!currentRole.isSystem && canUpdate && (
                         <ButtonModule
-                          variant="danger"
+                          variant="outlineCyan"
                           className="w-full justify-start gap-3"
                           onClick={handleDeleteRole}
                           disabled={deleteRoleLoading}
