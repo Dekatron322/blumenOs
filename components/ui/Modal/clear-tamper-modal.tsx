@@ -34,7 +34,7 @@ const ClearTamperModal: React.FC<ClearTamperModalProps> = ({
 }) => {
   const [copied, setCopied] = useState(false)
   const [showSuccessState, setShowSuccessState] = useState(false)
-  const [currentToken, setCurrentToken] = useState<string | null>(null)
+  const [currentToken, setCurrentToken] = useState<{ tokenDec: string; tokenHex: string } | null>(null)
   const hasShownSuccessRef = useRef(false)
 
   // Reset all state when modal opens or closes
@@ -117,19 +117,31 @@ const ClearTamperModal: React.FC<ClearTamperModalProps> = ({
     try {
       const parsed = JSON.parse(response) as any
 
-      // Handle the actual API response structure: data.data.result[0].tokenDec
+      // Handle the actual API response structure: data.data.result[0].tokenDec and tokenHex
       if (parsed.data?.data?.result && Array.isArray(parsed.data.data.result) && parsed.data.data.result.length > 0) {
-        return parsed.data.data.result[0]?.tokenDec
+        const result = parsed.data.data.result[0]
+        return {
+          tokenDec: result?.tokenDec,
+          tokenHex: result?.tokenHex,
+        }
       }
 
       // Fallback to direct result array
       if (parsed.result && Array.isArray(parsed.result) && parsed.result.length > 0) {
-        return parsed.result[0]?.tokenDec
+        const result = parsed.result[0]
+        return {
+          tokenDec: result?.tokenDec,
+          tokenHex: result?.tokenHex,
+        }
       }
 
       // Fallback to tokens array
       if (parsed.tokens && Array.isArray(parsed.tokens) && parsed.tokens.length > 0) {
-        return parsed.tokens[0]?.tokenDec
+        const result = parsed.tokens[0]
+        return {
+          tokenDec: result?.tokenDec,
+          tokenHex: result?.tokenHex,
+        }
       }
 
       return null
@@ -230,16 +242,18 @@ const ClearTamperModal: React.FC<ClearTamperModalProps> = ({
               <p className="text-sm text-green-800">{successMessage}</p>
               {currentToken && (
                 <div className="mt-3">
-                  <p className="mb-2 text-xs font-medium text-green-700">Clear Token:</p>
-                  <div className="flex items-center justify-between rounded border border-green-200 bg-green-50/50 p-2">
-                    <span className="font-mono text-sm font-bold text-green-800">{formatToken(currentToken)}</span>
+                  <p className="mb-2 text-xs font-medium text-green-700">Clear Token (Decimal):</p>
+                  <div className="mb-3 flex items-center justify-between rounded border border-green-200 bg-green-50/50 p-2">
+                    <span className="font-mono text-sm font-bold text-green-800">
+                      {formatToken(currentToken.tokenDec)}
+                    </span>
                     <ButtonModule
                       variant="outline"
                       size="sm"
-                      onClick={() => handleCopyToken(formatToken(currentToken))}
+                      onClick={() => handleCopyToken(formatToken(currentToken.tokenDec))}
                       className="flex items-center gap-1 border-green-300 text-green-700 hover:bg-green-100"
                     >
-                      {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
+                      <Copy className="size-3" />
                       {copied ? "Copied!" : "Copy"}
                     </ButtonModule>
                   </div>
@@ -249,60 +263,28 @@ const ClearTamperModal: React.FC<ClearTamperModalProps> = ({
           </div>
         )}
 
-        <div className="flex gap-3">
-          <ButtonModule
-            variant="secondary"
-            className="flex-1"
-            size="lg"
-            onClick={handleClose}
-            disabled={loading && !shouldShowSuccess}
-          >
-            {shouldShowSuccess ? "Close" : "Cancel"}
-          </ButtonModule>
-          {shouldShowSuccess && (
-            <ButtonModule
-              variant="outline"
-              className="flex items-center gap-2"
-              size="lg"
-              onClick={handleRefresh}
-              disabled={loading}
-            >
+        {!shouldShowSuccess && (
+          <div className="flex gap-3">
+            <ButtonModule variant="outline" onClick={handleClose} disabled={loading} className="flex-1">
+              Cancel
+            </ButtonModule>
+            <ButtonModule onClick={handleConfirm} disabled={loading} loading={loading} className="flex-1">
+              Clear Tamper
+            </ButtonModule>
+          </div>
+        )}
+
+        {shouldShowSuccess && (
+          <div className="flex gap-3">
+            <ButtonModule variant="outline" onClick={handleRefresh} className="flex items-center gap-2">
               <RotateCcw className="size-4" />
-              New Clear
+              Clear Another
             </ButtonModule>
-          )}
-          {!shouldShowSuccess && (
-            <ButtonModule variant="primary" className="flex-1" size="lg" onClick={handleConfirm} disabled={loading}>
-              {loading ? (
-                <div className="flex items-center justify-center">
-                  <svg
-                    className="mr-2 size-5 animate-spin"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                    ></path>
-                  </svg>
-                  Clearing...
-                </div>
-              ) : (
-                "Clear Tamper"
-              )}
+            <ButtonModule onClick={handleClose} className="flex-1">
+              Done
             </ButtonModule>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </Modal>
   )
