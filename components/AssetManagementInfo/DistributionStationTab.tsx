@@ -486,12 +486,26 @@ const DistributionStationTab: React.FC = () => {
 
     if (shouldUpdate) {
       setSearchText(trimmed)
+      // Apply filters immediately to trigger API call with search parameter
+      setAppliedFilters((prev) => ({
+        ...prev,
+        searchText: trimmed,
+      }))
+      // Reset to first page when searching
+      dispatch(setPagination({ page: 1, pageSize }))
     }
   }
 
   const handleCancelSearch = () => {
     setSearchText("")
     setSearchInput("")
+    // Clear search from applied filters and trigger API call
+    setAppliedFilters((prev) => ({
+      ...prev,
+      searchText: "",
+    }))
+    // Reset to first page when clearing search
+    dispatch(setPagination({ page: 1, pageSize }))
   }
 
   const paginate = (pageNumber: number) => {

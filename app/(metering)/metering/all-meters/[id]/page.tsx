@@ -38,6 +38,8 @@ import {
   clearCredit,
   clearCurrentMeter,
   clearTamper,
+  clearTamperData,
+  fetchClearTamperHistory,
   fetchMeterDetail,
   fetchMeterHistory,
   type MeterDetailData,
@@ -1336,7 +1338,7 @@ const MeterDetailsPage = () => {
     meterError,
     clearTamperLoading,
     clearTamperError,
-    clearTamperData,
+    clearTamperData: clearTamperDataState,
     clearCreditLoading,
     clearCreditError,
     clearCreditData,
@@ -1467,10 +1469,16 @@ const MeterDetailsPage = () => {
     closeAllModals()
   }
 
+  const handleClearTamperReset = () => {
+    dispatch(clearTamperData())
+  }
+
   const handleClearTamper = async () => {
     if (meter) {
       await dispatch(clearTamper(meter.id)).unwrap()
-      closeAllModals()
+      // Refresh history after successful clear
+      dispatch(fetchClearTamperHistory({ id: meter.id, pageNumber: 1, pageSize: 10 }))
+      // DON'T close modal automatically - let user see the token and close manually
     }
   }
 
@@ -2129,10 +2137,12 @@ const MeterDetailsPage = () => {
         isOpen={activeModal === "clearTamper"}
         onRequestClose={closeAllModals}
         onConfirm={handleClearTamper}
+        onReset={handleClearTamperReset}
         loading={clearTamperLoading}
         meterId={meter.id}
         errorMessage={clearTamperError || undefined}
-        successMessage={clearTamperData ? "Tamper cleared successfully!" : undefined}
+        successMessage={clearTamperDataState ? "Tamper cleared successfully!" : undefined}
+        tokenData={clearTamperDataState ? JSON.stringify(clearTamperDataState) : null}
       />
 
       <AddKeyChangeModal
