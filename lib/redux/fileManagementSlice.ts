@@ -450,6 +450,7 @@ export interface CsvJobsParams {
   PageNumber: number
   PageSize: number
   JobType?: number
+  JobTypes?: number[]
   Status?: number
   RequestedByUserId?: number
   RequestedFromUtc?: string
@@ -1422,6 +1423,9 @@ export const fetchCsvJobs = createAsyncThunk(
 
       // Optional parameters - only add if they exist
       if (params.JobType !== undefined) queryParams.append("JobType", params.JobType.toString())
+      if (params.JobTypes && params.JobTypes.length > 0) {
+        params.JobTypes.forEach((jobType) => queryParams.append("JobTypes", jobType.toString()))
+      }
       if (params.Status !== undefined) queryParams.append("Status", params.Status.toString())
       if (params.RequestedByUserId !== undefined)
         queryParams.append("RequestedByUserId", params.RequestedByUserId.toString())
