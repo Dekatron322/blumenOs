@@ -184,6 +184,18 @@ export const allLinks: LinkItem[] = [
         requiredActions: ["R"],
       },
       {
+        name: "Clear Tamper",
+        href: "/tokens/clear-tamper",
+        privilegeKey: "payments",
+        requiredActions: ["R"],
+      },
+      {
+        name: "Test Token",
+        href: "/tokens/test-token",
+        privilegeKey: "payments",
+        requiredActions: ["R"],
+      },
+      {
         name: "Failed Vends",
         href: "/tokens/failed-vend",
         privilegeKey: "payments",

@@ -61,38 +61,40 @@ const KeyChangeSuccessModal: React.FC<KeyChangeSuccessModalProps> = ({ isOpen, o
             {/* Content */}
             <div className="max-h-[calc(100vh-200px)] w-full overflow-y-auto p-4 md:p-6">
               {/* Advice Section */}
-              <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
-                <h3 className="mb-2 flex items-center gap-2 text-sm font-medium text-blue-900">
-                  <Key className="size-4" />
-                  Key Change Advice
-                </h3>
-                <div className="grid grid-cols-2 gap-2 text-xs text-blue-800 md:grid-cols-4">
-                  <div className="flex justify-between">
-                    <span className="font-medium">ID Record:</span>
-                    <span className="font-mono">{tokenData.advice.idRecord}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">Rollover:</span>
-                    <span>{tokenData.advice.rollover ? "Yes" : "No"}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">Token:</span>
-                    <span className="font-mono">{tokenData.advice.toKen}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">KRN:</span>
-                    <span className="font-mono">{tokenData.advice.toKrn}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">SGC:</span>
-                    <span className="font-mono">{tokenData.advice.toSgc}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">TI:</span>
-                    <span className="font-mono">{tokenData.advice.toTi}</span>
+              {tokenData.advice && (
+                <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
+                  <h3 className="mb-2 flex items-center gap-2 text-sm font-medium text-blue-900">
+                    <Key className="size-4" />
+                    Key Change Advice
+                  </h3>
+                  <div className="grid grid-cols-2 gap-2 text-xs text-blue-800 md:grid-cols-4">
+                    <div className="flex justify-between">
+                      <span className="font-medium">ID Record:</span>
+                      <span className="font-mono">{tokenData.advice?.idRecord || "N/A"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Rollover:</span>
+                      <span>{tokenData.advice?.rollover ? "Yes" : "No"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Token:</span>
+                      <span className="font-mono">{tokenData.advice?.toKen || "N/A"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">KRN:</span>
+                      <span className="font-mono">{tokenData.advice?.toKrn || "N/A"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">SGC:</span>
+                      <span className="font-mono">{tokenData.advice?.toSgc || "N/A"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">TI:</span>
+                      <span className="font-mono">{tokenData.advice?.toTi || "N/A"}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Tokens Section */}
               {tokenData.tokens && tokenData.tokens.length > 0 && (

@@ -243,6 +243,10 @@ export const API_ENDPOINTS = {
     POSTPAID_ESTIMATED_CONSUMPTION_BULK_UPLOAD: "/billing/postpaid/estimated-consumptions/bulk/import",
     DOWNLOAD_CSV_JOBS: "/system/csv-jobs/{id}/customer-setup/result",
     PRINT_BULK_UPLOAD: "/billing/postpaid/print/batch/upload",
+    CLEAR_TAMPER_BULK_UPLOAD: "/meters/prepaid/clear-tamper/bulk",
+    DOWNLOAD_CLEAR_TAMPER: "/system/csv-jobs/{id}/clear-tamper/result",
+    TEST_TOKEN_BULK_UPLOAD: "/meters/prepaid/test-token/bulk",
+    DOWNLOAD_TEST_TOKEN: "/system/csv-jobs/{id}/test-token/result",
   },
 
   METER_CAPTURE: {
@@ -288,7 +292,7 @@ export const API_ENDPOINTS = {
     POSTPAID_BILL_PRINT: "/billing/postpaid/print/batch",
     MARK_AS_READY_TO_PRINT: "/billing/postpaid/ready-to-print",
     SINGLE_BILLING_PRINT: "/billing/postpaid/print/batch",
-    DOWNLOAD_PRINT_JOB: "/billing/postpaid/print-jobs/{id}/download",
+    DOWNLOAD_PRINT_JOB: "/billing/postpaid/print/batch/{id}/download",
   },
 
   BILLING_PERIODS: {
@@ -469,6 +473,9 @@ export const API_ENDPOINTS = {
     UPDATE_METER_PHASE: "/meters/{id}/phase",
     CHANGE_TECHNICAL_CONFIG: "/meters/{id}/technical-config",
     CHANGE_TARIFF: "/meters/{id}/ti",
+    ACTIVATE: "/meters/{id}/activate",
+    DEACTIVATE: "/meters/{id}/deactivate",
+    TEST_TOKEN: "/meters/{id}/prepaid/test-token",
   },
 
   METER_BRANDS: {

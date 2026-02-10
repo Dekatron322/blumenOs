@@ -278,6 +278,15 @@ export interface MetersState {
   retryFailedPaymentError: string | null
   retryFailedPaymentSuccess: boolean
   retryFailedPaymentData: RetryFailedPaymentData | null
+  activateMeterData: MeterDetailData | null
+  activateMeterLoading: boolean
+  activateMeterError: string | null
+  deactivateMeterData: MeterDetailData | null
+  deactivateMeterLoading: boolean
+  deactivateMeterError: string | null
+  testTokenData: TestTokenResult | null
+  testTokenLoading: boolean
+  testTokenError: string | null
   summary: MetersSummaryData | null
   summaryLoading: boolean
   summaryError: string | null
@@ -419,6 +428,15 @@ const initialState: MetersState = {
   retryFailedPaymentError: null,
   retryFailedPaymentSuccess: false,
   retryFailedPaymentData: null,
+  activateMeterData: null,
+  activateMeterLoading: false,
+  activateMeterError: null,
+  deactivateMeterData: null,
+  deactivateMeterLoading: false,
+  deactivateMeterError: null,
+  testTokenData: null,
+  testTokenLoading: false,
+  testTokenError: null,
   summary: null,
   summaryLoading: false,
   summaryError: null,
@@ -499,6 +517,70 @@ export interface ChangeTariffResponse {
   isSuccess: boolean
   message: string
   data: MeterDetailData
+}
+
+// Interface for Activate Meter Request
+export interface ActivateMeterRequest {
+  status: number
+  changeReason: string
+}
+
+// Interface for Activate Meter Response
+export interface ActivateMeterResponse {
+  isSuccess: boolean
+  message: string
+  data: MeterDetailData
+}
+
+// Interface for Deactivate Meter Request
+export interface DeactivateMeterRequest {
+  status: number
+  changeReason: string
+}
+
+// Interface for Deactivate Meter Response
+export interface DeactivateMeterResponse {
+  isSuccess: boolean
+  message: string
+  data: MeterDetailData
+}
+
+// Interface for Test Token Request
+export interface TestTokenRequest {
+  control: number
+  mfrcode: number
+}
+
+// Interface for Test Token Result
+export interface TestTokenResult {
+  control: number
+  description: string
+  drn: string
+  mfrcode: number
+  pan: string
+  subclass: number
+  tokenClass: number
+  tokenDec: string
+  tokenHex: string
+  thrift_spec: string
+}
+
+// Interface for Test Token Response
+export interface TestTokenResponse {
+  isSuccess: boolean
+  message: string
+  data: {
+    data: {
+      messageId: string
+      success: boolean
+      result: TestTokenResult
+    }
+    error: {
+      code: string
+      error: string
+      success: boolean
+    }
+  }
 }
 
 // Interface for Add Meter Request
@@ -718,7 +800,7 @@ export interface Token {
   idSm: string
   isReservedTid: boolean
   krn: number
-  newConfig: TokenConfig
+  newConfig: TokenConfig | null
   pan: string
   scaledAmount: string
   scaledUnitName: string
@@ -745,10 +827,12 @@ export interface Advice {
 }
 
 export interface TokenData {
-  advice: Advice
-  raw: string
+  messageId?: string
+  advice: Advice | null
+  raw: string | null
   success: boolean
-  tokens: Token[]
+  result?: Token[]
+  tokens?: Token[]
 }
 
 export interface AddKeyChangeResponse {
@@ -1808,6 +1892,72 @@ export const retryFailedPayment = createAsyncThunk(
   }
 )
 
+// Async Thunk for activating meter
+export const activateMeter = createAsyncThunk(
+  "meters/activateMeter",
+  async ({ id, data }: { id: number; data: ActivateMeterRequest }, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.METERS.ACTIVATE.replace("{id}", id.toString())
+      const response = await api.post<ActivateMeterResponse>(buildApiUrl(endpoint), data)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to activate meter")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to activate meter")
+      }
+      return rejectWithValue(error.message || "Network error during meter activation")
+    }
+  }
+)
+
+// Async Thunk for deactivating meter
+export const deactivateMeter = createAsyncThunk(
+  "meters/deactivateMeter",
+  async ({ id, data }: { id: number; data: DeactivateMeterRequest }, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.METERS.DEACTIVATE.replace("{id}", id.toString())
+      const response = await api.post<DeactivateMeterResponse>(buildApiUrl(endpoint), data)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to deactivate meter")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to deactivate meter")
+      }
+      return rejectWithValue(error.message || "Network error during meter deactivation")
+    }
+  }
+)
+
+// Async Thunk for test token
+export const testToken = createAsyncThunk(
+  "meters/testToken",
+  async ({ id, requestData }: { id: number; requestData: TestTokenRequest }, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.METERS.TEST_TOKEN.replace("{id}", id.toString())
+      const response = await api.post<TestTokenResponse>(buildApiUrl(endpoint), requestData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to test token")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to test token")
+      }
+      return rejectWithValue(error.message || "Network error during token test")
+    }
+  }
+)
+
 // Create slice
 const metersSlice = createSlice({
   name: "meters",
@@ -1982,6 +2132,24 @@ const metersSlice = createSlice({
       state.retryFailedPaymentError = null
       state.retryFailedPaymentSuccess = false
       state.retryFailedPaymentData = null
+    },
+    // Clear activate meter state
+    clearActivateMeter: (state) => {
+      state.activateMeterData = null
+      state.activateMeterLoading = false
+      state.activateMeterError = null
+    },
+    // Clear deactivate meter state
+    clearDeactivateMeter: (state) => {
+      state.deactivateMeterData = null
+      state.deactivateMeterLoading = false
+      state.deactivateMeterError = null
+    },
+    // Clear test token state
+    clearTestToken: (state) => {
+      state.testTokenData = null
+      state.testTokenLoading = false
+      state.testTokenError = null
     },
   },
   extraReducers: (builder) => {
@@ -2501,6 +2669,91 @@ const metersSlice = createSlice({
         state.retryFailedPaymentError = action.payload as string
         state.retryFailedPaymentSuccess = false
       })
+      // Activate meter
+      .addCase(activateMeter.pending, (state) => {
+        state.activateMeterLoading = true
+        state.activateMeterError = null
+      })
+      .addCase(
+        activateMeter.fulfilled,
+        (
+          state,
+          action: PayloadAction<ActivateMeterResponse, string, { arg: { id: number; data: ActivateMeterRequest } }>
+        ) => {
+          state.activateMeterLoading = false
+          state.activateMeterData = action.payload.data
+          // Update the current meter if it's the same meter
+          if (state.currentMeter && state.currentMeter.id === action.meta.arg.id) {
+            state.currentMeter = {
+              ...state.currentMeter,
+              status: action.payload.data.status,
+              isMeterActive: action.payload.data.status === 1,
+            }
+          }
+          // Update the meter in the meters array if it exists
+          const index = state.meters.findIndex((meter) => meter.id === action.meta.arg.id)
+          if (index !== -1) {
+            state.meters[index] = {
+              ...state.meters[index],
+              status: action.payload.data.status,
+              isMeterActive: action.payload.data.status === 1,
+            } as Meter
+          }
+        }
+      )
+      .addCase(activateMeter.rejected, (state, action) => {
+        state.activateMeterLoading = false
+        state.activateMeterError = action.payload as string
+      })
+      // Deactivate meter
+      .addCase(deactivateMeter.pending, (state) => {
+        state.deactivateMeterLoading = true
+        state.deactivateMeterError = null
+      })
+      .addCase(
+        deactivateMeter.fulfilled,
+        (
+          state,
+          action: PayloadAction<DeactivateMeterResponse, string, { arg: { id: number; data: DeactivateMeterRequest } }>
+        ) => {
+          state.deactivateMeterLoading = false
+          state.deactivateMeterData = action.payload.data
+          // Update the current meter if it's the same meter
+          if (state.currentMeter && state.currentMeter.id === action.meta.arg.id) {
+            state.currentMeter = {
+              ...state.currentMeter,
+              status: action.payload.data.status,
+              isMeterActive: action.payload.data.status === 1,
+            }
+          }
+          // Update the meter in the meters array if it exists
+          const index = state.meters.findIndex((meter) => meter.id === action.meta.arg.id)
+          if (index !== -1) {
+            state.meters[index] = {
+              ...state.meters[index],
+              status: action.payload.data.status,
+              isMeterActive: action.payload.data.status === 1,
+            } as Meter
+          }
+        }
+      )
+      .addCase(deactivateMeter.rejected, (state, action) => {
+        state.deactivateMeterLoading = false
+        state.deactivateMeterError = action.payload as string
+      })
+      // Test token
+      .addCase(testToken.pending, (state) => {
+        state.testTokenLoading = true
+        state.testTokenError = null
+      })
+      .addCase(testToken.fulfilled, (state, action: PayloadAction<TestTokenResponse>) => {
+        state.testTokenLoading = false
+        state.testTokenData = action.payload.data.data.result
+      })
+      .addCase(testToken.rejected, (state, action) => {
+        state.testTokenLoading = false
+        state.testTokenError = action.payload as string
+      })
   },
 })
 
@@ -2523,5 +2776,8 @@ export const {
   clearPrepaidTransactions,
   clearFailedPayments,
   clearRetryFailedPayment,
+  clearActivateMeter,
+  clearDeactivateMeter,
+  clearTestToken,
 } = metersSlice.actions
 export default metersSlice.reducer

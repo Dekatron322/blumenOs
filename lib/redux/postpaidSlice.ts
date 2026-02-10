@@ -617,6 +617,16 @@ export interface MarkAsReadyToPrintResponse {
   }
 }
 
+// Download Print Job Interfaces
+export interface DownloadPrintJobResponse {
+  isSuccess: boolean
+  message: string
+  data: {
+    url: string
+    expiresAtUtc: string
+  }
+}
+
 // Adjustments Interfaces
 export interface Adjustment {
   id: number
@@ -888,6 +898,10 @@ interface PostpaidBillingState {
   downloadPrintJobError: string | null
   downloadPrintJobSuccess: boolean
   downloadPrintJobMessage: string | null
+  downloadPrintJobData: {
+    url: string
+    expiresAtUtc: string
+  } | null
 
   // Printing Jobs state
   printingJobs: PrintingJob[]
@@ -1074,6 +1088,7 @@ const initialState: PostpaidBillingState = {
   downloadPrintJobError: null,
   downloadPrintJobSuccess: false,
   downloadPrintJobMessage: null,
+  downloadPrintJobData: null,
   printingJobs: [],
   printingJobsLoading: false,
   printingJobsError: null,
@@ -1774,51 +1789,17 @@ export const downloadAR = createAsyncThunk(
 // Download Print Job Async Thunk
 export const downloadPrintJob = createAsyncThunk(
   "postpaidBilling/downloadPrintJob",
-  async (jobId: number, { rejectWithValue }) => {
+  async (id: number, { rejectWithValue }) => {
     try {
-      const response = await api.get(
-        buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.DOWNLOAD_PRINT_JOB.replace("{id}", jobId.toString())),
-        {
-          responseType: "blob", // Important for file downloads
-        }
+      const response = await api.get<DownloadPrintJobResponse>(
+        buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.DOWNLOAD_PRINT_JOB.replace("{id}", id.toString()))
       )
 
-      // Extract filename from Content-Disposition header if available
-      const contentDisposition = response.headers["content-disposition"]
-      let filename = `print-job-${jobId}.zip`
-
-      if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/)
-        if (filenameMatch) {
-          filename = filenameMatch[1]
-        }
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to download print job")
       }
 
-      // Create a blob from the response data
-      const blob = new Blob([response.data], { type: "application/zip" })
-
-      // Create download link and trigger download with the correct filename
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement("a")
-      link.href = url
-      link.download = filename
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-
-      // Clean up the blob URL
-      window.URL.revokeObjectURL(url)
-
-      return {
-        isSuccess: true,
-        message: `Print job downloaded successfully as: ${filename}`,
-        data: {
-          blob: response.data,
-          filename: filename,
-          headers: response.headers,
-          contentDisposition: contentDisposition || null,
-        },
-      }
+      return response.data
     } catch (error: any) {
       if (error.response?.data) {
         return rejectWithValue(error.response.data.message || "Failed to download print job")
@@ -2977,6 +2958,7 @@ const postpaidSlice = createSlice({
         state.downloadPrintJobSuccess = true
         state.downloadPrintJobMessage = action.payload.message || "Print job downloaded successfully"
         state.downloadPrintJobError = null
+        state.downloadPrintJobData = action.payload.data
       })
       .addCase(downloadPrintJob.rejected, (state, action) => {
         state.downloadPrintJobLoading = false

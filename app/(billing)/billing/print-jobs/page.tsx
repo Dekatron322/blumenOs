@@ -17,6 +17,7 @@ import { notify } from "components/ui/Notification/Notification"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
   clearSingleBillingPrintStatus,
+  downloadPrintJob,
   fetchPrintingJobs,
   markAsReadyToPrint,
   MarkAsReadyToPrintRequest,
@@ -703,9 +704,15 @@ const LoadingSkeleton = () => {
   )
 }
 
-const PrintJobs: React.FC = () => {
+// Main component
+const PrintJobs = () => {
   const dispatch = useAppDispatch()
   const {
+    downloadPrintJobLoading,
+    downloadPrintJobError,
+    downloadPrintJobSuccess,
+    downloadPrintJobMessage,
+    downloadPrintJobData,
     printingJobs,
     printingJobsLoading,
     printingJobsError,
@@ -715,6 +722,7 @@ const PrintJobs: React.FC = () => {
     markAsReadyToPrintError,
     markAsReadyToPrintSuccess,
     markAsReadyToPrintMessage,
+    markAsReadyToPrintData,
     singleBillingPrintLoading,
     singleBillingPrintError,
     singleBillingPrintSuccess,
@@ -834,6 +842,26 @@ const PrintJobs: React.FC = () => {
     }
   }, [markAsReadyToPrintSuccess, markAsReadyToPrintMessage])
 
+  // Handle download print job response
+  useEffect(() => {
+    if (downloadPrintJobSuccess && downloadPrintJobData) {
+      notify("success", downloadPrintJobMessage || "Download URL generated successfully")
+
+      // Trigger download using the returned URL
+      const link = document.createElement("a")
+      link.href = downloadPrintJobData.url
+      link.download = `print-job-${new Date().getTime()}.zip`
+      link.style.display = "none"
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    }
+
+    if (downloadPrintJobError) {
+      notify("error", downloadPrintJobError)
+    }
+  }, [downloadPrintJobSuccess, downloadPrintJobError, downloadPrintJobMessage, downloadPrintJobData])
+
   // Separate handler for table-only refresh
   const handleRefreshTableData = useCallback(() => {
     // This only triggers a table refresh by incrementing the refresh key
@@ -842,25 +870,11 @@ const PrintJobs: React.FC = () => {
 
   const handleDownloadZip = async (job: any) => {
     try {
-      if (job.zipUrl && job.zipKey) {
-        notify("info", "Starting download...")
-
-        // Create a temporary link element to trigger download
-        const link = document.createElement("a")
-        link.href = job.zipUrl
-        link.download = job.zipKey.split("/").pop() || "print-jobs.zip"
-        link.style.display = "none"
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-
-        notify("success", "Download started! Check your downloads folder.")
-      } else {
-        notify("error", "No download file available for this job")
-      }
+      // Use the new download print job endpoint
+      await dispatch(downloadPrintJob(job.id))
     } catch (error) {
       console.error("Download error:", error)
-      notify("error", "Download failed. The file may require special access permissions.")
+      notify("error", "Download failed. Please try again.")
     }
   }
 
@@ -1320,17 +1334,16 @@ const PrintJobs: React.FC = () => {
                             </td>
                             <td className="border-b p-3 text-sm">
                               <div className="flex gap-2">
-                                {job.zipUrl && (
-                                  <ButtonModule
-                                    variant="outline"
-                                    size="sm"
-                                    icon={<Download className="h-4 w-4" />}
-                                    onClick={() => handleDownloadZip(job)}
-                                    className="whitespace-nowrap"
-                                  >
-                                    Download ZIP
-                                  </ButtonModule>
-                                )}
+                                <ButtonModule
+                                  variant="outline"
+                                  size="sm"
+                                  icon={<Download className="h-4 w-4" />}
+                                  onClick={() => handleDownloadZip(job)}
+                                  loading={downloadPrintJobLoading}
+                                  className="whitespace-nowrap"
+                                >
+                                  {downloadPrintJobLoading ? "Generating..." : "Download ZIP"}
+                                </ButtonModule>
                               </div>
                             </td>
                           </tr>
