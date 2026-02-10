@@ -814,6 +814,34 @@ const ClearTamper = () => {
                       </div>
                     )}
 
+                    {/* Clear Tamper Success Result */}
+                    {clearTamperData && clearTamperData.result && clearTamperData.result.length > 0 && (
+                      <div className="mb-6 rounded-lg border border-green-200 bg-green-50 p-6">
+                        <h3 className="mb-4 text-lg font-medium text-green-800">Tamper Cleared Successfully</h3>
+                        <div className="space-y-4">
+                          {clearTamperData.result.map((token, index) => (
+                            <div key={index} className="rounded-lg border border-green-100 bg-white p-4">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <p className="text-sm font-medium text-gray-500">Token:</p>
+                                  <p className="rounded bg-gray-100 px-3 py-2 font-mono text-lg text-gray-900">
+                                    {token.tokenDec}
+                                  </p>
+                                </div>
+                                <button
+                                  onClick={() => handleCopyToken(token.tokenDec)}
+                                  className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                                  title="Copy token"
+                                >
+                                  {copiedToken ? "Copied!" : "Copy"}
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Clear Tamper Error */}
                     {clearTamperError && (
                       <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
