@@ -825,7 +825,7 @@ const ClearTamper = () => {
                     {/* No Results */}
                     {searchQuery && !loading && meters && meters.length === 0 && !error && (
                       <div className="mb-6 py-8 text-center">
-                        <p className="text-sm text-gray-600">No meters found matching "{searchQuery}"</p>
+                        <p className="text-sm text-gray-600">No meters found matching &ldquo;{searchQuery}&ldquo;</p>
                       </div>
                     )}
                   </motion.div>
