@@ -1264,16 +1264,18 @@ const ClearTamper = () => {
                                               View Failures
                                             </ButtonModule>
                                           )}
-                                          <ButtonModule
-                                            variant="outline"
-                                            size="sm"
-                                            icon={<Download className="h-4 w-4" />}
-                                            onClick={() => handleDownloadCsv(job)}
-                                            className="whitespace-nowrap"
-                                            disabled={downloadClearTamperLoading}
-                                          >
-                                            {downloadClearTamperLoading ? "Downloading..." : "Download"}
-                                          </ButtonModule>
+                                          {(job.status === 3 || job.status === 5) && (
+                                            <ButtonModule
+                                              variant="outline"
+                                              size="sm"
+                                              icon={<Download className="h-4 w-4" />}
+                                              onClick={() => handleDownloadCsv(job)}
+                                              className="whitespace-nowrap"
+                                              disabled={downloadClearTamperLoading}
+                                            >
+                                              {downloadClearTamperLoading ? "Downloading..." : "Download"}
+                                            </ButtonModule>
+                                          )}
                                         </div>
                                       </td>
                                     </tr>

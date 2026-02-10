@@ -833,7 +833,7 @@ const FileManagementPage = () => {
                           <div className="mt-4 flex flex-col justify-center gap-3 sm:flex-row">
                             <ButtonModule
                               variant="secondary"
-                              onClick={removeSelectedFile}
+                              onClick={() => fileInputRef.current?.click()}
                               disabled={
                                 isUploading ||
                                 (!!uploadProgress &&

@@ -722,14 +722,16 @@ export interface MetersSummaryResponse {
 export interface PrepaidCreditHistoryEntry {
   id: number
   meterId: number
-  userAccountId: number
-  agentId: number
+  meterNumber: string
+  userAccountId: number | null
+  agentId: number | null
   vendorId: number
   requestPayload: string
   responsePayload: string
+  token: string
   isSuccessful: boolean
-  errorCode: string
-  errorMessage: string
+  errorCode: string | null
+  errorMessage: string | null
   requestedAtUtc: string
   paymentId: number
 }

@@ -1334,16 +1334,18 @@ const PrintJobs = () => {
                             </td>
                             <td className="border-b p-3 text-sm">
                               <div className="flex gap-2">
-                                <ButtonModule
-                                  variant="outline"
-                                  size="sm"
-                                  icon={<Download className="h-4 w-4" />}
-                                  onClick={() => handleDownloadZip(job)}
-                                  loading={downloadPrintJobLoading}
-                                  className="whitespace-nowrap"
-                                >
-                                  {downloadPrintJobLoading ? "Generating..." : "Download ZIP"}
-                                </ButtonModule>
+                                {(job.status === 2 || job.status === 3) && (
+                                  <ButtonModule
+                                    variant="outline"
+                                    size="sm"
+                                    icon={<Download className="h-4 w-4" />}
+                                    onClick={() => handleDownloadZip(job)}
+                                    loading={downloadPrintJobLoading}
+                                    className="whitespace-nowrap"
+                                  >
+                                    {downloadPrintJobLoading ? "Generating..." : "Download ZIP"}
+                                  </ButtonModule>
+                                )}
                               </div>
                             </td>
                           </tr>

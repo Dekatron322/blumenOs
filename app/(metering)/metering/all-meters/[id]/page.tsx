@@ -1579,7 +1579,17 @@ const MeterDetailsPage = () => {
       case "basic-info":
         return <MeterBasicInfoTab meter={meter} canUpdate={canUpdate} openModal={openModal} router={router} />
       case "prepaid-credit-history":
-        return <PrepaidCreditHistoryTab meterId={meter.id} />
+        return (
+          <PrepaidCreditHistoryTab
+            meterId={meter.id}
+            customerInfo={{
+              customerFullName: meter.customerFullName,
+              customerAccountNumber: meter.customerAccountNumber,
+              address: meter.address,
+              city: meter.city,
+            }}
+          />
+        )
       case "clear-tamper-history":
         return <ClearTamperHistoryTab meterId={meter.id} />
       case "clear-credit-history":
