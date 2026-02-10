@@ -109,6 +109,82 @@ export interface CustomerSrdtUpdateBulkUploadResponse {
   data: BulkUploadJob
 }
 
+// Existing Customer Bulk Upload interfaces
+export interface ExistingCustomerBulkUploadRequest {
+  fileId: number
+}
+
+export interface ExistingCustomerBulkUploadResponse {
+  isSuccess: boolean
+  message: string
+  data: {
+    id: number
+    jobType: number
+    status: number
+    requestedByUserId: number
+    requestedAtUtc: string
+    fileName: string
+    fileKey: string
+    fileUrl: string
+    fileSize: number
+    resultFileName: string
+    resultFileKey: string
+    resultFileUrl: string
+    resultFileSize: number
+    resultGeneratedAtUtc: string
+    totalRows: number
+    processedRows: number
+    succeededRows: number
+    failedRows: number
+    lastProcessedRow: number
+    retryCount: number
+    startedAtUtc: string
+    completedAtUtc: string
+    lastError: string
+    errorBlobKey: string
+    payloadJson: string
+    canDownloadResult: boolean
+  }
+}
+
+// Status Codes Bulk Upload interfaces
+export interface StatusCodesBulkUploadRequest {
+  fileId: number
+}
+
+export interface StatusCodesBulkUploadResponse {
+  isSuccess: boolean
+  message: string
+  data: {
+    id: number
+    jobType: number
+    status: number
+    requestedByUserId: number
+    requestedAtUtc: string
+    fileName: string
+    fileKey: string
+    fileUrl: string
+    fileSize: number
+    resultFileName: string
+    resultFileKey: string
+    resultFileUrl: string
+    resultFileSize: number
+    resultGeneratedAtUtc: string
+    totalRows: number
+    processedRows: number
+    succeededRows: number
+    failedRows: number
+    lastProcessedRow: number
+    retryCount: number
+    startedAtUtc: string
+    completedAtUtc: string
+    lastError: string
+    errorBlobKey: string
+    payloadJson: string
+    canDownloadResult: boolean
+  }
+}
+
 // Meter Reading Bulk Upload interfaces
 export interface MeterReadingBulkUploadRequest {
   fileId: number
@@ -666,6 +742,18 @@ interface FileManagementState {
   customerSrdtUpdateBulkUploadSuccess: boolean
   customerSrdtUpdateBulkUploadResponse: CustomerSrdtUpdateBulkUploadResponse | null
 
+  // Existing Customer Bulk Upload state
+  existingCustomerBulkUploadLoading: boolean
+  existingCustomerBulkUploadError: string | null
+  existingCustomerBulkUploadSuccess: boolean
+  existingCustomerBulkUploadResponse: ExistingCustomerBulkUploadResponse | null
+
+  // Status Codes Bulk Upload state
+  statusCodesBulkUploadLoading: boolean
+  statusCodesBulkUploadError: string | null
+  statusCodesBulkUploadSuccess: boolean
+  statusCodesBulkUploadResponse: StatusCodesBulkUploadResponse | null
+
   // Meter Reading Bulk Upload state
   meterReadingBulkUploadLoading: boolean
   meterReadingBulkUploadError: string | null
@@ -879,6 +967,18 @@ const initialState: FileManagementState = {
   customerSrdtUpdateBulkUploadError: null,
   customerSrdtUpdateBulkUploadSuccess: false,
   customerSrdtUpdateBulkUploadResponse: null,
+
+  // Existing Customer Bulk Upload state
+  existingCustomerBulkUploadLoading: false,
+  existingCustomerBulkUploadError: null,
+  existingCustomerBulkUploadSuccess: false,
+  existingCustomerBulkUploadResponse: null,
+
+  // Status Codes Bulk Upload state
+  statusCodesBulkUploadLoading: false,
+  statusCodesBulkUploadError: null,
+  statusCodesBulkUploadSuccess: false,
+  statusCodesBulkUploadResponse: null,
 
   // Meter Reading Bulk Upload state
   meterReadingBulkUploadLoading: false,
@@ -1176,6 +1276,36 @@ export const processCustomerSrdtUpdateBulkUpload = createAsyncThunk(
       return response.data
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to process customer SRDT update bulk upload")
+    }
+  }
+)
+
+export const processExistingCustomerBulkUpload = createAsyncThunk(
+  "fileManagement/processExistingCustomerBulkUpload",
+  async (request: ExistingCustomerBulkUploadRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<ExistingCustomerBulkUploadResponse>(
+        buildApiUrl(API_ENDPOINTS.FILE_MANAGEMENT.EXISTING_CUSTOMER_BULK_UPLOAD),
+        request
+      )
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to process existing customer bulk upload")
+    }
+  }
+)
+
+export const processStatusCodesBulkUpload = createAsyncThunk(
+  "fileManagement/processStatusCodesBulkUpload",
+  async (request: StatusCodesBulkUploadRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<StatusCodesBulkUploadResponse>(
+        buildApiUrl(API_ENDPOINTS.FILE_MANAGEMENT.STATUS_CODES_BULK_UPLOAD),
+        request
+      )
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to process status codes bulk upload")
     }
   }
 )
@@ -2152,6 +2282,40 @@ const fileManagementSlice = createSlice({
         state.customerSrdtUpdateBulkUploadLoading = false
         state.customerSrdtUpdateBulkUploadError = action.payload as string
         state.customerSrdtUpdateBulkUploadSuccess = false
+      })
+
+      // Existing Customer Bulk Upload reducers
+      .addCase(processExistingCustomerBulkUpload.pending, (state) => {
+        state.existingCustomerBulkUploadLoading = true
+        state.existingCustomerBulkUploadError = null
+        state.existingCustomerBulkUploadSuccess = false
+      })
+      .addCase(processExistingCustomerBulkUpload.fulfilled, (state, action) => {
+        state.existingCustomerBulkUploadLoading = false
+        state.existingCustomerBulkUploadSuccess = true
+        state.existingCustomerBulkUploadResponse = action.payload
+      })
+      .addCase(processExistingCustomerBulkUpload.rejected, (state, action) => {
+        state.existingCustomerBulkUploadLoading = false
+        state.existingCustomerBulkUploadError = action.payload as string
+        state.existingCustomerBulkUploadSuccess = false
+      })
+
+      // Status Codes Bulk Upload reducers
+      .addCase(processStatusCodesBulkUpload.pending, (state) => {
+        state.statusCodesBulkUploadLoading = true
+        state.statusCodesBulkUploadError = null
+        state.statusCodesBulkUploadSuccess = false
+      })
+      .addCase(processStatusCodesBulkUpload.fulfilled, (state, action) => {
+        state.statusCodesBulkUploadLoading = false
+        state.statusCodesBulkUploadSuccess = true
+        state.statusCodesBulkUploadResponse = action.payload
+      })
+      .addCase(processStatusCodesBulkUpload.rejected, (state, action) => {
+        state.statusCodesBulkUploadLoading = false
+        state.statusCodesBulkUploadError = action.payload as string
+        state.statusCodesBulkUploadSuccess = false
       })
 
       // Meter Reading Bulk Upload reducers

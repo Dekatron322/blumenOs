@@ -247,6 +247,8 @@ export const API_ENDPOINTS = {
     DOWNLOAD_CLEAR_TAMPER: "/system/csv-jobs/{id}/clear-tamper/result",
     TEST_TOKEN_BULK_UPLOAD: "/meters/prepaid/test-token/bulk",
     DOWNLOAD_TEST_TOKEN: "/system/csv-jobs/{id}/test-token/result",
+    EXISTING_CUSTOMER_BULK_UPLOAD: "/customers/bulk/import-existing",
+    STATUS_CODES_BULK_UPLOAD: "/customers/bulk/status-change",
   },
 
   METER_CAPTURE: {

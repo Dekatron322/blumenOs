@@ -15,8 +15,10 @@ import {
   processCustomerStatusChangeBulkUpload,
   processCustomerStoredAverageUpdateBulkUpload,
   processCustomerTariffChangeBulkUpload,
+  processExistingCustomerBulkUpload,
   processMeterReadingStoredAverageUpdateBulkUpload,
   processPostpaidEstimatedConsumptionBulkUpload,
+  processStatusCodesBulkUpload,
 } from "lib/redux/fileManagementSlice"
 import * as XLSX from "xlsx"
 import DashboardNav from "components/Navbar/DashboardNav"
@@ -66,7 +68,7 @@ const FileManagementPage = () => {
       case 7:
         return "customer-tariff"
       case 8:
-        return "customer-status"
+        return "customer-status-change"
       case 9:
         return "customer-stored-average"
       case 10:
@@ -415,8 +417,8 @@ const FileManagementPage = () => {
 
                 // Use different endpoint based on upload type
                 if (selectedUploadType === 11) {
-                  // Customer Setup Import
-                  bulkResult = await dispatch(processCustomerSetupBulkUpload({ fileId })).unwrap()
+                  // Import Existing Customers
+                  bulkResult = await dispatch(processExistingCustomerBulkUpload({ fileId })).unwrap()
                 } else if (selectedUploadType === 5) {
                   // Customer Info Update
                   bulkResult = await dispatch(processCustomerInfoUpdateBulkUpload({ fileId })).unwrap()
@@ -427,8 +429,8 @@ const FileManagementPage = () => {
                   // Customer Tariff Change
                   bulkResult = await dispatch(processCustomerTariffChangeBulkUpload({ fileId })).unwrap()
                 } else if (selectedUploadType === 8) {
-                  // Customer Status Change
-                  bulkResult = await dispatch(processCustomerStatusChangeBulkUpload({ fileId })).unwrap()
+                  // Customer Status Code Change
+                  bulkResult = await dispatch(processStatusCodesBulkUpload({ fileId })).unwrap()
                 } else if (selectedUploadType === 9) {
                   // Customer Stored Average Update
                   bulkResult = await dispatch(processCustomerStoredAverageUpdateBulkUpload({ fileId })).unwrap()
@@ -439,7 +441,7 @@ const FileManagementPage = () => {
                   // Customer Bill Energy
                   bulkResult = await dispatch(processMeterReadingStoredAverageUpdateBulkUpload({ fileId })).unwrap()
                 } else if (selectedUploadType === 24) {
-                  // Postpaid Estimated Consumption
+                  // Customer Estimated Consumption
                   bulkResult = await dispatch(processPostpaidEstimatedConsumptionBulkUpload({ fileId })).unwrap()
                 } else {
                   // Regular Customer Import and other types
