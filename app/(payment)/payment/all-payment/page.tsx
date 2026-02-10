@@ -334,7 +334,7 @@ const LoadingSkeleton = () => {
                 <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
                   <thead>
                     <tr>
-                      {[...Array(8)].map((_, i) => (
+                      {[...Array(10)].map((_, i) => (
                         <th key={i} className="whitespace-nowrap border-b p-4">
                           <div className="h-4 w-24 rounded bg-gray-200"></div>
                         </th>
@@ -344,7 +344,7 @@ const LoadingSkeleton = () => {
                   <tbody>
                     {[...Array(5)].map((_, rowIndex) => (
                       <tr key={rowIndex}>
-                        {[...Array(8)].map((_, cellIndex) => (
+                        {[...Array(10)].map((_, cellIndex) => (
                           <td key={cellIndex} className="whitespace-nowrap border-b px-4 py-3">
                             <div className="h-4 w-full rounded bg-gray-200"></div>
                           </td>
@@ -2204,6 +2204,12 @@ const AllPayments: React.FC = () => {
                                 <div className="flex items-center gap-2">Amount</div>
                               </th>
                               <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
+                                <div className="flex items-center gap-2">Payment Type</div>
+                              </th>
+                              <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
+                                <div className="flex items-center gap-2">Purchase Type</div>
+                              </th>
+                              <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
                                 <div className="flex items-center gap-2">Status</div>
                               </th>
                               <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
@@ -2249,6 +2255,36 @@ const AllPayments: React.FC = () => {
                                 </td>
                                 <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-semibold text-gray-900">
                                   {formatCurrency(payment.amount || 0, payment.currency)}
+                                </td>
+                                <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-900">
+                                  <div className="font-medium">{payment.paymentTypeName || "-"}</div>
+                                </td>
+                                <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                                  <motion.div
+                                    className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
+                                    whileHover={{ scale: 1.05 }}
+                                    transition={{ duration: 0.1 }}
+                                    style={{
+                                      backgroundColor:
+                                        payment.isPrepaid === true
+                                          ? "#dbeafe"
+                                          : payment.isPrepaid === false
+                                          ? "#f3e8ff"
+                                          : "#f3f4f6",
+                                      color:
+                                        payment.isPrepaid === true
+                                          ? "#1e40af"
+                                          : payment.isPrepaid === false
+                                          ? "#6b21a8"
+                                          : "#374151",
+                                    }}
+                                  >
+                                    {payment.isPrepaid === true
+                                      ? "Prepaid"
+                                      : payment.isPrepaid === false
+                                      ? "Postpaid"
+                                      : "-"}
+                                  </motion.div>
                                 </td>
                                 <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
                                   <motion.div

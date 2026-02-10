@@ -488,6 +488,8 @@ const ClearTamper = () => {
         setUploadSuccess(true)
         notify("success", "Bulk clear tamper processed successfully")
         setSelectedFile(null)
+        // Refresh table to show the new job
+        handleRefreshTableData()
       } else {
         throw new Error((bulkUploadResult.payload as string) || "Failed to process bulk clear tamper")
       }

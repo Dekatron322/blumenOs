@@ -234,6 +234,11 @@ const TestToken = () => {
       )
       if (result.meta.requestStatus === "fulfilled") {
         notify("success", "Test token generated successfully")
+        // Clear context after successful test token retrieval
+        setSelectedMeter(null)
+        setControlValue(0)
+        setMfrCodeValue(0)
+        setSearchQuery("")
       } else {
         notify("error", result.payload as string)
       }
@@ -242,10 +247,17 @@ const TestToken = () => {
     }
   }
 
+  const formatTokenDecimal = (token: string) => {
+    // Remove any non-digit characters first
+    const cleanToken = token.replace(/\D/g, "")
+    // Format as groups of 4 digits separated by hyphens
+    return cleanToken.match(/.{1,4}/g)?.join("-") || token
+  }
+
   const handleCopyToken = async () => {
     if (testTokenData?.tokenDec) {
       try {
-        await navigator.clipboard.writeText(testTokenData.tokenDec)
+        await navigator.clipboard.writeText(formatTokenDecimal(testTokenData.tokenDec))
         setCopiedToken(true)
         notify("success", "Token copied to clipboard")
         setTimeout(() => setCopiedToken(false), 2000)
@@ -365,6 +377,8 @@ const TestToken = () => {
         setUploadSuccess(true)
         notify("success", "Bulk test token processed successfully")
         setSelectedFile(null)
+        // Refresh table to show the new job
+        handleRefreshTableData()
       } else {
         throw new Error((bulkUploadResult.payload as string) || "Failed to process bulk test token")
       }
@@ -825,40 +839,20 @@ const TestToken = () => {
                   {testTokenData && (
                     <div className="mb-6 rounded-lg border border-gray-200 bg-white p-6">
                       <h3 className="mb-4 text-lg font-medium text-gray-900">Test Token Result</h3>
-                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Token Decimal</p>
-                          <div className="mt-1 flex items-center gap-2">
-                            <p className="font-mono text-sm text-gray-900">{testTokenData.tokenDec}</p>
-                            <ButtonModule
-                              variant="outline"
-                              size="sm"
-                              onClick={handleCopyToken}
-                              className="border-gray-300 text-gray-700 hover:bg-gray-100"
-                            >
-                              {copiedToken ? "Copied!" : "Copy"}
-                            </ButtonModule>
-                          </div>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Token Hex</p>
-                          <p className="mt-1 font-mono text-sm text-gray-900">{testTokenData.tokenHex}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">DRN</p>
-                          <p className="mt-1 text-sm text-gray-900">{testTokenData.drn}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">PAN</p>
-                          <p className="mt-1 text-sm text-gray-900">{testTokenData.pan}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Description</p>
-                          <p className="mt-1 text-sm text-gray-900">{testTokenData.description}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Token Class</p>
-                          <p className="mt-1 text-sm text-gray-900">{testTokenData.tokenClass}</p>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Token Decimal</p>
+                        <div className="mt-1 flex items-center gap-2">
+                          <p className="font-mono text-sm text-gray-900">
+                            {formatTokenDecimal(testTokenData.tokenDec)}
+                          </p>
+                          <ButtonModule
+                            variant="outline"
+                            size="sm"
+                            onClick={handleCopyToken}
+                            className="border-gray-300 text-gray-700 hover:bg-gray-100"
+                          >
+                            {copiedToken ? "Copied!" : "Copy"}
+                          </ButtonModule>
                         </div>
                       </div>
                     </div>
