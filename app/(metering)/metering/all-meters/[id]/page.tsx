@@ -1916,16 +1916,7 @@ const MeterDetailsPage = () => {
                     </ButtonModule>
 
                     {canUpdate ? (
-                      <ButtonModule
-                        variant="primary"
-                        size="sm"
-                        className="flex items-center gap-2 text-sm"
-                        onClick={() => openModal("edit")}
-                      >
-                        <Edit3 className="size-3 sm:size-4" />
-                        <span className="max-sm:hidden">Edit</span>
-                        <span className="sm:hidden">Edit</span>
-                      </ButtonModule>
+                      <></>
                     ) : (
                       <ButtonModule
                         variant="outline"
@@ -2163,17 +2154,6 @@ const MeterDetailsPage = () => {
                               >
                                 <HistoryIcon className="size-5" />
                                 <span>Meter History</span>
-                              </button>
-                              <button
-                                onClick={() => setActiveTab("meter-history")}
-                                className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
-                                  activeTab === "meter-history"
-                                    ? "bg-[#004B23] text-white"
-                                    : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
-                                }`}
-                              >
-                                <HistoryIcon className="size-5" />
-                                <span>Activate</span>
                               </button>
                             </>
                           )}

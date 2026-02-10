@@ -171,23 +171,70 @@ const BulkUploads: React.FC = () => {
   // Separate state for table-only refresh
   const [tableRefreshKey, setTableRefreshKey] = useState(0)
 
-  // Initial load and filter changes
+  // Fetch all customer job types by making separate API calls for each type
+  const [allCustomerJobs, setAllCustomerJobs] = useState<any[]>([])
+  const [isLoadingAllTypes, setIsLoadingAllTypes] = useState(false)
+
+  // Fetch all customer job types
   useEffect(() => {
-    const fetchParams: CsvJobsParams = {
-      PageNumber: currentPage,
-      PageSize: 10,
-      ...(localFilters.JobType && { JobType: localFilters.JobType }),
-      ...(localFilters.Status && { Status: localFilters.Status }),
-      ...(localFilters.RequestedByUserId && { RequestedByUserId: localFilters.RequestedByUserId }),
-      ...(localFilters.RequestedFromUtc && { RequestedFromUtc: localFilters.RequestedFromUtc }),
-      ...(localFilters.RequestedToUtc && { RequestedToUtc: localFilters.RequestedToUtc }),
-      ...(localFilters.FileName && { FileName: localFilters.FileName }),
-      ...(localFilters.HasFailures !== undefined && { HasFailures: localFilters.HasFailures }),
-      ...(searchText && { Search: searchText }),
+    const fetchAllCustomerJobTypes = async () => {
+      setIsLoadingAllTypes(true)
+      const customerJobTypes = [1, 5, 6, 7, 8, 9, 10, 11, 24]
+      const allJobs: any[] = []
+
+      for (const jobType of customerJobTypes) {
+        try {
+          const fetchParams: CsvJobsParams = {
+            PageNumber: 1,
+            PageSize: 10,
+            JobType: jobType,
+            ...(localFilters.Status && { Status: localFilters.Status }),
+            ...(localFilters.RequestedByUserId && { RequestedByUserId: localFilters.RequestedByUserId }),
+            ...(localFilters.RequestedFromUtc && { RequestedFromUtc: localFilters.RequestedFromUtc }),
+            ...(localFilters.RequestedToUtc && { RequestedToUtc: localFilters.RequestedToUtc }),
+            ...(localFilters.FileName && { FileName: localFilters.FileName }),
+            ...(localFilters.HasFailures !== undefined && { HasFailures: localFilters.HasFailures }),
+            ...(searchText && { Search: searchText }),
+          }
+
+          // Dispatch the action and wait for it to complete
+          const result = await dispatch(fetchCsvJobs(fetchParams))
+          if (fetchCsvJobs.fulfilled.match(result)) {
+            if (result.payload?.data) {
+              allJobs.push(...result.payload.data)
+            }
+          }
+        } catch (error) {
+          console.error(`Error fetching job type ${jobType}:`, error)
+        }
+      }
+
+      setAllCustomerJobs(allJobs)
+      setIsLoadingAllTypes(false)
+      setHasInitialLoad(true)
     }
 
-    void dispatch(fetchCsvJobs(fetchParams))
-    setHasInitialLoad(true)
+    // Only fetch all types when no specific job type filter is selected
+    if (!localFilters.JobType) {
+      fetchAllCustomerJobTypes()
+    } else {
+      // Use normal single API call when specific job type is selected
+      const fetchParams: CsvJobsParams = {
+        PageNumber: currentPage,
+        PageSize: 10,
+        ...(localFilters.JobType && { JobType: localFilters.JobType }),
+        ...(localFilters.Status && { Status: localFilters.Status }),
+        ...(localFilters.RequestedByUserId && { RequestedByUserId: localFilters.RequestedByUserId }),
+        ...(localFilters.RequestedFromUtc && { RequestedFromUtc: localFilters.RequestedFromUtc }),
+        ...(localFilters.RequestedToUtc && { RequestedToUtc: localFilters.RequestedToUtc }),
+        ...(localFilters.FileName && { FileName: localFilters.FileName }),
+        ...(localFilters.HasFailures !== undefined && { HasFailures: localFilters.HasFailures }),
+        ...(searchText && { Search: searchText }),
+      }
+
+      void dispatch(fetchCsvJobs(fetchParams))
+      setHasInitialLoad(true)
+    }
   }, [dispatch, currentPage, localFilters, searchText, tableRefreshKey])
 
   // Separate handler for table-only refresh
@@ -334,11 +381,20 @@ const BulkUploads: React.FC = () => {
     setCurrentPage(newPage)
   }
 
-  // Filter jobs to only show customer-related job types
-  const customerJobTypes = [1, 5, 6, 7, 8, 9, 10, 11, 24] // Customer job type values
-  const filteredCsvJobs = csvJobs.filter((job) => customerJobTypes.includes(job.jobType))
+  // Use appropriate data source based on whether a specific job type is selected
+  const customerCsvJobs = localFilters.JobType ? csvJobs || [] : allCustomerJobs
 
-  if (csvJobsLoading && !hasInitialLoad) {
+  // Debug: Log the data to help identify issues
+  console.log("CSV Jobs Data:", csvJobs)
+  console.log("All Customer Jobs:", allCustomerJobs)
+  console.log("Selected Job Type:", localFilters.JobType)
+  console.log("Customer CSV Jobs count:", customerCsvJobs.length)
+  if (customerCsvJobs.length > 0) {
+    console.log("Sample job data:", customerCsvJobs[0])
+    console.log("Available job types:", Array.from(new Set(customerCsvJobs.map((job) => job.jobType))))
+  }
+
+  if ((csvJobsLoading || isLoadingAllTypes) && !hasInitialLoad) {
     return <LoadingSkeleton />
   }
 
@@ -497,6 +553,8 @@ const BulkUploads: React.FC = () => {
 
             {/* Results Section */}
             <div className="rounded-lg border bg-white">
+              {/* Debug Info - Remove in production */}
+
               {/* Results Header */}
               <div className="border-b p-4">
                 <div className="flex items-center justify-between">
@@ -504,7 +562,7 @@ const BulkUploads: React.FC = () => {
                     <h3 className="text-lg font-semibold">CSV Jobs</h3>
                     {csvJobsPagination && (
                       <p className="text-sm text-gray-600">
-                        Showing {filteredCsvJobs.length} of {csvJobsPagination.totalCount} jobs
+                        Showing {customerCsvJobs.length} of {csvJobsPagination?.totalCount || 0} jobs
                       </p>
                     )}
                   </div>
@@ -540,7 +598,7 @@ const BulkUploads: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredCsvJobs.length === 0 ? (
+                      {customerCsvJobs.length === 0 ? (
                         <tr>
                           <td colSpan={10} className="border-b p-8 text-center">
                             <div className="text-gray-500">
@@ -551,7 +609,7 @@ const BulkUploads: React.FC = () => {
                           </td>
                         </tr>
                       ) : (
-                        filteredCsvJobs.map((job) => (
+                        customerCsvJobs.map((job) => (
                           <tr key={job.id} className="border-b hover:bg-gray-50">
                             <td className="border-b p-3 text-sm">
                               <div className="max-w-xs truncate whitespace-nowrap" title={job.fileName}>

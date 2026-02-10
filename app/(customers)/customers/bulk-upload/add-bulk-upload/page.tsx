@@ -58,7 +58,7 @@ const FileManagementPage = () => {
       case 1:
         return "customers"
       case 11:
-        return "customer-setup"
+        return "customer-existing-import"
       case 5:
         return "customer-info"
       case 6:
