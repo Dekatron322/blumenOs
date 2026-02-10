@@ -43,14 +43,13 @@ const FileManagementPage = () => {
   // Upload type options
   const uploadTypeOptions = [
     { name: "New Customers", value: 1 },
-    { name: "Import Existing Customers", value: 11 },
+    { name: "Import Existing Customers", value: 23 },
     { name: "Customer Info Update", value: 5 },
     // { name: "Customer Feeder Update", value: 6 },
     { name: "Customer Tariff Change", value: 7 },
-    { name: "Customer Status Code Change", value: 8 },
+    { name: "Customer Status Change", value: 8 },
     { name: "Customer Stored Average Update", value: 9 },
-    { name: "Customer SR DT Update", value: 10 },
-    { name: "Customer Bill Energy", value: 16 },
+    { name: "Customer SRDT Update", value: 10 },
     { name: "Customer Estimated Consumption", value: 24 },
   ]
 
@@ -59,7 +58,7 @@ const FileManagementPage = () => {
     switch (uploadType) {
       case 1:
         return "customers"
-      case 11:
+      case 23:
         return "customer-existing-import"
       case 5:
         return "customer-info"
@@ -87,7 +86,7 @@ const FileManagementPage = () => {
     switch (uploadType) {
       case 1:
         return "customers-bulk-import"
-      case 11:
+      case 23:
         return "customers-setup-bulk"
       case 5:
         return "customers-info-update-bulk"
@@ -416,7 +415,7 @@ const FileManagementPage = () => {
                 let bulkResult
 
                 // Use different endpoint based on upload type
-                if (selectedUploadType === 11) {
+                if (selectedUploadType === 23) {
                   // Import Existing Customers
                   bulkResult = await dispatch(processExistingCustomerBulkUpload({ fileId })).unwrap()
                 } else if (selectedUploadType === 5) {
@@ -546,12 +545,12 @@ const FileManagementPage = () => {
     let sampleRows: string[]
 
     // Generate different templates based on upload type
-    if (selectedUploadType === 11) {
+    if (selectedUploadType === 23) {
       // Import Existing Customers template
       headers =
         "CustomerName,TariffCode,StatusCode,PhoneNumber,EmailAdddress,CustomerAccountNo,CustomerAddress1,CustomerAddress2,FeederName,TransformerDescription,DTNumber,EmployeeNo,CustomerCity,CustomerState,BusinessUnit,StoredAverage,IsPPM,Longitude,Latitude,IsSeparation,MotherAccountNumber"
       sampleRows = []
-    } else if (selectedUploadType === 7) {
+    } else if (selectedUploadType === 5) {
       // Customer Tariff Change template
       headers = "CustomerAccountNo,TariffCode"
       sampleRows = []
@@ -590,7 +589,7 @@ const FileManagementPage = () => {
     link.setAttribute("href", url)
     link.setAttribute(
       "download",
-      selectedUploadType === 11
+      selectedUploadType === 23
         ? "sample-import-existing-customers.csv"
         : selectedUploadType === 7
         ? "sample-customer-tariff-change.csv"

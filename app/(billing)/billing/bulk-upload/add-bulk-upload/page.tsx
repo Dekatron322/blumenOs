@@ -10,6 +10,7 @@ import {
   processAdjustmentBillingBulkUpload,
   processBillCrucialOpsBulkUpload,
   processBillingBulkUpload,
+  processBillRecomputeBulkUpload,
   processFeederEnergyCapBulkUpload,
   processFinalizeBillingBulkUpload,
   processMeterReadingBulkUpload,
@@ -42,6 +43,9 @@ const FileManagementPage = () => {
     billingBulkUploadLoading,
     billingBulkUploadError,
     billingBulkUploadSuccess,
+    billRecomputeBulkUploadLoading,
+    billRecomputeBulkUploadError,
+    billRecomputeBulkUploadSuccess,
   } = useAppSelector((state: { fileManagement: any }) => state.fileManagement)
 
   // Upload type options
@@ -51,6 +55,7 @@ const FileManagementPage = () => {
     { name: "Bill Adjustment", value: 19 },
     { name: "Mark Bills for Printing", value: 20 },
     { name: "Bill Crucial Ops", value: 21 },
+    { name: "Bill Recompute", value: 30 },
     { name: "Feeder Energy Cap", value: 3 },
     { name: "Customer Meter Reading", value: 2 },
     { name: "Meter Reading Account Import", value: "2" },
@@ -69,6 +74,8 @@ const FileManagementPage = () => {
         return "bill-finalize"
       case 21:
         return "bill-crucial-ops"
+      case 30:
+        return "bill-recompute"
       case 3:
         return "feeder-energy-cap"
       case 2:
@@ -93,6 +100,8 @@ const FileManagementPage = () => {
         return "postpaid-bill-finalize-bulk"
       case 21:
         return "postpaid-bill-crucial-bulk"
+      case 30:
+        return "postpaid-bill-recompute-bulk"
       case 3:
         return "feeder-energy-caps-bulk"
       case 2:
@@ -425,6 +434,9 @@ const FileManagementPage = () => {
                 } else if (selectedUploadType === 21) {
                   // Bill Crucial Ops - use bill crucial ops endpoint
                   bulkResult = await dispatch(processBillCrucialOpsBulkUpload({ fileId })).unwrap()
+                } else if (selectedUploadType === 30) {
+                  // Bill Recompute - use bill recompute endpoint
+                  bulkResult = await dispatch(processBillRecomputeBulkUpload({ fileId })).unwrap()
                 } else if (selectedUploadType === 3) {
                   // Feeder Energy Cap Import - use feeder energy cap endpoint with confirm
                   bulkResult = await dispatch(processFeederEnergyCapBulkUpload({ fileId, confirm: true })).unwrap()
@@ -553,6 +565,10 @@ const FileManagementPage = () => {
       // Bill Crucial Ops template
       headers = "CustomerAccountNo,MonthYear"
       sampleRows = []
+    } else if (selectedUploadType === 30) {
+      // Bill Recompute template
+      headers = "CustomerAccountNo,MonthYear,UsePaymentsFromTransactions"
+      sampleRows = []
     } else if (selectedUploadType === 2) {
       // Customer Bills Reading template
       headers = "CustomerAccountNo,PresentReading,PreviousReading,MonthYear"
@@ -584,6 +600,8 @@ const FileManagementPage = () => {
         ? "sample-mark-bills-for-printing.csv"
         : selectedUploadType === 21
         ? "sample-bill-crucial-ops.csv"
+        : selectedUploadType === 30
+        ? "sample-bill-recompute.csv"
         : selectedUploadType === 2
         ? "sample-customer-bills-reading.csv"
         : selectedUploadType === 3

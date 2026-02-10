@@ -19,7 +19,7 @@ import CsvUploadFailuresModal from "components/ui/Modal/CsvUploadFailuresModal"
 const jobTypeOptions = [
   { value: "", label: "All Job Types" },
   { value: "1", label: "Customer Import" },
-  { value: "11", label: "Customer Setup Import" },
+  { value: "23", label: "Import Existing Customers" },
   { value: "5", label: "Customer Info Update" },
   { value: "6", label: "Customer Feeder Update" },
   { value: "7", label: "Customer Tariff Change" },
@@ -159,7 +159,7 @@ const BulkUploads: React.FC = () => {
   const [localFilters, setLocalFilters] = useState<Partial<CsvJobsParams>>({
     PageNumber: 1,
     PageSize: 10,
-    JobTypes: [1, 5, 6, 7, 8, 9, 10, 11, 24], // Default to customer job types
+    JobTypes: [1, 5, 6, 7, 8, 9, 10, 23, 24], // Default to customer job types
     Status: undefined,
     RequestedByUserId: undefined,
     RequestedFromUtc: undefined,
@@ -177,7 +177,8 @@ const BulkUploads: React.FC = () => {
     const fetchParams: CsvJobsParams = {
       PageNumber: currentPage,
       PageSize: 10,
-      ...(localFilters.JobTypes && { JobTypes: localFilters.JobTypes }),
+      // Only send JobTypes array if no specific JobType is selected
+      ...(localFilters.JobType ? {} : { JobTypes: localFilters.JobTypes }),
       ...(localFilters.JobType && { JobType: localFilters.JobType }),
       ...(localFilters.Status && { Status: localFilters.Status }),
       ...(localFilters.RequestedByUserId && { RequestedByUserId: localFilters.RequestedByUserId }),
@@ -203,7 +204,8 @@ const BulkUploads: React.FC = () => {
     const fetchParams: CsvJobsParams = {
       PageNumber: currentPage,
       PageSize: 10,
-      ...(localFilters.JobTypes && { JobTypes: localFilters.JobTypes }),
+      // Only send JobTypes array if no specific JobType is selected
+      ...(localFilters.JobType ? {} : { JobTypes: localFilters.JobTypes }),
       ...(localFilters.JobType && { JobType: localFilters.JobType }),
       ...(localFilters.Status && { Status: localFilters.Status }),
       ...(localFilters.RequestedByUserId && { RequestedByUserId: localFilters.RequestedByUserId }),
@@ -220,7 +222,8 @@ const BulkUploads: React.FC = () => {
     const fetchParams: CsvJobsParams = {
       PageNumber: 1,
       PageSize: 10,
-      ...(localFilters.JobTypes && { JobTypes: localFilters.JobTypes }),
+      // Only send JobTypes array if no specific JobType is selected
+      ...(localFilters.JobType ? {} : { JobTypes: localFilters.JobTypes }),
       ...(localFilters.JobType && { JobType: localFilters.JobType }),
       ...(localFilters.Status && { Status: localFilters.Status }),
       ...(localFilters.RequestedByUserId && { RequestedByUserId: localFilters.RequestedByUserId }),
@@ -251,7 +254,7 @@ const BulkUploads: React.FC = () => {
     setLocalFilters({
       PageNumber: 1,
       PageSize: 10,
-      JobTypes: [1, 5, 6, 7, 8, 9, 10, 11, 24], // Default to customer job types
+      JobTypes: [1, 5, 6, 7, 8, 9, 10, 23, 24], // Default to customer job types
       JobType: undefined,
       Status: undefined,
       RequestedByUserId: undefined,

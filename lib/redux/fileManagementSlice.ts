@@ -299,6 +299,44 @@ export interface BillCrucialOpsBulkUploadResponse {
   data: BulkUploadJob
 }
 
+// Bill Recompute Bulk Upload interfaces
+export interface BillRecomputeBulkUploadRequest {
+  fileId: number
+}
+
+export interface BillRecomputeBulkUploadResponse {
+  isSuccess: boolean
+  message: string
+  data: {
+    id: number
+    jobType: number
+    status: number
+    requestedByUserId: number
+    requestedAtUtc: string
+    fileName: string
+    fileKey: string
+    fileUrl: string
+    fileSize: number
+    resultFileName: string
+    resultFileKey: string
+    resultFileUrl: string
+    resultFileSize: number
+    resultGeneratedAtUtc: string
+    totalRows: number
+    processedRows: number
+    succeededRows: number
+    failedRows: number
+    lastProcessedRow: number
+    retryCount: number
+    startedAtUtc: string
+    completedAtUtc: string
+    lastError: string
+    errorBlobKey: string
+    payloadJson: string
+    canDownloadResult: boolean
+  }
+}
+
 // Feeder Energy Cap Bulk Upload interfaces
 export interface FeederEnergyCapBulkUploadRequest {
   fileId: number
@@ -808,6 +846,12 @@ interface FileManagementState {
   billCrucialOpsBulkUploadSuccess: boolean
   billCrucialOpsBulkUploadResponse: BillCrucialOpsBulkUploadResponse | null
 
+  // Bill Recompute Bulk Upload state
+  billRecomputeBulkUploadLoading: boolean
+  billRecomputeBulkUploadError: string | null
+  billRecomputeBulkUploadSuccess: boolean
+  billRecomputeBulkUploadResponse: BillRecomputeBulkUploadResponse | null
+
   // Feeder Energy Cap Bulk Upload state
   feederEnergyCapBulkUploadLoading: boolean
   feederEnergyCapBulkUploadError: string | null
@@ -1033,6 +1077,12 @@ const initialState: FileManagementState = {
   billCrucialOpsBulkUploadError: null,
   billCrucialOpsBulkUploadSuccess: false,
   billCrucialOpsBulkUploadResponse: null,
+
+  // Bill Recompute Bulk Upload state
+  billRecomputeBulkUploadLoading: false,
+  billRecomputeBulkUploadError: null,
+  billRecomputeBulkUploadSuccess: false,
+  billRecomputeBulkUploadResponse: null,
 
   // Feeder Energy Cap Bulk Upload state
   feederEnergyCapBulkUploadLoading: false,
@@ -1443,6 +1493,21 @@ export const processBillCrucialOpsBulkUpload = createAsyncThunk(
       return response.data
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to process bill crucial ops bulk upload")
+    }
+  }
+)
+
+export const processBillRecomputeBulkUpload = createAsyncThunk(
+  "fileManagement/processBillRecomputeBulkUpload",
+  async (request: BillRecomputeBulkUploadRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<BillRecomputeBulkUploadResponse>(
+        buildApiUrl(API_ENDPOINTS.FILE_MANAGEMENT.RECOMPUTE_BULK_UPLOAD),
+        request
+      )
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to process bill recompute bulk upload")
     }
   }
 )
@@ -1885,6 +1950,12 @@ const fileManagementSlice = createSlice({
       state.billCrucialOpsBulkUploadSuccess = false
       state.billCrucialOpsBulkUploadResponse = null
     },
+    resetBillRecomputeBulkUploadState: (state) => {
+      state.billRecomputeBulkUploadLoading = false
+      state.billRecomputeBulkUploadError = null
+      state.billRecomputeBulkUploadSuccess = false
+      state.billRecomputeBulkUploadResponse = null
+    },
     resetFeederEnergyCapBulkUploadState: (state) => {
       state.feederEnergyCapBulkUploadLoading = false
       state.feederEnergyCapBulkUploadError = null
@@ -2049,6 +2120,10 @@ const fileManagementSlice = createSlice({
       state.billCrucialOpsBulkUploadError = null
       state.billCrucialOpsBulkUploadSuccess = false
       state.billCrucialOpsBulkUploadResponse = null
+      state.billRecomputeBulkUploadLoading = false
+      state.billRecomputeBulkUploadError = null
+      state.billRecomputeBulkUploadSuccess = false
+      state.billRecomputeBulkUploadResponse = null
       state.feederEnergyCapBulkUploadLoading = false
       state.feederEnergyCapBulkUploadError = null
       state.feederEnergyCapBulkUploadSuccess = false
@@ -2471,6 +2546,23 @@ const fileManagementSlice = createSlice({
         state.billCrucialOpsBulkUploadSuccess = false
       })
 
+      // Bill Recompute Bulk Upload reducers
+      .addCase(processBillRecomputeBulkUpload.pending, (state) => {
+        state.billRecomputeBulkUploadLoading = true
+        state.billRecomputeBulkUploadError = null
+        state.billRecomputeBulkUploadSuccess = false
+      })
+      .addCase(processBillRecomputeBulkUpload.fulfilled, (state, action) => {
+        state.billRecomputeBulkUploadLoading = false
+        state.billRecomputeBulkUploadSuccess = true
+        state.billRecomputeBulkUploadResponse = action.payload
+      })
+      .addCase(processBillRecomputeBulkUpload.rejected, (state, action) => {
+        state.billRecomputeBulkUploadLoading = false
+        state.billRecomputeBulkUploadError = action.payload as string
+        state.billRecomputeBulkUploadSuccess = false
+      })
+
       // Feeder Energy Cap Bulk Upload reducers
       .addCase(processFeederEnergyCapBulkUpload.pending, (state) => {
         state.feederEnergyCapBulkUploadLoading = true
@@ -2701,6 +2793,7 @@ export const {
   resetAdjustmentBillingBulkUploadState,
   resetFinalizeBillingBulkUploadState,
   resetBillCrucialOpsBulkUploadState,
+  resetBillRecomputeBulkUploadState,
   resetFeederEnergyCapBulkUploadState,
   resetDistributionSubstationBulkUploadState,
   resetPostpaidEstimatedConsumptionBulkUploadState,
