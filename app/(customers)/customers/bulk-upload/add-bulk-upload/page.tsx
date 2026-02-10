@@ -87,7 +87,7 @@ const FileManagementPage = () => {
       case 1:
         return "customers-bulk-import"
       case 23:
-        return "customers-setup-bulk"
+        return "customers-existing-import-bulk"
       case 5:
         return "customers-info-update-bulk"
       case 6:
@@ -548,7 +548,7 @@ const FileManagementPage = () => {
     if (selectedUploadType === 23) {
       // Import Existing Customers template
       headers =
-        "CustomerName,TariffCode,StatusCode,PhoneNumber,EmailAdddress,CustomerAccountNo,CustomerAddress1,CustomerAddress2,FeederName,TransformerDescription,DTNumber,EmployeeNo,CustomerCity,CustomerState,BusinessUnit,StoredAverage,IsPPM,Longitude,Latitude,IsSeparation,MotherAccountNumber"
+        "CustomerName,CustomerAccountNo,CustomerAddress1,CustomerAddress2,CustomerCity,CustomerState,TelephoneNumber,Tariff,FeederName,Transformers,DTNumber,TechnicalEngineer,EmployeeNo,AreaOffice,ServiceCenter,StoredAverage,OpeningBalance,IsPPM,Longitute,Latitude,MotherAccountNumber,IsSeperation,EmailAdddress,StatusCode,Error"
       sampleRows = []
     } else if (selectedUploadType === 5) {
       // Customer Tariff Change template
