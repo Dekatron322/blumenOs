@@ -310,6 +310,82 @@ export interface PrintBulkUploadResponse {
   }
 }
 
+// Clear Tamper Bulk Upload interfaces
+export interface ClearTamperBulkUploadRequest {
+  fileId: number
+}
+
+export interface ClearTamperBulkUploadResponse {
+  isSuccess: boolean
+  message: string
+  data: {
+    id: number
+    jobType: number
+    status: number
+    requestedByUserId: number
+    requestedAtUtc: string
+    fileName: string
+    fileKey: string
+    fileUrl: string
+    fileSize: number
+    resultFileName: string
+    resultFileKey: string
+    resultFileUrl: string
+    resultFileSize: number
+    resultGeneratedAtUtc: string
+    totalRows: number
+    processedRows: number
+    succeededRows: number
+    failedRows: number
+    lastProcessedRow: number
+    retryCount: number
+    startedAtUtc: string
+    completedAtUtc: string
+    lastError: string
+    errorBlobKey: string
+    payloadJson: string
+    canDownloadResult: boolean
+  }
+}
+
+// Test Token Bulk Upload interfaces
+export interface TestTokenBulkUploadRequest {
+  fileId: number
+}
+
+export interface TestTokenBulkUploadResponse {
+  isSuccess: boolean
+  message: string
+  data: {
+    id: number
+    jobType: number
+    status: number
+    requestedByUserId: number
+    requestedAtUtc: string
+    fileName: string
+    fileKey: string
+    fileUrl: string
+    fileSize: number
+    resultFileName: string
+    resultFileKey: string
+    resultFileUrl: string
+    resultFileSize: number
+    resultGeneratedAtUtc: string
+    totalRows: number
+    processedRows: number
+    succeededRows: number
+    failedRows: number
+    lastProcessedRow: number
+    retryCount: number
+    startedAtUtc: string
+    completedAtUtc: string
+    lastError: string
+    errorBlobKey: string
+    payloadJson: string
+    canDownloadResult: boolean
+  }
+}
+
 export interface BulkUploadPreview {
   fileId: number
   fileName: string
@@ -433,6 +509,30 @@ export interface DownloadCsvResponse {
   // For now, we'll keep it simple and handle as a blob
   data: Blob
   fileName: string
+}
+
+// Download Clear Tamper interfaces
+export interface DownloadClearTamperRequest {
+  id: number
+}
+
+export interface DownloadClearTamperResponse {
+  data: Blob | null
+  fileName?: string
+  isSuccess: boolean
+  message?: string
+}
+
+// Download Test Token interfaces
+export interface DownloadTestTokenRequest {
+  id: number
+}
+
+export interface DownloadTestTokenResponse {
+  data: Blob | null
+  fileName?: string
+  isSuccess: boolean
+  message?: string
 }
 
 export interface BulkUploadData {
@@ -643,6 +743,18 @@ interface FileManagementState {
   printBulkUploadSuccess: boolean
   printBulkUploadResponse: PrintBulkUploadResponse | null
 
+  // Clear Tamper Bulk Upload state
+  clearTamperBulkUploadLoading: boolean
+  clearTamperBulkUploadError: string | null
+  clearTamperBulkUploadSuccess: boolean
+  clearTamperBulkUploadResponse: ClearTamperBulkUploadResponse | null
+
+  // Test Token Bulk Upload state
+  testTokenBulkUploadLoading: boolean
+  testTokenBulkUploadError: string | null
+  testTokenBulkUploadSuccess: boolean
+  testTokenBulkUploadResponse: TestTokenBulkUploadResponse | null
+
   // CSV Jobs state
   csvJobsLoading: boolean
   csvJobsError: string | null
@@ -678,6 +790,18 @@ interface FileManagementState {
   downloadCsvError: string | null
   downloadCsvSuccess: boolean
   downloadCsvResponse: DownloadCsvResponse | null
+
+  // Download Clear Tamper state
+  downloadClearTamperLoading: boolean
+  downloadClearTamperError: string | null
+  downloadClearTamperSuccess: boolean
+  downloadClearTamperResponse: DownloadClearTamperResponse | null
+
+  // Download Test Token state
+  downloadTestTokenLoading: boolean
+  downloadTestTokenError: string | null
+  downloadTestTokenSuccess: boolean
+  downloadTestTokenResponse: DownloadTestTokenResponse | null
 }
 
 // Initial state
@@ -833,6 +957,18 @@ const initialState: FileManagementState = {
   printBulkUploadSuccess: false,
   printBulkUploadResponse: null,
 
+  // Clear Tamper Bulk Upload state
+  clearTamperBulkUploadLoading: false,
+  clearTamperBulkUploadError: null,
+  clearTamperBulkUploadSuccess: false,
+  clearTamperBulkUploadResponse: null,
+
+  // Test Token Bulk Upload state
+  testTokenBulkUploadLoading: false,
+  testTokenBulkUploadError: null,
+  testTokenBulkUploadSuccess: false,
+  testTokenBulkUploadResponse: null,
+
   // CSV Jobs state
   csvJobsLoading: false,
   csvJobsError: null,
@@ -854,6 +990,18 @@ const initialState: FileManagementState = {
   downloadCsvError: null,
   downloadCsvSuccess: false,
   downloadCsvResponse: null,
+
+  // Download Clear Tamper state
+  downloadClearTamperLoading: false,
+  downloadClearTamperError: null,
+  downloadClearTamperSuccess: false,
+  downloadClearTamperResponse: null,
+
+  // Download Test Token state
+  downloadTestTokenLoading: false,
+  downloadTestTokenError: null,
+  downloadTestTokenSuccess: false,
+  downloadTestTokenResponse: null,
 }
 
 // Async thunks
@@ -1230,6 +1378,36 @@ export const processPrintBulkUpload = createAsyncThunk(
   }
 )
 
+export const processClearTamperBulkUpload = createAsyncThunk(
+  "fileManagement/processClearTamperBulkUpload",
+  async (request: ClearTamperBulkUploadRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<ClearTamperBulkUploadResponse>(
+        buildApiUrl(API_ENDPOINTS.FILE_MANAGEMENT.CLEAR_TAMPER_BULK_UPLOAD),
+        request
+      )
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to process clear tamper bulk upload")
+    }
+  }
+)
+
+export const processTestTokenBulkUpload = createAsyncThunk(
+  "fileManagement/processTestTokenBulkUpload",
+  async (request: TestTokenBulkUploadRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<TestTokenBulkUploadResponse>(
+        buildApiUrl(API_ENDPOINTS.FILE_MANAGEMENT.TEST_TOKEN_BULK_UPLOAD),
+        request
+      )
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to process test token bulk upload")
+    }
+  }
+)
+
 // CSV Jobs async thunk
 export const fetchCsvJobs = createAsyncThunk(
   "fileManagement/fetchCsvJobs",
@@ -1309,6 +1487,120 @@ export const downloadCsv = createAsyncThunk(
       } as DownloadCsvResponse
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to download CSV")
+    }
+  }
+)
+
+// Download Clear Tamper async thunk
+export const downloadClearTamper = createAsyncThunk(
+  "fileManagement/downloadClearTamper",
+  async (request: DownloadClearTamperRequest, { rejectWithValue }) => {
+    try {
+      const endpoint = buildEndpointWithParams(API_ENDPOINTS.FILE_MANAGEMENT.DOWNLOAD_CLEAR_TAMPER, { id: request.id })
+      const response = await api.get(endpoint)
+
+      // Handle different status codes
+      if (response.status === 200) {
+        // Check if response is JSON (file not ready) or blob (file ready)
+        const contentType = response.headers["content-type"]
+
+        if (contentType && contentType.includes("application/json")) {
+          // JSON response - file not ready, return the API response as-is
+          return {
+            data: null,
+            isSuccess: response.data.isSuccess,
+            message: response.data.message,
+          }
+        } else {
+          // Blob response - file ready for download
+          // Extract filename from Content-Disposition header if available
+          const contentDisposition = response.headers["content-disposition"]
+          let fileName = `clear-tamper-job-${request.id}.csv`
+
+          if (contentDisposition) {
+            const fileNameMatch = contentDisposition.match(/filename="?([^";]+)"?/)
+            if (fileNameMatch && fileNameMatch[1]) {
+              fileName = fileNameMatch[1]
+            }
+          }
+
+          return {
+            data: response.data,
+            fileName: fileName,
+            isSuccess: true,
+          }
+        }
+      } else if (response.status === 400 || response.status === 404 || response.status === 409) {
+        // These are valid API responses with messages, not errors
+        return {
+          data: null,
+          isSuccess: response.data.isSuccess,
+          message: response.data.message,
+        }
+      } else {
+        // Other status codes are actual errors
+        return rejectWithValue(`HTTP ${response.status}: ${response.statusText}`)
+      }
+    } catch (error: any) {
+      // Handle network errors or other exceptions
+      return rejectWithValue(error.response?.data?.message || error.message || "Failed to download clear tamper CSV")
+    }
+  }
+)
+
+// Download Test Token async thunk
+export const downloadTestToken = createAsyncThunk(
+  "fileManagement/downloadTestToken",
+  async (request: DownloadTestTokenRequest, { rejectWithValue }) => {
+    try {
+      const endpoint = buildEndpointWithParams(API_ENDPOINTS.FILE_MANAGEMENT.DOWNLOAD_TEST_TOKEN, { id: request.id })
+      const response = await api.get(endpoint)
+
+      // Handle different status codes
+      if (response.status === 200) {
+        // Check if response is JSON (file not ready) or blob (file ready)
+        const contentType = response.headers["content-type"]
+
+        if (contentType && contentType.includes("application/json")) {
+          // JSON response - file not ready, return the API response as-is
+          return {
+            data: null,
+            isSuccess: response.data.isSuccess,
+            message: response.data.message,
+          }
+        } else {
+          // Blob response - file ready for download
+          // Extract filename from Content-Disposition header if available
+          const contentDisposition = response.headers["content-disposition"]
+          let fileName = `test-token-job-${request.id}.csv`
+
+          if (contentDisposition) {
+            const fileNameMatch = contentDisposition.match(/filename="?([^";]+)"?/)
+            if (fileNameMatch && fileNameMatch[1]) {
+              fileName = fileNameMatch[1]
+            }
+          }
+
+          return {
+            data: response.data,
+            fileName: fileName,
+            isSuccess: true,
+          }
+        }
+      } else if (response.status === 400 || response.status === 404 || response.status === 409) {
+        // These are valid API responses with messages, not errors
+        return {
+          data: null,
+          isSuccess: response.data.isSuccess,
+          message: response.data.message,
+        }
+      } else {
+        // Other status codes are actual errors
+        return rejectWithValue(`HTTP ${response.status}: ${response.statusText}`)
+      }
+    } catch (error: any) {
+      // Handle network errors or other exceptions
+      return rejectWithValue(error.response?.data?.message || error.message || "Failed to download test token CSV")
     }
   }
 )
@@ -1508,6 +1800,34 @@ const fileManagementSlice = createSlice({
       state.downloadCsvSuccess = false
       state.downloadCsvResponse = null
     },
+    // Reset Download Clear Tamper state
+    resetDownloadClearTamperState: (state) => {
+      state.downloadClearTamperLoading = false
+      state.downloadClearTamperError = null
+      state.downloadClearTamperSuccess = false
+      state.downloadClearTamperResponse = null
+    },
+    // Reset Download Test Token state
+    resetDownloadTestTokenState: (state) => {
+      state.downloadTestTokenLoading = false
+      state.downloadTestTokenError = null
+      state.downloadTestTokenSuccess = false
+      state.downloadTestTokenResponse = null
+    },
+    // Reset Clear Tamper Bulk Upload state
+    resetClearTamperBulkUploadState: (state) => {
+      state.clearTamperBulkUploadLoading = false
+      state.clearTamperBulkUploadError = null
+      state.clearTamperBulkUploadSuccess = false
+      state.clearTamperBulkUploadResponse = null
+    },
+    // Reset Test Token Bulk Upload state
+    resetTestTokenBulkUploadState: (state) => {
+      state.testTokenBulkUploadLoading = false
+      state.testTokenBulkUploadError = null
+      state.testTokenBulkUploadSuccess = false
+      state.testTokenBulkUploadResponse = null
+    },
     // Reset all file management state
     resetFileManagementState: (state) => {
       state.fileIntent = null
@@ -1611,6 +1931,10 @@ const fileManagementSlice = createSlice({
       state.printBulkUploadError = null
       state.printBulkUploadSuccess = false
       state.printBulkUploadResponse = null
+      state.clearTamperBulkUploadLoading = false
+      state.clearTamperBulkUploadError = null
+      state.clearTamperBulkUploadSuccess = false
+      state.clearTamperBulkUploadResponse = null
       state.csvJobsLoading = false
       state.csvJobsError = null
       state.csvJobsSuccess = false
@@ -2047,6 +2371,40 @@ const fileManagementSlice = createSlice({
         state.printBulkUploadSuccess = false
       })
 
+      // Clear Tamper Bulk Upload reducers
+      .addCase(processClearTamperBulkUpload.pending, (state) => {
+        state.clearTamperBulkUploadLoading = true
+        state.clearTamperBulkUploadError = null
+        state.clearTamperBulkUploadSuccess = false
+      })
+      .addCase(processClearTamperBulkUpload.fulfilled, (state, action) => {
+        state.clearTamperBulkUploadLoading = false
+        state.clearTamperBulkUploadSuccess = true
+        state.clearTamperBulkUploadResponse = action.payload
+      })
+      .addCase(processClearTamperBulkUpload.rejected, (state, action) => {
+        state.clearTamperBulkUploadLoading = false
+        state.clearTamperBulkUploadError = action.payload as string
+        state.clearTamperBulkUploadSuccess = false
+      })
+
+      // Test Token Bulk Upload reducers
+      .addCase(processTestTokenBulkUpload.pending, (state) => {
+        state.testTokenBulkUploadLoading = true
+        state.testTokenBulkUploadError = null
+        state.testTokenBulkUploadSuccess = false
+      })
+      .addCase(processTestTokenBulkUpload.fulfilled, (state, action) => {
+        state.testTokenBulkUploadLoading = false
+        state.testTokenBulkUploadSuccess = true
+        state.testTokenBulkUploadResponse = action.payload
+      })
+      .addCase(processTestTokenBulkUpload.rejected, (state, action) => {
+        state.testTokenBulkUploadLoading = false
+        state.testTokenBulkUploadError = action.payload as string
+        state.testTokenBulkUploadSuccess = false
+      })
+
       // CSV Jobs reducers
       .addCase(fetchCsvJobs.pending, (state) => {
         state.csvJobsLoading = true
@@ -2115,6 +2473,40 @@ const fileManagementSlice = createSlice({
         state.downloadCsvError = action.payload as string
         state.downloadCsvSuccess = false
       })
+
+      // Download Clear Tamper reducers
+      .addCase(downloadClearTamper.pending, (state) => {
+        state.downloadClearTamperLoading = true
+        state.downloadClearTamperError = null
+        state.downloadClearTamperSuccess = false
+      })
+      .addCase(downloadClearTamper.fulfilled, (state, action) => {
+        state.downloadClearTamperLoading = false
+        state.downloadClearTamperSuccess = true
+        state.downloadClearTamperResponse = action.payload
+      })
+      .addCase(downloadClearTamper.rejected, (state, action) => {
+        state.downloadClearTamperLoading = false
+        state.downloadClearTamperError = action.payload as string
+        state.downloadClearTamperSuccess = false
+      })
+
+      // Download Test Token reducers
+      .addCase(downloadTestToken.pending, (state) => {
+        state.downloadTestTokenLoading = true
+        state.downloadTestTokenError = null
+        state.downloadTestTokenSuccess = false
+      })
+      .addCase(downloadTestToken.fulfilled, (state, action) => {
+        state.downloadTestTokenLoading = false
+        state.downloadTestTokenSuccess = true
+        state.downloadTestTokenResponse = action.payload
+      })
+      .addCase(downloadTestToken.rejected, (state, action) => {
+        state.downloadTestTokenLoading = false
+        state.downloadTestTokenError = action.payload as string
+        state.downloadTestTokenSuccess = false
+      })
   },
 })
 
@@ -2147,6 +2539,10 @@ export const {
   resetCsvJobsState,
   resetCsvUploadFailuresState,
   resetDownloadCsvState,
+  resetDownloadClearTamperState,
+  resetDownloadTestTokenState,
+  resetClearTamperBulkUploadState,
+  resetTestTokenBulkUploadState,
 } = fileManagementSlice.actions
 
 export default fileManagementSlice.reducer

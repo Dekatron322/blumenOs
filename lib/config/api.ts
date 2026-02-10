@@ -243,6 +243,10 @@ export const API_ENDPOINTS = {
     POSTPAID_ESTIMATED_CONSUMPTION_BULK_UPLOAD: "/billing/postpaid/estimated-consumptions/bulk/import",
     DOWNLOAD_CSV_JOBS: "/system/csv-jobs/{id}/customer-setup/result",
     PRINT_BULK_UPLOAD: "/billing/postpaid/print/batch/upload",
+    CLEAR_TAMPER_BULK_UPLOAD: "/meters/prepaid/clear-tamper/bulk",
+    DOWNLOAD_CLEAR_TAMPER: "/system/csv-jobs/{id}/clear-tamper/result",
+    TEST_TOKEN_BULK_UPLOAD: "/meters/prepaid/test-token/bulk",
+    DOWNLOAD_TEST_TOKEN: "/system/csv-jobs/{id}/test-token/result",
   },
 
   METER_CAPTURE: {
@@ -471,6 +475,7 @@ export const API_ENDPOINTS = {
     CHANGE_TARIFF: "/meters/{id}/ti",
     ACTIVATE: "/meters/{id}/activate",
     DEACTIVATE: "/meters/{id}/deactivate",
+    TEST_TOKEN: "/meters/{id}/prepaid/test-token",
   },
 
   METER_BRANDS: {

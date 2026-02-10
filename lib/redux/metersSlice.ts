@@ -284,6 +284,9 @@ export interface MetersState {
   deactivateMeterData: MeterDetailData | null
   deactivateMeterLoading: boolean
   deactivateMeterError: string | null
+  testTokenData: TestTokenResult | null
+  testTokenLoading: boolean
+  testTokenError: string | null
   summary: MetersSummaryData | null
   summaryLoading: boolean
   summaryError: string | null
@@ -431,6 +434,9 @@ const initialState: MetersState = {
   deactivateMeterData: null,
   deactivateMeterLoading: false,
   deactivateMeterError: null,
+  testTokenData: null,
+  testTokenLoading: false,
+  testTokenError: null,
   summary: null,
   summaryLoading: false,
   summaryError: null,
@@ -537,6 +543,44 @@ export interface DeactivateMeterResponse {
   isSuccess: boolean
   message: string
   data: MeterDetailData
+}
+
+// Interface for Test Token Request
+export interface TestTokenRequest {
+  control: number
+  mfrcode: number
+}
+
+// Interface for Test Token Result
+export interface TestTokenResult {
+  control: number
+  description: string
+  drn: string
+  mfrcode: number
+  pan: string
+  subclass: number
+  tokenClass: number
+  tokenDec: string
+  tokenHex: string
+  thrift_spec: string
+}
+
+// Interface for Test Token Response
+export interface TestTokenResponse {
+  isSuccess: boolean
+  message: string
+  data: {
+    data: {
+      messageId: string
+      success: boolean
+      result: TestTokenResult
+    }
+    error: {
+      code: string
+      error: string
+      success: boolean
+    }
+  }
 }
 
 // Interface for Add Meter Request
@@ -756,7 +800,7 @@ export interface Token {
   idSm: string
   isReservedTid: boolean
   krn: number
-  newConfig: TokenConfig
+  newConfig: TokenConfig | null
   pan: string
   scaledAmount: string
   scaledUnitName: string
@@ -783,10 +827,12 @@ export interface Advice {
 }
 
 export interface TokenData {
-  advice: Advice
-  raw: string
+  messageId?: string
+  advice: Advice | null
+  raw: string | null
   success: boolean
-  tokens: Token[]
+  result?: Token[]
+  tokens?: Token[]
 }
 
 export interface AddKeyChangeResponse {
@@ -1890,6 +1936,28 @@ export const deactivateMeter = createAsyncThunk(
   }
 )
 
+// Async Thunk for test token
+export const testToken = createAsyncThunk(
+  "meters/testToken",
+  async ({ id, requestData }: { id: number; requestData: TestTokenRequest }, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.METERS.TEST_TOKEN.replace("{id}", id.toString())
+      const response = await api.post<TestTokenResponse>(buildApiUrl(endpoint), requestData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to test token")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to test token")
+      }
+      return rejectWithValue(error.message || "Network error during token test")
+    }
+  }
+)
+
 // Create slice
 const metersSlice = createSlice({
   name: "meters",
@@ -2076,6 +2144,12 @@ const metersSlice = createSlice({
       state.deactivateMeterData = null
       state.deactivateMeterLoading = false
       state.deactivateMeterError = null
+    },
+    // Clear test token state
+    clearTestToken: (state) => {
+      state.testTokenData = null
+      state.testTokenLoading = false
+      state.testTokenError = null
     },
   },
   extraReducers: (builder) => {
@@ -2667,6 +2741,19 @@ const metersSlice = createSlice({
         state.deactivateMeterLoading = false
         state.deactivateMeterError = action.payload as string
       })
+      // Test token
+      .addCase(testToken.pending, (state) => {
+        state.testTokenLoading = true
+        state.testTokenError = null
+      })
+      .addCase(testToken.fulfilled, (state, action: PayloadAction<TestTokenResponse>) => {
+        state.testTokenLoading = false
+        state.testTokenData = action.payload.data.data.result
+      })
+      .addCase(testToken.rejected, (state, action) => {
+        state.testTokenLoading = false
+        state.testTokenError = action.payload as string
+      })
   },
 })
 
@@ -2691,5 +2778,6 @@ export const {
   clearRetryFailedPayment,
   clearActivateMeter,
   clearDeactivateMeter,
+  clearTestToken,
 } = metersSlice.actions
 export default metersSlice.reducer
