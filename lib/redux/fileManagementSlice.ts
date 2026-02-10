@@ -32,6 +32,82 @@ export interface MeterBulkUploadResponse {
   data: BulkUploadJob
 }
 
+// Meter Bulk Reassign interfaces
+export interface MeterBulkReassignRequest {
+  fileId: number
+}
+
+export interface MeterBulkReassignResponse {
+  isSuccess: boolean
+  message: string
+  data: {
+    id: number
+    jobType: number
+    status: number
+    requestedByUserId: number
+    requestedAtUtc: string
+    fileName: string
+    fileKey: string
+    fileUrl: string
+    fileSize: number
+    resultFileName: string
+    resultFileKey: string
+    resultFileUrl: string
+    resultFileSize: number
+    resultGeneratedAtUtc: string
+    totalRows: number
+    processedRows: number
+    succeededRows: number
+    failedRows: number
+    lastProcessedRow: number
+    retryCount: number
+    startedAtUtc: string
+    completedAtUtc: string
+    lastError: string
+    errorBlobKey: string
+    payloadJson: string
+    canDownloadResult: boolean
+  }
+}
+
+// Meter Change Status interfaces
+export interface MeterChangeStatusRequest {
+  fileId: number
+}
+
+export interface MeterChangeStatusResponse {
+  isSuccess: boolean
+  message: string
+  data: {
+    id: number
+    jobType: number
+    status: number
+    requestedByUserId: number
+    requestedAtUtc: string
+    fileName: string
+    fileKey: string
+    fileUrl: string
+    fileSize: number
+    resultFileName: string
+    resultFileKey: string
+    resultFileUrl: string
+    resultFileSize: number
+    resultGeneratedAtUtc: string
+    totalRows: number
+    processedRows: number
+    succeededRows: number
+    failedRows: number
+    lastProcessedRow: number
+    retryCount: number
+    startedAtUtc: string
+    completedAtUtc: string
+    lastError: string
+    errorBlobKey: string
+    payloadJson: string
+    canDownloadResult: boolean
+  }
+}
+
 // Customer Setup Bulk Upload interfaces
 export interface CustomerSetupBulkUploadRequest {
   fileId: number
@@ -738,6 +814,18 @@ interface FileManagementState {
   meterBulkUploadSuccess: boolean
   meterBulkUploadResponse: MeterBulkUploadResponse | null
 
+  // Meter Bulk Reassign state
+  meterBulkReassignLoading: boolean
+  meterBulkReassignError: string | null
+  meterBulkReassignSuccess: boolean
+  meterBulkReassignResponse: MeterBulkReassignResponse | null
+
+  // Meter Change Status state
+  meterChangeStatusLoading: boolean
+  meterChangeStatusError: string | null
+  meterChangeStatusSuccess: boolean
+  meterChangeStatusResponse: MeterChangeStatusResponse | null
+
   // Customer Setup Bulk Upload state
   customerSetupBulkUploadLoading: boolean
   customerSetupBulkUploadError: string | null
@@ -969,6 +1057,18 @@ const initialState: FileManagementState = {
   meterBulkUploadError: null,
   meterBulkUploadSuccess: false,
   meterBulkUploadResponse: null,
+
+  // Meter Bulk Reassign state
+  meterBulkReassignLoading: false,
+  meterBulkReassignError: null,
+  meterBulkReassignSuccess: false,
+  meterBulkReassignResponse: null,
+
+  // Meter Change Status state
+  meterChangeStatusLoading: false,
+  meterChangeStatusError: null,
+  meterChangeStatusSuccess: false,
+  meterChangeStatusResponse: null,
 
   // Customer Setup Bulk Upload state
   customerSetupBulkUploadLoading: false,
@@ -1219,6 +1319,36 @@ export const processMeterBulkUpload = createAsyncThunk(
       return response.data
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to process meter bulk upload")
+    }
+  }
+)
+
+export const processMeterBulkReassign = createAsyncThunk(
+  "fileManagement/processMeterBulkReassign",
+  async (request: MeterBulkReassignRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<MeterBulkReassignResponse>(
+        buildApiUrl(API_ENDPOINTS.FILE_MANAGEMENT.METER_BULK_REASSIGN),
+        request
+      )
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to process meter bulk reassign")
+    }
+  }
+)
+
+export const processMeterChangeStatus = createAsyncThunk(
+  "fileManagement/processMeterChangeStatus",
+  async (request: MeterChangeStatusRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<MeterChangeStatusResponse>(
+        buildApiUrl(API_ENDPOINTS.FILE_MANAGEMENT.METER_CHANGE_STATUS),
+        request
+      )
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to process meter change status")
     }
   }
 )
@@ -2238,6 +2368,40 @@ const fileManagementSlice = createSlice({
         state.meterBulkUploadLoading = false
         state.meterBulkUploadError = action.payload as string
         state.meterBulkUploadSuccess = false
+      })
+
+      // Meter Bulk Reassign reducers
+      .addCase(processMeterBulkReassign.pending, (state) => {
+        state.meterBulkReassignLoading = true
+        state.meterBulkReassignError = null
+        state.meterBulkReassignSuccess = false
+      })
+      .addCase(processMeterBulkReassign.fulfilled, (state, action) => {
+        state.meterBulkReassignLoading = false
+        state.meterBulkReassignSuccess = true
+        state.meterBulkReassignResponse = action.payload
+      })
+      .addCase(processMeterBulkReassign.rejected, (state, action) => {
+        state.meterBulkReassignLoading = false
+        state.meterBulkReassignError = action.payload as string
+        state.meterBulkReassignSuccess = false
+      })
+
+      // Meter Change Status reducers
+      .addCase(processMeterChangeStatus.pending, (state) => {
+        state.meterChangeStatusLoading = true
+        state.meterChangeStatusError = null
+        state.meterChangeStatusSuccess = false
+      })
+      .addCase(processMeterChangeStatus.fulfilled, (state, action) => {
+        state.meterChangeStatusLoading = false
+        state.meterChangeStatusSuccess = true
+        state.meterChangeStatusResponse = action.payload
+      })
+      .addCase(processMeterChangeStatus.rejected, (state, action) => {
+        state.meterChangeStatusLoading = false
+        state.meterChangeStatusError = action.payload as string
+        state.meterChangeStatusSuccess = false
       })
 
       // Customer Setup Bulk Upload reducers

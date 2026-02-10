@@ -250,6 +250,8 @@ export const API_ENDPOINTS = {
     EXISTING_CUSTOMER_BULK_UPLOAD: "/customers/bulk/import-existing",
     STATUS_CODES_BULK_UPLOAD: "/customers/bulk/status-change",
     RECOMPUTE_BULK_UPLOAD: "/billing/postpaid/bills/bulk/recompute",
+    METER_BULK_REASSIGN: "/meters/bulk/reassign",
+    METER_CHANGE_STATUS: "/meters/bulk/status-change",
   },
 
   METER_CAPTURE: {
