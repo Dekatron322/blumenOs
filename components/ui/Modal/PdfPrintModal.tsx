@@ -138,9 +138,9 @@ const PdfPrintModal: React.FC<PdfPrintModalProps> = ({
   const getBulkInsertType = (uploadType: number): string => {
     switch (uploadType) {
       case 20:
-        return "bill-finalize"
+        return "bill-print"
       default:
-        return "bill-finalize"
+        return "bill-print"
     }
   }
 
