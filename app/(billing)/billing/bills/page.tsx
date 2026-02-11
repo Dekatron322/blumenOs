@@ -10,6 +10,13 @@ import { ButtonModule } from "components/ui/Button/Button"
 import { Download, PlayIcon, X } from "lucide-react"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { clearDownloadARStatus, downloadAR, DownloadARRequestParams } from "lib/redux/postpaidSlice"
+
+// Bill Status Enum
+export enum BillStatus {
+  Draft = 0,
+  Finalized = 1,
+  Refunded = 2,
+}
 import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
 import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { fetchFeeders } from "lib/redux/feedersSlice"
@@ -291,6 +298,7 @@ export default function MeteringDashboard() {
   const [selectedAreaOffice, setSelectedAreaOffice] = useState("")
   const [selectedFeeder, setSelectedFeeder] = useState("")
   const [selectedDistributionSubstation, setSelectedDistributionSubstation] = useState("")
+  const [selectedStatus, setSelectedStatus] = useState("")
   const [isMd, setIsMd] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [meterData, setMeterData] = useState(generateMeterData())
@@ -367,6 +375,7 @@ export default function MeteringDashboard() {
       ...(selectedDistributionSubstation && {
         distributionSubstationId: parseInt(selectedDistributionSubstation),
       }),
+      ...(selectedStatus && { billStatus: parseInt(selectedStatus) }),
       isMd: isMd,
     }
 
@@ -586,6 +595,22 @@ export default function MeteringDashboard() {
                       }
                     />
                   )}
+                </div>
+
+                {/* Bill Status - Optional */}
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Bill Status</label>
+                  <FormSelectModule
+                    name="billStatus"
+                    value={selectedStatus}
+                    onChange={(e) => setSelectedStatus(e.target.value)}
+                    options={[
+                      { value: "", label: "All Statuses" },
+                      { value: BillStatus.Draft.toString(), label: "Draft" },
+                      { value: BillStatus.Finalized.toString(), label: "Finalized" },
+                      { value: BillStatus.Refunded.toString(), label: "Refunded" },
+                    ]}
+                  />
                 </div>
 
                 {/* Is MD - Optional */}

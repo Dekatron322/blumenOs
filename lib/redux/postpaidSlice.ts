@@ -521,6 +521,7 @@ export interface DownloadARRequestParams {
   feederId?: number
   distributionSubstationId?: number
   isMd?: boolean
+  billStatus?: number
 }
 
 export interface DownloadARResponse {
@@ -1714,7 +1715,8 @@ export const downloadAR = createAsyncThunk(
   "postpaidBilling/downloadAR",
   async (params: DownloadARRequestParams, { rejectWithValue }) => {
     try {
-      const { billingPeriodId, billingPeriodName, areaOfficeId, feederId, distributionSubstationId, isMd } = params
+      const { billingPeriodId, billingPeriodName, areaOfficeId, feederId, distributionSubstationId, isMd, billStatus } =
+        params
 
       const response = await api.get(buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.DOWNLOAD_AR), {
         params: {
@@ -1723,6 +1725,7 @@ export const downloadAR = createAsyncThunk(
           ...(feederId && { FeederId: feederId }),
           ...(distributionSubstationId && { DistributionSubstationId: distributionSubstationId }),
           ...(isMd !== undefined && { IsMd: isMd }),
+          ...(billStatus !== undefined && { BillStatus: billStatus }),
         },
         responseType: "blob", // Important: Handle the response as a blob (file)
         // Add custom headers to ensure we get all response headers

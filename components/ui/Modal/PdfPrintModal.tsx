@@ -322,7 +322,7 @@ const PdfPrintModal: React.FC<PdfPrintModalProps> = ({
         purpose: getPurpose(20), // Mark Bills for Printing
         checksum,
         bulkInsertType: getBulkInsertType(20),
-        jobType: 20,
+        jobType: 25,
         columns: paymentColumns,
       }
 
