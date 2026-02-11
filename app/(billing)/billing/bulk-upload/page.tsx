@@ -23,6 +23,7 @@ const jobTypeOptions = [
   { value: "20", label: "Bill Finalize" },
   { value: "21", label: "Bill Crucial Ops" },
   { value: "30", label: "Bill Recompute" },
+  { value: "31", label: "Account To Be Billed" },
   { value: "3", label: "Feeder Energy Cap Import" },
   { value: "2", label: "Customer Meter Reading" },
 ]
@@ -328,7 +329,7 @@ const BulkUploads: React.FC = () => {
     setCurrentPage(newPage)
   }
 
-  const billingJobTypes = [15, 17, 18, 19, 20, 21, 30, 3, 2]
+  const billingJobTypes = [15, 17, 18, 19, 20, 21, 30, 31, 3, 2]
   const filteredCsvJobs = csvJobs.filter((job) => billingJobTypes.includes(job.jobType))
 
   if (csvJobsLoading && !hasInitialLoad) {

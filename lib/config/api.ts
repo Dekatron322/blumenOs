@@ -252,6 +252,7 @@ export const API_ENDPOINTS = {
     RECOMPUTE_BULK_UPLOAD: "/billing/postpaid/bills/bulk/recompute",
     METER_BULK_REASSIGN: "/meters/bulk/reassign",
     METER_CHANGE_STATUS: "/meters/bulk/status-change",
+    ACCOUNT_TO_BE_BILLED: "/billing/postpaid/bills/bulk/manual-energy",
   },
 
   METER_CAPTURE: {

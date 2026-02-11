@@ -442,6 +442,44 @@ export interface FeederEnergyCapBulkUploadResponse {
   }
 }
 
+// Bill Manual Energy Bulk Upload interfaces
+export interface BillManualEnergyBulkUploadRequest {
+  fileId: number
+}
+
+export interface BillManualEnergyBulkUploadResponse {
+  isSuccess: boolean
+  message: string
+  data: {
+    id: number
+    jobType: number
+    status: number
+    requestedByUserId: number
+    requestedAtUtc: string
+    fileName: string
+    fileKey: string
+    fileUrl: string
+    fileSize: number
+    resultFileName: string
+    resultFileKey: string
+    resultFileUrl: string
+    resultFileSize: number
+    resultGeneratedAtUtc: string
+    totalRows: number
+    processedRows: number
+    succeededRows: number
+    failedRows: number
+    lastProcessedRow: number
+    retryCount: number
+    startedAtUtc: string
+    completedAtUtc: string
+    lastError: string
+    errorBlobKey: string
+    payloadJson: string
+    canDownloadResult: boolean
+  }
+}
+
 // Distribution Substation Bulk Upload interfaces
 export interface DistributionSubstationBulkUploadRequest {
   fileId: number
@@ -940,6 +978,12 @@ interface FileManagementState {
   billRecomputeBulkUploadSuccess: boolean
   billRecomputeBulkUploadResponse: BillRecomputeBulkUploadResponse | null
 
+  // Bill Manual Energy Bulk Upload state
+  billManualEnergyBulkUploadLoading: boolean
+  billManualEnergyBulkUploadError: string | null
+  billManualEnergyBulkUploadSuccess: boolean
+  billManualEnergyBulkUploadResponse: BillManualEnergyBulkUploadResponse | null
+
   // Feeder Energy Cap Bulk Upload state
   feederEnergyCapBulkUploadLoading: boolean
   feederEnergyCapBulkUploadError: string | null
@@ -1183,6 +1227,12 @@ const initialState: FileManagementState = {
   billRecomputeBulkUploadError: null,
   billRecomputeBulkUploadSuccess: false,
   billRecomputeBulkUploadResponse: null,
+
+  // Bill Manual Energy Bulk Upload state
+  billManualEnergyBulkUploadLoading: false,
+  billManualEnergyBulkUploadError: null,
+  billManualEnergyBulkUploadSuccess: false,
+  billManualEnergyBulkUploadResponse: null,
 
   // Feeder Energy Cap Bulk Upload state
   feederEnergyCapBulkUploadLoading: false,
@@ -1642,6 +1692,21 @@ export const processBillRecomputeBulkUpload = createAsyncThunk(
   }
 )
 
+export const processBillManualEnergyBulkUpload = createAsyncThunk(
+  "fileManagement/processBillManualEnergyBulkUpload",
+  async (request: BillManualEnergyBulkUploadRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<BillManualEnergyBulkUploadResponse>(
+        buildApiUrl(API_ENDPOINTS.FILE_MANAGEMENT.ACCOUNT_TO_BE_BILLED),
+        request
+      )
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to process account to be billed bulk upload")
+    }
+  }
+)
+
 export const processFeederEnergyCapBulkUpload = createAsyncThunk(
   "fileManagement/processFeederEnergyCapBulkUpload",
   async (request: FeederEnergyCapBulkUploadRequest, { rejectWithValue }) => {
@@ -2086,6 +2151,12 @@ const fileManagementSlice = createSlice({
       state.billRecomputeBulkUploadSuccess = false
       state.billRecomputeBulkUploadResponse = null
     },
+    resetBillManualEnergyBulkUploadState: (state) => {
+      state.billManualEnergyBulkUploadLoading = false
+      state.billManualEnergyBulkUploadError = null
+      state.billManualEnergyBulkUploadSuccess = false
+      state.billManualEnergyBulkUploadResponse = null
+    },
     resetFeederEnergyCapBulkUploadState: (state) => {
       state.feederEnergyCapBulkUploadLoading = false
       state.feederEnergyCapBulkUploadError = null
@@ -2254,6 +2325,10 @@ const fileManagementSlice = createSlice({
       state.billRecomputeBulkUploadError = null
       state.billRecomputeBulkUploadSuccess = false
       state.billRecomputeBulkUploadResponse = null
+      state.billManualEnergyBulkUploadLoading = false
+      state.billManualEnergyBulkUploadError = null
+      state.billManualEnergyBulkUploadSuccess = false
+      state.billManualEnergyBulkUploadResponse = null
       state.feederEnergyCapBulkUploadLoading = false
       state.feederEnergyCapBulkUploadError = null
       state.feederEnergyCapBulkUploadSuccess = false
@@ -2725,6 +2800,23 @@ const fileManagementSlice = createSlice({
         state.billRecomputeBulkUploadLoading = false
         state.billRecomputeBulkUploadError = action.payload as string
         state.billRecomputeBulkUploadSuccess = false
+      })
+
+      // Bill Manual Energy Bulk Upload reducers
+      .addCase(processBillManualEnergyBulkUpload.pending, (state) => {
+        state.billManualEnergyBulkUploadLoading = true
+        state.billManualEnergyBulkUploadError = null
+        state.billManualEnergyBulkUploadSuccess = false
+      })
+      .addCase(processBillManualEnergyBulkUpload.fulfilled, (state, action) => {
+        state.billManualEnergyBulkUploadLoading = false
+        state.billManualEnergyBulkUploadSuccess = true
+        state.billManualEnergyBulkUploadResponse = action.payload
+      })
+      .addCase(processBillManualEnergyBulkUpload.rejected, (state, action) => {
+        state.billManualEnergyBulkUploadLoading = false
+        state.billManualEnergyBulkUploadError = action.payload as string
+        state.billManualEnergyBulkUploadSuccess = false
       })
 
       // Feeder Energy Cap Bulk Upload reducers
