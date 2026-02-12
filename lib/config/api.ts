@@ -321,6 +321,7 @@ export const API_ENDPOINTS = {
     GET_BY_ID: "/billing/postpaid/feeder-energy-caps/{id}",
     ADD: "/billing/postpaid/feeder-energy-caps/apply-all",
     CREATE_SINGLE: "/billing/postpaid/feeder-energy-caps",
+    DOWNLOAD_FEEDER_ENERGY_CSV: "/billing/postpaid/feeder-energy-caps/csv",
   },
 
   ANALYTICS: {

@@ -9,12 +9,13 @@ import { SearchModule } from "components/ui/Search/search-module"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
   clearError,
+  downloadFeederEnergyCsv,
   FeederEnergyCapsRequestParams,
   fetchFeederEnergyCaps,
   setPagination,
 } from "lib/redux/feederEnergyCapSlice"
 import { ButtonModule } from "components/ui/Button/Button"
-import { ArrowLeft, ChevronDown, ChevronUp, Filter, PlusCircle, SortAsc, SortDesc, X } from "lucide-react"
+import { ArrowLeft, ChevronDown, ChevronUp, Download, Filter, PlusCircle, SortAsc, SortDesc, X } from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { clearFeeders, fetchFeeders } from "lib/redux/feedersSlice"
@@ -434,9 +435,14 @@ const LoadingSkeleton = () => {
 const FeederEnergyCaps: React.FC = () => {
   const dispatch = useAppDispatch()
   const router = useRouter()
-  const { feederEnergyCaps, feederEnergyCapsLoading, feederEnergyCapsError, pagination } = useAppSelector(
-    (state) => state.feederEnergyCaps
-  )
+  const {
+    feederEnergyCaps,
+    feederEnergyCapsLoading,
+    feederEnergyCapsError,
+    pagination,
+    downloadFeederEnergyCsvLoading,
+    downloadFeederEnergyCsvSuccess,
+  } = useAppSelector((state) => state.feederEnergyCaps)
   const { areaOffices } = useAppSelector((state) => state.areaOffices)
   const { feeders } = useAppSelector((state) => state.feeders)
   const { companies } = useAppSelector((state) => state.companies)
@@ -459,6 +465,12 @@ const FeederEnergyCaps: React.FC = () => {
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(true)
   const [isSortExpanded, setIsSortExpanded] = useState(true)
+  const [showExportModal, setShowExportModal] = useState(false)
+  const [exportDateRange, setExportDateRange] = useState<"current" | "all">("current")
+  const [exportFromDate, setExportFromDate] = useState("")
+  const [exportToDate, setExportToDate] = useState("")
+  const [selectedExportBillingPeriod, setSelectedExportBillingPeriod] = useState<number | undefined>(undefined)
+  const [showExportSuccess, setShowExportSuccess] = useState(false)
 
   // Local state for filters (UI state - what user is selecting)
   const [localFilters, setLocalFilters] = useState({
@@ -737,6 +749,39 @@ const FeederEnergyCaps: React.FC = () => {
     router.push(`/billing/feeder-energy-caps/update-energy-cap/${energyCapId}`)
   }
 
+  const handleExportFeederEnergyCaps = async () => {
+    try {
+      // Use the selected billing period from the dropdown or default to the current applied filter
+      const billingPeriodId = selectedExportBillingPeriod || appliedFilters.billingPeriodId
+
+      if (!billingPeriodId) {
+        console.error("No billing period selected for export")
+        return
+      }
+
+      await dispatch(downloadFeederEnergyCsv({ billingPeriodId })).unwrap()
+      setShowExportModal(false)
+      setShowExportSuccess(true)
+      // Hide success message after 3 seconds
+      setTimeout(() => setShowExportSuccess(false), 3000)
+    } catch (error) {
+      console.error("Export failed:", error)
+    }
+  }
+
+  // Set default billing period when modal opens
+  const openExportModal = () => {
+    setSelectedExportBillingPeriod(appliedFilters.billingPeriodId)
+    setShowExportModal(true)
+  }
+
+  // Handle export success state
+  useEffect(() => {
+    if (downloadFeederEnergyCsvSuccess && showExportSuccess) {
+      // Success is already handled in the export handler
+    }
+  }, [downloadFeederEnergyCsvSuccess, showExportSuccess])
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString("en-US", {
@@ -842,13 +887,10 @@ const FeederEnergyCaps: React.FC = () => {
                   className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
                 >
                   <Filter className="size-4" />
-                  Filters
-                  {getActiveFilterCount() > 0 && (
-                    <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
-                      {getActiveFilterCount()}
-                    </span>
-                  )}
+                  <span className="hidden sm:inline">Filters</span>
                 </button>
+
+                {/* Export CSV button for mobile/tablet */}
 
                 <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">Feeder Energy Caps</p>
               </div>
@@ -872,6 +914,17 @@ const FeederEnergyCaps: React.FC = () => {
                   {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
                   {showDesktopFilters ? "Hide filters" : "Show filters"}
                 </button>
+
+                {/* Export CSV button - Desktop only (2xl and above) */}
+                <ButtonModule
+                  icon={<Download className="size-4" />}
+                  type="button"
+                  size="md"
+                  onClick={openExportModal}
+                  variant="outline"
+                >
+                  <span className="hidden sm:inline">Export CSV</span>
+                </ButtonModule>
               </div>
             </div>
 
@@ -1308,6 +1361,105 @@ const FeederEnergyCaps: React.FC = () => {
         isSortExpanded={isSortExpanded}
         setIsSortExpanded={setIsSortExpanded}
       />
+
+      {/* Export Modal */}
+      <AnimatePresence>
+        {showExportModal && (
+          <motion.div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowExportModal(false)}
+          >
+            <motion.div
+              className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl"
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Export Feeder Energy Caps</h3>
+                <p className="mt-1 text-sm text-gray-600">
+                  Export feeder energy caps data to CSV file for the selected billing period.
+                </p>
+              </div>
+
+              <div className="mb-6">
+                <label className="mb-2 block text-sm font-medium text-gray-700">Select Billing Period</label>
+                <FormSelectModule
+                  name="exportBillingPeriod"
+                  value={selectedExportBillingPeriod?.toString() || ""}
+                  onChange={(e) =>
+                    setSelectedExportBillingPeriod(e.target.value === "" ? undefined : Number(e.target.value))
+                  }
+                  options={periodOptions}
+                  className="w-full"
+                  controlClassName="h-10 text-sm"
+                />
+                <p className="mt-2 text-xs text-gray-500">
+                  Choose the billing period for which you want to export feeder energy caps data.
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowExportModal(false)}
+                  className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleExportFeederEnergyCaps}
+                  disabled={!selectedExportBillingPeriod || downloadFeederEnergyCsvLoading}
+                  className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors ${
+                    !selectedExportBillingPeriod || downloadFeederEnergyCsvLoading
+                      ? "cursor-not-allowed bg-gray-400"
+                      : "bg-[#004B23] hover:bg-[#003a1b]"
+                  }`}
+                >
+                  {downloadFeederEnergyCsvLoading ? (
+                    <>
+                      <div className="mr-2 inline-block size-4 animate-spin rounded-full border-2 border-solid border-white border-t-transparent"></div>
+                      Exporting...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="mr-2 inline-block size-4" />
+                      Export
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Export Success Message */}
+      <AnimatePresence>
+        {showExportSuccess && (
+          <motion.div
+            className="fixed right-4 top-4 z-[101] flex items-center gap-3 rounded-lg bg-green-50 px-4 py-3 shadow-lg"
+            initial={{ opacity: 0, x: 100, scale: 0.95 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 100, scale: 0.95 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+          >
+            <div className="flex size-8 items-center justify-center rounded-full bg-green-100">
+              <svg className="size-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-green-800">Export Successful!</p>
+              <p className="text-xs text-green-600">Feeder energy caps CSV has been downloaded</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   )
 }

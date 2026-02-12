@@ -1389,16 +1389,14 @@ const AllAnomaliesTable: React.FC<AllAnomaliesTableProps> = ({
               )}
             </button>
             {/* Export CSV Button */}
-            <button
+            <ButtonModule
               onClick={() => setShowExportModal(true)}
               disabled={isExporting}
-              className={`flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium transition-colors ${
-                isExporting ? "cursor-not-allowed text-gray-400" : "text-gray-700 hover:bg-gray-50"
-              }`}
+              variant="outline"
+              icon={<Download className={`size-4 ${isExporting ? "animate-pulse" : ""}`} />}
             >
-              <Download className={`size-4 ${isExporting ? "animate-pulse" : ""}`} />
               {isExporting ? "Exporting..." : "Export"}
-            </button>
+            </ButtonModule>
           </div>
         </div>
       </div>

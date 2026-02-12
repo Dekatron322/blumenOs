@@ -811,7 +811,7 @@ const MeterBasicInfoTab = ({
             </div>
           </motion.div>
           {/* Quick Actions */}
-          {canUpdate && meter.meterType === 1 && (
+          {canUpdate && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -832,6 +832,7 @@ const MeterBasicInfoTab = ({
                   <HistoryIcon />
                   View History
                 </ButtonModule>
+
                 <ButtonModule
                   variant="outlinePurple"
                   size="md"
@@ -841,6 +842,7 @@ const MeterBasicInfoTab = ({
                   <Edit3 className="size-4" />
                   Edit Meter
                 </ButtonModule>
+
                 {/* <ButtonModule
                   variant={meter.isMeterActive ? "danger" : "primary"}
                   size="md"
@@ -853,69 +855,73 @@ const MeterBasicInfoTab = ({
                   {meter.isMeterActive ? <PowerOff className="size-4" /> : <Power className="size-4" />}
                   {meter.isMeterActive ? "Deactivate" : "Activate"}
                 </ButtonModule> */}
-                <ButtonModule
-                  variant="outlineBlue"
-                  size="md"
-                  className="w-full justify-start gap-3 text-sm"
-                  onClick={() => openModal("clearTamper")}
-                >
-                  <Shield className="size-4" />
-                  Clear Tamper
-                </ButtonModule>
-                <ButtonModule
-                  variant="outlineOrange"
-                  size="md"
-                  className="w-full justify-start gap-3 text-sm"
-                  onClick={() => openModal("addKeyChange")}
-                >
-                  <Key className="size-4" />
-                  Add Key Change
-                </ButtonModule>
-                <ButtonModule
-                  variant="outlineCyan"
-                  size="md"
-                  className="w-full justify-start gap-3 text-sm"
-                  onClick={() => openModal("clearCredit")}
-                >
-                  <CreditCard className="size-4" />
-                  Clear Credit
-                </ButtonModule>
-                <ButtonModule
-                  variant="outlineIndigo"
-                  size="md"
-                  className="w-full justify-start gap-3 text-sm"
-                  onClick={() => openModal("setControl")}
-                >
-                  <Settings className="size-4" />
-                  Set Control
-                </ButtonModule>
-                <ButtonModule
-                  variant="outlinePink"
-                  size="md"
-                  className="w-full justify-start gap-3 text-sm"
-                  onClick={() => openModal("changePhase")}
-                >
-                  <RefreshCw className="size-4" />
-                  Change Phase
-                </ButtonModule>
-                <ButtonModule
-                  variant="outlineDanger"
-                  size="md"
-                  className="w-full justify-start gap-3 text-sm"
-                  onClick={() => openModal("changeTechnicalConfig")}
-                >
-                  <RefreshCw className="size-4" />
-                  Change Technical Config
-                </ButtonModule>
-                <ButtonModule
-                  variant="outlineGray"
-                  size="md"
-                  className="w-full justify-start gap-3 text-sm"
-                  onClick={() => openModal("changeTI")}
-                >
-                  <RefreshCw className="size-4" />
-                  Change TI
-                </ButtonModule>
+                {meter.meterType === 1 && (
+                  <>
+                    <ButtonModule
+                      variant="outlineBlue"
+                      size="md"
+                      className="w-full justify-start gap-3 text-sm"
+                      onClick={() => openModal("clearTamper")}
+                    >
+                      <Shield className="size-4" />
+                      Clear Tamper
+                    </ButtonModule>
+                    <ButtonModule
+                      variant="outlineOrange"
+                      size="md"
+                      className="w-full justify-start gap-3 text-sm"
+                      onClick={() => openModal("addKeyChange")}
+                    >
+                      <Key className="size-4" />
+                      Add Key Change
+                    </ButtonModule>
+                    <ButtonModule
+                      variant="outlineCyan"
+                      size="md"
+                      className="w-full justify-start gap-3 text-sm"
+                      onClick={() => openModal("clearCredit")}
+                    >
+                      <CreditCard className="size-4" />
+                      Clear Credit
+                    </ButtonModule>
+                    <ButtonModule
+                      variant="outlineIndigo"
+                      size="md"
+                      className="w-full justify-start gap-3 text-sm"
+                      onClick={() => openModal("setControl")}
+                    >
+                      <Settings className="size-4" />
+                      Set Control
+                    </ButtonModule>
+                    <ButtonModule
+                      variant="outlinePink"
+                      size="md"
+                      className="w-full justify-start gap-3 text-sm"
+                      onClick={() => openModal("changePhase")}
+                    >
+                      <RefreshCw className="size-4" />
+                      Change Phase
+                    </ButtonModule>
+                    <ButtonModule
+                      variant="outlineDanger"
+                      size="md"
+                      className="w-full justify-start gap-3 text-sm"
+                      onClick={() => openModal("changeTechnicalConfig")}
+                    >
+                      <RefreshCw className="size-4" />
+                      Change Technical Config
+                    </ButtonModule>
+                    <ButtonModule
+                      variant="outlineGray"
+                      size="md"
+                      className="w-full justify-start gap-3 text-sm"
+                      onClick={() => openModal("changeTI")}
+                    >
+                      <RefreshCw className="size-4" />
+                      Change TI
+                    </ButtonModule>
+                  </>
+                )}
                 {meter?.status === 1 ? (
                   <ButtonModule
                     variant="danger"

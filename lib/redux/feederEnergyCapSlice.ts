@@ -56,6 +56,10 @@ export interface CreateSingleFeederEnergyCapResponse {
   data: FeederEnergyCap
 }
 
+export interface DownloadFeederEnergyCsvRequest {
+  billingPeriodId: number
+}
+
 export interface ApplyFeederEnergyCapsResponse {
   isSuccess: boolean
   message: string
@@ -99,6 +103,11 @@ interface FeederEnergyCapState {
   createSingleFeederEnergyCapSuccess: boolean
   createdSingleFeederEnergyCap: FeederEnergyCap | null
 
+  // Download feeder energy CSV state
+  downloadFeederEnergyCsvLoading: boolean
+  downloadFeederEnergyCsvError: string | null
+  downloadFeederEnergyCsvSuccess: boolean
+
   // Pagination state
   pagination: {
     totalCount: number
@@ -134,6 +143,12 @@ const initialState: FeederEnergyCapState = {
   createSingleFeederEnergyCapError: null,
   createSingleFeederEnergyCapSuccess: false,
   createdSingleFeederEnergyCap: null,
+
+  // Download feeder energy CSV state
+  downloadFeederEnergyCsvLoading: false,
+  downloadFeederEnergyCsvError: null,
+  downloadFeederEnergyCsvSuccess: false,
+
   pagination: {
     totalCount: 0,
     totalPages: 0,
@@ -253,6 +268,39 @@ export const createSingleFeederEnergyCap = createAsyncThunk(
   }
 )
 
+// Async thunks - GET request to download feeder energy CSV
+export const downloadFeederEnergyCsv = createAsyncThunk(
+  "feederEnergyCap/downloadFeederEnergyCsv",
+  async (requestData: DownloadFeederEnergyCsvRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.get(buildApiUrl(API_ENDPOINTS.FEEDER_ENERGY_CAP.DOWNLOAD_FEEDER_ENERGY_CSV), {
+        params: {
+          billingPeriodId: requestData.billingPeriodId,
+        },
+        responseType: "blob",
+      })
+
+      // Create a download link for the CSV file
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement("a")
+      link.href = url
+      link.setAttribute("download", `feeder-energy-caps-${requestData.billingPeriodId}.csv`)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+
+      return { success: true, message: "CSV downloaded successfully" }
+    } catch (error: any) {
+      console.error("Error downloading feeder energy CSV:", error)
+      if (error.response?.data?.message) {
+        return rejectWithValue(error.response.data.message)
+      }
+      return rejectWithValue(error.message || "Failed to download feeder energy CSV")
+    }
+  }
+)
+
 // Feeder Energy Cap slice
 const feederEnergyCapSlice = createSlice({
   name: "feederEnergyCap",
@@ -297,6 +345,13 @@ const feederEnergyCapSlice = createSlice({
       state.createdSingleFeederEnergyCap = null
     },
 
+    // Clear download feeder energy CSV state
+    clearDownloadFeederEnergyCsv: (state) => {
+      state.downloadFeederEnergyCsvLoading = false
+      state.downloadFeederEnergyCsvError = null
+      state.downloadFeederEnergyCsvSuccess = false
+    },
+
     // Clear all errors
     clearError: (state) => {
       state.error = null
@@ -304,6 +359,7 @@ const feederEnergyCapSlice = createSlice({
       state.selectedFeederEnergyCapError = null
       state.applyFeederEnergyCapsError = null
       state.createSingleFeederEnergyCapError = null
+      state.downloadFeederEnergyCsvError = null
     },
 
     // Reset feeder energy cap state
@@ -324,6 +380,9 @@ const feederEnergyCapSlice = createSlice({
       state.createSingleFeederEnergyCapError = null
       state.createSingleFeederEnergyCapSuccess = false
       state.createdSingleFeederEnergyCap = null
+      state.downloadFeederEnergyCsvLoading = false
+      state.downloadFeederEnergyCsvError = null
+      state.downloadFeederEnergyCsvSuccess = false
       state.pagination = {
         totalCount: 0,
         totalPages: 0,
@@ -508,6 +567,25 @@ const feederEnergyCapSlice = createSlice({
         state.createSingleFeederEnergyCapSuccess = false
         state.createdSingleFeederEnergyCap = null
       })
+      // Download feeder energy CSV cases
+      .addCase(downloadFeederEnergyCsv.pending, (state) => {
+        state.downloadFeederEnergyCsvLoading = true
+        state.downloadFeederEnergyCsvError = null
+        state.downloadFeederEnergyCsvSuccess = false
+        state.loading = true
+      })
+      .addCase(downloadFeederEnergyCsv.fulfilled, (state, action) => {
+        state.downloadFeederEnergyCsvLoading = false
+        state.downloadFeederEnergyCsvSuccess = true
+        state.loading = false
+        state.downloadFeederEnergyCsvError = null
+      })
+      .addCase(downloadFeederEnergyCsv.rejected, (state, action) => {
+        state.downloadFeederEnergyCsvLoading = false
+        state.loading = false
+        state.downloadFeederEnergyCsvError = (action.payload as string) || "Failed to download feeder energy CSV"
+        state.downloadFeederEnergyCsvSuccess = false
+      })
   },
 })
 
@@ -516,6 +594,7 @@ export const {
   clearSelectedFeederEnergyCap,
   clearApplyFeederEnergyCaps,
   clearCreateSingleFeederEnergyCap,
+  clearDownloadFeederEnergyCsv,
   clearError,
   resetFeederEnergyCapState,
   setPagination,

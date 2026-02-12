@@ -317,6 +317,14 @@ export default function MeteringDashboard() {
     (state) => state.distributionSubstations
   )
 
+  // Debug logging for distribution substations
+  console.log("Distribution substations data:", {
+    distributionSubstations,
+    distributionSubstationsLoading,
+    length: distributionSubstations?.length,
+    firstItem: distributionSubstations?.[0],
+  })
+
   // Use mock data
   const { smartMeters, conventionalMeters, readSuccessRate, alerts, totalMeters } = meterData
 
@@ -433,7 +441,7 @@ export default function MeteringDashboard() {
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
                 <ButtonModule
-                  variant="outline"
+                  variant="primary"
                   size="md"
                   className="mt-2"
                   icon={<Download className="h-4 w-4" />}
@@ -591,7 +599,7 @@ export default function MeteringDashboard() {
                       options={
                         distributionSubstations?.map((substation) => ({
                           value: substation.id.toString(),
-                          label: substation.name,
+                          label: substation.name?.toString() || substation.dssCode || `Substation ${substation.id}`,
                         })) || []
                       }
                     />
