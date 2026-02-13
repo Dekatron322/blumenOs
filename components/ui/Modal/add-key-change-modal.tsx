@@ -25,9 +25,9 @@ const AddKeyChangeModal: React.FC<AddKeyChangeModalProps> = ({ isOpen, onRequest
 
   // Form state
   const [formData, setFormData] = useState<AddKeyChangeRequest>({
-    toSgc: 0,
-    toKrn: 0,
-    toTi: 0,
+    toSgc: 600293,
+    toKrn: 2,
+    toTi: 1,
   })
 
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -172,7 +172,7 @@ const AddKeyChangeModal: React.FC<AddKeyChangeModalProps> = ({ isOpen, onRequest
                           value={formData.toSgc}
                           onChange={handleInputChange}
                           required
-                          placeholder="0"
+                          placeholder="600293"
                           disabled={isSubmitting}
                           label="To SGC"
                           min="0"
@@ -188,7 +188,7 @@ const AddKeyChangeModal: React.FC<AddKeyChangeModalProps> = ({ isOpen, onRequest
                           value={formData.toKrn}
                           onChange={handleInputChange}
                           required
-                          placeholder="0"
+                          placeholder="2"
                           disabled={isSubmitting}
                           label="To KRN"
                           min="0"
@@ -204,7 +204,7 @@ const AddKeyChangeModal: React.FC<AddKeyChangeModalProps> = ({ isOpen, onRequest
                           value={formData.toTi}
                           onChange={handleInputChange}
                           required
-                          placeholder="0"
+                          placeholder="1"
                           disabled={isSubmitting}
                           label="To TI"
                           min="0"
