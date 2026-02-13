@@ -9,6 +9,7 @@ import {
   finalizeFile,
   processMeterBulkReassign,
   processMeterBulkUpload,
+  processMeterChangeOut,
   processMeterChangeStatus,
   processMeterReadingBulkUpload,
   processMeterReadingGeneralBulkUpload,
@@ -39,6 +40,7 @@ const FileManagementPage = () => {
     meterBulkUploadError,
     meterBulkReassignError,
     meterChangeStatusError,
+    meterChangeOutError,
   } = useAppSelector((state: { fileManagement: any }) => state.fileManagement)
 
   // Upload type options
@@ -46,6 +48,7 @@ const FileManagementPage = () => {
     { name: "New Meters", value: 12 },
     { name: "Meter Status Change", value: 28 },
     { name: "Meter Reallocation", value: 29 },
+    { name: "Meter Change Out", value: 32 },
     // { name: "Meter Reading Import", value: 2 },
     // { name: "Meter Reading Account Import", value: 15 },
     // { name: "Meter Reading Stored Average Import", value: 16 },
@@ -60,6 +63,8 @@ const FileManagementPage = () => {
         return "meter-status-change"
       case 29:
         return "meter-reassignment"
+      case 32:
+        return "meter-changeout"
       case 15:
         return "meter-readings-account"
       case 2:
@@ -333,6 +338,8 @@ const FileManagementPage = () => {
             ? "meters-reassign"
             : selectedUploadType === 28
             ? "meters-status-change"
+            : selectedUploadType === 32
+            ? "meters-changeout"
             : "meters-bulk-upload",
         checksum,
         bulkInsertType: getBulkInsertType(selectedUploadType),
@@ -432,6 +439,9 @@ const FileManagementPage = () => {
                 } else if (selectedUploadType === 29) {
                   // Meter Reallocation
                   bulkResult = await dispatch(processMeterBulkReassign({ fileId })).unwrap()
+                } else if (selectedUploadType === 32) {
+                  // Meter Change Out
+                  bulkResult = await dispatch(processMeterChangeOut({ fileId })).unwrap()
                 } else {
                   // Regular Meter Upload and other types
                   bulkResult = await dispatch(processMeterBulkUpload({ fileId })).unwrap()
@@ -554,6 +564,11 @@ const FileManagementPage = () => {
       headers = "NewCustomerAcctNo,MeterNumber"
       sampleRows = []
       fileName = "sample-meter-reallocation.csv"
+    } else if (selectedUploadType === 32) {
+      // Meter Change Out template
+      headers = "CustomerAccountNo,PresentReading,InitialReading,NewMeterNumber"
+      sampleRows = []
+      fileName = "sample-meter-change-out.csv"
     } else {
       // Default template for other upload types
       headers = "MeterNumber,MeterType,Location,InstallationDate,Status,Reading"
@@ -806,7 +821,8 @@ const FileManagementPage = () => {
                                     !Boolean(finalizeFileError) &&
                                     !Boolean(meterBulkUploadError) &&
                                     !Boolean(meterBulkReassignError) &&
-                                    !Boolean(meterChangeStatusError))
+                                    !Boolean(meterChangeStatusError) &&
+                                    !Boolean(meterChangeOutError))
                               )}
                             >
                               Choose Different File
@@ -924,7 +940,8 @@ const FileManagementPage = () => {
                       finalizeFileError ||
                       meterBulkUploadError ||
                       meterBulkReassignError ||
-                      meterChangeStatusError) && (
+                      meterChangeStatusError ||
+                      meterChangeOutError) && (
                       <div className="mb-6 rounded-md border border-red-200 bg-red-50 p-4">
                         <div className="flex">
                           <div className="shrink-0">
@@ -944,7 +961,8 @@ const FileManagementPage = () => {
                                 finalizeFileError ||
                                 meterBulkUploadError ||
                                 meterBulkReassignError ||
-                                meterChangeStatusError}
+                                meterChangeStatusError ||
+                                meterChangeOutError}
                             </div>
                           </div>
                         </div>

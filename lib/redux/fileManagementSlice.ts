@@ -108,6 +108,44 @@ export interface MeterChangeStatusResponse {
   }
 }
 
+// Meter Change Out interfaces
+export interface MeterChangeOutRequest {
+  fileId: number
+}
+
+export interface MeterChangeOutResponse {
+  isSuccess: boolean
+  message: string
+  data: {
+    id: number
+    jobType: number
+    status: number
+    requestedByUserId: number
+    requestedAtUtc: string
+    fileName: string
+    fileKey: string
+    fileUrl: string
+    fileSize: number
+    resultFileName: string
+    resultFileKey: string
+    resultFileUrl: string
+    resultFileSize: number
+    resultGeneratedAtUtc: string
+    totalRows: number
+    processedRows: number
+    succeededRows: number
+    failedRows: number
+    lastProcessedRow: number
+    retryCount: number
+    startedAtUtc: string
+    completedAtUtc: string
+    lastError: string
+    errorBlobKey: string
+    payloadJson: string
+    canDownloadResult: boolean
+  }
+}
+
 // Customer Setup Bulk Upload interfaces
 export interface CustomerSetupBulkUploadRequest {
   fileId: number
@@ -864,6 +902,12 @@ interface FileManagementState {
   meterChangeStatusSuccess: boolean
   meterChangeStatusResponse: MeterChangeStatusResponse | null
 
+  // Meter Change Out state
+  meterChangeOutLoading: boolean
+  meterChangeOutError: string | null
+  meterChangeOutSuccess: boolean
+  meterChangeOutResponse: MeterChangeOutResponse | null
+
   // Customer Setup Bulk Upload state
   customerSetupBulkUploadLoading: boolean
   customerSetupBulkUploadError: string | null
@@ -1113,6 +1157,12 @@ const initialState: FileManagementState = {
   meterChangeStatusError: null,
   meterChangeStatusSuccess: false,
   meterChangeStatusResponse: null,
+
+  // Meter Change Out state
+  meterChangeOutLoading: false,
+  meterChangeOutError: null,
+  meterChangeOutSuccess: false,
+  meterChangeOutResponse: null,
 
   // Customer Setup Bulk Upload state
   customerSetupBulkUploadLoading: false,
@@ -1399,6 +1449,21 @@ export const processMeterChangeStatus = createAsyncThunk(
       return response.data
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to process meter change status")
+    }
+  }
+)
+
+export const processMeterChangeOut = createAsyncThunk(
+  "fileManagement/processMeterChangeOut",
+  async (request: MeterChangeOutRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<MeterChangeOutResponse>(
+        buildApiUrl(API_ENDPOINTS.FILE_MANAGEMENT.METER_CHANGE_OUT),
+        request
+      )
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to process meter change out")
     }
   }
 )
@@ -2477,6 +2542,23 @@ const fileManagementSlice = createSlice({
         state.meterChangeStatusLoading = false
         state.meterChangeStatusError = action.payload as string
         state.meterChangeStatusSuccess = false
+      })
+
+      // Meter Change Out reducers
+      .addCase(processMeterChangeOut.pending, (state) => {
+        state.meterChangeOutLoading = true
+        state.meterChangeOutError = null
+        state.meterChangeOutSuccess = false
+      })
+      .addCase(processMeterChangeOut.fulfilled, (state, action) => {
+        state.meterChangeOutLoading = false
+        state.meterChangeOutSuccess = true
+        state.meterChangeOutResponse = action.payload
+      })
+      .addCase(processMeterChangeOut.rejected, (state, action) => {
+        state.meterChangeOutLoading = false
+        state.meterChangeOutError = action.payload as string
+        state.meterChangeOutSuccess = false
       })
 
       // Customer Setup Bulk Upload reducers
