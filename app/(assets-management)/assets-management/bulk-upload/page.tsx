@@ -16,7 +16,11 @@ import { VscCloudUpload, VscEye } from "react-icons/vsc"
 import CsvUploadFailuresModal from "components/ui/Modal/CsvUploadFailuresModal"
 
 // Job Type options for filters - Assets related job types only
-const jobTypeOptions = [{ value: "13", label: "Distribution Substation Import" }]
+const jobTypeOptions = [
+  { value: "13", label: "Distribution Substation Import" },
+  { value: "34", label: "Distribution Substation Feeder Realignment" },
+  { value: "35", label: "Feeder Band Change" },
+]
 
 // Status options for filters
 const statusOptions = [
@@ -56,7 +60,9 @@ const LoadingSkeleton = () => {
             <div className="mb-6 flex w-full flex-col justify-between gap-4 lg:flex-row lg:items-center">
               <div className="flex-1">
                 <h4 className="text-2xl font-semibold">Assets Bulk Upload Management</h4>
-                <p className="text-gray-600">Track and manage Distribution Substation bulk upload jobs</p>
+                <p className="text-gray-600">
+                  Track and manage Distribution Substation, Feeder Realignment, and Feeder Band Change bulk upload jobs
+                </p>
               </div>
             </div>
             <motion.div
@@ -148,7 +154,7 @@ const BulkUploads: React.FC = () => {
   const [localFilters, setLocalFilters] = useState<Partial<CsvJobsParams>>({
     PageNumber: 1,
     PageSize: 10,
-    JobType: 13, // Default to Distribution Substation Import only
+    JobType: undefined, // Show all asset job types by default
     Status: undefined,
     RequestedByUserId: undefined,
     RequestedFromUtc: undefined,
@@ -166,7 +172,8 @@ const BulkUploads: React.FC = () => {
     const fetchParams: CsvJobsParams = {
       PageNumber: currentPage,
       PageSize: 10,
-      ...(localFilters.JobType && { JobType: localFilters.JobType }),
+      // If no specific JobType is selected, fetch asset job types using JobTypes array
+      ...(localFilters.JobType ? { JobType: localFilters.JobType } : { JobTypes: [13, 34, 35] }),
       ...(localFilters.Status && { Status: localFilters.Status }),
       ...(localFilters.RequestedByUserId && { RequestedByUserId: localFilters.RequestedByUserId }),
       ...(localFilters.RequestedFromUtc && { RequestedFromUtc: localFilters.RequestedFromUtc }),
@@ -191,7 +198,8 @@ const BulkUploads: React.FC = () => {
     const fetchParams: CsvJobsParams = {
       PageNumber: currentPage,
       PageSize: 10,
-      ...(localFilters.JobType && { JobType: localFilters.JobType }),
+      // If no specific JobType is selected, fetch asset job types using JobTypes array
+      ...(localFilters.JobType ? { JobType: localFilters.JobType } : { JobTypes: [13, 34, 35] }),
       ...(localFilters.Status && { Status: localFilters.Status }),
       ...(localFilters.RequestedByUserId && { RequestedByUserId: localFilters.RequestedByUserId }),
       ...(localFilters.RequestedFromUtc && { RequestedFromUtc: localFilters.RequestedFromUtc }),
@@ -233,11 +241,11 @@ const BulkUploads: React.FC = () => {
     handleRefreshData()
   }
 
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     setLocalFilters({
       PageNumber: 1,
       PageSize: 10,
-      JobType: 13, // Keep Distribution Substation Import filter
+      JobType: undefined, // Show all asset job types
       Status: undefined,
       RequestedByUserId: undefined,
       RequestedFromUtc: undefined,
@@ -248,7 +256,7 @@ const BulkUploads: React.FC = () => {
     })
     setSearchText("")
     setCurrentPage(1)
-  }
+  }, [])
 
   const getActiveFilterCount = () => {
     return Object.entries(localFilters).filter(([key, value]) => {
@@ -324,8 +332,8 @@ const BulkUploads: React.FC = () => {
     setCurrentPage(newPage)
   }
 
-  // Filter jobs to only show Distribution Substation Import job type
-  const assetsJobTypes = [13] // Distribution Substation Import job type
+  // Filter jobs to only show asset-related job types
+  const assetsJobTypes = [13, 34, 35] // Distribution Substation Import, Feeder Realignment, and Feeder Band Change job types
   const filteredCsvJobs = csvJobs.filter((job) => assetsJobTypes.includes(job.jobType))
 
   if (csvJobsLoading && !hasInitialLoad) {
@@ -341,7 +349,9 @@ const BulkUploads: React.FC = () => {
             <div className="mb-6 flex w-full flex-col justify-between gap-4 lg:flex-row lg:items-center">
               <div className="flex-1">
                 <h4 className="text-2xl font-semibold">Assets Bulk Upload Management</h4>
-                <p className="text-gray-600">Track and manage Distribution Substation bulk upload jobs</p>
+                <p className="text-gray-600">
+                  Track and manage Distribution Substation, Feeder Realignment, and Feeder Band Change bulk upload jobs
+                </p>
               </div>
               <div className="flex items-center gap-3">
                 <ButtonModule
@@ -392,7 +402,7 @@ const BulkUploads: React.FC = () => {
                   </div>
 
                   {/* Job Type Filter */}
-                  {/* <div>
+                  <div>
                     <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Job Type</label>
                     <FormSelectModule
                       name="jobType"
@@ -404,7 +414,7 @@ const BulkUploads: React.FC = () => {
                       className="w-full"
                       controlClassName="h-9 text-sm"
                     />
-                  </div> */}
+                  </div>
 
                   {/* Status Filter */}
                   <div>

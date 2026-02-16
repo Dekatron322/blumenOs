@@ -529,6 +529,28 @@ export interface DistributionSubstationBulkUploadResponse {
   data: BulkUploadJob
 }
 
+// Distribution Substation Feeder Realignment Bulk Upload interfaces
+export interface DistributionSubstationFeederRealignmentBulkUploadRequest {
+  fileId: number
+}
+
+export interface DistributionSubstationFeederRealignmentBulkUploadResponse {
+  isSuccess: boolean
+  message: string
+  data: BulkUploadJob
+}
+
+// Feeder Band Change Bulk Upload interfaces
+export interface FeederBandChangeBulkUploadRequest {
+  fileId: number
+}
+
+export interface FeederBandChangeBulkUploadResponse {
+  isSuccess: boolean
+  message: string
+  data: BulkUploadJob
+}
+
 // Postpaid Estimated Consumption Bulk Upload interfaces
 export interface PostpaidEstimatedConsumptionBulkUploadRequest {
   fileId: number
@@ -1040,6 +1062,18 @@ interface FileManagementState {
   distributionSubstationBulkUploadSuccess: boolean
   distributionSubstationBulkUploadResponse: DistributionSubstationBulkUploadResponse | null
 
+  // Distribution Substation Feeder Realignment Bulk Upload state
+  distributionSubstationFeederRealignmentBulkUploadLoading: boolean
+  distributionSubstationFeederRealignmentBulkUploadError: string | null
+  distributionSubstationFeederRealignmentBulkUploadSuccess: boolean
+  distributionSubstationFeederRealignmentBulkUploadResponse: DistributionSubstationFeederRealignmentBulkUploadResponse | null
+
+  // Feeder Band Change Bulk Upload state
+  feederBandChangeBulkUploadLoading: boolean
+  feederBandChangeBulkUploadError: string | null
+  feederBandChangeBulkUploadSuccess: boolean
+  feederBandChangeBulkUploadResponse: FeederBandChangeBulkUploadResponse | null
+
   // Postpaid Estimated Consumption Bulk Upload state
   postpaidEstimatedConsumptionBulkUploadLoading: boolean
   postpaidEstimatedConsumptionBulkUploadError: string | null
@@ -1295,6 +1329,18 @@ const initialState: FileManagementState = {
   distributionSubstationBulkUploadError: null,
   distributionSubstationBulkUploadSuccess: false,
   distributionSubstationBulkUploadResponse: null,
+
+  // Distribution Substation Feeder Realignment Bulk Upload state
+  distributionSubstationFeederRealignmentBulkUploadLoading: false,
+  distributionSubstationFeederRealignmentBulkUploadError: null,
+  distributionSubstationFeederRealignmentBulkUploadSuccess: false,
+  distributionSubstationFeederRealignmentBulkUploadResponse: null,
+
+  // Feeder Band Change Bulk Upload state
+  feederBandChangeBulkUploadLoading: false,
+  feederBandChangeBulkUploadError: null,
+  feederBandChangeBulkUploadSuccess: false,
+  feederBandChangeBulkUploadResponse: null,
 
   // Postpaid Estimated Consumption Bulk Upload state
   postpaidEstimatedConsumptionBulkUploadLoading: false,
@@ -1798,6 +1844,38 @@ export const processDistributionSubstationBulkUpload = createAsyncThunk(
       return response.data
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to process distribution substation bulk upload")
+    }
+  }
+)
+
+export const processDistributionSubstationFeederRealignmentBulkUpload = createAsyncThunk(
+  "fileManagement/processDistributionSubstationFeederRealignmentBulkUpload",
+  async (request: DistributionSubstationFeederRealignmentBulkUploadRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<DistributionSubstationFeederRealignmentBulkUploadResponse>(
+        buildApiUrl(API_ENDPOINTS.FILE_MANAGEMENT.DISTRIBUTION_SUBSTATION_FEEDER_REALIGNMENT_BULK_UPLOAD),
+        request
+      )
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to process distribution substation feeder realignment bulk upload"
+      )
+    }
+  }
+)
+
+export const processFeederBandChangeBulkUpload = createAsyncThunk(
+  "fileManagement/processFeederBandChangeBulkUpload",
+  async (request: FeederBandChangeBulkUploadRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<FeederBandChangeBulkUploadResponse>(
+        buildApiUrl(API_ENDPOINTS.FILE_MANAGEMENT.FEEDER_BAND_CHANGE_BULK_UPLOAD),
+        request
+      )
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to process feeder band change bulk upload")
     }
   }
 )
@@ -2933,6 +3011,40 @@ const fileManagementSlice = createSlice({
         state.distributionSubstationBulkUploadLoading = false
         state.distributionSubstationBulkUploadError = action.payload as string
         state.distributionSubstationBulkUploadSuccess = false
+      })
+
+      // Distribution Substation Feeder Realignment Bulk Upload reducers
+      .addCase(processDistributionSubstationFeederRealignmentBulkUpload.pending, (state) => {
+        state.distributionSubstationFeederRealignmentBulkUploadLoading = true
+        state.distributionSubstationFeederRealignmentBulkUploadError = null
+        state.distributionSubstationFeederRealignmentBulkUploadSuccess = false
+      })
+      .addCase(processDistributionSubstationFeederRealignmentBulkUpload.fulfilled, (state, action) => {
+        state.distributionSubstationFeederRealignmentBulkUploadLoading = false
+        state.distributionSubstationFeederRealignmentBulkUploadSuccess = true
+        state.distributionSubstationFeederRealignmentBulkUploadResponse = action.payload
+      })
+      .addCase(processDistributionSubstationFeederRealignmentBulkUpload.rejected, (state, action) => {
+        state.distributionSubstationFeederRealignmentBulkUploadLoading = false
+        state.distributionSubstationFeederRealignmentBulkUploadError = action.payload as string
+        state.distributionSubstationFeederRealignmentBulkUploadSuccess = false
+      })
+
+      // Feeder Band Change Bulk Upload reducers
+      .addCase(processFeederBandChangeBulkUpload.pending, (state) => {
+        state.feederBandChangeBulkUploadLoading = true
+        state.feederBandChangeBulkUploadError = null
+        state.feederBandChangeBulkUploadSuccess = false
+      })
+      .addCase(processFeederBandChangeBulkUpload.fulfilled, (state, action) => {
+        state.feederBandChangeBulkUploadLoading = false
+        state.feederBandChangeBulkUploadSuccess = true
+        state.feederBandChangeBulkUploadResponse = action.payload
+      })
+      .addCase(processFeederBandChangeBulkUpload.rejected, (state, action) => {
+        state.feederBandChangeBulkUploadLoading = false
+        state.feederBandChangeBulkUploadError = action.payload as string
+        state.feederBandChangeBulkUploadSuccess = false
       })
 
       // Postpaid Estimated Consumption Bulk Upload reducers

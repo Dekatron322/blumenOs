@@ -239,6 +239,8 @@ export const API_ENDPOINTS = {
     BILL_CRUCIAL_OPS_BULK_UPLOAD: "/billing/postpaid/bills/bulk/crucial-ops",
     FEEDER_ENERGY_CAP_BULK_UPLOAD: "/billing/postpaid/feeder-energy-caps/bulk/import",
     DISTRIBUTION_SUBSTATION_BULK_UPLOAD: "/assets/distribution-substations/bulk/import",
+    DISTRIBUTION_SUBSTATION_FEEDER_REALIGNMENT_BULK_UPLOAD: "/assets/distribution-substations/bulk/feeder-realignment",
+    FEEDER_BAND_CHANGE_BULK_UPLOAD: "/assets/feeders/bulk/band-change",
     ADJUSTMENT_BULK_UPLOAD: "/billing/postpaid/bills/bulk/adjustments",
     POSTPAID_ESTIMATED_CONSUMPTION_BULK_UPLOAD: "/billing/postpaid/estimated-consumptions/bulk/import",
     DOWNLOAD_CSV_JOBS: "/system/csv-jobs/{id}/customer-setup/result",
