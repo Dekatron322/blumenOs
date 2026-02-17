@@ -587,32 +587,6 @@ const AddFeederPage = () => {
             </div>
 
             {/* Tab Navigation */}
-            <div className="px-16 max-md:px-0 max-sm:px-3">
-              <div className="rounded-t-lg border-b border-gray-200 bg-white">
-                <div className="flex">
-                  <button
-                    onClick={() => setActiveTab("single")}
-                    className={`flex-1 rounded-tl-lg px-6 py-4 text-sm font-medium transition-colors ${
-                      activeTab === "single"
-                        ? "border-b-2 border-blue-500 text-blue-600"
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
-                  >
-                    Single Entry
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("bulk")}
-                    className={`flex-1 rounded-tr-lg px-6 py-4 text-sm font-medium transition-colors ${
-                      activeTab === "bulk"
-                        ? "border-b-2 border-blue-500 text-blue-600"
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
-                  >
-                    Bulk Upload (CSV)
-                  </button>
-                </div>
-              </div>
-            </div>
 
             {/* Main Content Area */}
             <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
@@ -623,7 +597,7 @@ const AddFeederPage = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="rounded-b-lg bg-white p-6 shadow-sm"
+                    className="rounded-lg bg-white p-6 shadow-sm"
                   >
                     {/* Form Header */}
                     <div className="mb-6 border-b pb-4">

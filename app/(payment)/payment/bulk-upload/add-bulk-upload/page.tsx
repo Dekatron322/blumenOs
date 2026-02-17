@@ -110,16 +110,28 @@ const FileManagementPage = () => {
   }, [])
 
   // Handle file selection
-  const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      setSelectedFile(file)
-      setUploadError(null)
-      setUploadSuccess(false)
-      setFinalizedFile(null)
-      setUploadProgress(null)
-    }
-  }, [])
+  const handleFileSelect = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0]
+      if (file) {
+        setSelectedFile(file)
+        setUploadError(null)
+        setUploadSuccess(false)
+        setFinalizedFile(null)
+        setUploadProgress(null)
+      } else {
+        // Handle case where user cancels file selection
+        // Keep the current selected file and restore the file input value
+        if (fileInputRef.current && selectedFile) {
+          // Create a new FileList to restore the file input
+          const dataTransfer = new DataTransfer()
+          dataTransfer.items.add(selectedFile)
+          fileInputRef.current.files = dataTransfer.files
+        }
+      }
+    },
+    [selectedFile]
+  )
 
   // Handle file drop
   const handleFileDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
@@ -584,7 +596,7 @@ const FileManagementPage = () => {
                       <div className="mt-4 flex flex-col justify-center gap-3 sm:flex-row">
                         <ButtonModule
                           variant="secondary"
-                          onClick={removeSelectedFile}
+                          onClick={() => fileInputRef.current?.click()}
                           disabled={
                             isUploading ||
                             (!!uploadProgress &&

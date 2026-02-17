@@ -18,6 +18,9 @@ import CsvUploadFailuresModal from "components/ui/Modal/CsvUploadFailuresModal"
 // Job Type options for filters - Meter related job types only
 const jobTypeOptions = [
   { value: "12", label: "Meter Upload Import" },
+  { value: "28", label: "Meter Status Change" },
+  { value: "29", label: "Meter Reallocation" },
+  { value: "32", label: "Meter Change Out" },
   { value: "2", label: "Meter Reading Import" },
   { value: "15", label: "Meter Reading Account Import" },
   { value: "16", label: "Meter Reading Stored Average Import" },
@@ -330,7 +333,7 @@ const BulkUploads: React.FC = () => {
   }
 
   // Filter jobs to only show meter-related job types
-  const meterJobTypes = [12, 2, 15, 16] // Meter job type values
+  const meterJobTypes = [12, 28, 29, 32, 2, 15, 16] // Meter job type values
   const filteredCsvJobs = csvJobs.filter((job) => meterJobTypes.includes(job.jobType))
 
   if (csvJobsLoading && !hasInitialLoad) {
@@ -624,16 +627,18 @@ const BulkUploads: React.FC = () => {
                                     View Failures
                                   </ButtonModule>
                                 )}
-                                <ButtonModule
-                                  variant="outline"
-                                  size="sm"
-                                  icon={<Download className="h-4 w-4" />}
-                                  onClick={() => handleDownloadCsv(job)}
-                                  className="whitespace-nowrap"
-                                  disabled={downloadCsvLoading}
-                                >
-                                  {downloadCsvLoading ? "Downloading..." : "Download"}
-                                </ButtonModule>
+                                {(job.status === 3 || job.status === 5) && (
+                                  <ButtonModule
+                                    variant="outline"
+                                    size="sm"
+                                    icon={<Download className="h-4 w-4" />}
+                                    onClick={() => handleDownloadCsv(job)}
+                                    className="whitespace-nowrap"
+                                    disabled={downloadCsvLoading}
+                                  >
+                                    {downloadCsvLoading ? "Downloading..." : "Download"}
+                                  </ButtonModule>
+                                )}
                               </div>
                             </td>
                           </tr>

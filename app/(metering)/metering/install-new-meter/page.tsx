@@ -12,13 +12,16 @@ import { notify } from "components/ui/Notification/Notification"
 import { AppDispatch, RootState } from "lib/redux/store"
 import { addMeter, AddMeterRequest, clearMetersError } from "lib/redux/metersSlice"
 import { fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
+import { fetchDistributionSubstations as fetchFormDataDistributionSubstations } from "lib/redux/formDataSlice"
 import { fetchInjectionSubstations } from "lib/redux/injectionSubstationSlice"
 import { fetchFeeders } from "lib/redux/feedersSlice"
 import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
+import { fetchAreaOffices as fetchFormDataAreaOffices } from "lib/redux/formDataSlice"
 import { fetchServiceStations } from "lib/redux/serviceStationsSlice"
 import { fetchEmployees } from "lib/redux/employeeSlice"
 import { fetchCountries } from "lib/redux/countriesSlice"
 import { fetchCustomerById, fetchCustomers } from "lib/redux/customerSlice"
+import { fetchCustomers as fetchFormDataCustomers } from "lib/redux/formDataSlice"
 import { fetchMeterBrands } from "lib/redux/meterBrandsSlice"
 import { fetchMeterCategories } from "lib/redux/meterCategorySlice"
 import { fetchTariffGroups } from "lib/redux/tariffGroupSlice"
@@ -90,11 +93,9 @@ const InstallNewMeterPage = () => {
 
   const { loading, error, success } = useSelector((state: RootState) => state.meters)
 
-  const {
-    distributionSubstations,
-    loading: distributionSubstationsLoading,
-    error: distributionSubstationsError,
-  } = useSelector((state: RootState) => state.distributionSubstations)
+  const { distributionSubstations, distributionSubstationsLoading, distributionSubstationsError } = useSelector(
+    (state: RootState) => state.formData
+  )
 
   const {
     injectionSubstations,
@@ -104,11 +105,7 @@ const InstallNewMeterPage = () => {
 
   const { feeders, loading: feedersLoading, error: feedersError } = useSelector((state: RootState) => state.feeders)
 
-  const {
-    areaOffices,
-    loading: areaOfficesLoading,
-    error: areaOfficesError,
-  } = useSelector((state: RootState) => state.areaOffices)
+  const { areaOffices, areaOfficesLoading, areaOfficesError } = useSelector((state: RootState) => state.formData)
 
   const {
     serviceStations,
@@ -121,12 +118,18 @@ const InstallNewMeterPage = () => {
   const { countries, loading: countriesLoading } = useSelector((state: RootState) => state.countries)
 
   const {
-    customers,
-    loading: customersLoading,
-    error: customersError,
+    customers: formDataCustomers,
+    loading: formDataCustomersLoading,
+    error: formDataCustomersError,
     currentCustomer,
     currentCustomerLoading,
-  } = useSelector((state: RootState) => state.customers)
+  } = useSelector((state: RootState) => ({
+    customers: state.formData.customers,
+    loading: state.formData.customersLoading,
+    error: state.formData.customersError,
+    currentCustomer: state.customers.currentCustomer,
+    currentCustomerLoading: state.customers.currentCustomerLoading,
+  }))
 
   const {
     meterBrands,
@@ -187,14 +190,14 @@ const InstallNewMeterPage = () => {
     // Mark component as mounted after state is cleared
     setIsMounted(true)
 
-    dispatch(fetchDistributionSubstations({ pageNumber: 1, pageSize: 100 }))
+    dispatch(fetchFormDataDistributionSubstations({ PageNumber: 1, PageSize: 100 }))
     dispatch(fetchInjectionSubstations({ pageNumber: 1, pageSize: 100 }))
     dispatch(fetchFeeders({ pageNumber: 1, pageSize: 100 }))
-    dispatch(fetchAreaOffices({ PageNumber: 1, PageSize: 100 }))
+    dispatch(fetchFormDataAreaOffices({ PageNumber: 1, PageSize: 100 }))
     dispatch(fetchServiceStations({ pageNumber: 1, pageSize: 100 }))
     dispatch(fetchEmployees({ pageNumber: 1, pageSize: 100 }))
     dispatch(fetchCountries())
-    dispatch(fetchCustomers({ pageNumber: 1, pageSize: 100 }))
+    dispatch(fetchFormDataCustomers({ PageNumber: 1, PageSize: 100 }))
     dispatch(fetchMeterBrands({ pageNumber: 1, pageSize: 100 }))
     dispatch(fetchMeterCategories({ pageNumber: 1, pageSize: 100 }))
     dispatch(fetchTariffGroups({ PageNumber: 1, PageSize: 100, HasNonZeroTariffIndex: true }))
@@ -253,10 +256,10 @@ const InstallNewMeterPage = () => {
           const searchValue = isNumericSearch ? searchTerm.trim() : searchTerm.trim()
 
           dispatch(
-            fetchCustomers({
-              pageNumber: 1,
-              pageSize: 50,
-              search: searchValue,
+            fetchFormDataCustomers({
+              PageNumber: 1,
+              PageSize: 50,
+              Search: searchValue,
             })
           ).finally(() => {
             setSearchLoading((prev) => ({ ...prev, customer: false }))
@@ -264,9 +267,9 @@ const InstallNewMeterPage = () => {
         } else if (searchTerm === "") {
           // Only reload default data when search is explicitly cleared (empty string)
           dispatch(
-            fetchCustomers({
-              pageNumber: 1,
-              pageSize: 100,
+            fetchFormDataCustomers({
+              PageNumber: 1,
+              PageSize: 100,
             })
           )
         }
@@ -294,10 +297,10 @@ const InstallNewMeterPage = () => {
           const searchValue = isNumericSearch ? searchTerm.trim() : searchTerm.trim()
 
           dispatch(
-            fetchDistributionSubstations({
-              pageNumber: 1,
-              pageSize: 50,
-              search: searchValue,
+            fetchFormDataDistributionSubstations({
+              PageNumber: 1,
+              PageSize: 50,
+              Search: searchValue,
             })
           ).finally(() => {
             setSearchLoading((prev) => ({ ...prev, distributionSubstation: false }))
@@ -305,9 +308,9 @@ const InstallNewMeterPage = () => {
         } else if (searchTerm === "") {
           // Only reload default data when search is explicitly cleared (empty string)
           dispatch(
-            fetchDistributionSubstations({
-              pageNumber: 1,
-              pageSize: 100,
+            fetchFormDataDistributionSubstations({
+              PageNumber: 1,
+              PageSize: 100,
             })
           )
         }
@@ -376,7 +379,7 @@ const InstallNewMeterPage = () => {
           const searchValue = isNumericSearch ? searchTerm.trim() : searchTerm.trim()
 
           dispatch(
-            fetchAreaOffices({
+            fetchFormDataAreaOffices({
               PageNumber: 1,
               PageSize: 50,
               Search: searchValue,
@@ -387,7 +390,7 @@ const InstallNewMeterPage = () => {
         } else if (searchTerm === "") {
           // Only reload default data when search is explicitly cleared (empty string)
           dispatch(
-            fetchAreaOffices({
+            fetchFormDataAreaOffices({
               PageNumber: 1,
               PageSize: 100,
             })
@@ -419,13 +422,13 @@ const InstallNewMeterPage = () => {
 
   // Show error notification if customers fail to load
   useEffect(() => {
-    if (customersError) {
+    if (formDataCustomersError) {
       notify("error", "Failed to load customers", {
-        description: customersError,
+        description: formDataCustomersError,
         duration: 6000,
       })
     }
-  }, [customersError])
+  }, [formDataCustomersError])
 
   // Clear state when component unmounts
   useEffect(() => {
@@ -479,7 +482,7 @@ const InstallNewMeterPage = () => {
     { value: 0, label: "Select distribution substation" },
     ...distributionSubstations.map((substation) => ({
       value: substation.id,
-      label: `${substation.dssCode} (${substation.nercCode})`,
+      label: `${substation.name} (${substation.dssCode})`,
     })),
   ]
 
@@ -497,7 +500,7 @@ const InstallNewMeterPage = () => {
     { value: 0, label: "Select area office" },
     ...areaOffices.map((areaOffice) => ({
       value: areaOffice.id,
-      label: areaOffice.nameOfNewOAreaffice || `Area Office ${areaOffice.id}`,
+      label: areaOffice.name,
     })),
   ]
 
@@ -517,7 +520,7 @@ const InstallNewMeterPage = () => {
   // Generate customer options from API response
   const customerOptions = [
     { value: 0, label: "Select customer" },
-    ...customers.map((customer) => ({
+    ...formDataCustomers.map((customer) => ({
       value: customer.id,
       label: `${customer.accountNumber} - ${customer.fullName}`,
     })),
@@ -1160,7 +1163,7 @@ const InstallNewMeterPage = () => {
                               {
                                 value: 0,
                                 label:
-                                  customersLoading || searchLoading.customer
+                                  formDataCustomersLoading || searchLoading.customer
                                     ? "Loading customers..."
                                     : "Select customer",
                               },
@@ -1168,7 +1171,7 @@ const InstallNewMeterPage = () => {
                             ]}
                             error={formErrors.customerId}
                             required
-                            disabled={customersLoading || searchLoading.customer}
+                            disabled={formDataCustomersLoading || searchLoading.customer}
                             searchable
                             onSearchChange={handleCustomerSearch}
                             searchTerm={searchTerms.customer}

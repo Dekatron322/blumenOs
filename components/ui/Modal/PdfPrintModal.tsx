@@ -5,8 +5,12 @@ import { AlertCircle, CloudUpload, X } from "lucide-react"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { createFileIntent, finalizeFile, processPrintBulkUpload } from "lib/redux/fileManagementSlice"
 import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
-import { fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
 import { fetchCountries } from "lib/redux/countriesSlice"
+import {
+  fetchAreaOffices as fetchAreaOfficesFromFormData,
+  fetchDistributionSubstations,
+  fetchFeeders,
+} from "lib/redux/formDataSlice"
 import { selectAllProvinces } from "lib/redux/countriesSlice"
 import * as XLSX from "xlsx"
 
@@ -43,7 +47,6 @@ interface PdfPrintModalProps {
   success: boolean
   message: string | null
   billingPeriods: any[]
-  feeders: any[]
 }
 
 const PdfPrintModal: React.FC<PdfPrintModalProps> = ({
@@ -55,7 +58,6 @@ const PdfPrintModal: React.FC<PdfPrintModalProps> = ({
   success,
   message,
   billingPeriods,
-  feeders,
 }) => {
   const dispatch = useAppDispatch()
   const {
@@ -69,14 +71,14 @@ const PdfPrintModal: React.FC<PdfPrintModalProps> = ({
     printBulkUploadError,
   } = useAppSelector((state: { fileManagement: any }) => state.fileManagement)
 
-  const { areaOffices, loading: areaOfficesLoading } = useAppSelector(
-    (state: { areaOffices: any }) => state.areaOffices
-  )
   const {
+    areaOffices,
+    areaOfficesLoading,
+    areaOfficesError,
     distributionSubstations,
-    loading: distributionSubstationsLoading,
-    error: distributionSubstationsError,
-  } = useAppSelector((state: { distributionSubstations: any }) => state.distributionSubstations)
+    distributionSubstationsLoading,
+    distributionSubstationsError,
+  } = useAppSelector((state: { formData: any }) => state.formData)
   console.log("Distribution substations state:", {
     distributionSubstations,
     distributionSubstationsLoading,
@@ -86,6 +88,7 @@ const PdfPrintModal: React.FC<PdfPrintModalProps> = ({
   const { loading: countriesLoading, error: countriesError } = useAppSelector(
     (state: { countries: any }) => state.countries
   )
+  const { feeders, feedersLoading, feedersError } = useAppSelector((state: { formData: any }) => state.formData)
 
   const [activeTab, setActiveTab] = useState<"single" | "bulk">("single")
   const [formData, setFormData] = useState<SingleBillingPrintRequest>({
@@ -113,6 +116,9 @@ const PdfPrintModal: React.FC<PdfPrintModalProps> = ({
   const [finalizedFile, setFinalizedFile] = useState<any>(null)
   const [bulkUploadProcessed, setBulkUploadProcessed] = useState(false)
   const [isDragOver, setIsDragOver] = useState(false)
+  const [feederSearchTerm, setFeederSearchTerm] = useState("")
+  const [areaOfficeSearchTerm, setAreaOfficeSearchTerm] = useState("")
+  const [distributionSubstationSearchTerm, setDistributionSubstationSearchTerm] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -127,6 +133,75 @@ const PdfPrintModal: React.FC<PdfPrintModalProps> = ({
     }))
   }
 
+  const handleFeederSearch = () => {
+    console.log("Search button clicked! Current search term:", feederSearchTerm)
+
+    if (feederSearchTerm.trim()) {
+      // Search with term
+      const searchParams = {
+        PageNumber: 1,
+        PageSize: 1000,
+        Search: feederSearchTerm.trim(),
+      }
+      console.log("Search params being dispatched:", searchParams)
+      console.log(
+        "Full URL will be:",
+        `https://sandbox-api.blumenos.com/form-data/feeders?PageNumber=1&PageSize=1000&Search=${feederSearchTerm.trim()}`
+      )
+
+      dispatch(fetchFeeders(searchParams))
+    } else {
+      // Search term is empty - do nothing, let user clear search without triggering API call
+      console.log("Search term is empty, no action taken")
+    }
+  }
+
+  const handleAreaOfficeSearch = () => {
+    console.log("Area Office Search button clicked! Current search term:", areaOfficeSearchTerm)
+
+    if (areaOfficeSearchTerm.trim()) {
+      // Search with term
+      const searchParams = {
+        PageNumber: 1,
+        PageSize: 1000,
+        Search: areaOfficeSearchTerm.trim(),
+      }
+      console.log("Area Office Search params being dispatched:", searchParams)
+      console.log(
+        "Full URL will be:",
+        `https://sandbox-api.blumenos.com/form-data/area-offices?PageNumber=1&PageSize=1000&Search=${areaOfficeSearchTerm.trim()}`
+      )
+
+      dispatch(fetchAreaOfficesFromFormData(searchParams))
+    } else {
+      // Search term is empty - do nothing, let user clear search without triggering API call
+      console.log("Area Office search term is empty, no action taken")
+    }
+  }
+
+  const handleDistributionSubstationSearch = () => {
+    console.log("Distribution Substation Search button clicked! Current search term:", distributionSubstationSearchTerm)
+
+    if (distributionSubstationSearchTerm.trim()) {
+      // Search with term
+      const searchParams = {
+        PageNumber: 1,
+        PageSize: 1000,
+        Search: distributionSubstationSearchTerm.trim(),
+      }
+      console.log("Distribution Substation Search params being dispatched:", searchParams)
+      console.log(
+        "Full URL will be:",
+        `https://sandbox-api.blumenos.com/form-data/dss?PageNumber=1&PageSize=1000&Search=${distributionSubstationSearchTerm.trim()}`
+      )
+
+      dispatch(fetchDistributionSubstations(searchParams))
+    } else {
+      // Search term is empty - do nothing, let user clear search without triggering API call
+      console.log("Distribution Substation search term is empty, no action taken")
+    }
+  }
+
   const handleBulkFormChange = (field: keyof typeof bulkFormData, value: any) => {
     setBulkFormData((prev) => ({
       ...prev,
@@ -138,9 +213,9 @@ const PdfPrintModal: React.FC<PdfPrintModalProps> = ({
   const getBulkInsertType = (uploadType: number): string => {
     switch (uploadType) {
       case 20:
-        return "bill-finalize"
+        return "bill-print"
       default:
-        return "bill-finalize"
+        return "bill-print"
     }
   }
 
@@ -203,16 +278,28 @@ const PdfPrintModal: React.FC<PdfPrintModalProps> = ({
   }, [])
 
   // Handle file selection
-  const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      setSelectedFile(file)
-      setUploadError(null)
-      setUploadSuccess(false)
-      setFinalizedFile(null)
-      setUploadProgress(null)
-    }
-  }, [])
+  const handleFileSelect = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0]
+      if (file) {
+        setSelectedFile(file)
+        setUploadError(null)
+        setUploadSuccess(false)
+        setFinalizedFile(null)
+        setUploadProgress(null)
+      } else {
+        // Handle case where user cancels file selection
+        // Keep the current selected file and restore the file input value
+        if (fileInputRef.current && selectedFile) {
+          // Create a new FileList to restore the file input
+          const dataTransfer = new DataTransfer()
+          dataTransfer.items.add(selectedFile)
+          fileInputRef.current.files = dataTransfer.files
+        }
+      }
+    },
+    [selectedFile]
+  )
 
   // Handle file drop
   const handleFileDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
@@ -310,7 +397,7 @@ const PdfPrintModal: React.FC<PdfPrintModalProps> = ({
         purpose: getPurpose(20), // Mark Bills for Printing
         checksum,
         bulkInsertType: getBulkInsertType(20),
-        jobType: 20,
+        jobType: 25,
         columns: paymentColumns,
       }
 
@@ -457,12 +544,12 @@ const PdfPrintModal: React.FC<PdfPrintModalProps> = ({
     }
   }, [finalizedFile, bulkFormData, dispatch, onClose])
 
-  // Fetch area offices, distribution substations, and countries (for provinces) on mount
+  // Fetch area offices, distribution substations, countries (for provinces), and feeders on mount
   useEffect(() => {
-    console.log("PdfPrintModal useEffect:", { isOpen, areaOffices, distributionSubstations, provinces })
+    console.log("PdfPrintModal useEffect:", { isOpen, areaOffices, distributionSubstations, provinces, feeders })
     if (isOpen && (!areaOffices || areaOffices.length === 0)) {
       console.log("Fetching area offices...")
-      dispatch(fetchAreaOffices({ PageNumber: 1, PageSize: 1000 }))
+      dispatch(fetchAreaOfficesFromFormData({ PageNumber: 1, PageSize: 1000 }))
         .unwrap()
         .then((result: any) => {
           console.log("Area offices fetched successfully:", result)
@@ -473,7 +560,7 @@ const PdfPrintModal: React.FC<PdfPrintModalProps> = ({
     }
     if (isOpen && (!distributionSubstations || distributionSubstations.length === 0)) {
       console.log("Fetching distribution substations...")
-      dispatch(fetchDistributionSubstations({ pageNumber: 1, pageSize: 1000 }))
+      dispatch(fetchDistributionSubstations({ PageNumber: 1, PageSize: 1000 }))
         .unwrap()
         .then((result: any) => {
           console.log("Distribution substations fetched successfully:", result)
@@ -496,7 +583,18 @@ const PdfPrintModal: React.FC<PdfPrintModalProps> = ({
           console.error("Error fetching countries:", error)
         })
     }
-  }, [isOpen, dispatch, areaOffices, distributionSubstations, provinces])
+    if (isOpen && (!feeders || feeders.length === 0)) {
+      console.log("Fetching feeders...")
+      dispatch(fetchFeeders({ PageNumber: 1, PageSize: 1000 }))
+        .unwrap()
+        .then((result: any) => {
+          console.log("Feeders fetched successfully:", result)
+        })
+        .catch((error: any) => {
+          console.error("Error fetching feeders:", error)
+        })
+    }
+  }, [isOpen, dispatch, areaOffices, distributionSubstations, provinces, feeders])
 
   if (!isOpen) return null
 
@@ -662,18 +760,38 @@ const PdfPrintModal: React.FC<PdfPrintModalProps> = ({
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-700">Feeder</label>
                   <FormSelectModule
-                    value={formData.feederId?.toString() || ""}
-                    onChange={(e) => handleInputChange("feederId", Number(e.target.value))}
+                    value={
+                      feederSearchTerm.trim() && (!feeders || feeders.length === 0)
+                        ? ""
+                        : formData.feederId?.toString() || ""
+                    }
+                    onSearchChange={(value: string) => {
+                      setFeederSearchTerm(value)
+                    }}
+                    onSearchClick={handleFeederSearch}
+                    searchTerm={feederSearchTerm}
                     options={[
-                      { value: "0", label: "All Feeders" },
-                      ...(feeders || []).map((feeder: any) => ({
-                        value: feeder.id.toString(),
-                        label: feeder.name || feeder.code,
-                      })),
+                      ...(feederSearchTerm.trim() && (!feeders || feeders.length === 0)
+                        ? [{ value: "", label: "No search results" }]
+                        : [
+                            { value: "0", label: "All Feeders" },
+                            ...(feeders || []).map((feeder: any) => ({
+                              value: feeder.id.toString(),
+                              label: feeder.name || feeder.code,
+                            })),
+                          ]),
                     ]}
+                    onChange={(e) => {
+                      const value = Number(e.target.value)
+                      // Only update if it's a valid option (not "No search results")
+                      if (e.target.value !== "") {
+                        handleInputChange("feederId", value)
+                      }
+                    }}
                     className="w-full"
                     disabled={loading}
                     name="feeder"
+                    searchable={true}
                   />
                 </div>
 
@@ -681,21 +799,41 @@ const PdfPrintModal: React.FC<PdfPrintModalProps> = ({
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-700">Area Office</label>
                   <FormSelectModule
-                    value={formData.areaOfficeId?.toString() || ""}
-                    onChange={(e) => handleInputChange("areaOfficeId", Number(e.target.value))}
+                    value={
+                      areaOfficeSearchTerm.trim() && (!areaOffices || areaOffices.length === 0)
+                        ? ""
+                        : formData.areaOfficeId?.toString() || ""
+                    }
+                    onSearchChange={(value: string) => {
+                      setAreaOfficeSearchTerm(value)
+                    }}
+                    onSearchClick={handleAreaOfficeSearch}
+                    searchTerm={areaOfficeSearchTerm}
                     options={[
-                      { value: "", label: "Select Area Office" },
-                      ...(areaOffices || []).map((office: any) => {
-                        console.log("Mapping area office:", office)
-                        return {
-                          value: office.id.toString(),
-                          label: office.nameOfNewOAreaffice || office.name || office.displayName,
-                        }
-                      }),
+                      ...(areaOfficeSearchTerm.trim() && (!areaOffices || areaOffices.length === 0)
+                        ? [{ value: "", label: "No search results" }]
+                        : [
+                            { value: "0", label: "All Area Offices" },
+                            ...(areaOffices || []).map((office: any) => {
+                              console.log("Mapping area office:", office)
+                              return {
+                                value: office.id.toString(),
+                                label: office.nameOfNewOAreaffice || office.name || office.displayName,
+                              }
+                            }),
+                          ]),
                     ]}
+                    onChange={(e) => {
+                      const value = Number(e.target.value)
+                      // Only update if it's a valid option (not "No search results")
+                      if (e.target.value !== "") {
+                        handleInputChange("areaOfficeId", value)
+                      }
+                    }}
                     className="w-full"
-                    disabled={loading}
+                    disabled={loading || areaOfficesLoading}
                     name="areaOffice"
+                    searchable={true}
                   />
                 </div>
 
@@ -703,22 +841,44 @@ const PdfPrintModal: React.FC<PdfPrintModalProps> = ({
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-700">Distribution Substation</label>
                   <FormSelectModule
-                    value={formData.distributionSubstationId?.toString() || ""}
-                    onChange={(e) => handleInputChange("distributionSubstationId", Number(e.target.value))}
+                    value={
+                      distributionSubstationSearchTerm.trim() &&
+                      (!distributionSubstations || distributionSubstations.length === 0)
+                        ? ""
+                        : formData.distributionSubstationId?.toString() || ""
+                    }
+                    onSearchChange={(value: string) => {
+                      setDistributionSubstationSearchTerm(value)
+                    }}
+                    onSearchClick={handleDistributionSubstationSearch}
+                    searchTerm={distributionSubstationSearchTerm}
                     options={[
-                      { value: "", label: "Select Distribution Substation" },
-                      ...(distributionSubstations || []).map((substation: any) => {
-                        console.log("Mapping distribution substation:", substation)
-                        console.log("Available fields:", Object.keys(substation))
-                        return {
-                          value: substation.id.toString(),
-                          label: substation.dssCode || substation.name || `DSS-${substation.id}`,
-                        }
-                      }),
+                      ...(distributionSubstationSearchTerm.trim() &&
+                      (!distributionSubstations || distributionSubstations.length === 0)
+                        ? [{ value: "", label: "No search results" }]
+                        : [
+                            { value: "0", label: "All Distribution Substations" },
+                            ...(distributionSubstations || []).map((substation: any) => {
+                              console.log("Mapping distribution substation:", substation)
+                              console.log("Available fields:", Object.keys(substation))
+                              return {
+                                value: substation.id.toString(),
+                                label: substation.dssCode || substation.name || `DSS-${substation.id}`,
+                              }
+                            }),
+                          ]),
                     ]}
+                    onChange={(e) => {
+                      const value = Number(e.target.value)
+                      // Only update if it's a valid option (not "No search results")
+                      if (e.target.value !== "") {
+                        handleInputChange("distributionSubstationId", value)
+                      }
+                    }}
                     className="w-full"
-                    disabled={loading}
+                    disabled={loading || distributionSubstationsLoading}
                     name="distributionSubstation"
+                    searchable={true}
                   />
                 </div>
 
@@ -761,7 +921,7 @@ const PdfPrintModal: React.FC<PdfPrintModalProps> = ({
                     type="number"
                     value={formData.maxBillsPerFile || ""}
                     onChange={(e) => handleInputChange("maxBillsPerFile", Number(e.target.value) || 5000)}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     placeholder="1000"
                     disabled={loading}
                   />
@@ -873,7 +1033,7 @@ const PdfPrintModal: React.FC<PdfPrintModalProps> = ({
                       <div className="mt-4 flex flex-col justify-center gap-3 sm:flex-row">
                         <ButtonModule
                           variant="secondary"
-                          onClick={removeSelectedFile}
+                          onClick={() => fileInputRef.current?.click()}
                           disabled={
                             isUploading ||
                             printBulkUploadLoading ||

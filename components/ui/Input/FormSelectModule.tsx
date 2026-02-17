@@ -18,6 +18,9 @@ interface FormSelectModuleProps {
   searchable?: boolean
   searchTerm?: string
   onSearchChange?: (searchTerm: string) => void
+  onSearchClick?: () => void
+  // Loading state for search operations
+  loading?: boolean
 }
 
 export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
@@ -34,18 +37,23 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
   searchable = false,
   searchTerm = "",
   onSearchChange,
+  onSearchClick,
+  loading = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
   const [localSearchTerm, setLocalSearchTerm] = useState("")
+  const [isSearchActive, setIsSearchActive] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const selectedOption = options?.find((option) => String(option.value) === String(value))
 
   // Use external search term if searchable, otherwise use local search
   const effectiveSearchTerm = searchable ? searchTerm : localSearchTerm
 
-  const filteredOptions =
-    options?.filter((option) => String(option.label).toLowerCase().includes(effectiveSearchTerm.toLowerCase())) || []
+  // Don't filter options when searchable - only show all options
+  const displayOptions = searchable
+    ? options
+    : options?.filter((option) => String(option.label).toLowerCase().includes(effectiveSearchTerm.toLowerCase())) || []
 
   const handleSelect = (value: string | number) => {
     const syntheticEvent = {
@@ -65,8 +73,13 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
   }
 
   const handleClickOutside = (event: MouseEvent) => {
+    // Don't close if loading, search is active, or if click is within dropdown
+    if (loading || isSearchActive) {
+      return
+    }
     if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
       setIsOpen(false)
+      setIsSearchActive(false)
       // Don't clear search on close for searchable components with external search
       if (!searchable || !onSearchChange) {
         setLocalSearchTerm("")
@@ -76,10 +89,12 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
 
   useEffect(() => {
     document.addEventListener("mousedown", handleClickOutside)
+    document.addEventListener("click", handleClickOutside)
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
+      document.removeEventListener("click", handleClickOutside)
     }
-  }, [])
+  }, [loading, isSearchActive, searchable, onSearchChange])
 
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
@@ -126,38 +141,120 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
         <div
           id={`${name}-options`}
           className="absolute z-10 mt-1 w-full rounded-md border border-[#E0E0E0] bg-white shadow-lg"
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          onMouseUp={(e) => e.stopPropagation()}
         >
-          <div className="border-b border-[#E0E0E0] px-3 py-2">
-            <input
-              type="text"
-              value={effectiveSearchTerm}
-              onChange={(e) => {
-                const newSearchTerm = e.target.value
-                if (searchable && onSearchChange) {
-                  onSearchChange(newSearchTerm)
-                } else {
-                  setLocalSearchTerm(newSearchTerm)
-                }
-              }}
-              placeholder="Search by ID, code, or name..."
-              className="h-8 w-full rounded border border-[#E0E0E0] bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#004B23]"
-              autoFocus
-            />
+          <div className="border-b border-[#E0E0E0] px-3 py-2" onMouseDown={(e) => e.stopPropagation()}>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={effectiveSearchTerm}
+                onChange={(e) => {
+                  e.stopPropagation()
+                  const newSearchTerm = e.target.value
+                  if (searchable && onSearchChange) {
+                    onSearchChange(newSearchTerm)
+                  } else {
+                    setLocalSearchTerm(newSearchTerm)
+                  }
+                }}
+                onKeyDown={(e) => {
+                  e.stopPropagation()
+                  // Prevent dropdown from closing on Enter key and trigger search
+                  if (e.key === "Enter") {
+                    e.preventDefault()
+                    if (onSearchClick) {
+                      onSearchClick()
+                    } else {
+                      onSearchChange?.(effectiveSearchTerm)
+                    }
+                  }
+                }}
+                onFocus={(e) => {
+                  e.stopPropagation()
+                  setIsSearchActive(true)
+                }}
+                onBlur={(e) => {
+                  e.stopPropagation()
+                  // Don't immediately set search active to false on blur
+                  // This allows the search button click to work
+                  setTimeout(() => setIsSearchActive(false), 100)
+                }}
+                onMouseDown={(e) => {
+                  e.stopPropagation()
+                }}
+                onMouseUp={(e) => {
+                  e.stopPropagation()
+                }}
+                placeholder="Search by ID, code, or name..."
+                className="h-8 flex-1 rounded border border-[#E0E0E0] bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#004B23]"
+                autoFocus
+              />
+              {searchable && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    e.preventDefault()
+                    // Prevent dropdown from closing
+                    if (onSearchClick) {
+                      onSearchClick()
+                    } else {
+                      onSearchChange?.(effectiveSearchTerm)
+                    }
+                  }}
+                  onMouseDown={(e) => {
+                    e.stopPropagation()
+                    e.preventDefault()
+                  }}
+                  onMouseUp={(e) => {
+                    e.stopPropagation()
+                    e.preventDefault()
+                  }}
+                  onTouchStart={(e) => {
+                    e.stopPropagation()
+                    e.preventDefault()
+                  }}
+                  onTouchEnd={(e) => {
+                    e.stopPropagation()
+                    e.preventDefault()
+                  }}
+                  className="h-8 rounded bg-[#004B23] px-3 text-xs font-medium text-white hover:bg-[#003819] focus:outline-none focus:ring-2 focus:ring-[#004B23]"
+                >
+                  Search
+                </button>
+              )}
+            </div>
           </div>
           <div className="max-h-60 overflow-auto py-1">
-            {filteredOptions.map((option) => (
-              <div
-                key={option.value}
-                className={`px-3 py-2 text-base hover:bg-[#F0fdf4] ${
-                  String(value) === String(option.value) ? "bg-[#F0fdf4] text-[#004B23]" : ""
-                }`}
-                onClick={() => handleSelect(option.value)}
-                role="option"
-                aria-selected={String(value) === String(option.value)}
-              >
-                {option.label}
+            {loading ? (
+              <div className="flex items-center justify-center py-4">
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-[#004B23]"></div>
+                  Searching...
+                </div>
               </div>
-            ))}
+            ) : (
+              displayOptions.map((option) => (
+                <div
+                  key={option.value}
+                  className={`px-3 py-2 text-base hover:bg-[#F0fdf4] ${
+                    String(value) === String(option.value) ? "bg-[#F0fdf4] text-[#004B23]" : ""
+                  }`}
+                  onClick={() => handleSelect(option.value)}
+                  role="option"
+                  aria-selected={String(value) === String(option.value)}
+                >
+                  {option.label}
+                </div>
+              ))
+            )}
+            {!loading && displayOptions.length === 0 && effectiveSearchTerm && (
+              <div className="px-3 py-4 text-center text-sm text-gray-500">
+                No results found for "{effectiveSearchTerm}"
+              </div>
+            )}
           </div>
         </div>
       )}

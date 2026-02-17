@@ -14,9 +14,15 @@ import CreditDetailsModal from "components/ui/Modal/credit-details-modal"
 
 interface PrepaidCreditHistoryTabProps {
   meterId: number
+  customerInfo?: {
+    customerFullName?: string
+    customerAccountNumber?: string
+    address?: string
+    city?: string
+  }
 }
 
-const PrepaidCreditHistoryTab: React.FC<PrepaidCreditHistoryTabProps> = ({ meterId }) => {
+const PrepaidCreditHistoryTab: React.FC<PrepaidCreditHistoryTabProps> = ({ meterId, customerInfo }) => {
   const dispatch = useAppDispatch()
   const {
     prepaidCreditHistory,
@@ -69,23 +75,32 @@ const PrepaidCreditHistoryTab: React.FC<PrepaidCreditHistoryTabProps> = ({ meter
     dispatch(fetchPrepaidCreditHistory({ id: meterId, pageNumber: currentPage, pageSize }))
   }
 
-  const handleCopyToken = async (token: string) => {
+  const handleCopyToken = async (token: string, event: PrepaidCreditHistoryEntry) => {
     try {
       await navigator.clipboard.writeText(token)
-      setCopiedToken(token)
+      // Use a unique identifier combining token and event ID to avoid conflicts
+      const uniqueId = `${token}-${event.id}`
+      setCopiedToken(uniqueId)
       setTimeout(() => setCopiedToken(null), 2000)
     } catch (error) {
       console.error("Failed to copy token:", error)
     }
   }
 
-  const getStatusConfig = (status: string) => {
+  const getStatusConfig = (status: string, paymentStatus?: string) => {
+    // Use payment status if available, otherwise fall back to isSuccessful
+    const actualStatus = paymentStatus || (status === "true" ? "COMPLETED" : "FAILED")
+
     const configs = {
       COMPLETED: { color: "text-emerald-600", bg: "bg-emerald-50", label: "Completed" },
       PENDING: { color: "text-amber-600", bg: "bg-amber-50", label: "Pending" },
       FAILED: { color: "text-red-600", bg: "bg-red-50", label: "Failed" },
+      CONFIRMED: { color: "text-emerald-600", bg: "bg-emerald-50", label: "Confirmed" },
+      REVERSED: { color: "text-purple-600", bg: "bg-purple-50", label: "Reversed" },
     }
-    return configs[status as keyof typeof configs] || { color: "text-gray-600", bg: "bg-gray-50", label: status }
+    return (
+      configs[actualStatus as keyof typeof configs] || { color: "text-gray-600", bg: "bg-gray-50", label: actualStatus }
+    )
   }
 
   const getPageItems = (): (number | string)[] => {
@@ -121,7 +136,7 @@ const PrepaidCreditHistoryTab: React.FC<PrepaidCreditHistoryTabProps> = ({ meter
   const totalPages = prepaidCreditHistoryPagination.totalPages
 
   const CreditCardComponent = ({ event }: { event: PrepaidCreditHistoryEntry }) => {
-    const statusConfig = getStatusConfig(event.isSuccessful ? "COMPLETED" : "FAILED")
+    const statusConfig = getStatusConfig(event.isSuccessful.toString(), event.payment?.status)
 
     // Type definition for parsed response payload
     interface TokenInfo {
@@ -134,24 +149,29 @@ const PrepaidCreditHistoryTab: React.FC<PrepaidCreditHistoryTabProps> = ({ meter
     }
 
     interface ParsedResponse {
-      tokens?: TokenInfo[]
+      messageId?: string
+      success?: boolean
+      result?: TokenInfo[]
     }
 
     // Extract info from response payload
     const getResponseInfo = () => {
       try {
         const parsed = JSON.parse(event.responsePayload || "{}") as ParsedResponse
-        const token = parsed.tokens?.[0]
+        const token = parsed.result?.[0] // Use result array instead of tokens
         return {
-          tokenDec: token?.tokenDec,
-          drn: token?.drn,
+          tokenDec: token?.tokenDec || event.token, // Fallback to event.token
+          drn: token?.drn || event.meterNumber, // Use event.meterNumber as fallback
           description: token?.description,
           transferAmount: token?.transferAmount,
           scaledAmount: token?.scaledAmount,
           scaledUnitName: token?.scaledUnitName,
         }
       } catch {
-        return {}
+        return {
+          tokenDec: event.token, // Fallback to event.token
+          drn: event.meterNumber, // Use event.meterNumber
+        }
       }
     }
 
@@ -171,84 +191,147 @@ const PrepaidCreditHistoryTab: React.FC<PrepaidCreditHistoryTabProps> = ({ meter
           </div>
         </div>
 
-        <div className="mt-4 space-y-2 text-xs text-gray-600 sm:text-sm">
-          {responseInfo.tokenDec && (
-            <div className="flex justify-between">
-              <span>Token:</span>
-              <div className="flex items-center gap-2">
-                <span className="font-mono font-medium">
-                  {responseInfo.tokenDec.length >= 16
-                    ? responseInfo.tokenDec.match(/.{1,4}/g)?.join("-") || responseInfo.tokenDec
-                    : responseInfo.tokenDec}
+        <div className="mt-4 space-y-3 text-xs text-gray-600 sm:text-sm">
+          {/* Customer Information */}
+          <div className="border-b pb-3">
+            <h4 className="mb-2 font-semibold text-gray-900">Customer Information</h4>
+            <div className="space-y-1">
+              <div className="flex justify-between">
+                <span>Name:</span>
+                <span className="font-medium">
+                  {event.customer?.fullName || customerInfo?.customerFullName || "N/A"}
                 </span>
-                <button
-                  onClick={() => handleCopyToken(responseInfo.tokenDec!)}
-                  className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-800"
-                >
-                  {copiedToken === responseInfo.tokenDec ? (
-                    <>
-                      <svg className="size-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Copied!
-                    </>
-                  ) : (
-                    <>
-                      <svg className="size-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                        />
-                      </svg>
-                      Copy
-                    </>
-                  )}
-                </button>
+              </div>
+              <div className="flex justify-between">
+                <span>Address:</span>
+                <span className="max-w-[60%] text-right font-medium">
+                  {customerInfo ? `${customerInfo.address}, ${customerInfo.city || ""}`.trim() || "N/A" : "N/A"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Account Number:</span>
+                <span className="font-medium">
+                  {event.customer?.accountNumber || customerInfo?.customerAccountNumber || "N/A"}
+                </span>
               </div>
             </div>
-          )}
-
-          {responseInfo.transferAmount && (
-            <div className="flex justify-between">
-              <span>Amount:</span>
-              <span className="font-medium">{formatCurrency(responseInfo.transferAmount)}</span>
-            </div>
-          )}
-
-          {responseInfo.scaledAmount && (
-            <div className="flex justify-between">
-              <span>Units:</span>
-              <span className="font-medium">
-                {responseInfo.scaledAmount} {responseInfo.scaledUnitName || ""}
-              </span>
-            </div>
-          )}
-
-          <div className="flex justify-between">
-            <span>Meter Number:</span>
-            <span className="font-medium">{responseInfo.drn || event.meterId}</span>
           </div>
 
-          {responseInfo.description && (
-            <div className="flex justify-between">
-              <span>Type:</span>
-              <span className="font-medium">{responseInfo.description}</span>
-            </div>
-          )}
+          {/* Transaction Details */}
+          <div>
+            <h4 className="mb-2 font-semibold text-gray-900">Transaction Details</h4>
+            <div className="space-y-2">
+              {/* Payment Information */}
+              {event.payment && (
+                <>
+                  <div className="flex justify-between">
+                    <span>Payment Reference:</span>
+                    <span className="font-medium">{event.payment.reference}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Amount Paid:</span>
+                    <span className="font-medium text-green-600">{formatCurrency(event.payment.amount)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Payment Channel:</span>
+                    <span className="font-medium">{event.payment.channel}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Payment Status:</span>
+                    <span className={`font-medium ${statusConfig.color}`}>{event.payment.status}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Paid At:</span>
+                    <span className="font-medium">{formatDateTime(event.payment.paidAtUtc)}</span>
+                  </div>
+                </>
+              )}
 
-          <div className="flex justify-between">
-            <span>Date:</span>
-            <span className="font-medium">{formatDateTime(event.requestedAtUtc)}</span>
+              {/* Token Information */}
+              {responseInfo.transferAmount && (
+                <div className="flex justify-between">
+                  <span>Transfer Amount:</span>
+                  <span className="font-medium text-green-600">{formatCurrency(responseInfo.transferAmount)}</span>
+                </div>
+              )}
+
+              {responseInfo.scaledAmount && (
+                <div className="flex justify-between">
+                  <span>Units Credited:</span>
+                  <span className="font-medium">
+                    {responseInfo.scaledAmount} {responseInfo.scaledUnitName || ""}
+                  </span>
+                </div>
+              )}
+
+              {responseInfo.tokenDec && (
+                <div className="flex justify-between">
+                  <span>Token Issued:</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-medium">
+                      {responseInfo.tokenDec.length >= 16
+                        ? responseInfo.tokenDec.match(/.{1,4}/g)?.join("-") || responseInfo.tokenDec
+                        : responseInfo.tokenDec}
+                    </span>
+                    <button
+                      onClick={() => handleCopyToken(responseInfo.tokenDec!, event)}
+                      className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-800"
+                    >
+                      {copiedToken === `${responseInfo.tokenDec}-${event.id}` ? (
+                        <>
+                          <svg className="size-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <svg className="size-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                            />
+                          </svg>
+                          Copy
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-between">
+                <span>Meter Number:</span>
+                <span className="font-medium">{responseInfo.drn || event.meterId}</span>
+              </div>
+
+              <div className="flex justify-between">
+                <span>Payment ID:</span>
+                <span className="font-medium">#{event.paymentId}</span>
+              </div>
+
+              {event.isTestToken && (
+                <div className="flex justify-between">
+                  <span>Token Type:</span>
+                  <span className="rounded bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">Test Token</span>
+                </div>
+              )}
+
+              <div className="flex justify-between">
+                <span>Requested At:</span>
+                <span className="font-medium">{formatDateTime(event.requestedAtUtc)}</span>
+              </div>
+
+              {event.errorMessage && (
+                <div className="flex justify-between">
+                  <span>Error Message:</span>
+                  <span className="font-medium text-red-600">{event.errorMessage}</span>
+                </div>
+              )}
+            </div>
           </div>
-
-          {event.errorMessage && (
-            <div className="flex justify-between">
-              <span>Error Message:</span>
-              <span className="font-medium text-red-600">{event.errorMessage}</span>
-            </div>
-          )}
         </div>
 
         <div className="mt-3 flex gap-2">
@@ -265,7 +348,7 @@ const PrepaidCreditHistoryTab: React.FC<PrepaidCreditHistoryTabProps> = ({ meter
   }
 
   const CreditListItem = ({ event }: { event: PrepaidCreditHistoryEntry }) => {
-    const statusConfig = getStatusConfig(event.isSuccessful ? "COMPLETED" : "FAILED")
+    const statusConfig = getStatusConfig(event.isSuccessful.toString(), event.payment?.status)
 
     // Type definition for parsed response payload
     interface TokenInfo {
@@ -278,24 +361,29 @@ const PrepaidCreditHistoryTab: React.FC<PrepaidCreditHistoryTabProps> = ({ meter
     }
 
     interface ParsedResponse {
-      tokens?: TokenInfo[]
+      messageId?: string
+      success?: boolean
+      result?: TokenInfo[]
     }
 
     // Extract info from response payload
     const getResponseInfo = () => {
       try {
         const parsed = JSON.parse(event.responsePayload || "{}") as ParsedResponse
-        const token = parsed.tokens?.[0]
+        const token = parsed.result?.[0] // Use result array instead of tokens
         return {
-          tokenDec: token?.tokenDec,
-          drn: token?.drn,
+          tokenDec: token?.tokenDec || event.token, // Fallback to event.token
+          drn: token?.drn || event.meterNumber, // Use event.meterNumber as fallback
           description: token?.description,
           transferAmount: token?.transferAmount,
           scaledAmount: token?.scaledAmount,
           scaledUnitName: token?.scaledUnitName,
         }
       } catch {
-        return {}
+        return {
+          tokenDec: event.token, // Fallback to event.token
+          drn: event.meterNumber, // Use event.meterNumber
+        }
       }
     }
 
@@ -316,7 +404,54 @@ const PrepaidCreditHistoryTab: React.FC<PrepaidCreditHistoryTabProps> = ({ meter
                   </div>
                 </div>
               </div>
+
+              {/* Customer Information */}
               <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-600 sm:gap-4 sm:text-sm">
+                <span className="flex items-center gap-1">
+                  <strong>Customer:</strong> {event.customer?.fullName || customerInfo?.customerFullName || "N/A"}
+                </span>
+                {(event.customer?.accountNumber || customerInfo?.customerAccountNumber) && (
+                  <span className="flex items-center gap-1">
+                    <strong>Account:</strong> {event.customer?.accountNumber || customerInfo?.customerAccountNumber}
+                  </span>
+                )}
+              </div>
+
+              {/* Transaction Details */}
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-600 sm:gap-4 sm:text-sm">
+                {/* Payment Information */}
+                {event.payment && (
+                  <>
+                    <span className="flex items-center gap-1">
+                      <strong>Payment Ref:</strong> {event.payment.reference}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <strong>Amount Paid:</strong>{" "}
+                      <span className="text-green-600">{formatCurrency(event.payment.amount)}</span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <strong>Channel:</strong> {event.payment.channel}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <strong>Status:</strong> <span className={statusConfig.color}>{event.payment.status}</span>
+                    </span>
+                  </>
+                )}
+
+                {/* Token Information */}
+                {/* {responseInfo.transferAmount && (
+                  <span className="flex items-center gap-1">
+                    <strong>Transfer:</strong>{" "}
+                    <span className="text-green-600">{formatCurrency(responseInfo.transferAmount)}</span>
+                  </span>
+                )} */}
+
+                {responseInfo.scaledAmount && (
+                  <span className="flex items-center gap-1">
+                    <strong>Units Credited:</strong> {responseInfo.scaledAmount} {responseInfo.scaledUnitName || ""}
+                  </span>
+                )}
+
                 {responseInfo.tokenDec && (
                   <span className="flex items-center gap-1">
                     <strong>Token:</strong>{" "}
@@ -326,10 +461,10 @@ const PrepaidCreditHistoryTab: React.FC<PrepaidCreditHistoryTabProps> = ({ meter
                         : responseInfo.tokenDec}
                     </span>
                     <button
-                      onClick={() => handleCopyToken(responseInfo.tokenDec!)}
+                      onClick={() => handleCopyToken(responseInfo.tokenDec!, event)}
                       className="flex items-center gap-1 rounded-md px-1 py-0.5 text-xs text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-800"
                     >
-                      {copiedToken === responseInfo.tokenDec ? (
+                      {copiedToken === `${responseInfo.tokenDec}-${event.id}` ? (
                         <>
                           <svg className="size-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -353,27 +488,31 @@ const PrepaidCreditHistoryTab: React.FC<PrepaidCreditHistoryTabProps> = ({ meter
                   </span>
                 )}
 
-                {responseInfo.transferAmount && (
-                  <span>
-                    <strong>Amount:</strong> {formatCurrency(responseInfo.transferAmount)}
+                {event.isTestToken && (
+                  <span className="flex items-center gap-1">
+                    <strong>Type:</strong>
+                    <span className="rounded bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">
+                      Test Token
+                    </span>
                   </span>
                 )}
 
-                {responseInfo.scaledAmount && (
-                  <span>
-                    <strong>Units:</strong> {responseInfo.scaledAmount} {responseInfo.scaledUnitName || ""}
-                  </span>
-                )}
-
-                <span>
+                <span className="flex items-center gap-1">
                   <strong>Meter:</strong> {responseInfo.drn || event.meterId}
                 </span>
               </div>
+
+              {/* Address for mobile view */}
+              {customerInfo && customerInfo.address && (
+                <div className="mt-1 text-xs text-gray-500 sm:hidden">
+                  <strong>Address:</strong> {customerInfo.address}, {customerInfo.city || ""}
+                </div>
+              )}
             </div>
           </div>
 
           <div className="flex items-center justify-between gap-3 sm:justify-end">
-            <div className="hidden text-right text-sm sm:block">
+            <div className="hidden whitespace-nowrap text-right text-sm sm:block">
               <div className="mt-1 text-xs text-gray-500">{formatDateTime(event.requestedAtUtc)}</div>
             </div>
             <div className="flex items-center gap-2">

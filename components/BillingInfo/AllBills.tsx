@@ -8,8 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { SearchModule } from "components/ui/Search/search-module"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { clearError, clearFilters, fetchPostpaidBills, setFilters, setPagination } from "lib/redux/postpaidSlice"
-import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
-import { clearFeeders, fetchFeeders } from "lib/redux/feedersSlice"
+import { fetchAreaOffices, fetchFeeders } from "lib/redux/formDataSlice"
 import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import { MapIcon, UserIcon } from "components/Icons/Icons"
@@ -108,6 +107,14 @@ interface MobileFilterSidebarProps {
   sortOptions: SortOption[]
   isSortExpanded: boolean
   setIsSortExpanded: (value: boolean | ((prev: boolean) => boolean)) => void
+  areaOfficeSearch: string
+  feederSearch: string
+  handleAreaOfficeSearchChange: (searchValue: string) => void
+  handleFeederSearchChange: (searchValue: string) => void
+  handleAreaOfficeSearchClick: () => void
+  handleFeederSearchClick: () => void
+  areaOfficesLoading: boolean
+  feedersLoading: boolean
 }
 
 const ActionDropdown: React.FC<ActionDropdownProps> = ({ bill, onViewDetails, onUpdateBill }) => {
@@ -319,6 +326,14 @@ const MobileFilterSidebar = ({
   sortOptions,
   isSortExpanded,
   setIsSortExpanded,
+  areaOfficeSearch,
+  feederSearch,
+  handleAreaOfficeSearchChange,
+  handleFeederSearchChange,
+  handleAreaOfficeSearchClick,
+  handleFeederSearchClick,
+  areaOfficesLoading,
+  feedersLoading,
 }: MobileFilterSidebarProps) => {
   return (
     <AnimatePresence mode="wait">
@@ -443,6 +458,11 @@ const MobileFilterSidebar = ({
                     name="areaOfficeId"
                     value={localFilters.areaOfficeId || ""}
                     onChange={(e) => handleFilterChange("areaOfficeId", e.target.value || undefined)}
+                    searchable={true}
+                    searchTerm={areaOfficeSearch}
+                    onSearchChange={handleAreaOfficeSearchChange}
+                    onSearchClick={handleAreaOfficeSearchClick}
+                    loading={areaOfficesLoading}
                     options={areaOfficeOptions}
                     className="w-full"
                     controlClassName="h-9 text-sm"
@@ -456,6 +476,11 @@ const MobileFilterSidebar = ({
                     name="feederId"
                     value={localFilters.feederId || ""}
                     onChange={(e) => handleFilterChange("feederId", e.target.value || undefined)}
+                    searchable={true}
+                    searchTerm={feederSearch}
+                    onSearchChange={handleFeederSearchChange}
+                    onSearchClick={handleFeederSearchClick}
+                    loading={feedersLoading}
                     options={feederOptions}
                     className="w-full"
                     controlClassName="h-9 text-sm"
@@ -544,8 +569,8 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { bills, loading, error, pagination, filters } = useAppSelector((state) => state.postpaidBilling)
-  const { areaOffices } = useAppSelector((state) => state.areaOffices)
-  const { feeders } = useAppSelector((state) => state.feeders)
+  const { areaOffices, areaOfficesLoading } = useAppSelector((state) => state.formData)
+  const { feeders, feedersLoading } = useAppSelector((state) => state.formData)
   const { billingPeriods } = useAppSelector((state) => state.billingPeriods)
 
   const [sortColumn, setSortColumn] = useState<string | null>(null)
@@ -556,6 +581,10 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(true)
   const [isSortExpanded, setIsSortExpanded] = useState(false)
+
+  // Search states for dropdowns
+  const [areaOfficeSearch, setAreaOfficeSearch] = useState("")
+  const [feederSearch, setFeederSearch] = useState("")
 
   // State for PostpaidBillDetailsModal
   const [isBillModalOpen, setIsBillModalOpen] = useState(false)
@@ -589,6 +618,24 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
   const totalRecords = pagination.totalCount
   const totalPages = pagination.totalPages || 1
 
+  // Search handlers for dropdowns - only update search term state
+  const handleAreaOfficeSearchChange = (searchValue: string) => {
+    setAreaOfficeSearch(searchValue)
+  }
+
+  const handleFeederSearchChange = (searchValue: string) => {
+    setFeederSearch(searchValue)
+  }
+
+  // Search button handlers - trigger API calls
+  const handleAreaOfficeSearchClick = () => {
+    dispatch(fetchAreaOffices({ PageNumber: 1, PageSize: 100, Search: areaOfficeSearch }))
+  }
+
+  const handleFeederSearchClick = () => {
+    dispatch(fetchFeeders({ PageNumber: 1, PageSize: 100, Search: feederSearch }))
+  }
+
   // Fetch area offices, feeders, and billing periods on component mount for filter dropdowns
   useEffect(() => {
     dispatch(
@@ -600,8 +647,8 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
 
     dispatch(
       fetchFeeders({
-        pageNumber: 1,
-        pageSize: 100,
+        PageNumber: 1,
+        PageSize: 100,
       })
     )
 
@@ -614,8 +661,7 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
 
     // Cleanup function to clear states when component unmounts
     return () => {
-      dispatch(clearAreaOffices())
-      dispatch(clearFeeders())
+      // formDataSlice doesn't have clear functions, data will be cached
     }
   }, [dispatch])
 
@@ -761,7 +807,7 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
     { value: "", label: "All Area Offices" },
     ...areaOffices.map((office) => ({
       value: office.id.toString(),
-      label: `${office.nameOfNewOAreaffice} (${office.newKaedcoCode})`,
+      label: office.name,
     })),
   ]
 
@@ -770,7 +816,7 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
     { value: "", label: "All Feeders" },
     ...feeders.map((feeder) => ({
       value: feeder.id.toString(),
-      label: `${feeder.name} (${feeder.kaedcoFeederCode})`,
+      label: feeder.name,
     })),
   ]
 
@@ -2629,6 +2675,11 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
                   name="areaOfficeId"
                   value={localFilters.areaOfficeId || ""}
                   onChange={(e) => handleFilterChange("areaOfficeId", e.target.value || undefined)}
+                  searchable={true}
+                  searchTerm={areaOfficeSearch}
+                  onSearchChange={handleAreaOfficeSearchChange}
+                  onSearchClick={handleAreaOfficeSearchClick}
+                  loading={areaOfficesLoading}
                   options={areaOfficeOptions}
                   className="w-full"
                   controlClassName="h-9 text-sm"
@@ -2642,6 +2693,11 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
                   name="feederId"
                   value={localFilters.feederId || ""}
                   onChange={(e) => handleFilterChange("feederId", e.target.value || undefined)}
+                  searchable={true}
+                  searchTerm={feederSearch}
+                  onSearchChange={handleFeederSearchChange}
+                  onSearchClick={handleFeederSearchClick}
+                  loading={feedersLoading}
                   options={feederOptions}
                   className="w-full"
                   controlClassName="h-9 text-sm"
@@ -2745,6 +2801,14 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
         sortOptions={sortOptions}
         isSortExpanded={isSortExpanded}
         setIsSortExpanded={setIsSortExpanded}
+        areaOfficeSearch={areaOfficeSearch}
+        feederSearch={feederSearch}
+        handleAreaOfficeSearchChange={handleAreaOfficeSearchChange}
+        handleFeederSearchChange={handleFeederSearchChange}
+        handleAreaOfficeSearchClick={handleAreaOfficeSearchClick}
+        handleFeederSearchClick={handleFeederSearchClick}
+        areaOfficesLoading={areaOfficesLoading}
+        feedersLoading={feedersLoading}
       />
     </>
   )

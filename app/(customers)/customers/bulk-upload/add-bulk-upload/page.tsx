@@ -15,8 +15,10 @@ import {
   processCustomerStatusChangeBulkUpload,
   processCustomerStoredAverageUpdateBulkUpload,
   processCustomerTariffChangeBulkUpload,
+  processExistingCustomerBulkUpload,
   processMeterReadingStoredAverageUpdateBulkUpload,
   processPostpaidEstimatedConsumptionBulkUpload,
+  processStatusCodesBulkUpload,
 } from "lib/redux/fileManagementSlice"
 import * as XLSX from "xlsx"
 import DashboardNav from "components/Navbar/DashboardNav"
@@ -41,14 +43,13 @@ const FileManagementPage = () => {
   // Upload type options
   const uploadTypeOptions = [
     { name: "New Customers", value: 1 },
-    { name: "Import Existing Customers", value: 11 },
+    { name: "Import Existing Customers", value: 23 },
     { name: "Customer Info Update", value: 5 },
     // { name: "Customer Feeder Update", value: 6 },
     { name: "Customer Tariff Change", value: 7 },
-    { name: "Customer Status Code Change", value: 8 },
+    { name: "Customer Status Change", value: 8 },
     { name: "Customer Stored Average Update", value: 9 },
-    { name: "Customer SR DT Update", value: 10 },
-    { name: "Customer Bill Energy", value: 16 },
+    { name: "Customer-DT Reallignment", value: 10 },
     { name: "Customer Estimated Consumption", value: 24 },
   ]
 
@@ -57,8 +58,8 @@ const FileManagementPage = () => {
     switch (uploadType) {
       case 1:
         return "customers"
-      case 11:
-        return "customer-setup"
+      case 23:
+        return "customer-existing-import"
       case 5:
         return "customer-info"
       case 6:
@@ -66,7 +67,7 @@ const FileManagementPage = () => {
       case 7:
         return "customer-tariff"
       case 8:
-        return "customer-status"
+        return "customer-status-change"
       case 9:
         return "customer-stored-average"
       case 10:
@@ -85,8 +86,8 @@ const FileManagementPage = () => {
     switch (uploadType) {
       case 1:
         return "customers-bulk-import"
-      case 11:
-        return "customers-setup-bulk"
+      case 23:
+        return "customers-existing-import-bulk"
       case 5:
         return "customers-info-update-bulk"
       case 6:
@@ -414,9 +415,9 @@ const FileManagementPage = () => {
                 let bulkResult
 
                 // Use different endpoint based on upload type
-                if (selectedUploadType === 11) {
-                  // Customer Setup Import
-                  bulkResult = await dispatch(processCustomerSetupBulkUpload({ fileId })).unwrap()
+                if (selectedUploadType === 23) {
+                  // Import Existing Customers
+                  bulkResult = await dispatch(processExistingCustomerBulkUpload({ fileId })).unwrap()
                 } else if (selectedUploadType === 5) {
                   // Customer Info Update
                   bulkResult = await dispatch(processCustomerInfoUpdateBulkUpload({ fileId })).unwrap()
@@ -427,8 +428,8 @@ const FileManagementPage = () => {
                   // Customer Tariff Change
                   bulkResult = await dispatch(processCustomerTariffChangeBulkUpload({ fileId })).unwrap()
                 } else if (selectedUploadType === 8) {
-                  // Customer Status Change
-                  bulkResult = await dispatch(processCustomerStatusChangeBulkUpload({ fileId })).unwrap()
+                  // Customer Status Code Change
+                  bulkResult = await dispatch(processStatusCodesBulkUpload({ fileId })).unwrap()
                 } else if (selectedUploadType === 9) {
                   // Customer Stored Average Update
                   bulkResult = await dispatch(processCustomerStoredAverageUpdateBulkUpload({ fileId })).unwrap()
@@ -439,7 +440,7 @@ const FileManagementPage = () => {
                   // Customer Bill Energy
                   bulkResult = await dispatch(processMeterReadingStoredAverageUpdateBulkUpload({ fileId })).unwrap()
                 } else if (selectedUploadType === 24) {
-                  // Postpaid Estimated Consumption
+                  // Customer Estimated Consumption
                   bulkResult = await dispatch(processPostpaidEstimatedConsumptionBulkUpload({ fileId })).unwrap()
                 } else {
                   // Regular Customer Import and other types
@@ -544,12 +545,12 @@ const FileManagementPage = () => {
     let sampleRows: string[]
 
     // Generate different templates based on upload type
-    if (selectedUploadType === 11) {
+    if (selectedUploadType === 23) {
       // Import Existing Customers template
       headers =
-        "CustomerName,TariffCode,StatusCode,PhoneNumber,EmailAdddress,CustomerAccountNo,CustomerAddress1,CustomerAddress2,FeederName,TransformerDescription,DTNumber,EmployeeNo,CustomerCity,CustomerState,BusinessUnit,StoredAverage,IsPPM,Longitude,Latitude,IsSeparation,MotherAccountNumber"
+        "CustomerName,CustomerAccountNo,CustomerAddress1,CustomerAddress2,CustomerCity,CustomerState,TelephoneNumber,Tariff,FeederName,Transformers,DTNumber,TechnicalEngineer,EmployeeNo,AreaOffice,ServiceCenter,StoredAverage,OpeningBalance,IsPPM,Longitute,Latitude,MotherAccountNumber,IsSeperation,EmailAdddress,StatusCode,Error"
       sampleRows = []
-    } else if (selectedUploadType === 7) {
+    } else if (selectedUploadType === 5) {
       // Customer Tariff Change template
       headers = "CustomerAccountNo,TariffCode"
       sampleRows = []
@@ -588,7 +589,7 @@ const FileManagementPage = () => {
     link.setAttribute("href", url)
     link.setAttribute(
       "download",
-      selectedUploadType === 11
+      selectedUploadType === 23
         ? "sample-import-existing-customers.csv"
         : selectedUploadType === 7
         ? "sample-customer-tariff-change.csv"
@@ -832,7 +833,7 @@ const FileManagementPage = () => {
                           <div className="mt-4 flex flex-col justify-center gap-3 sm:flex-row">
                             <ButtonModule
                               variant="secondary"
-                              onClick={removeSelectedFile}
+                              onClick={() => fileInputRef.current?.click()}
                               disabled={
                                 isUploading ||
                                 (!!uploadProgress &&

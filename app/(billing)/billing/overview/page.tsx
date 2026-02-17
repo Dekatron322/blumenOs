@@ -685,7 +685,7 @@ export default function BillingDashboard() {
               >
                 <div className="flex items-center gap-3">
                   <PeriodSelector currentPeriod={selectedPeriod} onPeriodChange={handlePeriodChange} />
-                  {canPublishBills && (
+                  {/* {canPublishBills && (
                     <ButtonModule
                       variant="primary"
                       size="md"
@@ -697,7 +697,7 @@ export default function BillingDashboard() {
                       <span className="hidden sm:inline">Publish Postpaid Bills</span>
                       <span className="sm:hidden">Publish</span>
                     </ButtonModule>
-                  )}
+                  )} */}
                   {/* Polling Controls */}
                   <div className="flex items-center gap-2 rounded-md border-r bg-white p-2 pr-3">
                     <span className="text-sm font-medium text-gray-500">Auto-refresh:</span>

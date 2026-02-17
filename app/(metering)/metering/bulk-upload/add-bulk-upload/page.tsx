@@ -7,7 +7,10 @@ import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
   createFileIntent,
   finalizeFile,
+  processMeterBulkReassign,
   processMeterBulkUpload,
+  processMeterChangeOut,
+  processMeterChangeStatus,
   processMeterReadingBulkUpload,
   processMeterReadingGeneralBulkUpload,
   processMeterReadingStoredAverageUpdateBulkUpload,
@@ -29,12 +32,23 @@ interface UploadProgress {
 const FileManagementPage = () => {
   const dispatch = useAppDispatch()
   const router = useRouter()
-  const { fileIntentLoading, fileIntentError, finalizeFileLoading, finalizeFileError, meterBulkUploadError } =
-    useAppSelector((state: { fileManagement: any }) => state.fileManagement)
+  const {
+    fileIntentLoading,
+    fileIntentError,
+    finalizeFileLoading,
+    finalizeFileError,
+    meterBulkUploadError,
+    meterBulkReassignError,
+    meterChangeStatusError,
+    meterChangeOutError,
+  } = useAppSelector((state: { fileManagement: any }) => state.fileManagement)
 
   // Upload type options
   const uploadTypeOptions = [
     { name: "New Meters", value: 12 },
+    { name: "Meter Status Change", value: 28 },
+    { name: "Meter Reallocation", value: 29 },
+    { name: "Meter Change Out", value: 32 },
     // { name: "Meter Reading Import", value: 2 },
     // { name: "Meter Reading Account Import", value: 15 },
     // { name: "Meter Reading Stored Average Import", value: 16 },
@@ -45,6 +59,12 @@ const FileManagementPage = () => {
     switch (uploadType) {
       case 12:
         return "meter-upload"
+      case 28:
+        return "meter-status-change"
+      case 29:
+        return "meter-reassignment"
+      case 32:
+        return "meter-changeout"
       case 15:
         return "meter-readings-account"
       case 2:
@@ -144,17 +164,29 @@ const FileManagementPage = () => {
   }, [])
 
   // Handle file selection
-  const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      setSelectedFile(file)
-      setUploadError(null)
-      setUploadSuccess(false)
-      setFinalizedFile(null)
-      setUploadProgress(null)
-      // Don't reset upload type when new file is selected - only reset on manual change
-    }
-  }, [])
+  const handleFileSelect = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0]
+      if (file) {
+        setSelectedFile(file)
+        setUploadError(null)
+        setUploadSuccess(false)
+        setFinalizedFile(null)
+        setUploadProgress(null)
+        // Don't reset upload type when new file is selected - only reset on manual change
+      } else {
+        // Handle case where user cancels file selection
+        // Keep the current selected file and restore the file input value
+        if (fileInputRef.current && selectedFile) {
+          // Create a new FileList to restore the file input
+          const dataTransfer = new DataTransfer()
+          dataTransfer.items.add(selectedFile)
+          fileInputRef.current.files = dataTransfer.files
+        }
+      }
+    },
+    [selectedFile]
+  )
 
   // Handle file drop
   const handleFileDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
@@ -205,6 +237,23 @@ const FileManagementPage = () => {
     e.stopPropagation()
     setIsDragging(false)
     setIsDragOver(false)
+  }, [])
+
+  // Handle upload type selection with form reset
+  const handleUploadTypeSelection = useCallback((uploadType: number) => {
+    // Reset form state to show fresh form
+    setSelectedFile(null)
+    setUploadError(null)
+    setUploadSuccess(false)
+    setFinalizedFile(null)
+    setUploadProgress(null)
+    setIsUploading(false)
+    setBulkUploadProcessed(false)
+    setHasCompletedUploadTypeSelection(true)
+    setSelectedUploadType(uploadType)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
   }, [])
 
   // Remove selected file
@@ -285,6 +334,12 @@ const FileManagementPage = () => {
             ? "meter-reading-bulk-upload"
             : selectedUploadType === 2
             ? "meter-reading-general-bulk-upload"
+            : selectedUploadType === 29
+            ? "meters-reassign"
+            : selectedUploadType === 28
+            ? "meters-status-change"
+            : selectedUploadType === 32
+            ? "meters-changeout"
             : "meters-bulk-upload",
         checksum,
         bulkInsertType: getBulkInsertType(selectedUploadType),
@@ -378,6 +433,15 @@ const FileManagementPage = () => {
                 } else if (selectedUploadType === 16) {
                   // Meter Reading Stored Average Import
                   bulkResult = await dispatch(processMeterReadingStoredAverageUpdateBulkUpload({ fileId })).unwrap()
+                } else if (selectedUploadType === 28) {
+                  // Meter Status Change
+                  bulkResult = await dispatch(processMeterChangeStatus({ fileId })).unwrap()
+                } else if (selectedUploadType === 29) {
+                  // Meter Reallocation
+                  bulkResult = await dispatch(processMeterBulkReassign({ fileId })).unwrap()
+                } else if (selectedUploadType === 32) {
+                  // Meter Change Out
+                  bulkResult = await dispatch(processMeterChangeOut({ fileId })).unwrap()
                 } else {
                   // Regular Meter Upload and other types
                   bulkResult = await dispatch(processMeterBulkUpload({ fileId })).unwrap()
@@ -481,6 +545,7 @@ const FileManagementPage = () => {
   const downloadSampleFile = useCallback(() => {
     let headers: string
     let sampleRows: string[]
+    let fileName: string
 
     // Generate different templates based on upload type
     if (selectedUploadType === 12) {
@@ -488,10 +553,27 @@ const FileManagementPage = () => {
       headers =
         "MeterBrand,MeterNumber,MeterLocation,IsMapEnable,MapCode,TariffIndex,IsSmartMeter,Notes,CustomerAccountNo,InstallationDate,IsPPM,IsReadyInstallation,IsMeterInstalled,IsMeterActive,FactoryLoadedUnit,MeterType,SGC,KRN,InitialDeposit,PayBackPeriod,DeductionRate,IsMapDebtor,PercentageFirstVending,MeterCost,SealNumber,PoleNumber"
       sampleRows = []
+      fileName = "sample-new-meters.csv"
+    } else if (selectedUploadType === 28) {
+      // Meter Status Change template
+      headers = "MeterNumber,Status,Reason"
+      sampleRows = []
+      fileName = "sample-meter-status-change.csv"
+    } else if (selectedUploadType === 29) {
+      // Meter Reallocation template
+      headers = "NewCustomerAcctNo,MeterNumber"
+      sampleRows = []
+      fileName = "sample-meter-reallocation.csv"
+    } else if (selectedUploadType === 32) {
+      // Meter Change Out template
+      headers = "CustomerAccountNo,PresentReading,InitialReading,NewMeterNumber"
+      sampleRows = []
+      fileName = "sample-meter-change-out.csv"
     } else {
       // Default template for other upload types
       headers = "MeterNumber,MeterType,Location,InstallationDate,Status,Reading"
       sampleRows = []
+      fileName = "sample_meters_bulk.csv"
     }
 
     const sampleData = [headers, ...sampleRows].join("\n")
@@ -501,7 +583,7 @@ const FileManagementPage = () => {
     const url = URL.createObjectURL(blob)
 
     link.setAttribute("href", url)
-    link.setAttribute("download", selectedUploadType === 12 ? "sample-new-meters.csv" : "sample_meters_bulk.csv")
+    link.setAttribute("download", fileName)
     link.style.visibility = "hidden"
 
     document.body.appendChild(link)
@@ -611,8 +693,7 @@ const FileManagementPage = () => {
                         <button
                           key={type.value}
                           onClick={() => {
-                            setSelectedUploadType(type.value)
-                            setHasCompletedUploadTypeSelection(true)
+                            handleUploadTypeSelection(type.value)
                           }}
                           className="rounded-lg border border-gray-200 bg-white p-4 text-left transition-all hover:border-blue-300 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                         >
@@ -730,16 +811,19 @@ const FileManagementPage = () => {
                           <div className="mt-4 flex flex-col justify-center gap-3 sm:flex-row">
                             <ButtonModule
                               variant="secondary"
-                              onClick={removeSelectedFile}
-                              disabled={
+                              onClick={() => fileInputRef.current?.click()}
+                              disabled={Boolean(
                                 isUploading ||
-                                (!!uploadProgress &&
-                                  uploadProgress.percentage !== 100 &&
-                                  !uploadError &&
-                                  !fileIntentError &&
-                                  !finalizeFileError &&
-                                  !meterBulkUploadError)
-                              }
+                                  (uploadProgress &&
+                                    uploadProgress.percentage !== 100 &&
+                                    !Boolean(uploadError) &&
+                                    !Boolean(fileIntentError) &&
+                                    !Boolean(finalizeFileError) &&
+                                    !Boolean(meterBulkUploadError) &&
+                                    !Boolean(meterBulkReassignError) &&
+                                    !Boolean(meterChangeStatusError) &&
+                                    !Boolean(meterChangeOutError))
+                              )}
                             >
                               Choose Different File
                             </ButtonModule>
@@ -851,7 +935,13 @@ const FileManagementPage = () => {
                     )}
 
                     {/* Error Messages */}
-                    {(fileIntentError || uploadError || finalizeFileError || meterBulkUploadError) && (
+                    {(fileIntentError ||
+                      uploadError ||
+                      finalizeFileError ||
+                      meterBulkUploadError ||
+                      meterBulkReassignError ||
+                      meterChangeStatusError ||
+                      meterChangeOutError) && (
                       <div className="mb-6 rounded-md border border-red-200 bg-red-50 p-4">
                         <div className="flex">
                           <div className="shrink-0">
@@ -866,7 +956,13 @@ const FileManagementPage = () => {
                           <div className="ml-3 flex-1">
                             <h3 className="text-sm font-medium text-red-800">Upload Failed</h3>
                             <div className="mt-2 text-sm text-red-700">
-                              {fileIntentError || uploadError || finalizeFileError || meterBulkUploadError}
+                              {fileIntentError ||
+                                uploadError ||
+                                finalizeFileError ||
+                                meterBulkUploadError ||
+                                meterBulkReassignError ||
+                                meterChangeStatusError ||
+                                meterChangeOutError}
                             </div>
                           </div>
                         </div>

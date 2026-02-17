@@ -15,17 +15,22 @@ import { CsvJobsParams, downloadCsv, fetchCsvJobs } from "lib/redux/fileManageme
 import { VscCloudUpload, VscEye } from "react-icons/vsc"
 import CsvUploadFailuresModal from "components/ui/Modal/CsvUploadFailuresModal"
 
+// Job Type options for filters - Billing related job types only
 const jobTypeOptions = [
+  { value: "", label: "All Job Types" },
   { value: "15", label: "Meter Reading Account Import" },
   { value: "17", label: "Bill Generate Missing" },
   { value: "18", label: "Bill Generate Past" },
   { value: "19", label: "Bill Adjustment" },
   { value: "20", label: "Bill Finalize" },
   { value: "21", label: "Bill Crucial Ops" },
+  { value: "30", label: "Bill Recompute" },
+  { value: "31", label: "Account To Be Billed" },
   { value: "3", label: "Feeder Energy Cap Import" },
   { value: "2", label: "Customer Meter Reading" },
 ]
 
+// Status options for filters
 const statusOptions = [
   { value: "", label: "All Statuses" },
   { value: "1", label: "Queued" },
@@ -35,6 +40,7 @@ const statusOptions = [
   { value: "5", label: "Partially Completed" },
 ]
 
+// Boolean options for filters
 const booleanOptions = [
   { value: "", label: "All" },
   { value: "true", label: "Yes" },
@@ -146,12 +152,13 @@ const BulkUploads: React.FC = () => {
   const [selectedJob, setSelectedJob] = useState<any>(null)
   const [isFailuresModalOpen, setIsFailuresModalOpen] = useState(false)
   const [hasInitialLoad, setHasInitialLoad] = useState(false)
+  const [isTableLoading, setIsTableLoading] = useState(false)
 
   // Local state for filters
   const [localFilters, setLocalFilters] = useState<Partial<CsvJobsParams>>({
     PageNumber: 1,
-    PageSize: 10,
-    JobType: undefined,
+    PageSize: 50,
+    JobTypes: [15, 17, 18, 19, 20, 21, 30, 31, 3, 2], // Default to billing job types
     Status: undefined,
     RequestedByUserId: undefined,
     RequestedFromUtc: undefined,
@@ -168,7 +175,9 @@ const BulkUploads: React.FC = () => {
   useEffect(() => {
     const fetchParams: CsvJobsParams = {
       PageNumber: currentPage,
-      PageSize: 10,
+      PageSize: 50,
+      // Only send JobTypes array if no specific JobType is selected
+      ...(localFilters.JobType ? {} : { JobTypes: localFilters.JobTypes }),
       ...(localFilters.JobType && { JobType: localFilters.JobType }),
       ...(localFilters.Status && { Status: localFilters.Status }),
       ...(localFilters.RequestedByUserId && { RequestedByUserId: localFilters.RequestedByUserId }),
@@ -185,8 +194,11 @@ const BulkUploads: React.FC = () => {
 
   // Separate handler for table-only refresh
   const handleRefreshTableData = useCallback(() => {
+    setIsTableLoading(true)
     // This only triggers a table refresh by incrementing the refresh key
     setTableRefreshKey((prev) => prev + 1)
+    // Reset loading state after a short delay to prevent flickering
+    setTimeout(() => setIsTableLoading(false), 1000)
   }, [])
 
   const handleDownloadCsv = async (job: any) => {
@@ -214,7 +226,9 @@ const BulkUploads: React.FC = () => {
   const handleRefreshData = useCallback(() => {
     const fetchParams: CsvJobsParams = {
       PageNumber: currentPage,
-      PageSize: 10,
+      PageSize: 50,
+      // Only send JobTypes array if no specific JobType is selected
+      ...(localFilters.JobType ? {} : { JobTypes: localFilters.JobTypes }),
       ...(localFilters.JobType && { JobType: localFilters.JobType }),
       ...(localFilters.Status && { Status: localFilters.Status }),
       ...(localFilters.RequestedByUserId && { RequestedByUserId: localFilters.RequestedByUserId }),
@@ -230,7 +244,9 @@ const BulkUploads: React.FC = () => {
   const handleSearch = useCallback(() => {
     const fetchParams: CsvJobsParams = {
       PageNumber: 1,
-      PageSize: 10,
+      PageSize: 50,
+      // Only send JobTypes array if no specific JobType is selected
+      ...(localFilters.JobType ? {} : { JobTypes: localFilters.JobTypes }),
       ...(localFilters.JobType && { JobType: localFilters.JobType }),
       ...(localFilters.Status && { Status: localFilters.Status }),
       ...(localFilters.RequestedByUserId && { RequestedByUserId: localFilters.RequestedByUserId }),
@@ -260,7 +276,8 @@ const BulkUploads: React.FC = () => {
   const resetFilters = () => {
     setLocalFilters({
       PageNumber: 1,
-      PageSize: 10,
+      PageSize: 50,
+      JobTypes: [15, 17, 18, 19, 20, 21, 30, 31, 3, 2], // Default to billing job types
       JobType: undefined,
       Status: undefined,
       RequestedByUserId: undefined,
@@ -327,8 +344,8 @@ const BulkUploads: React.FC = () => {
     setCurrentPage(newPage)
   }
 
-  const billingJobTypes = [15, 17, 18, 19, 20, 21, 3, 2]
-  const filteredCsvJobs = csvJobs.filter((job) => billingJobTypes.includes(job.jobType))
+  // Use server-side data directly since we're now filtering at API level
+  const filteredCsvJobs = csvJobs
 
   if (csvJobsLoading && !hasInitialLoad) {
     return <LoadingSkeleton />
@@ -496,7 +513,8 @@ const BulkUploads: React.FC = () => {
                     <h3 className="text-lg font-semibold">CSV Jobs</h3>
                     {csvJobsPagination && (
                       <p className="text-sm text-gray-600">
-                        Showing {filteredCsvJobs.length} of {csvJobsPagination.totalCount} jobs
+                        Showing {csvJobs.length} of {csvJobsPagination.totalCount} billing jobs (Page{" "}
+                        {csvJobsPagination.currentPage} of {csvJobsPagination.totalPages})
                       </p>
                     )}
                   </div>
@@ -514,7 +532,7 @@ const BulkUploads: React.FC = () => {
               </div>
 
               {/* Table */}
-              <div className="max-h-[70vh] w-full overflow-x-auto overflow-y-hidden ">
+              <div className="max-h-[70vh] w-full overflow-x-auto overflow-y-auto ">
                 <div className="min-w-[1200px]">
                   <table className="w-full border-separate border-spacing-0">
                     <thead>
@@ -532,7 +550,16 @@ const BulkUploads: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredCsvJobs.length === 0 ? (
+                      {isTableLoading ? (
+                        <tr>
+                          <td colSpan={10} className="border-b p-8 text-center">
+                            <div className="flex items-center justify-center">
+                              <RefreshCw className="mr-2 size-5 animate-spin text-blue-600" />
+                              <span className="text-gray-600">Loading table data...</span>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : filteredCsvJobs.length === 0 ? (
                         <tr>
                           <td colSpan={10} className="border-b p-8 text-center">
                             <div className="text-gray-500">
@@ -621,16 +648,18 @@ const BulkUploads: React.FC = () => {
                                     View Failures
                                   </ButtonModule>
                                 )}
-                                <ButtonModule
-                                  variant="outline"
-                                  size="sm"
-                                  icon={<Download className="h-4 w-4" />}
-                                  onClick={() => handleDownloadCsv(job)}
-                                  className="whitespace-nowrap"
-                                  disabled={downloadCsvLoading}
-                                >
-                                  {downloadCsvLoading ? "Downloading..." : "Download"}
-                                </ButtonModule>
+                                {(job.status === 3 || job.status === 5) && (
+                                  <ButtonModule
+                                    variant="outline"
+                                    size="sm"
+                                    icon={<Download className="h-4 w-4" />}
+                                    onClick={() => handleDownloadCsv(job)}
+                                    className="whitespace-nowrap"
+                                    disabled={downloadCsvLoading}
+                                  >
+                                    {downloadCsvLoading ? "Downloading..." : "Download"}
+                                  </ButtonModule>
+                                )}
                               </div>
                             </td>
                           </tr>
@@ -657,7 +686,16 @@ const BulkUploads: React.FC = () => {
                         <MdOutlineArrowBackIosNew className="size-4" />
                       </button>
                       {[...Array(Math.min(5, csvJobsPagination.totalPages))].map((_, index) => {
-                        const pageNumber = index + 1
+                        let pageNumber
+                        if (csvJobsPagination.totalPages <= 5) {
+                          pageNumber = index + 1
+                        } else if (currentPage <= 3) {
+                          pageNumber = index + 1
+                        } else if (currentPage >= csvJobsPagination.totalPages - 2) {
+                          pageNumber = csvJobsPagination.totalPages - 4 + index
+                        } else {
+                          pageNumber = currentPage - 2 + index
+                        }
                         return (
                           <button
                             key={pageNumber}

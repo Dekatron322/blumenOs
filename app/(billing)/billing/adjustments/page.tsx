@@ -11,11 +11,13 @@ import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { SearchModule } from "components/ui/Search/search-module"
 
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { AdjustmentsRequestParams, fetchAdjustments } from "lib/redux/postpaidSlice"
+import { AdjustmentsRequestParams, approveAllAdjustments, fetchAdjustments } from "lib/redux/postpaidSlice"
 import { fetchCustomers } from "lib/redux/customerSlice"
 import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
+import { fetchAreaOffices as fetchFormDataAreaOffices } from "lib/redux/formDataSlice"
 import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
 import { VscCloudUpload } from "react-icons/vsc"
+import ApproveAdjustmentsModal from "components/ui/Modal/ApproveAdjustmentsModal"
 
 // Status options for filters - matching the API values
 const statusOptions = [
@@ -120,11 +122,25 @@ const LoadingSkeleton = () => {
 
 const Adjustments: React.FC = () => {
   const dispatch = useAppDispatch()
-  const { adjustments, adjustmentsLoading, adjustmentsError, adjustmentsSuccess, adjustmentsPagination } =
-    useAppSelector((state) => state.postpaidBilling)
+  const {
+    adjustments,
+    adjustmentsLoading,
+    adjustmentsError,
+    adjustmentsSuccess,
+    adjustmentsPagination,
+    approveAllAdjustmentsLoading,
+    approveAllAdjustmentsError,
+    approveAllAdjustmentsSuccess,
+  } = useAppSelector((state) => state.postpaidBilling)
   const { customers, loading: customersLoading } = useAppSelector((state) => state.customers)
-  const { areaOffices, loading: areaOfficesLoading } = useAppSelector((state) => state.areaOffices)
+  const { areaOffices, areaOfficesLoading, areaOfficesError } = useAppSelector((state) => state.formData)
   const { billingPeriods, loading: billingPeriodsLoading } = useAppSelector((state) => state.billingPeriods)
+
+  // Debug: Check what billing periods data we have
+  React.useEffect(() => {
+    console.log("Adjustments page - billingPeriods:", billingPeriods)
+    console.log("Adjustments page - billingPeriodsLoading:", billingPeriodsLoading)
+  }, [billingPeriods, billingPeriodsLoading])
 
   const router = useRouter()
 
@@ -135,7 +151,12 @@ const Adjustments: React.FC = () => {
   const [searchText, setSearchText] = useState("")
   const [selectedJob, setSelectedJob] = useState<any>(null)
   const [isFailuresModalOpen, setIsFailuresModalOpen] = useState(false)
+  const [isApproveModalOpen, setIsApproveModalOpen] = useState(false)
+  const [approveResponse, setApproveResponse] = useState<{ isSuccess: boolean; message: string } | undefined>()
   const [hasInitialLoad, setHasInitialLoad] = useState(false)
+
+  // Search states for dropdowns
+  const [areaOfficeSearch, setAreaOfficeSearch] = useState("")
 
   // Local state for filters
   const [localFilters, setLocalFilters] = useState<Partial<AdjustmentsRequestParams>>({
@@ -158,15 +179,13 @@ const Adjustments: React.FC = () => {
     void dispatch(fetchCustomers({ pageNumber: 1, pageSize: 1000 })) // Fetch all customers for dropdown
 
     // Fetch area offices for dropdown
-    void dispatch(fetchAreaOffices({ PageNumber: 1, PageSize: 1000 })) // Fetch all area offices for dropdown
+    void dispatch(fetchFormDataAreaOffices({ PageNumber: 1, PageSize: 1000 })) // Fetch all area offices for dropdown
 
     // Fetch billing periods for dropdown
     void dispatch(
       fetchBillingPeriods({
         pageNumber: 1,
         pageSize: 100,
-        year: new Date().getFullYear(),
-        month: new Date().getMonth() + 1,
       })
     )
   }, [dispatch])
@@ -208,6 +227,48 @@ const Adjustments: React.FC = () => {
     }
     void dispatch(fetchAdjustments(fetchParams))
   }, [dispatch, currentPage, localFilters, searchText])
+
+  const handleApproveAllAdjustments = useCallback(() => {
+    setIsApproveModalOpen(true)
+  }, [])
+
+  const handleConfirmApproveAllAdjustments = useCallback(
+    (billingPeriodId: number) => {
+      void dispatch(approveAllAdjustments(billingPeriodId)).then((result) => {
+        if (approveAllAdjustments.fulfilled.match(result)) {
+          // Extract the response message from the result payload
+          const response = result.payload as { isSuccess: boolean; message: string }
+          setApproveResponse(response)
+
+          // Refresh the adjustments data after successful approval
+          const fetchParams: AdjustmentsRequestParams = {
+            pageNumber: currentPage,
+            pageSize: 10,
+            ...(localFilters.billingPeriodId && { billingPeriodId: localFilters.billingPeriodId }),
+            ...(localFilters.period && { period: localFilters.period }),
+            ...(localFilters.customerId && { customerId: localFilters.customerId }),
+            ...(localFilters.areaOfficeId && { areaOfficeId: localFilters.areaOfficeId }),
+            ...(localFilters.csvBulkInsertionJobId && { csvBulkInsertionJobId: localFilters.csvBulkInsertionJobId }),
+            ...(localFilters.status !== undefined && { status: localFilters.status }),
+          }
+          void dispatch(fetchAdjustments(fetchParams))
+        } else if (approveAllAdjustments.rejected.match(result)) {
+          // Handle error response
+          const errorMessage = (result.payload as string) || "Failed to approve all adjustments"
+          setApproveResponse({
+            isSuccess: false,
+            message: errorMessage,
+          })
+        }
+      })
+    },
+    [dispatch, currentPage, localFilters]
+  )
+
+  const handleCloseApproveModal = () => {
+    setIsApproveModalOpen(false)
+    setApproveResponse(undefined)
+  }
 
   const handleSearch = useCallback(() => {
     const fetchParams: AdjustmentsRequestParams = {
@@ -259,6 +320,14 @@ const Adjustments: React.FC = () => {
     }).length
   }
 
+  const handleAreaOfficeSearchChange = (searchValue: string) => {
+    setAreaOfficeSearch(searchValue)
+  }
+
+  const handleAreaOfficeSearchClick = () => {
+    dispatch(fetchFormDataAreaOffices({ PageNumber: 1, PageSize: 1000, Search: areaOfficeSearch }))
+  }
+
   // Generate dropdown options
   const getCustomerOptions = () => {
     if (!customers || customers.length === 0) return []
@@ -272,7 +341,7 @@ const Adjustments: React.FC = () => {
     if (!areaOffices || areaOffices.length === 0) return []
     return areaOffices.map((areaOffice) => ({
       value: areaOffice.id.toString(),
-      label: areaOffice.nameOfNewOAreaffice || areaOffice.nameOfOldOAreaffice || `Area Office ${areaOffice.id}`,
+      label: areaOffice.name,
     }))
   }
 
@@ -340,8 +409,12 @@ const Adjustments: React.FC = () => {
                 <p className="text-gray-600">View and manage bill adjustment records</p>
               </div>
               <div className="flex items-center gap-3">
-                <ButtonModule variant="primary" disabled={adjustmentsLoading}>
-                  Approve Bulk Adjust
+                <ButtonModule
+                  variant="primary"
+                  onClick={handleApproveAllAdjustments}
+                  disabled={adjustmentsLoading || approveAllAdjustmentsLoading}
+                >
+                  {approveAllAdjustmentsLoading ? "Approving..." : "Approve All Adjustments"}
                 </ButtonModule>
               </div>
             </div>
@@ -439,22 +512,21 @@ const Adjustments: React.FC = () => {
                   {/* Area Office Filter */}
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
-                    {areaOfficesLoading ? (
-                      <div className="h-9 w-full rounded-md border border-gray-300 bg-gray-50 px-3 text-sm text-gray-500">
-                        Loading area offices...
-                      </div>
-                    ) : (
-                      <FormSelectModule
-                        name="areaOfficeId"
-                        value={localFilters.areaOfficeId?.toString() || ""}
-                        onChange={(e) =>
-                          handleFilterChange("areaOfficeId", e.target.value ? Number(e.target.value) : undefined)
-                        }
-                        options={getAreaOfficeOptions()}
-                        className="w-full"
-                        controlClassName="h-9 text-sm"
-                      />
-                    )}
+                    <FormSelectModule
+                      name="areaOfficeId"
+                      value={localFilters.areaOfficeId?.toString() || ""}
+                      onChange={(e) =>
+                        handleFilterChange("areaOfficeId", e.target.value ? Number(e.target.value) : undefined)
+                      }
+                      searchable={true}
+                      searchTerm={areaOfficeSearch}
+                      onSearchChange={handleAreaOfficeSearchChange}
+                      onSearchClick={handleAreaOfficeSearchClick}
+                      loading={areaOfficesLoading}
+                      options={getAreaOfficeOptions()}
+                      className="w-full"
+                      controlClassName="h-9 text-sm"
+                    />
                   </div>
 
                   {/* CSV Bulk Insertion Job ID Filter */}
@@ -557,7 +629,7 @@ const Adjustments: React.FC = () => {
                             <td className="whitespace-nowrap border-b p-3 text-sm">{adjustment.period}</td>
                             <td className="whitespace-nowrap border-b p-3 text-sm">
                               <div className="font-medium text-blue-600">
-                                ${adjustment.amount?.toFixed(2) || "0.00"}
+                                ₦{adjustment.amount?.toFixed(2) || "0.00"}
                               </div>
                             </td>
                             <td className="border-b p-3 text-sm">
@@ -643,6 +715,16 @@ const Adjustments: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Approve Adjustments Modal */}
+      <ApproveAdjustmentsModal
+        isOpen={isApproveModalOpen}
+        onClose={handleCloseApproveModal}
+        onApprove={handleConfirmApproveAllAdjustments}
+        billingPeriods={billingPeriods}
+        isLoading={approveAllAdjustmentsLoading}
+        response={approveResponse}
+      />
     </section>
   )
 }

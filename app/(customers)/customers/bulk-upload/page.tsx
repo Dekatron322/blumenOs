@@ -17,14 +17,15 @@ import CsvUploadFailuresModal from "components/ui/Modal/CsvUploadFailuresModal"
 
 // Job Type options for filters - Customer related job types only
 const jobTypeOptions = [
+  { value: "", label: "All Job Types" },
   { value: "1", label: "Customer Import" },
-  { value: "11", label: "Customer Setup Import" },
+  { value: "23", label: "Import Existing Customers" },
   { value: "5", label: "Customer Info Update" },
   { value: "6", label: "Customer Feeder Update" },
   { value: "7", label: "Customer Tariff Change" },
   { value: "8", label: "Customer Status Change" },
   { value: "9", label: "Customer Stored Average Update" },
-  { value: "10", label: "Customer Sr Dt Update" },
+  { value: "10", label: "Customer-DT Reallignment" },
   { value: "24", label: "Customer Estimated Consumption" },
 ]
 
@@ -158,7 +159,7 @@ const BulkUploads: React.FC = () => {
   const [localFilters, setLocalFilters] = useState<Partial<CsvJobsParams>>({
     PageNumber: 1,
     PageSize: 10,
-    JobType: undefined,
+    JobTypes: [1, 5, 6, 7, 8, 9, 10, 23, 24], // Default to customer job types
     Status: undefined,
     RequestedByUserId: undefined,
     RequestedFromUtc: undefined,
@@ -176,6 +177,8 @@ const BulkUploads: React.FC = () => {
     const fetchParams: CsvJobsParams = {
       PageNumber: currentPage,
       PageSize: 10,
+      // Only send JobTypes array if no specific JobType is selected
+      ...(localFilters.JobType ? {} : { JobTypes: localFilters.JobTypes }),
       ...(localFilters.JobType && { JobType: localFilters.JobType }),
       ...(localFilters.Status && { Status: localFilters.Status }),
       ...(localFilters.RequestedByUserId && { RequestedByUserId: localFilters.RequestedByUserId }),
@@ -201,6 +204,8 @@ const BulkUploads: React.FC = () => {
     const fetchParams: CsvJobsParams = {
       PageNumber: currentPage,
       PageSize: 10,
+      // Only send JobTypes array if no specific JobType is selected
+      ...(localFilters.JobType ? {} : { JobTypes: localFilters.JobTypes }),
       ...(localFilters.JobType && { JobType: localFilters.JobType }),
       ...(localFilters.Status && { Status: localFilters.Status }),
       ...(localFilters.RequestedByUserId && { RequestedByUserId: localFilters.RequestedByUserId }),
@@ -217,6 +222,8 @@ const BulkUploads: React.FC = () => {
     const fetchParams: CsvJobsParams = {
       PageNumber: 1,
       PageSize: 10,
+      // Only send JobTypes array if no specific JobType is selected
+      ...(localFilters.JobType ? {} : { JobTypes: localFilters.JobTypes }),
       ...(localFilters.JobType && { JobType: localFilters.JobType }),
       ...(localFilters.Status && { Status: localFilters.Status }),
       ...(localFilters.RequestedByUserId && { RequestedByUserId: localFilters.RequestedByUserId }),
@@ -247,6 +254,7 @@ const BulkUploads: React.FC = () => {
     setLocalFilters({
       PageNumber: 1,
       PageSize: 10,
+      JobTypes: [1, 5, 6, 7, 8, 9, 10, 23, 24], // Default to customer job types
       JobType: undefined,
       Status: undefined,
       RequestedByUserId: undefined,
@@ -334,9 +342,8 @@ const BulkUploads: React.FC = () => {
     setCurrentPage(newPage)
   }
 
-  // Filter jobs to only show customer-related job types
-  const customerJobTypes = [1, 5, 6, 7, 8, 9, 10, 11, 24] // Customer job type values
-  const filteredCsvJobs = csvJobs.filter((job) => customerJobTypes.includes(job.jobType))
+  // Use server-side data directly since we're now filtering at API level
+  const filteredCsvJobs = csvJobs
 
   if (csvJobsLoading && !hasInitialLoad) {
     return <LoadingSkeleton />
@@ -504,7 +511,7 @@ const BulkUploads: React.FC = () => {
                     <h3 className="text-lg font-semibold">CSV Jobs</h3>
                     {csvJobsPagination && (
                       <p className="text-sm text-gray-600">
-                        Showing {filteredCsvJobs.length} of {csvJobsPagination.totalCount} jobs
+                        Showing {csvJobs.length} of {csvJobsPagination.totalCount} customer jobs
                       </p>
                     )}
                   </div>
@@ -540,7 +547,7 @@ const BulkUploads: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredCsvJobs.length === 0 ? (
+                      {csvJobs.length === 0 ? (
                         <tr>
                           <td colSpan={10} className="border-b p-8 text-center">
                             <div className="text-gray-500">
@@ -551,7 +558,7 @@ const BulkUploads: React.FC = () => {
                           </td>
                         </tr>
                       ) : (
-                        filteredCsvJobs.map((job) => (
+                        csvJobs.map((job) => (
                           <tr key={job.id} className="border-b hover:bg-gray-50">
                             <td className="border-b p-3 text-sm">
                               <div className="max-w-xs truncate whitespace-nowrap" title={job.fileName}>
@@ -629,16 +636,18 @@ const BulkUploads: React.FC = () => {
                                     View Failures
                                   </ButtonModule>
                                 )}
-                                <ButtonModule
-                                  variant="outline"
-                                  size="sm"
-                                  icon={<Download className="h-4 w-4" />}
-                                  onClick={() => handleDownloadCsv(job)}
-                                  className="whitespace-nowrap"
-                                  disabled={downloadCsvLoading}
-                                >
-                                  {downloadCsvLoading ? "Downloading..." : "Download"}
-                                </ButtonModule>
+                                {(job.status === 3 || job.status === 5) && (
+                                  <ButtonModule
+                                    variant="outline"
+                                    size="sm"
+                                    icon={<Download className="h-4 w-4" />}
+                                    onClick={() => handleDownloadCsv(job)}
+                                    className="whitespace-nowrap"
+                                    disabled={downloadCsvLoading}
+                                  >
+                                    {downloadCsvLoading ? "Downloading..." : "Download"}
+                                  </ButtonModule>
+                                )}
                               </div>
                             </td>
                           </tr>

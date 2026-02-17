@@ -239,6 +239,8 @@ export const API_ENDPOINTS = {
     BILL_CRUCIAL_OPS_BULK_UPLOAD: "/billing/postpaid/bills/bulk/crucial-ops",
     FEEDER_ENERGY_CAP_BULK_UPLOAD: "/billing/postpaid/feeder-energy-caps/bulk/import",
     DISTRIBUTION_SUBSTATION_BULK_UPLOAD: "/assets/distribution-substations/bulk/import",
+    DISTRIBUTION_SUBSTATION_FEEDER_REALIGNMENT_BULK_UPLOAD: "/assets/distribution-substations/bulk/feeder-realignment",
+    FEEDER_BAND_CHANGE_BULK_UPLOAD: "/assets/feeders/bulk/band-change",
     ADJUSTMENT_BULK_UPLOAD: "/billing/postpaid/bills/bulk/adjustments",
     POSTPAID_ESTIMATED_CONSUMPTION_BULK_UPLOAD: "/billing/postpaid/estimated-consumptions/bulk/import",
     DOWNLOAD_CSV_JOBS: "/system/csv-jobs/{id}/customer-setup/result",
@@ -247,6 +249,13 @@ export const API_ENDPOINTS = {
     DOWNLOAD_CLEAR_TAMPER: "/system/csv-jobs/{id}/clear-tamper/result",
     TEST_TOKEN_BULK_UPLOAD: "/meters/prepaid/test-token/bulk",
     DOWNLOAD_TEST_TOKEN: "/system/csv-jobs/{id}/test-token/result",
+    EXISTING_CUSTOMER_BULK_UPLOAD: "/customers/bulk/import-existing",
+    STATUS_CODES_BULK_UPLOAD: "/customers/bulk/status-change",
+    RECOMPUTE_BULK_UPLOAD: "/billing/postpaid/bills/bulk/recompute",
+    METER_BULK_REASSIGN: "/meters/bulk/reassign",
+    METER_CHANGE_STATUS: "/meters/bulk/status-change",
+    METER_CHANGE_OUT: "/meters/bulk/changeout",
+    ACCOUNT_TO_BE_BILLED: "/billing/postpaid/bills/bulk/manual-energy",
   },
 
   METER_CAPTURE: {
@@ -288,6 +297,7 @@ export const API_ENDPOINTS = {
     METER_READINGS: "/billing/postpaid/meter-readings",
     FINALIZE_SINGLE_BILL: "/billing/postpaid/{id}/finalize",
     ADJUSTMENTS: "/billing/postpaid/bills/adjustments",
+    APPROVE_ALL_ADJUSTMENTS: "/billing/postpaid/bills/adjustments/approve",
     DOWNLOAD_AR: "/billing/postpaid/ar/csv",
     POSTPAID_BILL_PRINT: "/billing/postpaid/print/batch",
     MARK_AS_READY_TO_PRINT: "/billing/postpaid/ready-to-print",
@@ -315,6 +325,7 @@ export const API_ENDPOINTS = {
     GET_BY_ID: "/billing/postpaid/feeder-energy-caps/{id}",
     ADD: "/billing/postpaid/feeder-energy-caps/apply-all",
     CREATE_SINGLE: "/billing/postpaid/feeder-energy-caps",
+    DOWNLOAD_FEEDER_ENERGY_CSV: "/billing/postpaid/feeder-energy-caps/csv",
   },
 
   ANALYTICS: {
@@ -533,6 +544,15 @@ export const API_ENDPOINTS = {
 
   AUDIT_LOGS: {
     audit_logs: "/system/audit/logs",
+  },
+
+  FORM_DATA: {
+    feeders: "/form-data/feeders",
+    area_office: "/form-data/area-offices",
+    distribution_substation: "/form-data/dss",
+    customers: "/form-data/customers",
+    meters: "/form-data/meters",
+    service_centers: "/form-data/service-centers",
   },
 }
 

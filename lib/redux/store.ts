@@ -46,6 +46,7 @@ import auditLogReducer from "./auditLogSlice"
 import refundReducer from "./refundSlice"
 import fileManagementReducer from "./fileManagementSlice"
 import meterCaptureReducer from "./meterCaptureSlice"
+import formDataReducer from "./formDataSlice"
 
 export const store = configureStore({
   reducer: {
@@ -95,6 +96,7 @@ export const store = configureStore({
     refunds: refundReducer,
     fileManagement: fileManagementReducer,
     meterCapture: meterCaptureReducer,
+    formData: formDataReducer,
     [adminApi.reducerPath]: adminApi.reducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(adminApi.middleware),

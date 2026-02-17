@@ -12,8 +12,7 @@ import { ToggleSwitch } from "components/ui/Input/ToggleSwitch"
 import { notify } from "components/ui/Notification/Notification"
 import { AppDispatch, RootState } from "lib/redux/store"
 import { clearCreateState, createCustomer } from "lib/redux/createCustomerSlice"
-import { fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
-import { fetchServiceStations } from "lib/redux/serviceStationsSlice"
+import { fetchDistributionSubstations, fetchServiceCenters } from "lib/redux/formDataSlice"
 import { fetchCustomerCategories, fetchSubCategoriesByCategoryId } from "lib/redux/customersCategoriesSlice"
 import { fetchTariffGroups } from "lib/redux/tariffGroupSlice"
 import { fetchCountries, fetchLGAsByProvinceId } from "lib/redux/countriesSlice"
@@ -68,17 +67,13 @@ const AddCustomerPage = () => {
     (state: RootState) => state.createCustomer
   )
 
-  const {
-    distributionSubstations,
-    loading: distributionSubstationsLoading,
-    error: distributionSubstationsError,
-  } = useSelector((state: RootState) => state.distributionSubstations)
+  const { distributionSubstations, distributionSubstationsLoading, distributionSubstationsError } = useSelector(
+    (state: RootState) => state.formData
+  )
 
-  const {
-    serviceStations,
-    loading: serviceStationsLoading,
-    error: serviceStationsError,
-  } = useSelector((state: RootState) => state.serviceStations)
+  const { serviceCenters, serviceCentersLoading, serviceCentersError } = useSelector(
+    (state: RootState) => state.formData
+  )
 
   const {
     categories: customerCategories,
@@ -138,6 +133,7 @@ const AddCustomerPage = () => {
   const [searchTerms, setSearchTerms] = useState<Record<string, string>>({
     distributionSubstation: "",
     serviceStation: "",
+    serviceCenter: "",
     feeder: "",
     tariff: "",
     employee: "",
@@ -148,6 +144,7 @@ const AddCustomerPage = () => {
   const [searchLoading, setSearchLoading] = useState<Record<string, boolean>>({
     distributionSubstation: false,
     serviceStation: false,
+    serviceCenter: false,
     feeder: false,
     tariff: false,
     employee: false,
@@ -158,15 +155,15 @@ const AddCustomerPage = () => {
   React.useEffect(() => {
     dispatch(
       fetchDistributionSubstations({
-        pageNumber: 1,
-        pageSize: 100,
+        PageNumber: 1,
+        PageSize: 100,
       })
     )
 
     dispatch(
-      fetchServiceStations({
-        pageNumber: 1,
-        pageSize: 100,
+      fetchServiceCenters({
+        PageNumber: 1,
+        PageSize: 100,
       })
     )
 
@@ -223,9 +220,9 @@ const AddCustomerPage = () => {
 
           dispatch(
             fetchDistributionSubstations({
-              pageNumber: 1,
-              pageSize: 50,
-              search: searchValue,
+              PageNumber: 1,
+              PageSize: 50,
+              Search: searchValue,
             })
           ).finally(() => {
             setSearchLoading((prev) => ({ ...prev, distributionSubstation: false }))
@@ -235,8 +232,50 @@ const AddCustomerPage = () => {
           // Don't reload on initial mount or when dropdown closes
           dispatch(
             fetchDistributionSubstations({
-              pageNumber: 1,
-              pageSize: 100,
+              PageNumber: 1,
+              PageSize: 100,
+            })
+          )
+        }
+      }, 500) // 500ms debounce delay
+    },
+    [dispatch]
+  )
+
+  const handleServiceCenterSearch = React.useCallback(
+    (searchTerm: string) => {
+      setSearchTerms((prev) => ({ ...prev, serviceCenter: searchTerm }))
+
+      // Clear existing timeout
+      if (debouncedSearchRef.current.serviceCenter) {
+        clearTimeout(debouncedSearchRef.current.serviceCenter)
+      }
+
+      // Set new timeout for debounced API call
+      debouncedSearchRef.current.serviceCenter = setTimeout(() => {
+        if (searchTerm.trim()) {
+          setSearchLoading((prev) => ({ ...prev, serviceCenter: true }))
+
+          // Check if search term is a pure number (ID search)
+          const isNumericSearch = /^\d+$/.test(searchTerm.trim())
+          const searchValue = isNumericSearch ? searchTerm.trim() : searchTerm.trim()
+
+          dispatch(
+            fetchServiceCenters({
+              PageNumber: 1,
+              PageSize: 50,
+              Search: searchValue,
+            })
+          ).finally(() => {
+            setSearchLoading((prev) => ({ ...prev, serviceCenter: false }))
+          })
+        } else if (searchTerm === "") {
+          // Only reload default data when search is explicitly cleared (empty string)
+          // Don't reload on initial mount or when dropdown closes
+          dispatch(
+            fetchServiceCenters({
+              PageNumber: 1,
+              PageSize: 100,
             })
           )
         }
@@ -286,7 +325,7 @@ const AddCustomerPage = () => {
     { value: 0, label: "Select distribution substation" },
     ...distributionSubstations.map((substation) => ({
       value: substation.id,
-      label: `ID: ${substation.id} - ${substation.dssCode} (${substation.nercCode})`,
+      label: `${substation.dssCode} (${substation.name})`,
     })),
   ]
 
@@ -343,9 +382,9 @@ const AddCustomerPage = () => {
   // Service center options from fetched data
   const serviceCenterOptions = [
     { value: 0, label: "Select service center" },
-    ...serviceStations.map((serviceStation) => ({
-      value: serviceStation.id,
-      label: `${serviceStation.name} (${serviceStation.code})`,
+    ...serviceCenters.map((serviceCenter) => ({
+      value: serviceCenter.id,
+      label: serviceCenter.name,
     })),
   ]
 
@@ -1122,7 +1161,10 @@ const AddCustomerPage = () => {
                             options={serviceCenterOptions}
                             error={formErrors.serviceCenterId}
                             required
-                            disabled={serviceStationsLoading}
+                            disabled={serviceCentersLoading || searchLoading.serviceCenter}
+                            onSearchChange={handleServiceCenterSearch}
+                            searchTerm={searchTerms.serviceCenter}
+                            searchable
                           />
 
                           <FormInputModule

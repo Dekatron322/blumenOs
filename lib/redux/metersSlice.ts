@@ -718,20 +718,42 @@ export interface MetersSummaryResponse {
   data: MetersSummaryData
 }
 
+// Interface for Payment information in Prepaid Credit History
+export interface PrepaidCreditHistoryPayment {
+  id: number
+  reference: string
+  amount: number
+  status: "Confirmed" | "Pending" | "Failed" | "Reversed"
+  channel: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Chaque"
+  paidAtUtc: string
+}
+
+// Interface for Customer information in Prepaid Credit History
+export interface PrepaidCreditHistoryCustomer {
+  id: number
+  fullName: string
+  accountNumber: string
+}
+
 // Interface for Prepaid Credit History entry
 export interface PrepaidCreditHistoryEntry {
   id: number
   meterId: number
-  userAccountId: number
-  agentId: number
+  meterNumber: string
+  userAccountId: number | null
+  agentId: number | null
   vendorId: number
   requestPayload: string
   responsePayload: string
+  token: string
   isSuccessful: boolean
-  errorCode: string
-  errorMessage: string
+  errorCode: string | null
+  errorMessage: string | null
   requestedAtUtc: string
   paymentId: number
+  isTestToken: boolean
+  payment: PrepaidCreditHistoryPayment
+  customer: PrepaidCreditHistoryCustomer
 }
 
 // Interface for Prepaid Credit History Response
@@ -751,15 +773,22 @@ export interface PrepaidCreditHistoryResponse {
 export interface ClearTamperHistoryEntry {
   id: number
   meterId: number
+  meterNumber: string
   userAccountId: number
-  agentId: number
-  vendorId: number
+  agentId: number | null
+  vendorId: number | null
   requestPayload: string
   responsePayload: string
+  token: string | null
   isSuccessful: boolean
-  errorCode: string
-  errorMessage: string
+  errorCode: string | null
+  errorMessage: string | null
   requestedAtUtc: string
+  customer?: {
+    id: number
+    fullName: string
+    accountNumber: string
+  }
 }
 
 // Interface for Clear Tamper History Response

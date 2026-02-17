@@ -10,6 +10,8 @@ import {
   processAdjustmentBillingBulkUpload,
   processBillCrucialOpsBulkUpload,
   processBillingBulkUpload,
+  processBillManualEnergyBulkUpload,
+  processBillRecomputeBulkUpload,
   processFeederEnergyCapBulkUpload,
   processFinalizeBillingBulkUpload,
   processMeterReadingBulkUpload,
@@ -42,6 +44,12 @@ const FileManagementPage = () => {
     billingBulkUploadLoading,
     billingBulkUploadError,
     billingBulkUploadSuccess,
+    billRecomputeBulkUploadLoading,
+    billRecomputeBulkUploadError,
+    billRecomputeBulkUploadSuccess,
+    billManualEnergyBulkUploadLoading,
+    billManualEnergyBulkUploadError,
+    billManualEnergyBulkUploadSuccess,
   } = useAppSelector((state: { fileManagement: any }) => state.fileManagement)
 
   // Upload type options
@@ -51,9 +59,9 @@ const FileManagementPage = () => {
     { name: "Bill Adjustment", value: 19 },
     { name: "Mark Bills for Printing", value: 20 },
     { name: "Bill Crucial Ops", value: 21 },
+    { name: "Bill Recompute", value: 30 },
     { name: "Feeder Energy Cap", value: 3 },
     { name: "Customer Meter Reading", value: 2 },
-    { name: "Meter Reading Account Import", value: "2" },
   ]
 
   // Helper function to get bulkInsertType based on upload type
@@ -69,11 +77,11 @@ const FileManagementPage = () => {
         return "bill-finalize"
       case 21:
         return "bill-crucial-ops"
+      case 30:
+        return "bill-recompute"
       case 3:
         return "feeder-energy-cap"
       case 2:
-        return "meter-readings-account"
-      case "2":
         return "meter-readings-account"
       default:
         return "bill-generate-missing" // fallback
@@ -93,11 +101,11 @@ const FileManagementPage = () => {
         return "postpaid-bill-finalize-bulk"
       case 21:
         return "postpaid-bill-crucial-bulk"
+      case 30:
+        return "postpaid-bill-recompute-bulk"
       case 3:
         return "feeder-energy-caps-bulk"
       case 2:
-        return "postpaid-meter-readings-account-bulk"
-      case "2":
         return "postpaid-meter-readings-account-bulk"
       default:
         return "billing-bulk-import" // fallback
@@ -192,17 +200,29 @@ const FileManagementPage = () => {
   }, [])
 
   // Handle file selection
-  const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      setSelectedFile(file)
-      setUploadError(null)
-      setUploadSuccess(false)
-      setFinalizedFile(null)
-      setUploadProgress(null)
-      // Don't reset upload type when new file is selected - only reset on manual change
-    }
-  }, [])
+  const handleFileSelect = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0]
+      if (file) {
+        setSelectedFile(file)
+        setUploadError(null)
+        setUploadSuccess(false)
+        setFinalizedFile(null)
+        setUploadProgress(null)
+        // Don't reset upload type when new file is selected - only reset on manual change
+      } else {
+        // Handle case where user cancels file selection
+        // Keep the current selected file and restore the file input value
+        if (fileInputRef.current && selectedFile) {
+          // Create a new FileList to restore the file input
+          const dataTransfer = new DataTransfer()
+          dataTransfer.items.add(selectedFile)
+          fileInputRef.current.files = dataTransfer.files
+        }
+      }
+    },
+    [selectedFile]
+  )
 
   // Handle file drop
   const handleFileDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
@@ -425,6 +445,12 @@ const FileManagementPage = () => {
                 } else if (selectedUploadType === 21) {
                   // Bill Crucial Ops - use bill crucial ops endpoint
                   bulkResult = await dispatch(processBillCrucialOpsBulkUpload({ fileId })).unwrap()
+                } else if (selectedUploadType === 30) {
+                  // Bill Recompute - use bill recompute endpoint
+                  bulkResult = await dispatch(processBillRecomputeBulkUpload({ fileId })).unwrap()
+                } else if (selectedUploadType === 31) {
+                  // Bill Manual Energy - use bill manual energy endpoint
+                  bulkResult = await dispatch(processBillManualEnergyBulkUpload({ fileId })).unwrap()
                 } else if (selectedUploadType === 3) {
                   // Feeder Energy Cap Import - use feeder energy cap endpoint with confirm
                   bulkResult = await dispatch(processFeederEnergyCapBulkUpload({ fileId, confirm: true })).unwrap()
@@ -553,6 +579,14 @@ const FileManagementPage = () => {
       // Bill Crucial Ops template
       headers = "CustomerAccountNo,MonthYear"
       sampleRows = []
+    } else if (selectedUploadType === 30) {
+      // Bill Recompute template
+      headers = "CustomerAccountNo,MonthYear,UsePaymentsFromTransactions"
+      sampleRows = []
+    } else if (selectedUploadType === 31) {
+      // Account To Be Billed template
+      headers = "CustomerAccountNo,EnergyKwhToBeBilled"
+      sampleRows = ["123456789,150.50", "987654321,200.75", "555666777,100.00"]
     } else if (selectedUploadType === 2) {
       // Customer Bills Reading template
       headers = "CustomerAccountNo,PresentReading,PreviousReading,MonthYear"
@@ -584,6 +618,10 @@ const FileManagementPage = () => {
         ? "sample-mark-bills-for-printing.csv"
         : selectedUploadType === 21
         ? "sample-bill-crucial-ops.csv"
+        : selectedUploadType === 30
+        ? "sample-bill-recompute.csv"
+        : selectedUploadType === 31
+        ? "sample-account-to-be-billed.csv"
         : selectedUploadType === 2
         ? "sample-customer-bills-reading.csv"
         : selectedUploadType === 3
@@ -668,7 +706,9 @@ const FileManagementPage = () => {
                       uploadSuccess ||
                       fileIntentLoading ||
                       finalizeFileLoading ||
-                      billingBulkUploadLoading
+                      billingBulkUploadLoading ||
+                      billRecomputeBulkUploadLoading ||
+                      billManualEnergyBulkUploadLoading
                     }
                     icon={<VscAdd />}
                     iconPosition="start"
@@ -819,7 +859,7 @@ const FileManagementPage = () => {
                           <div className="mt-4 flex flex-col justify-center gap-3 sm:flex-row">
                             <ButtonModule
                               variant="secondary"
-                              onClick={removeSelectedFile}
+                              onClick={() => fileInputRef.current?.click()}
                               disabled={
                                 isUploading ||
                                 (!!uploadProgress &&
@@ -827,7 +867,9 @@ const FileManagementPage = () => {
                                   !uploadError &&
                                   !fileIntentError &&
                                   !finalizeFileError &&
-                                  !billingBulkUploadError)
+                                  !billingBulkUploadError &&
+                                  !billRecomputeBulkUploadError &&
+                                  !billManualEnergyBulkUploadError)
                               }
                             >
                               Choose Different File
@@ -844,7 +886,9 @@ const FileManagementPage = () => {
                                 !selectedUploadType ||
                                 fileIntentLoading ||
                                 finalizeFileLoading ||
-                                billingBulkUploadLoading
+                                billingBulkUploadLoading ||
+                                billRecomputeBulkUploadLoading ||
+                                billManualEnergyBulkUploadLoading
                               }
                             >
                               {isUploading ? "Uploading..." : "Upload File"}
@@ -937,22 +981,24 @@ const FileManagementPage = () => {
                     )}
 
                     {/* Error Messages */}
-                    {(fileIntentError || uploadError || finalizeFileError || billingBulkUploadError) && (
+                    {(fileIntentError ||
+                      uploadError ||
+                      finalizeFileError ||
+                      billingBulkUploadError ||
+                      billRecomputeBulkUploadError ||
+                      billManualEnergyBulkUploadError) && (
                       <div className="mb-6 rounded-md border border-red-200 bg-red-50 p-4">
                         <div className="flex">
-                          <div className="shrink-0">
-                            <svg className="size-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                              <path
-                                fillRule="evenodd"
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          </div>
+                          <div className="shrink-0">{/* Error icon could go here */}</div>
                           <div className="ml-3 flex-1">
                             <h3 className="text-sm font-medium text-red-800">Upload Failed</h3>
                             <div className="mt-2 text-sm text-red-700">
-                              {fileIntentError || uploadError || finalizeFileError || billingBulkUploadError}
+                              {fileIntentError ||
+                                uploadError ||
+                                finalizeFileError ||
+                                billingBulkUploadError ||
+                                billRecomputeBulkUploadError ||
+                                billManualEnergyBulkUploadError}
                             </div>
                           </div>
                         </div>
@@ -1000,7 +1046,9 @@ const FileManagementPage = () => {
                 uploadSuccess ||
                 fileIntentLoading ||
                 finalizeFileLoading ||
-                billingBulkUploadLoading
+                billingBulkUploadLoading ||
+                billRecomputeBulkUploadLoading ||
+                billManualEnergyBulkUploadLoading
               }
               className="flex items-center gap-1 rounded-lg bg-[#004B23] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#003618] disabled:cursor-not-allowed disabled:opacity-50"
             >

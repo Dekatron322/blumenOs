@@ -13,9 +13,7 @@ import {
   fetchDataQualitySummary,
 } from "lib/redux/customerSlice"
 import { fetchCountries } from "lib/redux/countriesSlice"
-import { fetchServiceStations } from "lib/redux/serviceStationsSlice"
-import { fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
-import { fetchFeeders } from "lib/redux/feedersSlice"
+import { fetchDistributionSubstations, fetchFeeders, fetchServiceCenters } from "lib/redux/formDataSlice"
 import AllDataQualityTable from "components/Tables/AllDataQualityTable"
 
 // Filter Modal Component
@@ -30,6 +28,11 @@ const FilterModal = ({
   serviceStationOptions,
   distributionSubstationOptions,
   feederOptions,
+  handleServiceCenterSearch,
+  handleDistributionSubstationSearch,
+  handleFeederSearch,
+  searchTerms,
+  searchLoading,
 }: {
   isOpen: boolean
   onRequestClose: () => void
@@ -41,6 +44,11 @@ const FilterModal = ({
   serviceStationOptions: Array<{ value: string | number; label: string }>
   distributionSubstationOptions: Array<{ value: string | number; label: string }>
   feederOptions: Array<{ value: string | number; label: string }>
+  handleServiceCenterSearch?: (searchTerm: string) => void
+  handleDistributionSubstationSearch?: (searchTerm: string) => void
+  handleFeederSearch?: (searchTerm: string) => void
+  searchTerms?: Record<string, string>
+  searchLoading?: Record<string, boolean>
 }) => {
   const [modalTab, setModalTab] = useState<"filters" | "active">("filters")
 
@@ -186,6 +194,10 @@ const FilterModal = ({
                         options={serviceStationOptions}
                         className="w-full"
                         controlClassName="h-10 bg-white"
+                        onSearchChange={handleServiceCenterSearch}
+                        searchTerm={searchTerms?.serviceCenter || ""}
+                        searchable
+                        disabled={searchLoading?.serviceCenter}
                       />
                     </div>
                     <div>
@@ -202,6 +214,10 @@ const FilterModal = ({
                         options={distributionSubstationOptions}
                         className="w-full"
                         controlClassName="h-10 bg-white"
+                        onSearchChange={handleDistributionSubstationSearch}
+                        searchTerm={searchTerms?.distributionSubstation || ""}
+                        searchable
+                        disabled={searchLoading?.distributionSubstation}
                       />
                     </div>
                     <div>
@@ -215,6 +231,10 @@ const FilterModal = ({
                         options={feederOptions}
                         className="w-full"
                         controlClassName="h-10 bg-white"
+                        onSearchChange={handleFeederSearch}
+                        searchTerm={searchTerms?.feeder || ""}
+                        searchable
+                        disabled={searchLoading?.feeder}
                       />
                     </div>
                   </div>
@@ -517,14 +537,29 @@ export default function DataQualityPage() {
     (state) => state.customers
   )
   const { countries } = useAppSelector((state) => state.countries)
-  const { serviceStations } = useAppSelector((state) => state.serviceStations)
-  const { distributionSubstations } = useAppSelector((state) => state.distributionSubstations)
-  const { feeders } = useAppSelector((state) => state.feeders)
+  const { serviceCenters, distributionSubstations, feeders } = useAppSelector((state) => state.formData)
 
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [showFilterModal, setShowFilterModal] = useState(false)
   const [qualityAccordionOpen, setQualityAccordionOpen] = useState(false)
+
+  // Search states for dropdowns
+  const [searchTerms, setSearchTerms] = useState<Record<string, string>>({
+    serviceCenter: "",
+    distributionSubstation: "",
+    feeder: "",
+  })
+
+  // Search loading states
+  const [searchLoading, setSearchLoading] = useState<Record<string, boolean>>({
+    serviceCenter: false,
+    distributionSubstation: false,
+    feeder: false,
+  })
+
+  // Debounced search handlers
+  const debouncedSearchRef = React.useRef<Record<string, NodeJS.Timeout>>({})
 
   // Tab state for breakdown sections
   const [activeTab, setActiveTab] = useState("severity")
@@ -548,9 +583,9 @@ export default function DataQualityPage() {
   // Fetch location data for filter options
   useEffect(() => {
     dispatch(fetchCountries())
-    dispatch(fetchServiceStations({ pageNumber: 1, pageSize: 100 }))
-    dispatch(fetchDistributionSubstations({ pageNumber: 1, pageSize: 100 }))
-    dispatch(fetchFeeders({ pageNumber: 1, pageSize: 100 }))
+    dispatch(fetchServiceCenters({ PageNumber: 1, PageSize: 100 }))
+    dispatch(fetchDistributionSubstations({ PageNumber: 1, PageSize: 100 }))
+    dispatch(fetchFeeders({ PageNumber: 1, PageSize: 100 }))
 
     return () => {
       dispatch(clearDataQualitySummaryState())
@@ -570,9 +605,9 @@ export default function DataQualityPage() {
 
   const serviceStationOptions = [
     { value: "", label: "All Service Centers" },
-    ...serviceStations.map((station) => ({
-      value: station.id,
-      label: station.name,
+    ...serviceCenters.map((serviceCenter) => ({
+      value: serviceCenter.id,
+      label: serviceCenter.name,
     })),
   ]
 
@@ -580,7 +615,7 @@ export default function DataQualityPage() {
     { value: "", label: "All Distribution Substations" },
     ...distributionSubstations.map((substation) => ({
       value: substation.id,
-      label: substation.dssCode,
+      label: `${substation.dssCode} (${substation.name})`,
     })),
   ]
 
@@ -609,6 +644,133 @@ export default function DataQualityPage() {
       [key]: value,
     }))
   }
+
+  // Debounced search handlers
+  const handleServiceCenterSearch = React.useCallback(
+    (searchTerm: string) => {
+      setSearchTerms((prev) => ({ ...prev, serviceCenter: searchTerm }))
+
+      // Clear existing timeout
+      if (debouncedSearchRef.current.serviceCenter) {
+        clearTimeout(debouncedSearchRef.current.serviceCenter)
+      }
+
+      // Set new timeout for debounced API call
+      debouncedSearchRef.current.serviceCenter = setTimeout(() => {
+        if (searchTerm.trim()) {
+          setSearchLoading((prev) => ({ ...prev, serviceCenter: true }))
+
+          // Check if search term is a pure number (ID search)
+          const isNumericSearch = /^\d+$/.test(searchTerm.trim())
+          const searchValue = isNumericSearch ? searchTerm.trim() : searchTerm.trim()
+
+          dispatch(
+            fetchServiceCenters({
+              PageNumber: 1,
+              PageSize: 50,
+              Search: searchValue,
+            })
+          ).finally(() => {
+            setSearchLoading((prev) => ({ ...prev, serviceCenter: false }))
+          })
+        } else if (searchTerm === "") {
+          // Only reload default data when search is explicitly cleared (empty string)
+          // Don't reload on initial mount or when dropdown closes
+          dispatch(
+            fetchServiceCenters({
+              PageNumber: 1,
+              PageSize: 100,
+            })
+          )
+        }
+      }, 500) // 500ms debounce delay
+    },
+    [dispatch]
+  )
+
+  const handleDistributionSubstationSearch = React.useCallback(
+    (searchTerm: string) => {
+      setSearchTerms((prev) => ({ ...prev, distributionSubstation: searchTerm }))
+
+      // Clear existing timeout
+      if (debouncedSearchRef.current.distributionSubstation) {
+        clearTimeout(debouncedSearchRef.current.distributionSubstation)
+      }
+
+      // Set new timeout for debounced API call
+      debouncedSearchRef.current.distributionSubstation = setTimeout(() => {
+        if (searchTerm.trim()) {
+          setSearchLoading((prev) => ({ ...prev, distributionSubstation: true }))
+
+          // Check if search term is a pure number (ID search)
+          const isNumericSearch = /^\d+$/.test(searchTerm.trim())
+          const searchValue = isNumericSearch ? searchTerm.trim() : searchTerm.trim()
+
+          dispatch(
+            fetchDistributionSubstations({
+              PageNumber: 1,
+              PageSize: 50,
+              Search: searchValue,
+            })
+          ).finally(() => {
+            setSearchLoading((prev) => ({ ...prev, distributionSubstation: false }))
+          })
+        } else if (searchTerm === "") {
+          // Only reload default data when search is explicitly cleared (empty string)
+          // Don't reload on initial mount or when dropdown closes
+          dispatch(
+            fetchDistributionSubstations({
+              PageNumber: 1,
+              PageSize: 100,
+            })
+          )
+        }
+      }, 500) // 500ms debounce delay
+    },
+    [dispatch]
+  )
+
+  const handleFeederSearch = React.useCallback(
+    (searchTerm: string) => {
+      setSearchTerms((prev) => ({ ...prev, feeder: searchTerm }))
+
+      // Clear existing timeout
+      if (debouncedSearchRef.current.feeder) {
+        clearTimeout(debouncedSearchRef.current.feeder)
+      }
+
+      // Set new timeout for debounced API call
+      debouncedSearchRef.current.feeder = setTimeout(() => {
+        if (searchTerm.trim()) {
+          setSearchLoading((prev) => ({ ...prev, feeder: true }))
+
+          // Check if search term is a pure number (ID search)
+          const isNumericSearch = /^\d+$/.test(searchTerm.trim())
+          const searchValue = isNumericSearch ? searchTerm.trim() : searchTerm.trim()
+
+          dispatch(
+            fetchFeeders({
+              PageNumber: 1,
+              PageSize: 50,
+              Search: searchValue,
+            })
+          ).finally(() => {
+            setSearchLoading((prev) => ({ ...prev, feeder: false }))
+          })
+        } else if (searchTerm === "") {
+          // Only reload default data when search is explicitly cleared (empty string)
+          // Don't reload on initial mount or when dropdown closes
+          dispatch(
+            fetchFeeders({
+              PageNumber: 1,
+              PageSize: 100,
+            })
+          )
+        }
+      }, 500) // 500ms debounce delay
+    },
+    [dispatch]
+  )
 
   const getActiveFilterCount = () => {
     let count = 0
@@ -1097,6 +1259,11 @@ export default function DataQualityPage() {
         serviceStationOptions={serviceStationOptions}
         distributionSubstationOptions={distributionSubstationOptions}
         feederOptions={feederOptions}
+        handleServiceCenterSearch={handleServiceCenterSearch}
+        handleDistributionSubstationSearch={handleDistributionSubstationSearch}
+        handleFeederSearch={handleFeederSearch}
+        searchTerms={searchTerms}
+        searchLoading={searchLoading}
       />
     </section>
   )

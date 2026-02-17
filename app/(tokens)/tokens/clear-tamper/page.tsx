@@ -488,6 +488,8 @@ const ClearTamper = () => {
         setUploadSuccess(true)
         notify("success", "Bulk clear tamper processed successfully")
         setSelectedFile(null)
+        // Refresh table to show the new job
+        handleRefreshTableData()
       } else {
         throw new Error((bulkUploadResult.payload as string) || "Failed to process bulk clear tamper")
       }
@@ -810,6 +812,34 @@ const ClearTamper = () => {
                           >
                             {clearTamperLoading ? "Clearing Tamper..." : "Clear Tamper"}
                           </ButtonModule>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Clear Tamper Success Result */}
+                    {clearTamperData && clearTamperData.result && clearTamperData.result.length > 0 && (
+                      <div className="mb-6 rounded-lg border border-green-200 bg-green-50 p-6">
+                        <h3 className="mb-4 text-lg font-medium text-green-800">Tamper Cleared Successfully</h3>
+                        <div className="space-y-4">
+                          {clearTamperData.result.map((token, index) => (
+                            <div key={index} className="rounded-lg border border-green-100 bg-white p-4">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <p className="text-sm font-medium text-gray-500">Token:</p>
+                                  <p className="rounded bg-gray-100 px-3 py-2 font-mono text-lg text-gray-900">
+                                    {token.tokenDec}
+                                  </p>
+                                </div>
+                                <button
+                                  onClick={() => handleCopyToken(token.tokenDec)}
+                                  className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                                  title="Copy token"
+                                >
+                                  {copiedToken ? "Copied!" : "Copy"}
+                                </button>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     )}
@@ -1236,16 +1266,18 @@ const ClearTamper = () => {
                                               View Failures
                                             </ButtonModule>
                                           )}
-                                          <ButtonModule
-                                            variant="outline"
-                                            size="sm"
-                                            icon={<Download className="h-4 w-4" />}
-                                            onClick={() => handleDownloadCsv(job)}
-                                            className="whitespace-nowrap"
-                                            disabled={downloadClearTamperLoading}
-                                          >
-                                            {downloadClearTamperLoading ? "Downloading..." : "Download"}
-                                          </ButtonModule>
+                                          {(job.status === 3 || job.status === 5) && (
+                                            <ButtonModule
+                                              variant="outline"
+                                              size="sm"
+                                              icon={<Download className="h-4 w-4" />}
+                                              onClick={() => handleDownloadCsv(job)}
+                                              className="whitespace-nowrap"
+                                              disabled={downloadClearTamperLoading}
+                                            >
+                                              {downloadClearTamperLoading ? "Downloading..." : "Download"}
+                                            </ButtonModule>
+                                          )}
                                         </div>
                                       </td>
                                     </tr>

@@ -21,6 +21,12 @@ const KeyChangeDetailsModal: React.FC<KeyChangeDetailsModalProps> = ({
 }) => {
   const [copied, setCopied] = useState(false)
 
+  const formatTokenDisplay = (tokenDec: string) => {
+    // Remove any existing formatting and add hyphens every 4 digits
+    const cleanToken = tokenDec.replace(/\D/g, "") // Remove non-digits
+    return cleanToken.match(/.{1,4}/g)?.join("-") || tokenDec
+  }
+
   const handleCopyToken = async (token: string) => {
     try {
       await navigator.clipboard.writeText(token)
@@ -82,50 +88,65 @@ const KeyChangeDetailsModal: React.FC<KeyChangeDetailsModalProps> = ({
 
             {selectedEvent.responsePayload && !selectedEvent.errorMessage && (
               <div>
-                <span className="text-gray-600">Token:</span>
-                <div className="mt-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="font-mono text-lg font-bold tracking-wider text-gray-800">
-                      {(() => {
-                        try {
-                          const parsed = JSON.parse(selectedEvent.responsePayload) as {
-                            tokens?: Array<{ tokenDec?: string }>
-                          }
-                          const tokenDec = parsed.tokens?.[0]?.tokenDec
-                          if (tokenDec && tokenDec.length >= 16) {
-                            // Format as 4 groups of 4 characters: 0000-0000-0000-0000
-                            return tokenDec.match(/.{1,4}/g)?.join("-") || tokenDec
-                          }
-                          return tokenDec || selectedEvent.responsePayload
-                        } catch {
-                          return selectedEvent.responsePayload
-                        }
-                      })()}
-                    </div>
-                    <ButtonModule
-                      variant="primary"
-                      size="sm"
-                      onClick={() => {
-                        try {
-                          const parsed = JSON.parse(selectedEvent.responsePayload) as {
-                            tokens?: Array<{ tokenDec?: string }>
-                          }
-                          const tokenDec = parsed.tokens?.[0]?.tokenDec
-                          const tokenToCopy =
-                            tokenDec && tokenDec.length >= 16
-                              ? tokenDec.match(/.{1,4}/g)?.join("-") || tokenDec
-                              : tokenDec || selectedEvent.responsePayload
-                          handleCopyToken(tokenToCopy)
-                        } catch {
-                          handleCopyToken(selectedEvent.responsePayload)
-                        }
-                      }}
-                      className="flex items-center gap-1"
-                    >
-                      {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
-                      {copied ? "Copied!" : "Copy"}
-                    </ButtonModule>
-                  </div>
+                <span className="text-gray-600">Tokens:</span>
+                <div className="mt-2 space-y-3">
+                  {(() => {
+                    try {
+                      const parsed = JSON.parse(selectedEvent.responsePayload) as {
+                        result?: Array<{
+                          description?: string
+                          tokenDec?: string
+                          tokenHex?: string
+                          drn?: string
+                        }>
+                      }
+                      const tokens = parsed.result || []
+
+                      if (tokens.length === 0) {
+                        return (
+                          <div className="rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-4">
+                            <div className="font-mono text-sm text-gray-600">No tokens found in response</div>
+                          </div>
+                        )
+                      }
+
+                      return tokens.map((token, index) => {
+                        const tokenDec = token.tokenDec
+                        const formattedToken = tokenDec ? formatTokenDisplay(tokenDec) : "N/A"
+
+                        return (
+                          <div key={index} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                            <div className="mb-2 flex items-center gap-2">
+                              <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                                {token.description || `Token ${index + 1}`}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                              <div className="font-mono text-lg font-bold tracking-wider text-gray-800">
+                                {formattedToken}
+                              </div>
+                              <ButtonModule
+                                variant="primary"
+                                size="sm"
+                                onClick={() => handleCopyToken(tokenDec || formattedToken)}
+                                className="flex items-center gap-1"
+                              >
+                                {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
+                                {copied ? "Copied!" : "Copy"}
+                              </ButtonModule>
+                            </div>
+                          </div>
+                        )
+                      })
+                    } catch (error) {
+                      return (
+                        <div className="rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-4">
+                          <div className="font-mono text-sm text-gray-600">{selectedEvent.responsePayload}</div>
+                        </div>
+                      )
+                    }
+                  })()}
                 </div>
               </div>
             )}

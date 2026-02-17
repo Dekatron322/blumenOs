@@ -32,6 +32,120 @@ export interface MeterBulkUploadResponse {
   data: BulkUploadJob
 }
 
+// Meter Bulk Reassign interfaces
+export interface MeterBulkReassignRequest {
+  fileId: number
+}
+
+export interface MeterBulkReassignResponse {
+  isSuccess: boolean
+  message: string
+  data: {
+    id: number
+    jobType: number
+    status: number
+    requestedByUserId: number
+    requestedAtUtc: string
+    fileName: string
+    fileKey: string
+    fileUrl: string
+    fileSize: number
+    resultFileName: string
+    resultFileKey: string
+    resultFileUrl: string
+    resultFileSize: number
+    resultGeneratedAtUtc: string
+    totalRows: number
+    processedRows: number
+    succeededRows: number
+    failedRows: number
+    lastProcessedRow: number
+    retryCount: number
+    startedAtUtc: string
+    completedAtUtc: string
+    lastError: string
+    errorBlobKey: string
+    payloadJson: string
+    canDownloadResult: boolean
+  }
+}
+
+// Meter Change Status interfaces
+export interface MeterChangeStatusRequest {
+  fileId: number
+}
+
+export interface MeterChangeStatusResponse {
+  isSuccess: boolean
+  message: string
+  data: {
+    id: number
+    jobType: number
+    status: number
+    requestedByUserId: number
+    requestedAtUtc: string
+    fileName: string
+    fileKey: string
+    fileUrl: string
+    fileSize: number
+    resultFileName: string
+    resultFileKey: string
+    resultFileUrl: string
+    resultFileSize: number
+    resultGeneratedAtUtc: string
+    totalRows: number
+    processedRows: number
+    succeededRows: number
+    failedRows: number
+    lastProcessedRow: number
+    retryCount: number
+    startedAtUtc: string
+    completedAtUtc: string
+    lastError: string
+    errorBlobKey: string
+    payloadJson: string
+    canDownloadResult: boolean
+  }
+}
+
+// Meter Change Out interfaces
+export interface MeterChangeOutRequest {
+  fileId: number
+}
+
+export interface MeterChangeOutResponse {
+  isSuccess: boolean
+  message: string
+  data: {
+    id: number
+    jobType: number
+    status: number
+    requestedByUserId: number
+    requestedAtUtc: string
+    fileName: string
+    fileKey: string
+    fileUrl: string
+    fileSize: number
+    resultFileName: string
+    resultFileKey: string
+    resultFileUrl: string
+    resultFileSize: number
+    resultGeneratedAtUtc: string
+    totalRows: number
+    processedRows: number
+    succeededRows: number
+    failedRows: number
+    lastProcessedRow: number
+    retryCount: number
+    startedAtUtc: string
+    completedAtUtc: string
+    lastError: string
+    errorBlobKey: string
+    payloadJson: string
+    canDownloadResult: boolean
+  }
+}
+
 // Customer Setup Bulk Upload interfaces
 export interface CustomerSetupBulkUploadRequest {
   fileId: number
@@ -107,6 +221,82 @@ export interface CustomerSrdtUpdateBulkUploadResponse {
   isSuccess: boolean
   message: string
   data: BulkUploadJob
+}
+
+// Existing Customer Bulk Upload interfaces
+export interface ExistingCustomerBulkUploadRequest {
+  fileId: number
+}
+
+export interface ExistingCustomerBulkUploadResponse {
+  isSuccess: boolean
+  message: string
+  data: {
+    id: number
+    jobType: number
+    status: number
+    requestedByUserId: number
+    requestedAtUtc: string
+    fileName: string
+    fileKey: string
+    fileUrl: string
+    fileSize: number
+    resultFileName: string
+    resultFileKey: string
+    resultFileUrl: string
+    resultFileSize: number
+    resultGeneratedAtUtc: string
+    totalRows: number
+    processedRows: number
+    succeededRows: number
+    failedRows: number
+    lastProcessedRow: number
+    retryCount: number
+    startedAtUtc: string
+    completedAtUtc: string
+    lastError: string
+    errorBlobKey: string
+    payloadJson: string
+    canDownloadResult: boolean
+  }
+}
+
+// Status Codes Bulk Upload interfaces
+export interface StatusCodesBulkUploadRequest {
+  fileId: number
+}
+
+export interface StatusCodesBulkUploadResponse {
+  isSuccess: boolean
+  message: string
+  data: {
+    id: number
+    jobType: number
+    status: number
+    requestedByUserId: number
+    requestedAtUtc: string
+    fileName: string
+    fileKey: string
+    fileUrl: string
+    fileSize: number
+    resultFileName: string
+    resultFileKey: string
+    resultFileUrl: string
+    resultFileSize: number
+    resultGeneratedAtUtc: string
+    totalRows: number
+    processedRows: number
+    succeededRows: number
+    failedRows: number
+    lastProcessedRow: number
+    retryCount: number
+    startedAtUtc: string
+    completedAtUtc: string
+    lastError: string
+    errorBlobKey: string
+    payloadJson: string
+    canDownloadResult: boolean
+  }
 }
 
 // Meter Reading Bulk Upload interfaces
@@ -223,6 +413,44 @@ export interface BillCrucialOpsBulkUploadResponse {
   data: BulkUploadJob
 }
 
+// Bill Recompute Bulk Upload interfaces
+export interface BillRecomputeBulkUploadRequest {
+  fileId: number
+}
+
+export interface BillRecomputeBulkUploadResponse {
+  isSuccess: boolean
+  message: string
+  data: {
+    id: number
+    jobType: number
+    status: number
+    requestedByUserId: number
+    requestedAtUtc: string
+    fileName: string
+    fileKey: string
+    fileUrl: string
+    fileSize: number
+    resultFileName: string
+    resultFileKey: string
+    resultFileUrl: string
+    resultFileSize: number
+    resultGeneratedAtUtc: string
+    totalRows: number
+    processedRows: number
+    succeededRows: number
+    failedRows: number
+    lastProcessedRow: number
+    retryCount: number
+    startedAtUtc: string
+    completedAtUtc: string
+    lastError: string
+    errorBlobKey: string
+    payloadJson: string
+    canDownloadResult: boolean
+  }
+}
+
 // Feeder Energy Cap Bulk Upload interfaces
 export interface FeederEnergyCapBulkUploadRequest {
   fileId: number
@@ -252,12 +480,72 @@ export interface FeederEnergyCapBulkUploadResponse {
   }
 }
 
+// Bill Manual Energy Bulk Upload interfaces
+export interface BillManualEnergyBulkUploadRequest {
+  fileId: number
+}
+
+export interface BillManualEnergyBulkUploadResponse {
+  isSuccess: boolean
+  message: string
+  data: {
+    id: number
+    jobType: number
+    status: number
+    requestedByUserId: number
+    requestedAtUtc: string
+    fileName: string
+    fileKey: string
+    fileUrl: string
+    fileSize: number
+    resultFileName: string
+    resultFileKey: string
+    resultFileUrl: string
+    resultFileSize: number
+    resultGeneratedAtUtc: string
+    totalRows: number
+    processedRows: number
+    succeededRows: number
+    failedRows: number
+    lastProcessedRow: number
+    retryCount: number
+    startedAtUtc: string
+    completedAtUtc: string
+    lastError: string
+    errorBlobKey: string
+    payloadJson: string
+    canDownloadResult: boolean
+  }
+}
+
 // Distribution Substation Bulk Upload interfaces
 export interface DistributionSubstationBulkUploadRequest {
   fileId: number
 }
 
 export interface DistributionSubstationBulkUploadResponse {
+  isSuccess: boolean
+  message: string
+  data: BulkUploadJob
+}
+
+// Distribution Substation Feeder Realignment Bulk Upload interfaces
+export interface DistributionSubstationFeederRealignmentBulkUploadRequest {
+  fileId: number
+}
+
+export interface DistributionSubstationFeederRealignmentBulkUploadResponse {
+  isSuccess: boolean
+  message: string
+  data: BulkUploadJob
+}
+
+// Feeder Band Change Bulk Upload interfaces
+export interface FeederBandChangeBulkUploadRequest {
+  fileId: number
+}
+
+export interface FeederBandChangeBulkUploadResponse {
   isSuccess: boolean
   message: string
   data: BulkUploadJob
@@ -450,6 +738,7 @@ export interface CsvJobsParams {
   PageNumber: number
   PageSize: number
   JobType?: number
+  JobTypes?: number[]
   Status?: number
   RequestedByUserId?: number
   RequestedFromUtc?: string
@@ -623,6 +912,24 @@ interface FileManagementState {
   meterBulkUploadSuccess: boolean
   meterBulkUploadResponse: MeterBulkUploadResponse | null
 
+  // Meter Bulk Reassign state
+  meterBulkReassignLoading: boolean
+  meterBulkReassignError: string | null
+  meterBulkReassignSuccess: boolean
+  meterBulkReassignResponse: MeterBulkReassignResponse | null
+
+  // Meter Change Status state
+  meterChangeStatusLoading: boolean
+  meterChangeStatusError: string | null
+  meterChangeStatusSuccess: boolean
+  meterChangeStatusResponse: MeterChangeStatusResponse | null
+
+  // Meter Change Out state
+  meterChangeOutLoading: boolean
+  meterChangeOutError: string | null
+  meterChangeOutSuccess: boolean
+  meterChangeOutResponse: MeterChangeOutResponse | null
+
   // Customer Setup Bulk Upload state
   customerSetupBulkUploadLoading: boolean
   customerSetupBulkUploadError: string | null
@@ -664,6 +971,18 @@ interface FileManagementState {
   customerSrdtUpdateBulkUploadError: string | null
   customerSrdtUpdateBulkUploadSuccess: boolean
   customerSrdtUpdateBulkUploadResponse: CustomerSrdtUpdateBulkUploadResponse | null
+
+  // Existing Customer Bulk Upload state
+  existingCustomerBulkUploadLoading: boolean
+  existingCustomerBulkUploadError: string | null
+  existingCustomerBulkUploadSuccess: boolean
+  existingCustomerBulkUploadResponse: ExistingCustomerBulkUploadResponse | null
+
+  // Status Codes Bulk Upload state
+  statusCodesBulkUploadLoading: boolean
+  statusCodesBulkUploadError: string | null
+  statusCodesBulkUploadSuccess: boolean
+  statusCodesBulkUploadResponse: StatusCodesBulkUploadResponse | null
 
   // Meter Reading Bulk Upload state
   meterReadingBulkUploadLoading: boolean
@@ -719,6 +1038,18 @@ interface FileManagementState {
   billCrucialOpsBulkUploadSuccess: boolean
   billCrucialOpsBulkUploadResponse: BillCrucialOpsBulkUploadResponse | null
 
+  // Bill Recompute Bulk Upload state
+  billRecomputeBulkUploadLoading: boolean
+  billRecomputeBulkUploadError: string | null
+  billRecomputeBulkUploadSuccess: boolean
+  billRecomputeBulkUploadResponse: BillRecomputeBulkUploadResponse | null
+
+  // Bill Manual Energy Bulk Upload state
+  billManualEnergyBulkUploadLoading: boolean
+  billManualEnergyBulkUploadError: string | null
+  billManualEnergyBulkUploadSuccess: boolean
+  billManualEnergyBulkUploadResponse: BillManualEnergyBulkUploadResponse | null
+
   // Feeder Energy Cap Bulk Upload state
   feederEnergyCapBulkUploadLoading: boolean
   feederEnergyCapBulkUploadError: string | null
@@ -730,6 +1061,18 @@ interface FileManagementState {
   distributionSubstationBulkUploadError: string | null
   distributionSubstationBulkUploadSuccess: boolean
   distributionSubstationBulkUploadResponse: DistributionSubstationBulkUploadResponse | null
+
+  // Distribution Substation Feeder Realignment Bulk Upload state
+  distributionSubstationFeederRealignmentBulkUploadLoading: boolean
+  distributionSubstationFeederRealignmentBulkUploadError: string | null
+  distributionSubstationFeederRealignmentBulkUploadSuccess: boolean
+  distributionSubstationFeederRealignmentBulkUploadResponse: DistributionSubstationFeederRealignmentBulkUploadResponse | null
+
+  // Feeder Band Change Bulk Upload state
+  feederBandChangeBulkUploadLoading: boolean
+  feederBandChangeBulkUploadError: string | null
+  feederBandChangeBulkUploadSuccess: boolean
+  feederBandChangeBulkUploadResponse: FeederBandChangeBulkUploadResponse | null
 
   // Postpaid Estimated Consumption Bulk Upload state
   postpaidEstimatedConsumptionBulkUploadLoading: boolean
@@ -837,6 +1180,24 @@ const initialState: FileManagementState = {
   meterBulkUploadSuccess: false,
   meterBulkUploadResponse: null,
 
+  // Meter Bulk Reassign state
+  meterBulkReassignLoading: false,
+  meterBulkReassignError: null,
+  meterBulkReassignSuccess: false,
+  meterBulkReassignResponse: null,
+
+  // Meter Change Status state
+  meterChangeStatusLoading: false,
+  meterChangeStatusError: null,
+  meterChangeStatusSuccess: false,
+  meterChangeStatusResponse: null,
+
+  // Meter Change Out state
+  meterChangeOutLoading: false,
+  meterChangeOutError: null,
+  meterChangeOutSuccess: false,
+  meterChangeOutResponse: null,
+
   // Customer Setup Bulk Upload state
   customerSetupBulkUploadLoading: false,
   customerSetupBulkUploadError: null,
@@ -878,6 +1239,18 @@ const initialState: FileManagementState = {
   customerSrdtUpdateBulkUploadError: null,
   customerSrdtUpdateBulkUploadSuccess: false,
   customerSrdtUpdateBulkUploadResponse: null,
+
+  // Existing Customer Bulk Upload state
+  existingCustomerBulkUploadLoading: false,
+  existingCustomerBulkUploadError: null,
+  existingCustomerBulkUploadSuccess: false,
+  existingCustomerBulkUploadResponse: null,
+
+  // Status Codes Bulk Upload state
+  statusCodesBulkUploadLoading: false,
+  statusCodesBulkUploadError: null,
+  statusCodesBulkUploadSuccess: false,
+  statusCodesBulkUploadResponse: null,
 
   // Meter Reading Bulk Upload state
   meterReadingBulkUploadLoading: false,
@@ -933,6 +1306,18 @@ const initialState: FileManagementState = {
   billCrucialOpsBulkUploadSuccess: false,
   billCrucialOpsBulkUploadResponse: null,
 
+  // Bill Recompute Bulk Upload state
+  billRecomputeBulkUploadLoading: false,
+  billRecomputeBulkUploadError: null,
+  billRecomputeBulkUploadSuccess: false,
+  billRecomputeBulkUploadResponse: null,
+
+  // Bill Manual Energy Bulk Upload state
+  billManualEnergyBulkUploadLoading: false,
+  billManualEnergyBulkUploadError: null,
+  billManualEnergyBulkUploadSuccess: false,
+  billManualEnergyBulkUploadResponse: null,
+
   // Feeder Energy Cap Bulk Upload state
   feederEnergyCapBulkUploadLoading: false,
   feederEnergyCapBulkUploadError: null,
@@ -944,6 +1329,18 @@ const initialState: FileManagementState = {
   distributionSubstationBulkUploadError: null,
   distributionSubstationBulkUploadSuccess: false,
   distributionSubstationBulkUploadResponse: null,
+
+  // Distribution Substation Feeder Realignment Bulk Upload state
+  distributionSubstationFeederRealignmentBulkUploadLoading: false,
+  distributionSubstationFeederRealignmentBulkUploadError: null,
+  distributionSubstationFeederRealignmentBulkUploadSuccess: false,
+  distributionSubstationFeederRealignmentBulkUploadResponse: null,
+
+  // Feeder Band Change Bulk Upload state
+  feederBandChangeBulkUploadLoading: false,
+  feederBandChangeBulkUploadError: null,
+  feederBandChangeBulkUploadSuccess: false,
+  feederBandChangeBulkUploadResponse: null,
 
   // Postpaid Estimated Consumption Bulk Upload state
   postpaidEstimatedConsumptionBulkUploadLoading: false,
@@ -1072,6 +1469,51 @@ export const processMeterBulkUpload = createAsyncThunk(
   }
 )
 
+export const processMeterBulkReassign = createAsyncThunk(
+  "fileManagement/processMeterBulkReassign",
+  async (request: MeterBulkReassignRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<MeterBulkReassignResponse>(
+        buildApiUrl(API_ENDPOINTS.FILE_MANAGEMENT.METER_BULK_REASSIGN),
+        request
+      )
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to process meter bulk reassign")
+    }
+  }
+)
+
+export const processMeterChangeStatus = createAsyncThunk(
+  "fileManagement/processMeterChangeStatus",
+  async (request: MeterChangeStatusRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<MeterChangeStatusResponse>(
+        buildApiUrl(API_ENDPOINTS.FILE_MANAGEMENT.METER_CHANGE_STATUS),
+        request
+      )
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to process meter change status")
+    }
+  }
+)
+
+export const processMeterChangeOut = createAsyncThunk(
+  "fileManagement/processMeterChangeOut",
+  async (request: MeterChangeOutRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<MeterChangeOutResponse>(
+        buildApiUrl(API_ENDPOINTS.FILE_MANAGEMENT.METER_CHANGE_OUT),
+        request
+      )
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to process meter change out")
+    }
+  }
+)
+
 export const processCustomerSetupBulkUpload = createAsyncThunk(
   "fileManagement/processCustomerSetupBulkUpload",
   async (request: CustomerSetupBulkUploadRequest, { rejectWithValue }) => {
@@ -1175,6 +1617,36 @@ export const processCustomerSrdtUpdateBulkUpload = createAsyncThunk(
       return response.data
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to process customer SRDT update bulk upload")
+    }
+  }
+)
+
+export const processExistingCustomerBulkUpload = createAsyncThunk(
+  "fileManagement/processExistingCustomerBulkUpload",
+  async (request: ExistingCustomerBulkUploadRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<ExistingCustomerBulkUploadResponse>(
+        buildApiUrl(API_ENDPOINTS.FILE_MANAGEMENT.EXISTING_CUSTOMER_BULK_UPLOAD),
+        request
+      )
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to process existing customer bulk upload")
+    }
+  }
+)
+
+export const processStatusCodesBulkUpload = createAsyncThunk(
+  "fileManagement/processStatusCodesBulkUpload",
+  async (request: StatusCodesBulkUploadRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<StatusCodesBulkUploadResponse>(
+        buildApiUrl(API_ENDPOINTS.FILE_MANAGEMENT.STATUS_CODES_BULK_UPLOAD),
+        request
+      )
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to process status codes bulk upload")
     }
   }
 )
@@ -1316,6 +1788,36 @@ export const processBillCrucialOpsBulkUpload = createAsyncThunk(
   }
 )
 
+export const processBillRecomputeBulkUpload = createAsyncThunk(
+  "fileManagement/processBillRecomputeBulkUpload",
+  async (request: BillRecomputeBulkUploadRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<BillRecomputeBulkUploadResponse>(
+        buildApiUrl(API_ENDPOINTS.FILE_MANAGEMENT.RECOMPUTE_BULK_UPLOAD),
+        request
+      )
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to process bill recompute bulk upload")
+    }
+  }
+)
+
+export const processBillManualEnergyBulkUpload = createAsyncThunk(
+  "fileManagement/processBillManualEnergyBulkUpload",
+  async (request: BillManualEnergyBulkUploadRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<BillManualEnergyBulkUploadResponse>(
+        buildApiUrl(API_ENDPOINTS.FILE_MANAGEMENT.ACCOUNT_TO_BE_BILLED),
+        request
+      )
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to process account to be billed bulk upload")
+    }
+  }
+)
+
 export const processFeederEnergyCapBulkUpload = createAsyncThunk(
   "fileManagement/processFeederEnergyCapBulkUpload",
   async (request: FeederEnergyCapBulkUploadRequest, { rejectWithValue }) => {
@@ -1342,6 +1844,38 @@ export const processDistributionSubstationBulkUpload = createAsyncThunk(
       return response.data
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to process distribution substation bulk upload")
+    }
+  }
+)
+
+export const processDistributionSubstationFeederRealignmentBulkUpload = createAsyncThunk(
+  "fileManagement/processDistributionSubstationFeederRealignmentBulkUpload",
+  async (request: DistributionSubstationFeederRealignmentBulkUploadRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<DistributionSubstationFeederRealignmentBulkUploadResponse>(
+        buildApiUrl(API_ENDPOINTS.FILE_MANAGEMENT.DISTRIBUTION_SUBSTATION_FEEDER_REALIGNMENT_BULK_UPLOAD),
+        request
+      )
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to process distribution substation feeder realignment bulk upload"
+      )
+    }
+  }
+)
+
+export const processFeederBandChangeBulkUpload = createAsyncThunk(
+  "fileManagement/processFeederBandChangeBulkUpload",
+  async (request: FeederBandChangeBulkUploadRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<FeederBandChangeBulkUploadResponse>(
+        buildApiUrl(API_ENDPOINTS.FILE_MANAGEMENT.FEEDER_BAND_CHANGE_BULK_UPLOAD),
+        request
+      )
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to process feeder band change bulk upload")
     }
   }
 )
@@ -1422,6 +1956,9 @@ export const fetchCsvJobs = createAsyncThunk(
 
       // Optional parameters - only add if they exist
       if (params.JobType !== undefined) queryParams.append("JobType", params.JobType.toString())
+      if (params.JobTypes && params.JobTypes.length > 0) {
+        params.JobTypes.forEach((jobType) => queryParams.append("JobTypes", jobType.toString()))
+      }
       if (params.Status !== undefined) queryParams.append("Status", params.Status.toString())
       if (params.RequestedByUserId !== undefined)
         queryParams.append("RequestedByUserId", params.RequestedByUserId.toString())
@@ -1751,6 +2288,18 @@ const fileManagementSlice = createSlice({
       state.billCrucialOpsBulkUploadSuccess = false
       state.billCrucialOpsBulkUploadResponse = null
     },
+    resetBillRecomputeBulkUploadState: (state) => {
+      state.billRecomputeBulkUploadLoading = false
+      state.billRecomputeBulkUploadError = null
+      state.billRecomputeBulkUploadSuccess = false
+      state.billRecomputeBulkUploadResponse = null
+    },
+    resetBillManualEnergyBulkUploadState: (state) => {
+      state.billManualEnergyBulkUploadLoading = false
+      state.billManualEnergyBulkUploadError = null
+      state.billManualEnergyBulkUploadSuccess = false
+      state.billManualEnergyBulkUploadResponse = null
+    },
     resetFeederEnergyCapBulkUploadState: (state) => {
       state.feederEnergyCapBulkUploadLoading = false
       state.feederEnergyCapBulkUploadError = null
@@ -1915,6 +2464,14 @@ const fileManagementSlice = createSlice({
       state.billCrucialOpsBulkUploadError = null
       state.billCrucialOpsBulkUploadSuccess = false
       state.billCrucialOpsBulkUploadResponse = null
+      state.billRecomputeBulkUploadLoading = false
+      state.billRecomputeBulkUploadError = null
+      state.billRecomputeBulkUploadSuccess = false
+      state.billRecomputeBulkUploadResponse = null
+      state.billManualEnergyBulkUploadLoading = false
+      state.billManualEnergyBulkUploadError = null
+      state.billManualEnergyBulkUploadSuccess = false
+      state.billManualEnergyBulkUploadResponse = null
       state.feederEnergyCapBulkUploadLoading = false
       state.feederEnergyCapBulkUploadError = null
       state.feederEnergyCapBulkUploadSuccess = false
@@ -2029,6 +2586,57 @@ const fileManagementSlice = createSlice({
         state.meterBulkUploadLoading = false
         state.meterBulkUploadError = action.payload as string
         state.meterBulkUploadSuccess = false
+      })
+
+      // Meter Bulk Reassign reducers
+      .addCase(processMeterBulkReassign.pending, (state) => {
+        state.meterBulkReassignLoading = true
+        state.meterBulkReassignError = null
+        state.meterBulkReassignSuccess = false
+      })
+      .addCase(processMeterBulkReassign.fulfilled, (state, action) => {
+        state.meterBulkReassignLoading = false
+        state.meterBulkReassignSuccess = true
+        state.meterBulkReassignResponse = action.payload
+      })
+      .addCase(processMeterBulkReassign.rejected, (state, action) => {
+        state.meterBulkReassignLoading = false
+        state.meterBulkReassignError = action.payload as string
+        state.meterBulkReassignSuccess = false
+      })
+
+      // Meter Change Status reducers
+      .addCase(processMeterChangeStatus.pending, (state) => {
+        state.meterChangeStatusLoading = true
+        state.meterChangeStatusError = null
+        state.meterChangeStatusSuccess = false
+      })
+      .addCase(processMeterChangeStatus.fulfilled, (state, action) => {
+        state.meterChangeStatusLoading = false
+        state.meterChangeStatusSuccess = true
+        state.meterChangeStatusResponse = action.payload
+      })
+      .addCase(processMeterChangeStatus.rejected, (state, action) => {
+        state.meterChangeStatusLoading = false
+        state.meterChangeStatusError = action.payload as string
+        state.meterChangeStatusSuccess = false
+      })
+
+      // Meter Change Out reducers
+      .addCase(processMeterChangeOut.pending, (state) => {
+        state.meterChangeOutLoading = true
+        state.meterChangeOutError = null
+        state.meterChangeOutSuccess = false
+      })
+      .addCase(processMeterChangeOut.fulfilled, (state, action) => {
+        state.meterChangeOutLoading = false
+        state.meterChangeOutSuccess = true
+        state.meterChangeOutResponse = action.payload
+      })
+      .addCase(processMeterChangeOut.rejected, (state, action) => {
+        state.meterChangeOutLoading = false
+        state.meterChangeOutError = action.payload as string
+        state.meterChangeOutSuccess = false
       })
 
       // Customer Setup Bulk Upload reducers
@@ -2148,6 +2756,40 @@ const fileManagementSlice = createSlice({
         state.customerSrdtUpdateBulkUploadLoading = false
         state.customerSrdtUpdateBulkUploadError = action.payload as string
         state.customerSrdtUpdateBulkUploadSuccess = false
+      })
+
+      // Existing Customer Bulk Upload reducers
+      .addCase(processExistingCustomerBulkUpload.pending, (state) => {
+        state.existingCustomerBulkUploadLoading = true
+        state.existingCustomerBulkUploadError = null
+        state.existingCustomerBulkUploadSuccess = false
+      })
+      .addCase(processExistingCustomerBulkUpload.fulfilled, (state, action) => {
+        state.existingCustomerBulkUploadLoading = false
+        state.existingCustomerBulkUploadSuccess = true
+        state.existingCustomerBulkUploadResponse = action.payload
+      })
+      .addCase(processExistingCustomerBulkUpload.rejected, (state, action) => {
+        state.existingCustomerBulkUploadLoading = false
+        state.existingCustomerBulkUploadError = action.payload as string
+        state.existingCustomerBulkUploadSuccess = false
+      })
+
+      // Status Codes Bulk Upload reducers
+      .addCase(processStatusCodesBulkUpload.pending, (state) => {
+        state.statusCodesBulkUploadLoading = true
+        state.statusCodesBulkUploadError = null
+        state.statusCodesBulkUploadSuccess = false
+      })
+      .addCase(processStatusCodesBulkUpload.fulfilled, (state, action) => {
+        state.statusCodesBulkUploadLoading = false
+        state.statusCodesBulkUploadSuccess = true
+        state.statusCodesBulkUploadResponse = action.payload
+      })
+      .addCase(processStatusCodesBulkUpload.rejected, (state, action) => {
+        state.statusCodesBulkUploadLoading = false
+        state.statusCodesBulkUploadError = action.payload as string
+        state.statusCodesBulkUploadSuccess = false
       })
 
       // Meter Reading Bulk Upload reducers
@@ -2303,6 +2945,40 @@ const fileManagementSlice = createSlice({
         state.billCrucialOpsBulkUploadSuccess = false
       })
 
+      // Bill Recompute Bulk Upload reducers
+      .addCase(processBillRecomputeBulkUpload.pending, (state) => {
+        state.billRecomputeBulkUploadLoading = true
+        state.billRecomputeBulkUploadError = null
+        state.billRecomputeBulkUploadSuccess = false
+      })
+      .addCase(processBillRecomputeBulkUpload.fulfilled, (state, action) => {
+        state.billRecomputeBulkUploadLoading = false
+        state.billRecomputeBulkUploadSuccess = true
+        state.billRecomputeBulkUploadResponse = action.payload
+      })
+      .addCase(processBillRecomputeBulkUpload.rejected, (state, action) => {
+        state.billRecomputeBulkUploadLoading = false
+        state.billRecomputeBulkUploadError = action.payload as string
+        state.billRecomputeBulkUploadSuccess = false
+      })
+
+      // Bill Manual Energy Bulk Upload reducers
+      .addCase(processBillManualEnergyBulkUpload.pending, (state) => {
+        state.billManualEnergyBulkUploadLoading = true
+        state.billManualEnergyBulkUploadError = null
+        state.billManualEnergyBulkUploadSuccess = false
+      })
+      .addCase(processBillManualEnergyBulkUpload.fulfilled, (state, action) => {
+        state.billManualEnergyBulkUploadLoading = false
+        state.billManualEnergyBulkUploadSuccess = true
+        state.billManualEnergyBulkUploadResponse = action.payload
+      })
+      .addCase(processBillManualEnergyBulkUpload.rejected, (state, action) => {
+        state.billManualEnergyBulkUploadLoading = false
+        state.billManualEnergyBulkUploadError = action.payload as string
+        state.billManualEnergyBulkUploadSuccess = false
+      })
+
       // Feeder Energy Cap Bulk Upload reducers
       .addCase(processFeederEnergyCapBulkUpload.pending, (state) => {
         state.feederEnergyCapBulkUploadLoading = true
@@ -2335,6 +3011,40 @@ const fileManagementSlice = createSlice({
         state.distributionSubstationBulkUploadLoading = false
         state.distributionSubstationBulkUploadError = action.payload as string
         state.distributionSubstationBulkUploadSuccess = false
+      })
+
+      // Distribution Substation Feeder Realignment Bulk Upload reducers
+      .addCase(processDistributionSubstationFeederRealignmentBulkUpload.pending, (state) => {
+        state.distributionSubstationFeederRealignmentBulkUploadLoading = true
+        state.distributionSubstationFeederRealignmentBulkUploadError = null
+        state.distributionSubstationFeederRealignmentBulkUploadSuccess = false
+      })
+      .addCase(processDistributionSubstationFeederRealignmentBulkUpload.fulfilled, (state, action) => {
+        state.distributionSubstationFeederRealignmentBulkUploadLoading = false
+        state.distributionSubstationFeederRealignmentBulkUploadSuccess = true
+        state.distributionSubstationFeederRealignmentBulkUploadResponse = action.payload
+      })
+      .addCase(processDistributionSubstationFeederRealignmentBulkUpload.rejected, (state, action) => {
+        state.distributionSubstationFeederRealignmentBulkUploadLoading = false
+        state.distributionSubstationFeederRealignmentBulkUploadError = action.payload as string
+        state.distributionSubstationFeederRealignmentBulkUploadSuccess = false
+      })
+
+      // Feeder Band Change Bulk Upload reducers
+      .addCase(processFeederBandChangeBulkUpload.pending, (state) => {
+        state.feederBandChangeBulkUploadLoading = true
+        state.feederBandChangeBulkUploadError = null
+        state.feederBandChangeBulkUploadSuccess = false
+      })
+      .addCase(processFeederBandChangeBulkUpload.fulfilled, (state, action) => {
+        state.feederBandChangeBulkUploadLoading = false
+        state.feederBandChangeBulkUploadSuccess = true
+        state.feederBandChangeBulkUploadResponse = action.payload
+      })
+      .addCase(processFeederBandChangeBulkUpload.rejected, (state, action) => {
+        state.feederBandChangeBulkUploadLoading = false
+        state.feederBandChangeBulkUploadError = action.payload as string
+        state.feederBandChangeBulkUploadSuccess = false
       })
 
       // Postpaid Estimated Consumption Bulk Upload reducers
@@ -2533,6 +3243,7 @@ export const {
   resetAdjustmentBillingBulkUploadState,
   resetFinalizeBillingBulkUploadState,
   resetBillCrucialOpsBulkUploadState,
+  resetBillRecomputeBulkUploadState,
   resetFeederEnergyCapBulkUploadState,
   resetDistributionSubstationBulkUploadState,
   resetPostpaidEstimatedConsumptionBulkUploadState,
