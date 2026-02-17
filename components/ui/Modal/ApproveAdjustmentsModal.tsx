@@ -1,6 +1,6 @@
 "use client"
 import React from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 import { X } from "lucide-react"
 
 import { ButtonModule } from "components/ui/Button/Button"
