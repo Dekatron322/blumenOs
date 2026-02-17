@@ -143,24 +143,50 @@ const ClearTamperHistoryTab: React.FC<ClearTamperHistoryTabProps> = ({ meterId }
 
     // Type definition for parsed response payload
     interface TokenInfo {
-      tokenDec?: string
-      drn?: string
       description?: string
+      drn?: string
+      ea?: number
+      idSm?: string
+      isReservedTid?: boolean
+      krn?: number
+      pan?: string
+      scaledAmount?: string
+      scaledUnitName?: string
+      sgc?: number
+      stsUnitName?: string
+      subclass?: number
+      tct?: number
+      ti?: number
+      tid?: number
+      tokenClass?: number
+      tokenDec?: string
+      tokenHex?: string
+      thrift_spec?: any
+      transferAmount?: number
+      vkKcv?: string
     }
 
     interface ParsedResponse {
-      tokens?: TokenInfo[]
+      code?: string
+      error?: string
+      success?: boolean
+      messageId?: string
+      result?: TokenInfo[]
     }
 
     // Extract info from response payload
     const getResponseInfo = () => {
       try {
         const parsed = JSON.parse(event.responsePayload || "{}") as ParsedResponse
-        const token = parsed.tokens?.[0]
+        const token = parsed.result?.[0]
         return {
           tokenDec: token?.tokenDec,
           drn: token?.drn,
           description: token?.description,
+          messageId: parsed.messageId,
+          errorCode: parsed.code,
+          error: parsed.error,
+          success: parsed.success,
         }
       } catch {
         return {}
@@ -198,23 +224,39 @@ const ClearTamperHistoryTab: React.FC<ClearTamperHistoryTabProps> = ({ meterId }
         <div className="mt-4 space-y-2 text-xs text-gray-600 sm:text-sm">
           <div className="flex justify-between">
             <span>Meter Number:</span>
-            <span className="font-medium">{responseInfo.drn || event.meterId}</span>
+            <span className="font-medium">{event.meterNumber || responseInfo.drn || event.meterId}</span>
           </div>
 
-          {responseInfo.tokenDec && (
+          {event.customer && (
+            <div className="flex justify-between">
+              <span>Customer:</span>
+              <span className="font-medium">{event.customer.fullName}</span>
+            </div>
+          )}
+
+          {event.customer && (
+            <div className="flex justify-between">
+              <span>Account Number:</span>
+              <span className="font-medium">{event.customer.accountNumber}</span>
+            </div>
+          )}
+
+          {(event.token || responseInfo.tokenDec) && (
             <div className="flex justify-between">
               <span>Token:</span>
               <div className="flex items-center gap-2">
                 <span className="font-mono font-medium">
-                  {responseInfo.tokenDec.length >= 16
-                    ? responseInfo.tokenDec.match(/.{1,4}/g)?.join("-") || responseInfo.tokenDec
-                    : responseInfo.tokenDec}
+                  {(event.token || responseInfo.tokenDec)!.length >= 16
+                    ? (event.token || responseInfo.tokenDec)!.match(/.{1,4}/g)?.join("-") ||
+                      event.token ||
+                      responseInfo.tokenDec
+                    : event.token || responseInfo.tokenDec}
                 </span>
                 <button
-                  onClick={() => handleCopyToken(responseInfo.tokenDec!)}
+                  onClick={() => handleCopyToken((event.token || responseInfo.tokenDec)!)}
                   className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-800"
                 >
-                  {copiedToken === responseInfo.tokenDec ? (
+                  {copiedToken === (event.token || responseInfo.tokenDec) ? (
                     <>
                       <svg className="size-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -238,14 +280,37 @@ const ClearTamperHistoryTab: React.FC<ClearTamperHistoryTabProps> = ({ meterId }
               </div>
             </div>
           )}
+
+          {responseInfo.messageId && (
+            <div className="flex justify-between">
+              <span>Message ID:</span>
+              <span className="font-mono text-xs font-medium">{responseInfo.messageId}</span>
+            </div>
+          )}
+
           <div className="flex justify-between">
             <span>Requested At:</span>
             <span className="font-medium">{formatDateTime(event.requestedAtUtc)}</span>
           </div>
+
           {event.errorMessage && (
             <div className="flex justify-between">
               <span>Error Message:</span>
               <span className="font-medium text-red-600">{event.errorMessage}</span>
+            </div>
+          )}
+
+          {responseInfo.error && !event.errorMessage && (
+            <div className="flex justify-between">
+              <span>Error Message:</span>
+              <span className="font-medium text-red-600">{responseInfo.error}</span>
+            </div>
+          )}
+
+          {event.userAccountId && (
+            <div className="flex justify-between">
+              <span>User Account ID:</span>
+              <span className="font-medium">{event.userAccountId}</span>
             </div>
           )}
         </div>
@@ -268,24 +333,50 @@ const ClearTamperHistoryTab: React.FC<ClearTamperHistoryTabProps> = ({ meterId }
 
     // Type definition for parsed response payload
     interface TokenInfo {
-      tokenDec?: string
-      drn?: string
       description?: string
+      drn?: string
+      ea?: number
+      idSm?: string
+      isReservedTid?: boolean
+      krn?: number
+      pan?: string
+      scaledAmount?: string
+      scaledUnitName?: string
+      sgc?: number
+      stsUnitName?: string
+      subclass?: number
+      tct?: number
+      ti?: number
+      tid?: number
+      tokenClass?: number
+      tokenDec?: string
+      tokenHex?: string
+      thrift_spec?: any
+      transferAmount?: number
+      vkKcv?: string
     }
 
     interface ParsedResponse {
-      tokens?: TokenInfo[]
+      code?: string
+      error?: string
+      success?: boolean
+      messageId?: string
+      result?: TokenInfo[]
     }
 
     // Extract info from response payload
     const getResponseInfo = () => {
       try {
         const parsed = JSON.parse(event.responsePayload || "{}") as ParsedResponse
-        const token = parsed.tokens?.[0]
+        const token = parsed.result?.[0]
         return {
           tokenDec: token?.tokenDec,
           drn: token?.drn,
           description: token?.description,
+          messageId: parsed.messageId,
+          errorCode: parsed.code,
+          error: parsed.error,
+          success: parsed.success,
         }
       } catch {
         return {}
@@ -316,22 +407,30 @@ const ClearTamperHistoryTab: React.FC<ClearTamperHistoryTabProps> = ({ meterId }
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-600 sm:gap-4 sm:text-sm">
                 <span>
-                  <strong>Meter Number:</strong> {responseInfo.drn || event.meterId}
+                  <strong>Meter Number:</strong> {event.meterNumber || responseInfo.drn || event.meterId}
                 </span>
 
-                {responseInfo.tokenDec && (
+                {event.customer && (
+                  <span>
+                    <strong>Customer:</strong> {event.customer.fullName}
+                  </span>
+                )}
+
+                {(event.token || responseInfo.tokenDec) && (
                   <span className="flex items-center gap-1">
                     <strong>Token:</strong>{" "}
                     <span className="font-mono">
-                      {responseInfo.tokenDec.length >= 16
-                        ? responseInfo.tokenDec.match(/.{1,4}/g)?.join("-") || responseInfo.tokenDec
-                        : responseInfo.tokenDec}
+                      {(event.token || responseInfo.tokenDec)!.length >= 16
+                        ? (event.token || responseInfo.tokenDec)!.match(/.{1,4}/g)?.join("-") ||
+                          event.token ||
+                          responseInfo.tokenDec
+                        : event.token || responseInfo.tokenDec}
                     </span>
                     <button
-                      onClick={() => handleCopyToken(responseInfo.tokenDec!)}
+                      onClick={() => handleCopyToken((event.token || responseInfo.tokenDec)!)}
                       className="flex items-center gap-1 rounded-md px-1 py-0.5 text-xs text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-800"
                     >
-                      {copiedToken === responseInfo.tokenDec ? (
+                      {copiedToken === (event.token || responseInfo.tokenDec) ? (
                         <>
                           <svg className="size-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -357,6 +456,16 @@ const ClearTamperHistoryTab: React.FC<ClearTamperHistoryTabProps> = ({ meterId }
                 <span>
                   <strong>Date:</strong> {formatDateTime(event.requestedAtUtc)}
                 </span>
+                {event.errorMessage && (
+                  <span className="text-red-600">
+                    <strong>Error:</strong> {event.errorMessage}
+                  </span>
+                )}
+                {responseInfo.error && !event.errorMessage && (
+                  <span className="text-red-600">
+                    <strong>Error:</strong> {responseInfo.error}
+                  </span>
+                )}
               </div>
             </div>
           </div>

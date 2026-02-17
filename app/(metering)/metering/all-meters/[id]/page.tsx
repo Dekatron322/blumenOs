@@ -94,8 +94,8 @@ interface MeterHistoryEntry {
   id: number
   meterId: number
   userAccountId: number
-  agentId: number
-  vendorId: number
+  agentId: number | null
+  vendorId: number | null
   changeType: string
   changedFields: string
   oldPayload: string
@@ -129,9 +129,11 @@ const changeTypeOptions = [
 const MeterHistoryCard = ({
   history,
   onViewDetails,
+  customerFullName,
 }: {
   history: MeterHistoryEntry
   onViewDetails: (history: MeterHistoryEntry) => void
+  customerFullName?: string
 }) => {
   const getChangeTypeConfig = (type: string) => {
     const configs = {
@@ -141,6 +143,13 @@ const MeterHistoryCard = ({
       ACTIVATE: { color: "text-green-600", bg: "bg-green-50", border: "border-green-200", label: "ACTIVATED" },
       SUSPEND: { color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200", label: "SUSPENDED" },
       RETIRE: { color: "text-gray-600", bg: "bg-gray-50", border: "border-gray-200", label: "RETIRED" },
+      TechnicalConfigUpdate: {
+        color: "text-blue-600",
+        bg: "bg-blue-50",
+        border: "border-blue-200",
+        label: "TECHNICAL UPDATE",
+      },
+      PhaseUpdate: { color: "text-purple-600", bg: "bg-purple-50", border: "border-purple-200", label: "PHASE UPDATE" },
     }
     return configs[type as keyof typeof configs] || configs.UPDATE
   }
@@ -155,7 +164,35 @@ const MeterHistoryCard = ({
     })
   }
 
+  // Parse payloads to extract specific field changes
+  const getFieldChanges = () => {
+    try {
+      const oldData = JSON.parse(history.oldPayload || "{}") as Record<string, any>
+      const newData = JSON.parse(history.newPayload || "{}") as Record<string, any>
+      const changes: Array<{ field: string; old: string; new: string }> = []
+
+      // Get the changed fields and extract values
+      const fields = history.changedFields?.split(",") || []
+      fields.forEach((field) => {
+        const oldValue = oldData[field]
+        const newValue = newData[field]
+        if (oldValue !== newValue) {
+          changes.push({
+            field,
+            old: oldValue?.toString() || "N/A",
+            new: newValue?.toString() || "N/A",
+          })
+        }
+      })
+
+      return changes
+    } catch {
+      return []
+    }
+  }
+
   const changeTypeConfig = getChangeTypeConfig(history.changeType)
+  const fieldChanges = getFieldChanges()
 
   return (
     <div className="mt-3 rounded-lg border bg-[#f9f9f9] p-4 shadow-sm transition-all hover:shadow-md">
@@ -182,6 +219,12 @@ const MeterHistoryCard = ({
       </div>
 
       <div className="mt-4 space-y-2 text-xs text-gray-600 sm:text-sm">
+        {customerFullName && (
+          <div className="flex justify-between">
+            <span>Customer:</span>
+            <span className="font-medium">{customerFullName}</span>
+          </div>
+        )}
         <div className="flex justify-between">
           <span>Changed Fields:</span>
           <span className="font-medium">{history.changedFields || "N/A"}</span>
@@ -198,7 +241,33 @@ const MeterHistoryCard = ({
           <span>User ID:</span>
           <div className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium">{history.userAccountId}</div>
         </div>
+        {history.agentId && (
+          <div className="flex justify-between">
+            <span>Agent ID:</span>
+            <div className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium">{history.agentId}</div>
+          </div>
+        )}
       </div>
+
+      {/* Show specific field changes */}
+      {fieldChanges.length > 0 && (
+        <div className="mt-3 rounded-md bg-gray-50 p-2">
+          <p className="mb-1 text-xs font-medium text-gray-700">Field Changes:</p>
+          <div className="space-y-1">
+            {fieldChanges.slice(0, 2).map((change, index) => (
+              <div key={index} className="flex items-center gap-2 text-xs text-gray-600">
+                <span className="font-medium">{change.field}:</span>
+                <span className="text-red-600 line-through">{change.old}</span>
+                <span>→</span>
+                <span className="text-green-600">{change.new}</span>
+              </div>
+            ))}
+            {fieldChanges.length > 2 && (
+              <p className="text-xs text-gray-500">+{fieldChanges.length - 2} more changes...</p>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="mt-3 border-t pt-3">
         <p className="text-xs text-gray-500">Meter ID: {history.meterId}</p>
@@ -221,9 +290,11 @@ const MeterHistoryCard = ({
 const MeterHistoryListItem = ({
   history,
   onViewDetails,
+  customerFullName,
 }: {
   history: MeterHistoryEntry
   onViewDetails: (history: MeterHistoryEntry) => void
+  customerFullName?: string
 }) => {
   const getChangeTypeConfig = (type: string) => {
     const configs = {
@@ -233,6 +304,13 @@ const MeterHistoryListItem = ({
       ACTIVATE: { color: "text-green-600", bg: "bg-green-50", border: "border-green-200", label: "ACTIVATED" },
       SUSPEND: { color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200", label: "SUSPENDED" },
       RETIRE: { color: "text-gray-600", bg: "bg-gray-50", border: "border-gray-200", label: "RETIRED" },
+      TechnicalConfigUpdate: {
+        color: "text-blue-600",
+        bg: "bg-blue-50",
+        border: "border-blue-200",
+        label: "TECHNICAL UPDATE",
+      },
+      PhaseUpdate: { color: "text-purple-600", bg: "bg-purple-50", border: "border-purple-200", label: "PHASE UPDATE" },
     }
     return configs[type as keyof typeof configs] || configs.UPDATE
   }
@@ -247,7 +325,35 @@ const MeterHistoryListItem = ({
     })
   }
 
+  // Parse payloads to extract specific field changes
+  const getFieldChanges = () => {
+    try {
+      const oldData = JSON.parse(history.oldPayload || "{}") as Record<string, any>
+      const newData = JSON.parse(history.newPayload || "{}") as Record<string, any>
+      const changes: Array<{ field: string; old: string; new: string }> = []
+
+      // Get the changed fields and extract values
+      const fields = history.changedFields?.split(",") || []
+      fields.forEach((field) => {
+        const oldValue = oldData[field]
+        const newValue = newData[field]
+        if (oldValue !== newValue) {
+          changes.push({
+            field,
+            old: oldValue?.toString() || "N/A",
+            new: newValue?.toString() || "N/A",
+          })
+        }
+      })
+
+      return changes
+    } catch {
+      return []
+    }
+  }
+
   const changeTypeConfig = getChangeTypeConfig(history.changeType)
+  const fieldChanges = getFieldChanges()
 
   return (
     <div className="border-b bg-white p-4 transition-all hover:bg-gray-50">
@@ -272,6 +378,11 @@ const MeterHistoryListItem = ({
               </div>
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-600 sm:gap-4 sm:text-sm">
+              {customerFullName && (
+                <span>
+                  <strong>Customer:</strong> {customerFullName}
+                </span>
+              )}
               <span>
                 <strong>Fields:</strong> {history.changedFields || "N/A"}
               </span>
@@ -281,7 +392,32 @@ const MeterHistoryListItem = ({
               <span>
                 <strong>User ID:</strong> {history.userAccountId}
               </span>
+              {history.agentId && (
+                <span>
+                  <strong>Agent ID:</strong> {history.agentId}
+                </span>
+              )}
             </div>
+
+            {/* Show specific field changes */}
+            {fieldChanges.length > 0 && (
+              <div className="mt-3 rounded-md bg-gray-50 p-2">
+                <p className="mb-1 text-xs font-medium text-gray-700">Field Changes:</p>
+                <div className="space-y-1">
+                  {fieldChanges.slice(0, 2).map((change, index) => (
+                    <div key={index} className="flex items-center gap-2 text-xs text-gray-600">
+                      <span className="font-medium">{change.field}:</span>
+                      <span className="text-red-600 line-through">{change.old}</span>
+                      <span>→</span>
+                      <span className="text-green-600">{change.new}</span>
+                    </div>
+                  ))}
+                  {fieldChanges.length > 2 && (
+                    <p className="text-xs text-gray-500">+{fieldChanges.length - 2} more changes...</p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -306,7 +442,7 @@ const MeterHistoryListItem = ({
 // Meter History Section Component
 const MeterHistorySection = ({ meterId }: { meterId: number }) => {
   const dispatch = useAppDispatch()
-  const { meterHistory, historyLoading, historyError } = useAppSelector((state) => state.meters)
+  const { meterHistory, historyLoading, historyError, currentMeter } = useAppSelector((state) => state.meters)
 
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(6)
@@ -556,13 +692,23 @@ const MeterHistorySection = ({ meterId }: { meterId: number }) => {
       ) : viewMode === "grid" ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {meterHistory.map((history) => (
-            <MeterHistoryCard key={history.id} history={history} onViewDetails={handleViewDetails} />
+            <MeterHistoryCard
+              key={history.id}
+              history={history}
+              onViewDetails={handleViewDetails}
+              customerFullName={currentMeter?.customerFullName}
+            />
           ))}
         </div>
       ) : (
         <div className="divide-y">
           {meterHistory.map((history) => (
-            <MeterHistoryListItem key={history.id} history={history} onViewDetails={handleViewDetails} />
+            <MeterHistoryListItem
+              key={history.id}
+              history={history}
+              onViewDetails={handleViewDetails}
+              customerFullName={currentMeter?.customerFullName}
+            />
           ))}
         </div>
       )}

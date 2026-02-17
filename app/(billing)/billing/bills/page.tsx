@@ -11,10 +11,8 @@ import { Download, PlayIcon, X } from "lucide-react"
 import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
 
-import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
+import { fetchAreaOffices, fetchDistributionSubstations, fetchFeeders } from "lib/redux/formDataSlice"
 import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
-import { fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
-import { fetchFeeders } from "lib/redux/feedersSlice"
 import { clearDownloadARStatus, downloadAR, DownloadARRequestParams } from "lib/redux/postpaidSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 
@@ -304,6 +302,11 @@ export default function MeteringDashboard() {
   const [isLoading, setIsLoading] = useState(false)
   const [meterData, setMeterData] = useState(generateMeterData())
 
+  // Search states for dropdowns
+  const [areaOfficeSearch, setAreaOfficeSearch] = useState("")
+  const [feederSearch, setFeederSearch] = useState("")
+  const [distributionSubstationSearch, setDistributionSubstationSearch] = useState("")
+
   const dispatch = useAppDispatch()
   const { downloadARLoading, downloadARError, downloadARSuccess, downloadARMessage } = useAppSelector(
     (state) => state.postpaidBilling
@@ -311,11 +314,9 @@ export default function MeteringDashboard() {
 
   // Get data from other slices
   const { billingPeriods, loading: billingPeriodsLoading } = useAppSelector((state) => state.billingPeriods)
-  const { areaOffices, loading: areaOfficesLoading } = useAppSelector((state) => state.areaOffices)
-  const { feeders, loading: feedersLoading } = useAppSelector((state) => state.feeders)
-  const { distributionSubstations, loading: distributionSubstationsLoading } = useAppSelector(
-    (state) => state.distributionSubstations
-  )
+  const { areaOffices, areaOfficesLoading } = useAppSelector((state) => state.formData)
+  const { feeders, feedersLoading } = useAppSelector((state) => state.formData)
+  const { distributionSubstations, distributionSubstationsLoading } = useAppSelector((state) => state.formData)
 
   // Debug logging for distribution substations
   console.log("Distribution substations data:", {
@@ -343,12 +344,38 @@ export default function MeteringDashboard() {
       dispatch(fetchAreaOffices({ PageNumber: 1, PageSize: 100 }))
 
       // Fetch feeders
-      dispatch(fetchFeeders({ pageNumber: 1, pageSize: 100 }))
+      dispatch(fetchFeeders({ PageNumber: 1, PageSize: 100 }))
 
       // Fetch distribution substations
-      dispatch(fetchDistributionSubstations({ pageNumber: 1, pageSize: 100 }))
+      dispatch(fetchDistributionSubstations({ PageNumber: 1, PageSize: 100 }))
     }
   }, [isDownloadARModalOpen, dispatch])
+
+  // Search handlers for dropdowns - only update search term state
+  const handleAreaOfficeSearchChange = (searchValue: string) => {
+    setAreaOfficeSearch(searchValue)
+  }
+
+  const handleFeederSearchChange = (searchValue: string) => {
+    setFeederSearch(searchValue)
+  }
+
+  const handleDistributionSubstationSearchChange = (searchValue: string) => {
+    setDistributionSubstationSearch(searchValue)
+  }
+
+  // Search button handlers - trigger API calls
+  const handleAreaOfficeSearchClick = () => {
+    dispatch(fetchAreaOffices({ PageNumber: 1, PageSize: 100, Search: areaOfficeSearch }))
+  }
+
+  const handleFeederSearchClick = () => {
+    dispatch(fetchFeeders({ PageNumber: 1, PageSize: 100, Search: feederSearch }))
+  }
+
+  const handleDistributionSubstationSearchClick = () => {
+    dispatch(fetchDistributionSubstations({ PageNumber: 1, PageSize: 100, Search: distributionSubstationSearch }))
+  }
 
   const handleAddCustomerSuccess = async () => {
     setIsAddCustomerModalOpen(false)
@@ -543,67 +570,64 @@ export default function MeteringDashboard() {
                 {/* Area Office - Optional */}
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-700">Area Office</label>
-                  {areaOfficesLoading ? (
-                    <div className="h-9 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500">
-                      Loading area offices...
-                    </div>
-                  ) : (
-                    <FormSelectModule
-                      name="areaOffice"
-                      value={selectedAreaOffice}
-                      onChange={(e) => setSelectedAreaOffice(e.target.value)}
-                      options={
-                        areaOffices?.map((office) => ({
-                          value: office.id.toString(),
-                          label: office.nameOfNewOAreaffice,
-                        })) || []
-                      }
-                    />
-                  )}
+                  <FormSelectModule
+                    name="areaOffice"
+                    value={selectedAreaOffice}
+                    onChange={(e) => setSelectedAreaOffice(e.target.value)}
+                    searchable={true}
+                    searchTerm={areaOfficeSearch}
+                    onSearchChange={handleAreaOfficeSearchChange}
+                    onSearchClick={handleAreaOfficeSearchClick}
+                    loading={areaOfficesLoading}
+                    options={
+                      areaOffices?.map((office) => ({
+                        value: office.id.toString(),
+                        label: office.name,
+                      })) || []
+                    }
+                  />
                 </div>
 
                 {/* Feeder - Optional */}
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-700">Feeder</label>
-                  {feedersLoading ? (
-                    <div className="h-9 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500">
-                      Loading feeders...
-                    </div>
-                  ) : (
-                    <FormSelectModule
-                      name="feeder"
-                      value={selectedFeeder}
-                      onChange={(e) => setSelectedFeeder(e.target.value)}
-                      options={
-                        feeders?.map((feeder) => ({
-                          value: feeder.id.toString(),
-                          label: feeder.name,
-                        })) || []
-                      }
-                    />
-                  )}
+                  <FormSelectModule
+                    name="feeder"
+                    value={selectedFeeder}
+                    onChange={(e) => setSelectedFeeder(e.target.value)}
+                    searchable={true}
+                    searchTerm={feederSearch}
+                    onSearchChange={handleFeederSearchChange}
+                    onSearchClick={handleFeederSearchClick}
+                    loading={feedersLoading}
+                    options={
+                      feeders?.map((feeder) => ({
+                        value: feeder.id.toString(),
+                        label: feeder.name,
+                      })) || []
+                    }
+                  />
                 </div>
 
                 {/* Distribution Substation - Optional */}
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-700">Distribution Substation</label>
-                  {distributionSubstationsLoading ? (
-                    <div className="h-9 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500">
-                      Loading distribution substations...
-                    </div>
-                  ) : (
-                    <FormSelectModule
-                      name="distributionSubstation"
-                      value={selectedDistributionSubstation}
-                      onChange={(e) => setSelectedDistributionSubstation(e.target.value)}
-                      options={
-                        distributionSubstations?.map((substation) => ({
-                          value: substation.id.toString(),
-                          label: substation.name?.toString() || substation.dssCode || `Substation ${substation.id}`,
-                        })) || []
-                      }
-                    />
-                  )}
+                  <FormSelectModule
+                    name="distributionSubstation"
+                    value={selectedDistributionSubstation}
+                    onChange={(e) => setSelectedDistributionSubstation(e.target.value)}
+                    searchable={true}
+                    searchTerm={distributionSubstationSearch}
+                    onSearchChange={handleDistributionSubstationSearchChange}
+                    onSearchClick={handleDistributionSubstationSearchClick}
+                    loading={distributionSubstationsLoading}
+                    options={
+                      distributionSubstations?.map((substation) => ({
+                        value: substation.id.toString(),
+                        label: substation.name?.toString() || substation.dssCode || `Substation ${substation.id}`,
+                      })) || []
+                    }
+                  />
                 </div>
 
                 {/* Bill Status - Optional */}

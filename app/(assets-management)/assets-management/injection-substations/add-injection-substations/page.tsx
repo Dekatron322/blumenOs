@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useRef, useState } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import { motion } from "framer-motion"
 import { useDispatch, useSelector } from "react-redux"
 import DashboardNav from "components/Navbar/DashboardNav"
@@ -16,7 +16,7 @@ import {
   createSingleInjectionSubstation,
   fetchInjectionSubstations,
 } from "lib/redux/injectionSubstationSlice"
-import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
+import { fetchAreaOffices } from "lib/redux/formDataSlice"
 
 interface InjectionSubstationFormData {
   areaOfficeId: number
@@ -41,11 +41,7 @@ const AddInjectionSubstationPage = () => {
     error: injectionSubstationsError,
   } = useSelector((state: RootState) => state.injectionSubstations)
 
-  const {
-    areaOffices,
-    loading: areaOfficesLoading,
-    error: areaOfficesError,
-  } = useSelector((state: RootState) => state.areaOffices)
+  const { areaOffices, areaOfficesLoading, areaOfficesError } = useSelector((state: RootState) => state.formData)
 
   const [activeTab, setActiveTab] = useState<"single" | "bulk">("single")
   const [csvFile, setCsvFile] = useState<File | null>(null)
@@ -60,6 +56,60 @@ const AddInjectionSubstationPage = () => {
   })
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
+
+  // Search states for dropdowns
+  const [searchTerms, setSearchTerms] = useState<Record<string, string>>({
+    areaOffice: "",
+  })
+
+  // Search loading states
+  const [searchLoading, setSearchLoading] = useState<Record<string, boolean>>({
+    areaOffice: false,
+  })
+
+  // Debounced search handlers
+  const debouncedSearchRef = React.useRef<Record<string, NodeJS.Timeout>>({})
+
+  const handleAreaOfficeSearch = useCallback(
+    (searchTerm: string) => {
+      setSearchTerms((prev) => ({ ...prev, areaOffice: searchTerm }))
+
+      // Clear existing timeout
+      if (debouncedSearchRef.current.areaOffice) {
+        clearTimeout(debouncedSearchRef.current.areaOffice)
+      }
+
+      // Set new timeout for debounced API call
+      debouncedSearchRef.current.areaOffice = setTimeout(() => {
+        if (searchTerm.trim()) {
+          setSearchLoading((prev) => ({ ...prev, areaOffice: true }))
+
+          // Check if search term is a pure number (ID search)
+          const isNumericSearch = /^\d+$/.test(searchTerm.trim())
+          const searchValue = isNumericSearch ? searchTerm.trim() : searchTerm.trim()
+
+          dispatch(
+            fetchAreaOffices({
+              PageNumber: 1,
+              PageSize: 50,
+              Search: searchValue,
+            })
+          ).finally(() => {
+            setSearchLoading((prev) => ({ ...prev, areaOffice: false }))
+          })
+        } else if (searchTerm === "") {
+          // Only reload default data when search is explicitly cleared (empty string)
+          dispatch(
+            fetchAreaOffices({
+              PageNumber: 1,
+              PageSize: 100,
+            })
+          )
+        }
+      }, 500) // 500ms debounce delay
+    },
+    [dispatch]
+  )
 
   // Fetch existing injection substations and area offices on component mount
   useEffect(() => {
@@ -77,12 +127,22 @@ const AddInjectionSubstationPage = () => {
     )
   }, [dispatch])
 
+  // Clear search timeouts when component unmounts
+  useEffect(() => {
+    return () => {
+      // Clear any pending search timeouts
+      Object.values(debouncedSearchRef.current).forEach((timeout) => {
+        if (timeout) clearTimeout(timeout)
+      })
+    }
+  }, [])
+
   // Area office options from fetched data
   const areaOfficeOptions = [
     { value: 0, label: "Select area office" },
     ...areaOffices.map((areaOffice) => ({
       value: areaOffice.id,
-      label: `${areaOffice.nameOfNewOAreaffice} (${areaOffice.newNercCode})`,
+      label: `${areaOffice.name}`,
     })),
   ]
 
@@ -503,32 +563,6 @@ const AddInjectionSubstationPage = () => {
             </div>
 
             {/* Tab Navigation */}
-            <div className="px-16 max-md:px-0 max-sm:px-3">
-              <div className="rounded-t-lg border-b border-gray-200 bg-white">
-                <div className="flex">
-                  <button
-                    onClick={() => setActiveTab("single")}
-                    className={`flex-1 rounded-tl-lg px-6 py-4 text-sm font-medium transition-colors ${
-                      activeTab === "single"
-                        ? "border-b-2 border-blue-500 text-blue-600"
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
-                  >
-                    Single Entry
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("bulk")}
-                    className={`flex-1 rounded-tr-lg px-6 py-4 text-sm font-medium transition-colors ${
-                      activeTab === "bulk"
-                        ? "border-b-2 border-blue-500 text-blue-600"
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
-                  >
-                    Bulk Upload (CSV)
-                  </button>
-                </div>
-              </div>
-            </div>
 
             {/* Main Content Area */}
             <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
@@ -539,7 +573,7 @@ const AddInjectionSubstationPage = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="rounded-b-lg bg-white p-6 shadow-sm"
+                    className="rounded-lg bg-white p-6 shadow-sm"
                   >
                     {/* Form Header */}
                     <div className="mb-6 border-b pb-4">
@@ -569,7 +603,10 @@ const AddInjectionSubstationPage = () => {
                             options={areaOfficeOptions}
                             error={formErrors.areaOfficeId}
                             required
-                            disabled={areaOfficesLoading}
+                            disabled={areaOfficesLoading || searchLoading.areaOffice}
+                            searchable
+                            onSearchChange={handleAreaOfficeSearch}
+                            searchTerm={searchTerms.areaOffice}
                           />
                           {areaOfficesLoading && <p className="text-sm text-gray-500">Loading area offices...</p>}
                         </div>

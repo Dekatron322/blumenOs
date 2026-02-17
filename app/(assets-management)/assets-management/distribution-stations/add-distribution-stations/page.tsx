@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useRef, useState } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import { motion } from "framer-motion"
 import { useDispatch, useSelector } from "react-redux"
 import DashboardNav from "components/Navbar/DashboardNav"
@@ -16,7 +16,7 @@ import {
   createSingleDistributionSubstation,
   fetchDistributionSubstations,
 } from "lib/redux/distributionSubstationsSlice"
-import { fetchFeeders } from "lib/redux/feedersSlice"
+import { fetchFeeders } from "lib/redux/formDataSlice"
 
 interface DistributionSubstationFormData {
   feederId: number
@@ -65,7 +65,7 @@ const AddDistributionStationPage = () => {
     error: distributionSubstationsError,
   } = useSelector((state: RootState) => state.distributionSubstations)
 
-  const { feeders, loading: feedersLoading, error: feedersError } = useSelector((state: RootState) => state.feeders)
+  const { feeders, feedersLoading, feedersError } = useSelector((state: RootState) => state.formData)
 
   const [activeTab, setActiveTab] = useState<"single" | "bulk">("single")
   const [csvFile, setCsvFile] = useState<File | null>(null)
@@ -93,6 +93,60 @@ const AddDistributionStationPage = () => {
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
 
+  // Search states for dropdowns
+  const [searchTerms, setSearchTerms] = useState<Record<string, string>>({
+    feeder: "",
+  })
+
+  // Search loading states
+  const [searchLoading, setSearchLoading] = useState<Record<string, boolean>>({
+    feeder: false,
+  })
+
+  // Debounced search handlers
+  const debouncedSearchRef = React.useRef<Record<string, NodeJS.Timeout>>({})
+
+  const handleFeederSearch = useCallback(
+    (searchTerm: string) => {
+      setSearchTerms((prev) => ({ ...prev, feeder: searchTerm }))
+
+      // Clear existing timeout
+      if (debouncedSearchRef.current.feeder) {
+        clearTimeout(debouncedSearchRef.current.feeder)
+      }
+
+      // Set new timeout for debounced API call
+      debouncedSearchRef.current.feeder = setTimeout(() => {
+        if (searchTerm.trim()) {
+          setSearchLoading((prev) => ({ ...prev, feeder: true }))
+
+          // Check if search term is a pure number (ID search)
+          const isNumericSearch = /^\d+$/.test(searchTerm.trim())
+          const searchValue = isNumericSearch ? searchTerm.trim() : searchTerm.trim()
+
+          dispatch(
+            fetchFeeders({
+              PageNumber: 1,
+              PageSize: 50,
+              Search: searchValue,
+            })
+          ).finally(() => {
+            setSearchLoading((prev) => ({ ...prev, feeder: false }))
+          })
+        } else if (searchTerm === "") {
+          // Only reload default data when search is explicitly cleared (empty string)
+          dispatch(
+            fetchFeeders({
+              PageNumber: 1,
+              PageSize: 100,
+            })
+          )
+        }
+      }, 500) // 500ms debounce delay
+    },
+    [dispatch]
+  )
+
   // Fetch existing distribution substations and feeders on component mount
   useEffect(() => {
     dispatch(
@@ -103,18 +157,28 @@ const AddDistributionStationPage = () => {
     )
     dispatch(
       fetchFeeders({
-        pageNumber: 1,
-        pageSize: 100,
+        PageNumber: 1,
+        PageSize: 100,
       })
     )
   }, [dispatch])
+
+  // Clear search timeouts when component unmounts
+  useEffect(() => {
+    return () => {
+      // Clear any pending search timeouts
+      Object.values(debouncedSearchRef.current).forEach((timeout) => {
+        if (timeout) clearTimeout(timeout)
+      })
+    }
+  }, [])
 
   // Feeder options from fetched data
   const feederOptions = [
     { value: 0, label: "Select feeder" },
     ...feeders.map((feeder) => ({
       value: feeder.id,
-      label: `${feeder.name} (${feeder.nercCode}) - ${feeder.injectionSubstation.injectionSubstationCode}`,
+      label: `${feeder.name}`,
     })),
   ]
 
@@ -765,32 +829,6 @@ const AddDistributionStationPage = () => {
             </div>
 
             {/* Tab Navigation */}
-            <div className="px-16 max-md:px-0 max-sm:px-3">
-              <div className="rounded-t-lg border-b border-gray-200 bg-white">
-                <div className="flex">
-                  <button
-                    onClick={() => setActiveTab("single")}
-                    className={`flex-1 rounded-tl-lg px-6 py-4 text-sm font-medium transition-colors ${
-                      activeTab === "single"
-                        ? "border-b-2 border-blue-500 text-blue-600"
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
-                  >
-                    Single Entry
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("bulk")}
-                    className={`flex-1 rounded-tr-lg px-6 py-4 text-sm font-medium transition-colors ${
-                      activeTab === "bulk"
-                        ? "border-b-2 border-blue-500 text-blue-600"
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
-                  >
-                    Bulk Upload (CSV)
-                  </button>
-                </div>
-              </div>
-            </div>
 
             {/* Main Content Area */}
             <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
@@ -801,7 +839,7 @@ const AddDistributionStationPage = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="rounded-b-lg bg-white p-6 shadow-sm"
+                    className="rounded-lg bg-white p-6 shadow-sm"
                   >
                     {/* Form Header */}
                     <div className="mb-6 border-b pb-4">
@@ -831,7 +869,10 @@ const AddDistributionStationPage = () => {
                             options={feederOptions}
                             error={formErrors.feederId}
                             required
-                            disabled={feedersLoading}
+                            disabled={feedersLoading || searchLoading.feeder}
+                            searchable
+                            onSearchChange={handleFeederSearch}
+                            searchTerm={searchTerms.feeder}
                           />
                         </div>
                         {feedersLoading && <p className="text-sm text-gray-500">Loading feeders...</p>}

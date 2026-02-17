@@ -297,6 +297,7 @@ export const API_ENDPOINTS = {
     METER_READINGS: "/billing/postpaid/meter-readings",
     FINALIZE_SINGLE_BILL: "/billing/postpaid/{id}/finalize",
     ADJUSTMENTS: "/billing/postpaid/bills/adjustments",
+    APPROVE_ALL_ADJUSTMENTS: "/billing/postpaid/bills/adjustments/approve",
     DOWNLOAD_AR: "/billing/postpaid/ar/csv",
     POSTPAID_BILL_PRINT: "/billing/postpaid/print/batch",
     MARK_AS_READY_TO_PRINT: "/billing/postpaid/ready-to-print",

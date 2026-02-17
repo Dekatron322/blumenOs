@@ -43,7 +43,7 @@ const FileManagementPage = () => {
 
   // Upload type options
   const uploadTypeOptions = [
-    { name: "Distribution Substations", value: 25 },
+    { name: "Distribution Substations", value: 13 },
     { name: "Distribution Substations Feeder Realignment", value: 26 },
     { name: "Feeder Band Change", value: 27 },
   ]
@@ -51,28 +51,28 @@ const FileManagementPage = () => {
   // Helper function to get bulkInsertType based on upload type
   const getBulkInsertType = (uploadType: number | null): string => {
     switch (uploadType) {
-      case 25:
-        return "distribution-substation-import"
+      case 13:
+        return "distribution-substation-upload"
       case 26:
         return "distribution-substation-feeder-realignment"
       case 27:
         return "feeder-band-change"
       default:
-        return "distribution-substation-import" // fallback
+        return "distribution-substation-upload" // fallback
     }
   }
 
   // Helper function to get purpose based on upload type
   const getPurpose = (uploadType: number | null): string => {
     switch (uploadType) {
-      case 25:
-        return "distribution-substations-feeder-realignment-bulk"
+      case 13:
+        return "distribution-substations-bulk"
       case 26:
         return "distribution-substations-feeder-realignment-bulk"
       case 27:
         return "feeders-band-change-bulk"
       default:
-        return "distribution-substations-feeder-realignment-bulk"
+        return "distribution-substations-bulk"
     }
   }
 
@@ -528,10 +528,10 @@ const FileManagementPage = () => {
     let fileName: string
 
     // Generate different templates based on upload type
-    if (selectedUploadType === 25) {
+    if (selectedUploadType === 13) {
       // Distribution Substations template
       headers =
-        "SubstationName,SubstationCode,VoltageLevel,CapacityKVA,Location,Latitude,Longitude,CommissioningDate,Status,Region"
+        "SubstationName,SubstationCode,VoltageLevel,CapacityKVA,Location,Latitude,Longitude,CommissioningDate,Status,Region,FeederName"
       sampleRows = []
       fileName = "sample_distribution_substations.csv"
     } else if (selectedUploadType === 26) {

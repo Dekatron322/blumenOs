@@ -21,6 +21,7 @@ import CreateBillingJobModal from "components/ui/Modal/create-billing-job-modal"
 import { ArrowLeft, ChevronDown, ChevronUp, Filter, RefreshCw, SortAsc, SortDesc, X } from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
+import { fetchAreaOffices as fetchFormDataAreaOffices } from "lib/redux/formDataSlice"
 import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
 import { VscEye } from "react-icons/vsc"
 
@@ -251,6 +252,10 @@ const MobileFilterSidebar = ({
   sortOptions,
   isSortExpanded,
   setIsSortExpanded,
+  areaOfficeSearch,
+  handleAreaOfficeSearchChange,
+  handleAreaOfficeSearchClick,
+  areaOfficesLoading,
 }: {
   isOpen: boolean
   onClose: () => void
@@ -266,6 +271,10 @@ const MobileFilterSidebar = ({
   sortOptions: SortOption[]
   isSortExpanded: boolean
   setIsSortExpanded: (value: boolean | ((prev: boolean) => boolean)) => void
+  areaOfficeSearch: string
+  handleAreaOfficeSearchChange: (searchValue: string) => void
+  handleAreaOfficeSearchClick: () => void
+  areaOfficesLoading: boolean
 }) => {
   return (
     <AnimatePresence mode="wait">
@@ -337,6 +346,11 @@ const MobileFilterSidebar = ({
                     onChange={(e) =>
                       handleFilterChange("areaOfficeId", e.target.value === "" ? undefined : Number(e.target.value))
                     }
+                    searchable={true}
+                    searchTerm={areaOfficeSearch}
+                    onSearchChange={handleAreaOfficeSearchChange}
+                    onSearchClick={handleAreaOfficeSearchClick}
+                    loading={areaOfficesLoading}
                     options={areaOfficeOptions}
                     className="w-full"
                     controlClassName="h-9 text-sm"
@@ -630,7 +644,7 @@ const BillingJobs: React.FC = () => {
   const dispatch = useAppDispatch()
   const { billingJobs, billingJobsLoading, billingJobsError, billingJobsSuccess, billingJobsPagination } =
     useAppSelector((state) => state.postpaidBilling)
-  const { areaOffices } = useAppSelector((state) => state.areaOffices)
+  const { areaOffices, areaOfficesLoading, areaOfficesError } = useAppSelector((state) => state.formData)
   const { billingPeriods } = useAppSelector((state) => state.billingPeriods)
 
   const [isAddJobModalOpen, setIsAddJobModalOpen] = useState(false)
@@ -642,6 +656,9 @@ const BillingJobs: React.FC = () => {
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(true)
   const [isSortExpanded, setIsSortExpanded] = useState(false)
+
+  // Search states for dropdowns
+  const [areaOfficeSearch, setAreaOfficeSearch] = useState("")
 
   // Separate state for table-only refresh
   const [tableRefreshKey, setTableRefreshKey] = useState(0)
@@ -672,7 +689,7 @@ const BillingJobs: React.FC = () => {
   // Fetch area offices and billing periods on component mount for filter dropdowns
   useEffect(() => {
     dispatch(
-      fetchAreaOffices({
+      fetchFormDataAreaOffices({
         PageNumber: 1,
         PageSize: 100,
       })
@@ -736,7 +753,7 @@ const BillingJobs: React.FC = () => {
     { value: "", label: "All Area Offices" },
     ...areaOffices.map((office) => ({
       value: office.id,
-      label: `${office.nameOfNewOAreaffice} (${office.newKaedcoCode})`,
+      label: office.name,
     })),
   ]
 
@@ -814,6 +831,14 @@ const BillingJobs: React.FC = () => {
     if (localFilters.status !== undefined) count++
     if (localFilters.sortBy) count++
     return count
+  }
+
+  const handleAreaOfficeSearchChange = (searchValue: string) => {
+    setAreaOfficeSearch(searchValue)
+  }
+
+  const handleAreaOfficeSearchClick = () => {
+    dispatch(fetchFormDataAreaOffices({ PageNumber: 1, PageSize: 100, Search: areaOfficeSearch }))
   }
 
   const getStatusStyle = (status: number) => {
@@ -1465,6 +1490,11 @@ const BillingJobs: React.FC = () => {
                                 e.target.value === "" ? undefined : Number(e.target.value)
                               )
                             }
+                            searchable={true}
+                            searchTerm={areaOfficeSearch}
+                            onSearchChange={handleAreaOfficeSearchChange}
+                            onSearchClick={handleAreaOfficeSearchClick}
+                            loading={areaOfficesLoading}
                             options={areaOfficeOptions}
                             className="w-full"
                             controlClassName="h-9 text-sm"
@@ -1605,6 +1635,10 @@ const BillingJobs: React.FC = () => {
         sortOptions={sortOptions}
         isSortExpanded={isSortExpanded}
         setIsSortExpanded={setIsSortExpanded}
+        areaOfficeSearch={areaOfficeSearch}
+        handleAreaOfficeSearchChange={handleAreaOfficeSearchChange}
+        handleAreaOfficeSearchClick={handleAreaOfficeSearchClick}
+        areaOfficesLoading={areaOfficesLoading}
       />
 
       <CreateBillingJobModal

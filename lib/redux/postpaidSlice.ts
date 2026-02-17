@@ -875,6 +875,9 @@ interface PostpaidBillingState {
     hasNext: boolean
     hasPrevious: boolean
   }
+  approveAllAdjustmentsLoading: boolean
+  approveAllAdjustmentsError: string | null
+  approveAllAdjustmentsSuccess: boolean
 
   // Vendor Summary Report state
   vendorSummaryReport: VendorSummaryReportData | null
@@ -1074,6 +1077,9 @@ const initialState: PostpaidBillingState = {
     hasNext: false,
     hasPrevious: false,
   },
+  approveAllAdjustmentsLoading: false,
+  approveAllAdjustmentsError: null,
+  approveAllAdjustmentsSuccess: false,
   vendorSummaryReport: null,
   vendorSummaryReportLoading: false,
   vendorSummaryReportError: null,
@@ -1679,6 +1685,29 @@ export const fetchAdjustments = createAsyncThunk(
   }
 )
 
+// Approve All Adjustments Async Thunk
+export const approveAllAdjustments = createAsyncThunk(
+  "postpaidBilling/approveAllAdjustments",
+  async (billingPeriodId: number, { rejectWithValue }) => {
+    try {
+      const response = await api.post(buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.APPROVE_ALL_ADJUSTMENTS), {
+        billingPeriodId,
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to approve all adjustments")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to approve all adjustments")
+      }
+      return rejectWithValue(error.message || "Network error during approve all adjustments")
+    }
+  }
+)
+
 // Fetch Vendor Summary Report Async Thunk
 export const fetchVendorSummaryReport = createAsyncThunk(
   "postpaidBilling/fetchVendorSummaryReport",
@@ -2118,6 +2147,13 @@ const postpaidSlice = createSlice({
         hasNext: false,
         hasPrevious: false,
       }
+    },
+
+    // Clear approve all adjustments status
+    clearApproveAllAdjustmentsStatus: (state) => {
+      state.approveAllAdjustmentsLoading = false
+      state.approveAllAdjustmentsError = null
+      state.approveAllAdjustmentsSuccess = false
     },
 
     // Clear vendor summary report status
@@ -2909,6 +2945,24 @@ const postpaidSlice = createSlice({
           hasPrevious: false,
         }
       })
+      // Approve all adjustments cases
+      .addCase(approveAllAdjustments.pending, (state) => {
+        state.approveAllAdjustmentsLoading = true
+        state.approveAllAdjustmentsError = null
+        state.approveAllAdjustmentsSuccess = false
+      })
+      .addCase(approveAllAdjustments.fulfilled, (state) => {
+        state.approveAllAdjustmentsLoading = false
+        state.approveAllAdjustmentsSuccess = true
+        state.approveAllAdjustmentsError = null
+        // Refresh adjustments data after successful approval
+        // Note: You might want to trigger a refetch of adjustments here
+      })
+      .addCase(approveAllAdjustments.rejected, (state, action) => {
+        state.approveAllAdjustmentsLoading = false
+        state.approveAllAdjustmentsError = (action.payload as string) || "Failed to approve all adjustments"
+        state.approveAllAdjustmentsSuccess = false
+      })
       // Fetch vendor summary report cases
       .addCase(fetchVendorSummaryReport.pending, (state) => {
         state.vendorSummaryReportLoading = true
@@ -3068,6 +3122,7 @@ export const {
   clearCreateMeterReadingStatus,
   clearFinalizeSingleBillStatus,
   clearAdjustmentsStatus,
+  clearApproveAllAdjustmentsStatus,
   clearVendorSummaryReportStatus,
   clearDownloadARStatus,
   clearPrintingJobsStatus,

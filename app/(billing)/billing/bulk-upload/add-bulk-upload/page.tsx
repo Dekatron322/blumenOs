@@ -60,10 +60,8 @@ const FileManagementPage = () => {
     { name: "Mark Bills for Printing", value: 20 },
     { name: "Bill Crucial Ops", value: 21 },
     { name: "Bill Recompute", value: 30 },
-    { name: "Account To Be Billed", value: 31 },
     { name: "Feeder Energy Cap", value: 3 },
     { name: "Customer Meter Reading", value: 2 },
-    { name: "Meter Reading Account Import", value: "2" },
   ]
 
   // Helper function to get bulkInsertType based on upload type
@@ -81,13 +79,9 @@ const FileManagementPage = () => {
         return "bill-crucial-ops"
       case 30:
         return "bill-recompute"
-      case 31:
-        return "bill-manual-energy"
       case 3:
         return "feeder-energy-cap"
       case 2:
-        return "meter-readings-account"
-      case "2":
         return "meter-readings-account"
       default:
         return "bill-generate-missing" // fallback
@@ -109,13 +103,9 @@ const FileManagementPage = () => {
         return "postpaid-bill-crucial-bulk"
       case 30:
         return "postpaid-bill-recompute-bulk"
-      case 31:
-        return "postpaid-bill-manual-energy-bulk"
       case 3:
         return "feeder-energy-caps-bulk"
       case 2:
-        return "postpaid-meter-readings-account-bulk"
-      case "2":
         return "postpaid-meter-readings-account-bulk"
       default:
         return "billing-bulk-import" // fallback

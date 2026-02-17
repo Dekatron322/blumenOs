@@ -19,6 +19,10 @@ import { ArrowLeft, ChevronDown, ChevronUp, Download, Filter, PlusCircle, SortAs
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { clearFeeders, fetchFeeders } from "lib/redux/feedersSlice"
+import {
+  fetchAreaOffices as fetchFormDataAreaOffices,
+  fetchFeeders as fetchFormDataFeeders,
+} from "lib/redux/formDataSlice"
 import { clearCompanies, fetchCompanies } from "lib/redux/companySlice"
 import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
 import { VscEye } from "react-icons/vsc"
@@ -181,6 +185,14 @@ const MobileFilterSidebar = ({
   sortOptions,
   isSortExpanded,
   setIsSortExpanded,
+  areaOfficeSearch,
+  feederSearch,
+  handleAreaOfficeSearchChange,
+  handleFeederSearchChange,
+  handleAreaOfficeSearchClick,
+  handleFeederSearchClick,
+  areaOfficesLoading,
+  feedersLoading,
 }: {
   isOpen: boolean
   onClose: () => void
@@ -197,6 +209,14 @@ const MobileFilterSidebar = ({
   sortOptions: SortOption[]
   isSortExpanded: boolean
   setIsSortExpanded: (value: boolean | ((prev: boolean) => boolean)) => void
+  areaOfficeSearch: string
+  feederSearch: string
+  handleAreaOfficeSearchChange: (searchValue: string) => void
+  handleFeederSearchChange: (searchValue: string) => void
+  handleAreaOfficeSearchClick: () => void
+  handleFeederSearchClick: () => void
+  areaOfficesLoading: boolean
+  feedersLoading: boolean
 }) => {
   return (
     <AnimatePresence>
@@ -266,6 +286,11 @@ const MobileFilterSidebar = ({
                     onChange={(e) =>
                       handleFilterChange("areaOfficeId", e.target.value === "" ? undefined : Number(e.target.value))
                     }
+                    searchable={true}
+                    searchTerm={areaOfficeSearch}
+                    onSearchChange={handleAreaOfficeSearchChange}
+                    onSearchClick={handleAreaOfficeSearchClick}
+                    loading={areaOfficesLoading}
                     options={areaOfficeOptions}
                     className="w-full"
                     controlClassName="h-9 text-sm"
@@ -281,6 +306,11 @@ const MobileFilterSidebar = ({
                     onChange={(e) =>
                       handleFilterChange("feederId", e.target.value === "" ? undefined : Number(e.target.value))
                     }
+                    searchable={true}
+                    searchTerm={feederSearch}
+                    onSearchChange={handleFeederSearchChange}
+                    onSearchClick={handleFeederSearchClick}
+                    loading={feedersLoading}
                     options={feederOptions}
                     className="w-full"
                     controlClassName="h-9 text-sm"
@@ -443,8 +473,8 @@ const FeederEnergyCaps: React.FC = () => {
     downloadFeederEnergyCsvLoading,
     downloadFeederEnergyCsvSuccess,
   } = useAppSelector((state) => state.feederEnergyCaps)
-  const { areaOffices } = useAppSelector((state) => state.areaOffices)
-  const { feeders } = useAppSelector((state) => state.feeders)
+  const { areaOffices, areaOfficesLoading, areaOfficesError } = useAppSelector((state) => state.formData)
+  const { feeders, feedersLoading, feedersError } = useAppSelector((state) => state.formData)
   const { companies } = useAppSelector((state) => state.companies)
   const { billingPeriods, loading: billingPeriodsLoading } = useAppSelector((state) => state.billingPeriods)
   const { user } = useAppSelector((state) => state.auth)
@@ -464,7 +494,11 @@ const FeederEnergyCaps: React.FC = () => {
   const [selectedEnergyCap, setSelectedEnergyCap] = useState<FeederEnergyCap | null>(null)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(true)
-  const [isSortExpanded, setIsSortExpanded] = useState(true)
+  const [isSortExpanded, setIsSortExpanded] = useState(false)
+
+  // Search states for dropdowns
+  const [areaOfficeSearch, setAreaOfficeSearch] = useState("")
+  const [feederSearch, setFeederSearch] = useState("")
   const [showExportModal, setShowExportModal] = useState(false)
   const [exportDateRange, setExportDateRange] = useState<"current" | "all">("current")
   const [exportFromDate, setExportFromDate] = useState("")
@@ -501,16 +535,16 @@ const FeederEnergyCaps: React.FC = () => {
   // Fetch area offices, feeders, companies, and billing periods on component mount for filter dropdowns
   useEffect(() => {
     dispatch(
-      fetchAreaOffices({
+      fetchFormDataAreaOffices({
         PageNumber: 1,
         PageSize: 100,
       })
     )
 
     dispatch(
-      fetchFeeders({
-        pageNumber: 1,
-        pageSize: 100,
+      fetchFormDataFeeders({
+        PageNumber: 1,
+        PageSize: 100,
       })
     )
 
@@ -572,16 +606,16 @@ const FeederEnergyCaps: React.FC = () => {
   // Area office options
   const areaOfficeOptions = [
     { value: "", label: "All Area Offices" },
-    ...areaOffices.map((office) => ({
+    ...(areaOffices || []).map((office) => ({
       value: office.id,
-      label: `${office.nameOfNewOAreaffice} (${office.newKaedcoCode})`,
+      label: office.name,
     })),
   ]
 
   // Feeder options
   const feederOptions = [
     { value: "", label: "All Feeders" },
-    ...feeders.map((feeder) => ({
+    ...(feeders || []).map((feeder) => ({
       value: feeder.id,
       label: `${feeder.name} (${feeder.kaedcoFeederCode})`,
     })),
@@ -712,6 +746,24 @@ const FeederEnergyCaps: React.FC = () => {
     setSearchText("")
     dispatch(setPagination({ page: 1, pageSize }))
     setSearchTrigger((prev) => prev + 1)
+  }
+
+  // Search handlers for dropdowns - only update search term state
+  const handleAreaOfficeSearchChange = (searchValue: string) => {
+    setAreaOfficeSearch(searchValue)
+  }
+
+  const handleFeederSearchChange = (searchValue: string) => {
+    setFeederSearch(searchValue)
+  }
+
+  // Search button handlers - trigger API calls
+  const handleAreaOfficeSearchClick = () => {
+    dispatch(fetchFormDataAreaOffices({ PageNumber: 1, PageSize: 100, Search: areaOfficeSearch }))
+  }
+
+  const handleFeederSearchClick = () => {
+    dispatch(fetchFormDataFeeders({ PageNumber: 1, PageSize: 100, Search: feederSearch }))
   }
 
   // const handleCancelSearch = () => {
@@ -1228,6 +1280,11 @@ const FeederEnergyCaps: React.FC = () => {
                   onChange={(e) =>
                     handleFilterChange("areaOfficeId", e.target.value === "" ? undefined : Number(e.target.value))
                   }
+                  searchable={true}
+                  searchTerm={areaOfficeSearch}
+                  onSearchChange={handleAreaOfficeSearchChange}
+                  onSearchClick={handleAreaOfficeSearchClick}
+                  loading={areaOfficesLoading}
                   options={areaOfficeOptions}
                   className="w-full"
                   controlClassName="h-9 text-sm"
@@ -1243,6 +1300,11 @@ const FeederEnergyCaps: React.FC = () => {
                   onChange={(e) =>
                     handleFilterChange("feederId", e.target.value === "" ? undefined : Number(e.target.value))
                   }
+                  searchable={true}
+                  searchTerm={feederSearch}
+                  onSearchChange={handleFeederSearchChange}
+                  onSearchClick={handleFeederSearchClick}
+                  loading={feedersLoading}
                   options={feederOptions}
                   className="w-full"
                   controlClassName="h-9 text-sm"
@@ -1360,6 +1422,14 @@ const FeederEnergyCaps: React.FC = () => {
         sortOptions={sortOptions}
         isSortExpanded={isSortExpanded}
         setIsSortExpanded={setIsSortExpanded}
+        areaOfficeSearch={areaOfficeSearch}
+        feederSearch={feederSearch}
+        handleAreaOfficeSearchChange={handleAreaOfficeSearchChange}
+        handleFeederSearchChange={handleFeederSearchChange}
+        handleAreaOfficeSearchClick={handleAreaOfficeSearchClick}
+        handleFeederSearchClick={handleFeederSearchClick}
+        areaOfficesLoading={areaOfficesLoading}
+        feedersLoading={feedersLoading}
       />
 
       {/* Export Modal */}

@@ -6,6 +6,7 @@ import { API_ENDPOINTS } from "lib/config/api"
 export interface Feeder {
   id: number
   name: string
+  kaedcoFeederCode: string
 }
 
 export interface FeedersParams {

@@ -26,6 +26,7 @@ import {
   SingleBillingPrintRequest,
 } from "lib/redux/postpaidSlice"
 import { fetchFeeders } from "lib/redux/feedersSlice"
+import { fetchFeeders as fetchFormDataFeeders } from "lib/redux/formDataSlice"
 import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
 import { Customer, fetchCustomers } from "lib/redux/customerSlice"
 import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
@@ -66,6 +67,10 @@ const MarkAsReadyToPrintModal: React.FC<{
   message: string | null
   billingPeriods: any[]
   feeders: any[]
+  feedersLoading: boolean
+  feederSearch: string
+  handleFeederSearchChange: (searchValue: string) => void
+  handleFeederSearchClick: () => void
   areaOffices: any[]
   areaOfficesLoading: boolean
   distributionSubstations: any[]
@@ -86,6 +91,10 @@ const MarkAsReadyToPrintModal: React.FC<{
   message,
   billingPeriods,
   feeders,
+  feedersLoading,
+  feederSearch,
+  handleFeederSearchChange,
+  handleFeederSearchClick,
   areaOffices,
   areaOfficesLoading,
   distributionSubstations,
@@ -428,11 +437,16 @@ const MarkAsReadyToPrintModal: React.FC<{
                     name="feederId"
                     value={formData.feederId?.toString() || ""}
                     onChange={(e) => handleInputChange("feederId", e.target.value ? Number(e.target.value) : undefined)}
+                    searchable={true}
+                    searchTerm={feederSearch}
+                    onSearchChange={handleFeederSearchChange}
+                    onSearchClick={handleFeederSearchClick}
+                    loading={feedersLoading}
                     options={[
                       { value: "", label: "All Feeders" },
                       ...feeders.map((feeder) => ({
                         value: feeder.id.toString(),
-                        label: feeder.name,
+                        label: `${feeder.name} (${feeder.kaedcoFeederCode})`,
                       })),
                     ]}
                     className="w-full"
@@ -728,7 +742,7 @@ const PrintJobs = () => {
     singleBillingPrintSuccess,
     singleBillingPrintMessage,
   } = useAppSelector((state) => state.postpaidBilling)
-  const { feeders, loading: feedersLoading } = useAppSelector((state) => state.feeders)
+  const { feeders, feedersLoading } = useAppSelector((state) => state.formData)
   const { billingPeriods, loading: billingPeriodsLoading } = useAppSelector((state) => state.billingPeriods)
   const { areaOffices, loading: areaOfficesLoading } = useAppSelector((state) => state.areaOffices)
   const { distributionSubstations, loading: distributionSubstationsLoading } = useAppSelector(
@@ -750,6 +764,9 @@ const PrintJobs = () => {
   const [customerSearchText, setCustomerSearchText] = useState("")
   const [isSearchingCustomers, setIsSearchingCustomers] = useState(false)
   const [searchedCustomers, setSearchedCustomers] = useState<Customer[]>([])
+
+  // Search states for dropdowns
+  const [feederSearch, setFeederSearch] = useState("")
 
   // Local state for filters
   const [localFilters, setLocalFilters] = useState<Partial<PrintingJobsRequestParams>>({
@@ -804,10 +821,18 @@ const PrintJobs = () => {
     searchCustomers(customerSearchText)
   }, [customerSearchText, searchCustomers])
 
+  const handleFeederSearchChange = (searchValue: string) => {
+    setFeederSearch(searchValue)
+  }
+
+  const handleFeederSearchClick = () => {
+    dispatch(fetchFormDataFeeders({ PageNumber: 1, PageSize: 1000, Search: feederSearch }))
+  }
+
   // Initial load and filter changes
   useEffect(() => {
     // Fetch feeders for dropdown
-    void dispatch(fetchFeeders({ pageNumber: 1, pageSize: 1000 }))
+    void dispatch(fetchFormDataFeeders({ PageNumber: 1, PageSize: 1000 }))
     // Fetch billing periods for dropdown
     void dispatch(fetchBillingPeriods({ pageNumber: 1, pageSize: 1000 }))
     // Fetch area offices for dropdown
@@ -1205,16 +1230,20 @@ const PrintJobs = () => {
                     onChange={(e) =>
                       handleFilterChange("feederId", e.target.value ? Number(e.target.value) : undefined)
                     }
+                    searchable={true}
+                    searchTerm={feederSearch}
+                    onSearchChange={handleFeederSearchChange}
+                    onSearchClick={handleFeederSearchClick}
+                    loading={feedersLoading}
                     options={[
                       { value: "", label: "All Feeders" },
                       ...feeders.map((feeder) => ({
                         value: feeder.id.toString(),
-                        label: feeder.name,
+                        label: `${feeder.name}`,
                       })),
                     ]}
                     className="w-full"
                     controlClassName="h-9 text-sm"
-                    disabled={feedersLoading}
                   />
                 </div>
 
@@ -1414,6 +1443,10 @@ const PrintJobs = () => {
         message={markAsReadyToPrintMessage}
         billingPeriods={billingPeriods}
         feeders={feeders}
+        feedersLoading={feedersLoading}
+        feederSearch={feederSearch}
+        handleFeederSearchChange={handleFeederSearchChange}
+        handleFeederSearchClick={handleFeederSearchClick}
         areaOffices={areaOffices}
         areaOfficesLoading={areaOfficesLoading}
         distributionSubstations={distributionSubstations}
