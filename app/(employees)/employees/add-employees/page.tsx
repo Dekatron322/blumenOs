@@ -1087,7 +1087,7 @@ const AddEmployeePage = () => {
             </div>
 
             {/* Tab Navigation */}
-            <div className="mb-4">
+            {/* <div className="mb-4">
               <div className="rounded-t-lg border-b border-gray-200 bg-white">
                 <div className="flex">
                   <button
@@ -1112,7 +1112,7 @@ const AddEmployeePage = () => {
                   </button>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* Mobile Step Navigation for Single Entry */}
             {activeTab === "single" && <MobileStepNavigation />}

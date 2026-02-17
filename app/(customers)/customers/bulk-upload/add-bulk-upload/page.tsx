@@ -49,7 +49,7 @@ const FileManagementPage = () => {
     { name: "Customer Tariff Change", value: 7 },
     { name: "Customer Status Change", value: 8 },
     { name: "Customer Stored Average Update", value: 9 },
-    { name: "Customer SRDT Update", value: 10 },
+    { name: "Customer-DT Reallignment", value: 10 },
     { name: "Customer Estimated Consumption", value: 24 },
   ]
 

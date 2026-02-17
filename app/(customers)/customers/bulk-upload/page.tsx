@@ -25,7 +25,7 @@ const jobTypeOptions = [
   { value: "7", label: "Customer Tariff Change" },
   { value: "8", label: "Customer Status Change" },
   { value: "9", label: "Customer Stored Average Update" },
-  { value: "10", label: "Customer Sr Dt Update" },
+  { value: "10", label: "Customer-DT Reallignment" },
   { value: "24", label: "Customer Estimated Consumption" },
 ]
 

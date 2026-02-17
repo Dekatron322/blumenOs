@@ -10,7 +10,7 @@ import { SearchModule } from "components/ui/Search/search-module"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { DataQualityItem, DataQualityParams, fetchDataQuality } from "lib/redux/customerSlice"
-import { fetchCustomers } from "lib/redux/customerSlice"
+import { fetchCustomers } from "lib/redux/formDataSlice"
 import { fetchVendors } from "lib/redux/vendorSlice"
 import { fetchAgents } from "lib/redux/agentSlice"
 import { fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
@@ -237,6 +237,9 @@ const MobileFilterSidebar = ({
   setIsSortExpanded,
   paymentTypeOptions,
   resolutionActionOptions,
+  handleCustomerSearch,
+  searchTerms,
+  searchLoading,
 }: {
   isOpen: boolean
   onClose: () => void
@@ -257,6 +260,9 @@ const MobileFilterSidebar = ({
   setIsSortExpanded: (value: boolean | ((prev: boolean) => boolean)) => void
   paymentTypeOptions: Array<{ value: string | number; label: string }>
   resolutionActionOptions: Array<{ value: string; label: string }>
+  handleCustomerSearch?: (searchTerm: string) => void
+  searchTerms?: Record<string, string>
+  searchLoading?: Record<string, boolean>
 }) => {
   return (
     <AnimatePresence mode="wait">
@@ -312,6 +318,10 @@ const MobileFilterSidebar = ({
                     options={customerOptions}
                     className="w-full"
                     controlClassName="h-9 text-sm"
+                    onSearchChange={handleCustomerSearch}
+                    searchTerm={searchTerms?.customer || ""}
+                    searchable
+                    disabled={searchLoading?.customer}
                   />
                 </div>
 
@@ -579,7 +589,7 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
   const router = useRouter()
   const customersState = useAppSelector((state) => state.customers)
   const { dataQuality, dataQualityLoading, dataQualityError, dataQualityPagination } = customersState
-  const { customers } = useAppSelector((state) => state.customers)
+  const { customers } = useAppSelector((state) => state.formData)
   const { vendors } = useAppSelector((state) => state.vendors)
   const { agents } = useAppSelector((state) => state.agents)
   const { paymentTypes } = useAppSelector((state) => state.paymentTypes)
@@ -604,6 +614,62 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
   const [showMobileFiltersLocal, setShowMobileFiltersLocal] = useState(false)
   const [showDesktopFiltersLocal, setShowDesktopFiltersLocal] = useState(true)
   const [isSortExpanded, setIsSortExpanded] = useState(false)
+
+  // Search states for dropdowns
+  const [searchTerms, setSearchTerms] = useState<Record<string, string>>({
+    customer: "",
+  })
+
+  // Search loading states
+  const [searchLoading, setSearchLoading] = useState<Record<string, boolean>>({
+    customer: false,
+  })
+
+  // Debounced search handlers
+  const debouncedSearchRef = React.useRef<Record<string, NodeJS.Timeout>>({})
+
+  // Debounced search handlers
+  const handleCustomerSearch = React.useCallback(
+    (searchTerm: string) => {
+      setSearchTerms((prev) => ({ ...prev, customer: searchTerm }))
+
+      // Clear existing timeout
+      if (debouncedSearchRef.current.customer) {
+        clearTimeout(debouncedSearchRef.current.customer)
+      }
+
+      // Set new timeout for debounced API call
+      debouncedSearchRef.current.customer = setTimeout(() => {
+        if (searchTerm.trim()) {
+          setSearchLoading((prev) => ({ ...prev, customer: true }))
+
+          // Check if search term is a pure number (ID search)
+          const isNumericSearch = /^\d+$/.test(searchTerm.trim())
+          const searchValue = isNumericSearch ? searchTerm.trim() : searchTerm.trim()
+
+          dispatch(
+            fetchCustomers({
+              PageNumber: 1,
+              PageSize: 50,
+              Search: searchValue,
+            })
+          ).finally(() => {
+            setSearchLoading((prev) => ({ ...prev, customer: false }))
+          })
+        } else if (searchTerm === "") {
+          // Only reload default data when search is explicitly cleared (empty string)
+          // Don't reload on initial mount or when dropdown closes
+          dispatch(
+            fetchCustomers({
+              PageNumber: 1,
+              PageSize: 100,
+            })
+          )
+        }
+      }, 500) // 500ms debounce delay
+    },
+    [dispatch]
+  )
 
   // Resolve data quality modal state
   const [isResolveModalOpen, setIsResolveModalOpen] = useState(false)
@@ -706,8 +772,8 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
   useEffect(() => {
     dispatch(
       fetchCustomers({
-        pageNumber: 1,
-        pageSize: 100,
+        PageNumber: 1,
+        PageSize: 100,
       })
     )
     dispatch(
@@ -1555,6 +1621,10 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
                   options={customerOptions}
                   className="w-full"
                   controlClassName="h-9 text-sm"
+                  onSearchChange={handleCustomerSearch}
+                  searchTerm={searchTerms.customer}
+                  searchable
+                  disabled={searchLoading.customer}
                 />
               </div>
 
@@ -1791,6 +1861,9 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
         setIsSortExpanded={setIsSortExpanded}
         paymentTypeOptions={paymentTypeOptions}
         resolutionActionOptions={resolutionActionOptions}
+        handleCustomerSearch={handleCustomerSearch}
+        searchTerms={searchTerms}
+        searchLoading={searchLoading}
       />
 
       {/* Export CSV Modal */}
@@ -1804,7 +1877,7 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
             onClick={() => setShowExportModal(false)}
           >
             <motion.div
-              className="w-full max-w-lg rounded-lg bg-white shadow-xl"
+              className="w-full max-w-2xl rounded-lg bg-white shadow-xl"
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
@@ -1884,47 +1957,43 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="mb-2 block text-sm font-medium text-gray-700">Status</label>
-                      <select
+                      <FormSelectModule
+                        name="exportStatus"
                         value={exportStatus}
                         onChange={(e) => setExportStatus(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
-                      >
-                        <option value="all">All Status</option>
-                        <option value="Open">Open</option>
-                        <option value="Resolved">Resolved</option>
-                      </select>
+                        options={statusOptions}
+                        className="w-full"
+                        controlClassName="h-9 text-sm"
+                      />
                     </div>
                     <div>
                       <label className="mb-2 block text-sm font-medium text-gray-700">Channel</label>
-                      <select
+                      <FormSelectModule
+                        name="exportChannel"
                         value={exportChannel}
                         onChange={(e) => setExportChannel(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
-                      >
-                        <option value="all">All Channels</option>
-                        <option value="Cash">Cash</option>
-                        <option value="BankTransfer">Bank Transfer</option>
-                        <option value="Pos">POS</option>
-                        <option value="Card">Card</option>
-                        <option value="VendorWallet">Vendor Wallet</option>
-                        <option value="Chaque">Chaque</option>
-                        <option value="BankDeposit">Bank Deposit</option>
-                        <option value="Vendor">Vendor</option>
-                        <option value="Migration">Migration</option>
-                      </select>
+                        options={channelOptions}
+                        className="w-full"
+                        controlClassName="h-9 text-sm"
+                      />
                     </div>
                   </div>
 
                   {/* ID Filters */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-700">Customer ID</label>
-                      <input
-                        type="text"
-                        placeholder="Enter ID"
+                      <label className="mb-2 block text-sm font-medium text-gray-700">Customer</label>
+                      <FormSelectModule
+                        name="exportCustomerId"
                         value={exportCustomerId}
                         onChange={(e) => setExportCustomerId(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                        options={customerOptions}
+                        className="w-full"
+                        controlClassName="h-9 text-sm"
+                        onSearchChange={handleCustomerSearch}
+                        searchTerm={searchTerms?.customer || ""}
+                        searchable
+                        disabled={searchLoading?.customer}
                       />
                     </div>
                     <div>
@@ -1942,23 +2011,25 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
                   {/* Additional Filters */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-700">Vendor ID</label>
-                      <input
-                        type="text"
-                        placeholder="Enter ID"
+                      <label className="mb-2 block text-sm font-medium text-gray-700">Vendor</label>
+                      <FormSelectModule
+                        name="exportVendorId"
                         value={exportVendorId}
                         onChange={(e) => setExportVendorId(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                        options={vendorOptions}
+                        className="w-full"
+                        controlClassName="h-9 text-sm"
                       />
                     </div>
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-700">Agent ID</label>
-                      <input
-                        type="text"
-                        placeholder="Enter ID"
+                      <label className="mb-2 block text-sm font-medium text-gray-700">Agent</label>
+                      <FormSelectModule
+                        name="exportAgentId"
                         value={exportAgentId}
                         onChange={(e) => setExportAgentId(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                        options={agentOptions}
+                        className="w-full"
+                        controlClassName="h-9 text-sm"
                       />
                     </div>
                   </div>
@@ -1966,18 +2037,14 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
                   {/* Payment Type */}
                   <div>
                     <label className="mb-2 block text-sm font-medium text-gray-700">Payment Type</label>
-                    <select
+                    <FormSelectModule
+                      name="exportPaymentTypeId"
                       value={exportPaymentTypeId}
                       onChange={(e) => setExportPaymentTypeId(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
-                    >
-                      <option value="">All Types</option>
-                      {paymentTypes?.map((type) => (
-                        <option key={type.id} value={type.id}>
-                          {type.name}
-                        </option>
-                      )) || []}
-                    </select>
+                      options={paymentTypeOptions}
+                      className="w-full"
+                      controlClassName="h-9 text-sm"
+                    />
                   </div>
                 </div>
               </div>

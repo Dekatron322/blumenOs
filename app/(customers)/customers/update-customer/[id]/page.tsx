@@ -18,8 +18,7 @@ import {
   updateCustomerById,
   UpdateCustomerRequest,
 } from "lib/redux/customerSlice"
-import { fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
-import { fetchServiceStations } from "lib/redux/serviceStationsSlice"
+import { fetchDistributionSubstations, fetchServiceCenters } from "lib/redux/formDataSlice"
 import { fetchEmployees } from "lib/redux/employeeSlice"
 import { fetchCountries } from "lib/redux/countriesSlice"
 import { fetchCustomerCategories, fetchSubCategoriesByCategoryId } from "lib/redux/customersCategoriesSlice"
@@ -76,17 +75,13 @@ const UpdateCustomerPage = () => {
   const { updateLoading, updateError, updateSuccess, currentCustomer, currentCustomerLoading, currentCustomerError } =
     useSelector((state: RootState) => state.customers)
 
-  const {
-    distributionSubstations,
-    loading: distributionSubstationsLoading,
-    error: distributionSubstationsError,
-  } = useSelector((state: RootState) => state.distributionSubstations)
+  const { distributionSubstations, distributionSubstationsLoading, distributionSubstationsError } = useSelector(
+    (state: RootState) => state.formData
+  )
 
-  const {
-    serviceStations,
-    loading: serviceStationsLoading,
-    error: serviceStationsError,
-  } = useSelector((state: RootState) => state.serviceStations)
+  const { serviceCenters, serviceCentersLoading, serviceCentersError } = useSelector(
+    (state: RootState) => state.formData
+  )
 
   const { employees, employeesLoading, employeesError } = useSelector((state: RootState) => state.employee)
 
@@ -151,6 +146,21 @@ const UpdateCustomerPage = () => {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
   const [activeSection, setActiveSection] = useState<string>("personal")
 
+  // Search states for dropdowns
+  const [searchTerms, setSearchTerms] = useState<Record<string, string>>({
+    distributionSubstation: "",
+    serviceCenter: "",
+  })
+
+  // Search loading states
+  const [searchLoading, setSearchLoading] = useState<Record<string, boolean>>({
+    distributionSubstation: false,
+    serviceCenter: false,
+  })
+
+  // Debounced search handlers
+  const debouncedSearchRef = React.useRef<Record<string, NodeJS.Timeout>>({})
+
   // Fetch customer data and related data when component mounts or ID changes
   useEffect(() => {
     if (id) {
@@ -175,16 +185,16 @@ const UpdateCustomerPage = () => {
     // Fetch distribution substations for the dropdown
     dispatch(
       fetchDistributionSubstations({
-        pageNumber: 1,
-        pageSize: 100,
+        PageNumber: 1,
+        PageSize: 100,
       })
     )
 
     // Fetch service centers for the dropdown
     dispatch(
-      fetchServiceStations({
-        pageNumber: 1,
-        pageSize: 100,
+      fetchServiceCenters({
+        PageNumber: 1,
+        PageSize: 100,
       })
     )
 
@@ -299,21 +309,106 @@ const UpdateCustomerPage = () => {
     }
   }, [updateSuccess, updateError, currentCustomerError, formData.fullName, router])
 
+  // Debounced search handlers
+  const handleDistributionSubstationSearch = React.useCallback(
+    (searchTerm: string) => {
+      setSearchTerms((prev) => ({ ...prev, distributionSubstation: searchTerm }))
+
+      // Clear existing timeout
+      if (debouncedSearchRef.current.distributionSubstation) {
+        clearTimeout(debouncedSearchRef.current.distributionSubstation)
+      }
+
+      // Set new timeout for debounced API call
+      debouncedSearchRef.current.distributionSubstation = setTimeout(() => {
+        if (searchTerm.trim()) {
+          setSearchLoading((prev) => ({ ...prev, distributionSubstation: true }))
+
+          // Check if search term is a pure number (ID search)
+          const isNumericSearch = /^\d+$/.test(searchTerm.trim())
+          const searchValue = isNumericSearch ? searchTerm.trim() : searchTerm.trim()
+
+          dispatch(
+            fetchDistributionSubstations({
+              PageNumber: 1,
+              PageSize: 50,
+              Search: searchValue,
+            })
+          ).finally(() => {
+            setSearchLoading((prev) => ({ ...prev, distributionSubstation: false }))
+          })
+        } else if (searchTerm === "") {
+          // Only reload default data when search is explicitly cleared (empty string)
+          // Don't reload on initial mount or when dropdown closes
+          dispatch(
+            fetchDistributionSubstations({
+              PageNumber: 1,
+              PageSize: 100,
+            })
+          )
+        }
+      }, 500) // 500ms debounce delay
+    },
+    [dispatch]
+  )
+
+  const handleServiceCenterSearch = React.useCallback(
+    (searchTerm: string) => {
+      setSearchTerms((prev) => ({ ...prev, serviceCenter: searchTerm }))
+
+      // Clear existing timeout
+      if (debouncedSearchRef.current.serviceCenter) {
+        clearTimeout(debouncedSearchRef.current.serviceCenter)
+      }
+
+      // Set new timeout for debounced API call
+      debouncedSearchRef.current.serviceCenter = setTimeout(() => {
+        if (searchTerm.trim()) {
+          setSearchLoading((prev) => ({ ...prev, serviceCenter: true }))
+
+          // Check if search term is a pure number (ID search)
+          const isNumericSearch = /^\d+$/.test(searchTerm.trim())
+          const searchValue = isNumericSearch ? searchTerm.trim() : searchTerm.trim()
+
+          dispatch(
+            fetchServiceCenters({
+              PageNumber: 1,
+              PageSize: 50,
+              Search: searchValue,
+            })
+          ).finally(() => {
+            setSearchLoading((prev) => ({ ...prev, serviceCenter: false }))
+          })
+        } else if (searchTerm === "") {
+          // Only reload default data when search is explicitly cleared (empty string)
+          // Don't reload on initial mount or when dropdown closes
+          dispatch(
+            fetchServiceCenters({
+              PageNumber: 1,
+              PageSize: 100,
+            })
+          )
+        }
+      }, 500) // 500ms debounce delay
+    },
+    [dispatch]
+  )
+
   // Distribution substation options from fetched data
   const distributionSubstationOptions = [
     { value: 0, label: "Select distribution substation" },
     ...distributionSubstations.map((substation) => ({
       value: substation.id,
-      label: `${substation.dssCode} (${substation.nercCode})`,
+      label: `${substation.dssCode} (${substation.name})`,
     })),
   ]
 
   // Service center options from fetched data
   const serviceCenterOptions = [
     { value: 0, label: "Select service center" },
-    ...serviceStations.map((serviceStation) => ({
-      value: serviceStation.id,
-      label: `${serviceStation.name} (${serviceStation.code})`,
+    ...serviceCenters.map((serviceCenter) => ({
+      value: serviceCenter.id,
+      label: serviceCenter.name,
     })),
   ]
 
@@ -967,7 +1062,10 @@ const UpdateCustomerPage = () => {
                         options={distributionSubstationOptions}
                         error={formErrors.distributionSubstationId}
                         required
-                        disabled={distributionSubstationsLoading}
+                        disabled={distributionSubstationsLoading || searchLoading.distributionSubstation}
+                        onSearchChange={handleDistributionSubstationSearch}
+                        searchTerm={searchTerms.distributionSubstation}
+                        searchable
                       />
 
                       <FormSelectModule
@@ -978,7 +1076,10 @@ const UpdateCustomerPage = () => {
                         options={serviceCenterOptions}
                         error={formErrors.serviceCenterId}
                         required
-                        disabled={serviceStationsLoading}
+                        disabled={serviceCentersLoading || searchLoading.serviceCenter}
+                        onSearchChange={handleServiceCenterSearch}
+                        searchTerm={searchTerms.serviceCenter}
+                        searchable
                       />
 
                       <FormSelectModule
@@ -1017,9 +1118,9 @@ const UpdateCustomerPage = () => {
                         Error loading distribution substations: {distributionSubstationsError}
                       </p>
                     )}
-                    {serviceStationsLoading && <p className="text-sm text-gray-500">Loading service centers...</p>}
-                    {serviceStationsError && (
-                      <p className="text-sm text-red-500">Error loading service centers: {serviceStationsError}</p>
+                    {serviceCentersLoading && <p className="text-sm text-gray-500">Loading service centers...</p>}
+                    {serviceCentersError && (
+                      <p className="text-sm text-red-500">Error loading service centers: {serviceCentersError}</p>
                     )}
                   </div>
 
