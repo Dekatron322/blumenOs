@@ -11,13 +11,20 @@ import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { SearchModule } from "components/ui/Search/search-module"
 
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { AdjustmentsRequestParams, approveAllAdjustments, fetchAdjustments } from "lib/redux/postpaidSlice"
-import { fetchCustomers } from "lib/redux/customerSlice"
+import {
+  AdjustmentsRequestParams,
+  approveAllAdjustments,
+  clearBillAdjustmentDetailsStatus,
+  fetchAdjustments,
+  fetchBillAdjustmentDetails,
+} from "lib/redux/postpaidSlice"
 import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { fetchAreaOffices as fetchFormDataAreaOffices } from "lib/redux/formDataSlice"
 import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
-import { VscCloudUpload } from "react-icons/vsc"
+import { fetchCustomers } from "lib/redux/customerSlice"
+import { VscCloudUpload, VscEye } from "react-icons/vsc"
 import ApproveAdjustmentsModal from "components/ui/Modal/ApproveAdjustmentsModal"
+import BillAdjustmentDetailsModal from "components/ui/Modal/BillAdjustmentDetailsModal"
 
 // Status options for filters - matching the API values
 const statusOptions = [
@@ -131,6 +138,10 @@ const Adjustments: React.FC = () => {
     approveAllAdjustmentsLoading,
     approveAllAdjustmentsError,
     approveAllAdjustmentsSuccess,
+    billAdjustmentDetails,
+    billAdjustmentDetailsLoading,
+    billAdjustmentDetailsError,
+    billAdjustmentDetailsSuccess,
   } = useAppSelector((state) => state.postpaidBilling)
   const { customers, loading: customersLoading } = useAppSelector((state) => state.customers)
   const { areaOffices, areaOfficesLoading, areaOfficesError } = useAppSelector((state) => state.formData)
@@ -152,6 +163,8 @@ const Adjustments: React.FC = () => {
   const [selectedJob, setSelectedJob] = useState<any>(null)
   const [isFailuresModalOpen, setIsFailuresModalOpen] = useState(false)
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false)
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
+  const [selectedAdjustment, setSelectedAdjustment] = useState<any>(null)
   const [approveResponse, setApproveResponse] = useState<{ isSuccess: boolean; message: string } | undefined>()
   const [hasInitialLoad, setHasInitialLoad] = useState(false)
 
@@ -237,7 +250,7 @@ const Adjustments: React.FC = () => {
       void dispatch(approveAllAdjustments(billingPeriodId)).then((result) => {
         if (approveAllAdjustments.fulfilled.match(result)) {
           // Extract the response message from the result payload
-          const response = result.payload as { isSuccess: boolean; message: string }
+          const response = result.payload
           setApproveResponse(response)
 
           // Refresh the adjustments data after successful approval
@@ -372,8 +385,16 @@ const Adjustments: React.FC = () => {
   }
 
   const handleViewDetails = (adjustment: any) => {
-    console.log("View details:", adjustment)
-    // You can implement a modal or navigation to details page
+    setSelectedAdjustment(adjustment)
+    setIsDetailsModalOpen(true)
+    // Fetch adjustment details when modal opens
+    dispatch(fetchBillAdjustmentDetails(adjustment.id))
+  }
+
+  const handleCloseDetailsModal = () => {
+    setIsDetailsModalOpen(false)
+    setSelectedAdjustment(null)
+    dispatch(clearBillAdjustmentDetailsStatus())
   }
 
   const handleViewFailures = (adjustment: any) => {
@@ -654,7 +675,7 @@ const Adjustments: React.FC = () => {
                               <ButtonModule
                                 variant="outline"
                                 size="sm"
-                                icon={<Eye />}
+                                icon={<VscEye />}
                                 onClick={() => handleViewDetails(adjustment)}
                                 className="whitespace-nowrap"
                               >
@@ -724,6 +745,15 @@ const Adjustments: React.FC = () => {
         billingPeriods={billingPeriods}
         isLoading={approveAllAdjustmentsLoading}
         response={approveResponse}
+      />
+
+      {/* Bill Adjustment Details Modal */}
+      <BillAdjustmentDetailsModal
+        isOpen={isDetailsModalOpen}
+        onClose={handleCloseDetailsModal}
+        adjustmentDetails={billAdjustmentDetails}
+        loading={billAdjustmentDetailsLoading}
+        error={billAdjustmentDetailsError}
       />
     </section>
   )

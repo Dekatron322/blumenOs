@@ -63,6 +63,7 @@ export interface MeterCaptureState {
   retryLoading: boolean
   retryError: string | null
   retrySuccess: boolean
+  retryMessage: string | null
   retryAllLoading: boolean
   retryAllError: string | null
   retryAllSuccess: boolean
@@ -85,6 +86,7 @@ const initialState: MeterCaptureState = {
   retryLoading: false,
   retryError: null,
   retrySuccess: false,
+  retryMessage: null,
   retryAllLoading: false,
   retryAllError: null,
   retryAllSuccess: false,
@@ -203,6 +205,7 @@ const meterCaptureSlice = createSlice({
     clearRetryError: (state) => {
       state.retryError = null
       state.retrySuccess = false
+      state.retryMessage = null
     },
     clearRetryAllError: (state) => {
       state.retryAllError = null
@@ -216,6 +219,7 @@ const meterCaptureSlice = createSlice({
       state.retryLoading = false
       state.retryError = null
       state.retrySuccess = false
+      state.retryMessage = null
       state.retryAllLoading = false
       state.retryAllError = null
       state.retryAllSuccess = false
@@ -264,6 +268,7 @@ const meterCaptureSlice = createSlice({
       .addCase(retryMeterCapture.fulfilled, (state, action: PayloadAction<RetryMeterCaptureResponse>) => {
         state.retryLoading = false
         state.retrySuccess = true
+        state.retryMessage = action.payload.message
       })
       .addCase(retryMeterCapture.rejected, (state, action) => {
         state.retryLoading = false
