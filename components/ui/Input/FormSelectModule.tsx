@@ -18,6 +18,7 @@ interface FormSelectModuleProps {
   searchable?: boolean
   searchTerm?: string
   onSearchChange?: (searchTerm: string) => void
+  onSearchClick?: () => void
 }
 
 export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
@@ -34,6 +35,7 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
   searchable = false,
   searchTerm = "",
   onSearchChange,
+  onSearchClick,
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
@@ -44,8 +46,10 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
   // Use external search term if searchable, otherwise use local search
   const effectiveSearchTerm = searchable ? searchTerm : localSearchTerm
 
-  const filteredOptions =
-    options?.filter((option) => String(option.label).toLowerCase().includes(effectiveSearchTerm.toLowerCase())) || []
+  // Don't filter options when searchable - only show all options
+  const displayOptions = searchable
+    ? options
+    : options?.filter((option) => String(option.label).toLowerCase().includes(effectiveSearchTerm.toLowerCase())) || []
 
   const handleSelect = (value: string | number) => {
     const syntheticEvent = {
@@ -128,24 +132,35 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
           className="absolute z-10 mt-1 w-full rounded-md border border-[#E0E0E0] bg-white shadow-lg"
         >
           <div className="border-b border-[#E0E0E0] px-3 py-2">
-            <input
-              type="text"
-              value={effectiveSearchTerm}
-              onChange={(e) => {
-                const newSearchTerm = e.target.value
-                if (searchable && onSearchChange) {
-                  onSearchChange(newSearchTerm)
-                } else {
-                  setLocalSearchTerm(newSearchTerm)
-                }
-              }}
-              placeholder="Search by ID, code, or name..."
-              className="h-8 w-full rounded border border-[#E0E0E0] bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#004B23]"
-              autoFocus
-            />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={effectiveSearchTerm}
+                onChange={(e) => {
+                  const newSearchTerm = e.target.value
+                  if (searchable && onSearchChange) {
+                    onSearchChange(newSearchTerm)
+                  } else {
+                    setLocalSearchTerm(newSearchTerm)
+                  }
+                }}
+                placeholder="Search by ID, code, or name..."
+                className="h-8 flex-1 rounded border border-[#E0E0E0] bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#004B23]"
+                autoFocus
+              />
+              {searchable && (
+                <button
+                  type="button"
+                  onClick={onSearchClick || (() => onSearchChange?.(effectiveSearchTerm))}
+                  className="h-8 rounded bg-[#004B23] px-3 text-xs font-medium text-white hover:bg-[#003819] focus:outline-none focus:ring-2 focus:ring-[#004B23]"
+                >
+                  Search
+                </button>
+              )}
+            </div>
           </div>
           <div className="max-h-60 overflow-auto py-1">
-            {filteredOptions.map((option) => (
+            {displayOptions.map((option) => (
               <div
                 key={option.value}
                 className={`px-3 py-2 text-base hover:bg-[#F0fdf4] ${

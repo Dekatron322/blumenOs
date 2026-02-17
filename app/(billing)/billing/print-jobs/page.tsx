@@ -1436,7 +1436,6 @@ const PrintJobs = () => {
         success={singleBillingPrintSuccess}
         message={singleBillingPrintMessage}
         billingPeriods={billingPeriods}
-        feeders={feeders}
       />
 
       {/* Print Job Files Modal */}

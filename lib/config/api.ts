@@ -544,6 +544,15 @@ export const API_ENDPOINTS = {
   AUDIT_LOGS: {
     audit_logs: "/system/audit/logs",
   },
+
+  FORM_DATA: {
+    feeders: "/form-data/feeders",
+    area_office: "/form-data/area-offices",
+    distribution_substation: "/form-data/dss",
+    customers: "/form-data/customers",
+    meters: "/form-data/meters",
+    service_centers: "/form-data/service-centers",
+  },
 }
 
 // Helper function to build full URL
