@@ -252,7 +252,7 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
             )}
             {!loading && displayOptions.length === 0 && effectiveSearchTerm && (
               <div className="px-3 py-4 text-center text-sm text-gray-500">
-                No results found for "{effectiveSearchTerm}"
+                No results found for &quot;{effectiveSearchTerm}&quot;
               </div>
             )}
           </div>

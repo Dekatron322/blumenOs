@@ -4,36 +4,42 @@ import { AnimatePresence, motion } from "framer-motion"
 import { FileText, RotateCcw } from "lucide-react"
 import { MdCalendarToday, MdClose, MdError, MdInfo } from "react-icons/md"
 import { ButtonModule } from "components/ui/Button/Button"
+import { notify } from "components/ui/Notification/Notification"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import { retryMeterCapture } from "lib/redux/meterCaptureSlice"
 
 interface MeterCaptureDetailsModalProps {
   isOpen: boolean
   onClose: () => void
   meterCapture: any
-  onRetry?: (id: number) => void
-  retryLoading?: boolean
-  retryDisabled?: boolean
 }
 
-const MeterCaptureDetailsModal: React.FC<MeterCaptureDetailsModalProps> = ({
-  isOpen,
-  onClose,
-  meterCapture,
-  onRetry,
-  retryLoading,
-}) => {
+const MeterCaptureDetailsModal: React.FC<MeterCaptureDetailsModalProps> = ({ isOpen, onClose, meterCapture }) => {
+  const dispatch = useAppDispatch()
+  const { retryLoading, retryError, retrySuccess, retryMessage } = useAppSelector((state) => state.meterCapture)
+
   const handleClose = () => {
     onClose()
   }
 
   const handleRetry = async () => {
-    if (onRetry && meterCapture) {
+    if (meterCapture) {
       try {
-        await onRetry(meterCapture.id)
-        // Close modal on successful retry
-        onClose()
-      } catch (error) {
-        // Error is handled by the parent component
-        console.error("Retry failed:", error)
+        const result = await dispatch(retryMeterCapture(meterCapture.id)).unwrap()
+        if (result.isSuccess) {
+          // Close modal after successful retry - notification will be shown by parent page
+          setTimeout(() => {
+            onClose()
+          }, 1000)
+        }
+      } catch (error: any) {
+        // Show error notification with the exact error message
+        const errorMessage = error || "Failed to retry meter capture"
+        notify("error", errorMessage, {
+          title: "Retry Failed",
+          description: errorMessage,
+          duration: 5000,
+        })
       }
     }
   }
@@ -255,7 +261,7 @@ const MeterCaptureDetailsModal: React.FC<MeterCaptureDetailsModalProps> = ({
                   <div className="rounded-lg border border-red-200 bg-red-100 p-3">
                     <p className="font-mono text-sm text-red-800">{meterCapture.error}</p>
                   </div>
-                  {meterCapture.status === 1 && onRetry && (
+                  {meterCapture.status === 1 && (
                     <div className="mt-4">
                       <ButtonModule
                         onClick={handleRetry}

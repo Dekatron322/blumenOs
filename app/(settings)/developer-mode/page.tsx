@@ -31,7 +31,7 @@ export default function DevModePage() {
             <div className="mb-8">
               <div className="flex items-center justify-between rounded-xl border border-gray-700/30 bg-gray-800/30 p-4">
                 <div className="flex items-center space-x-3">
-                  <div className="h-3 w-3 animate-pulse rounded-full bg-green-500" />
+                  <div className="size-3 animate-pulse rounded-full bg-green-500" />
                   <span className="font-medium text-white">Dev Mode Status</span>
                 </div>
                 <span className="rounded-full border border-green-500/30 bg-green-500/20 px-3 py-1 text-sm font-semibold text-green-400">

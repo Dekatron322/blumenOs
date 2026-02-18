@@ -1625,11 +1625,11 @@ export default function Dashboard() {
                               </div>
                               <div className="mt-4 flex justify-center gap-4">
                                 <div className="flex items-center gap-2">
-                                  <div className="h-3 w-3 animate-pulse rounded bg-gray-300"></div>
+                                  <div className="size-3 animate-pulse rounded bg-gray-300"></div>
                                   <div className="h-3 w-16 animate-pulse rounded bg-gray-200"></div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <div className="h-3 w-3 animate-pulse rounded bg-gray-300"></div>
+                                  <div className="size-3 animate-pulse rounded bg-gray-300"></div>
                                   <div className="h-3 w-12 animate-pulse rounded bg-gray-200"></div>
                                 </div>
                               </div>
@@ -1904,11 +1904,11 @@ export default function Dashboard() {
                           </div>
                           <div className="mt-4 flex justify-center gap-4">
                             <div className="flex items-center gap-2">
-                              <div className="h-3 w-3 animate-pulse rounded bg-gray-300"></div>
+                              <div className="size-3 animate-pulse rounded bg-gray-300"></div>
                               <div className="h-3 w-16 animate-pulse rounded bg-gray-200"></div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <div className="h-3 w-3 animate-pulse rounded bg-gray-300"></div>
+                              <div className="size-3 animate-pulse rounded bg-gray-300"></div>
                               <div className="h-3 w-12 animate-pulse rounded bg-gray-200"></div>
                             </div>
                           </div>

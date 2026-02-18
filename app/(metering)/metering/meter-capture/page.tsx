@@ -584,14 +584,20 @@ const MeterCapture: React.FC = () => {
   // Show toast notifications for retry operations
   useEffect(() => {
     if (retrySuccess) {
-      notify("success", "The meter capture has been queued for retry.", { title: "Retry Successful" })
+      notify("success", "Vendor enumeration retry queued.", {
+        title: "Retry Successful",
+        description: "Vendor enumeration retry queued.",
+      })
       dispatch(clearRetryError())
     }
   }, [retrySuccess, dispatch])
 
   useEffect(() => {
     if (retryError) {
-      notify("error", retryError, { title: "Retry Failed" })
+      notify("error", retryError, {
+        title: "Retry Failed",
+        description: retryError,
+      })
     }
   }, [retryError])
 
@@ -1377,7 +1383,6 @@ const MeterCapture: React.FC = () => {
         isOpen={isDetailsModalOpen}
         onClose={handleCloseDetailsModal}
         meterCapture={selectedCapture}
-        retryLoading={retryLoading}
       />
 
       {/* Vendor Summary Filter Modal */}

@@ -248,6 +248,10 @@ const TestToken = () => {
   }
 
   const formatTokenDecimal = (token: string) => {
+    // Handle null/undefined and ensure it's a string
+    if (!token || typeof token !== "string") {
+      return token || ""
+    }
     // Remove any non-digit characters first
     const cleanToken = token.replace(/\D/g, "")
     // Format as groups of 4 digits separated by hyphens
@@ -798,7 +802,7 @@ const TestToken = () => {
                       </div>
 
                       {/* Test Token Parameters */}
-                      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      {/* <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
                           <label className="mb-2 block text-sm font-medium text-gray-700">Control Value</label>
                           <FormInputModule
@@ -821,7 +825,7 @@ const TestToken = () => {
                             label={""}
                           />
                         </div>
-                      </div>
+                      </div> */}
 
                       <div className="mt-6">
                         <ButtonModule

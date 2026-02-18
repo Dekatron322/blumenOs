@@ -303,6 +303,7 @@ export const API_ENDPOINTS = {
     MARK_AS_READY_TO_PRINT: "/billing/postpaid/ready-to-print",
     SINGLE_BILLING_PRINT: "/billing/postpaid/print/batch",
     DOWNLOAD_PRINT_JOB: "/billing/postpaid/print/batch/{id}/download",
+    BILL_ADJUSTMENT_DETAILS: "/billing/postpaid/bills/adjustments/{id}/financial-statement",
   },
 
   BILLING_PERIODS: {

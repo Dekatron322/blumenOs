@@ -1171,7 +1171,7 @@ export default function AgentManagementDashboard() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center justify-center gap-2 text-xs text-gray-600 sm:justify-start sm:text-sm">
                     <svg
-                      className="h-3 w-3 text-gray-400 sm:h-4 sm:w-4"
+                      className="size-3 text-gray-400 sm:h-4 sm:w-4"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"

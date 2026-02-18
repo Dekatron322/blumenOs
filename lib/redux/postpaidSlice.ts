@@ -671,6 +671,87 @@ export interface AdjustmentsRequestParams {
   status?: number
 }
 
+// Bill Adjustment Details Interfaces
+export interface BillAdjustmentCustomer {
+  id: number
+  fullName: string
+  accountNumber: string
+  address: string
+  phoneNumber: string
+}
+
+export interface BillAdjustmentBill {
+  id: number
+  billingId: string
+  period: string
+  status: number
+  category: number
+  openingBalance: number
+  totalPaymentAmount: number
+  adjustedOpeningBalance: number
+  chargeBeforeVat: number
+  vatAmount: number
+  currentBillAmount: number
+  baseTotalDue: number
+  adjustmentAmount: number
+  adjustedTotalDue: number
+  lastAdjustmentAmount: number
+  adjustmentStatus: number
+}
+
+export interface BillAdjustmentAccountSummary {
+  totalDebits: number
+  totalCredits: number
+  netBalance: number
+  outstandingDebtBalance: number
+  outstandingCreditBalance: number
+  billDebits: number
+  billCredits: number
+  billNetBalance: number
+}
+
+export interface BillAdjustmentStatementEntry {
+  id: number
+  effectiveAtUtc: string
+  type: number
+  amount: number
+  code: string
+  memo: string
+  referenceId: number
+  postpaidBillId: number
+  paymentTransactionId: number
+}
+
+export interface BillAdjustmentPayment {
+  id: number
+  reference: string
+  amount: number
+  status: "Pending" | string
+  channel: "Cash" | string
+  paidAtUtc: string
+  confirmedAtUtc: string
+}
+
+export interface BillAdjustmentDetails {
+  adjustmentId: number
+  adjustmentStatus: number
+  adjustmentAmount: number
+  approvedAtUtc: string
+  approvedByName: string
+  statementGeneratedAtUtc: string
+  customer: BillAdjustmentCustomer
+  bill: BillAdjustmentBill
+  accountSummary: BillAdjustmentAccountSummary
+  statementEntries: BillAdjustmentStatementEntry[]
+  payments: BillAdjustmentPayment[]
+}
+
+export interface BillAdjustmentDetailsResponse {
+  isSuccess: boolean
+  message: string
+  data: BillAdjustmentDetails
+}
+
 // Single Billing Print Interfaces
 export interface SingleBillingPrintRequest {
   billingPeriodId: number
@@ -879,6 +960,12 @@ interface PostpaidBillingState {
   approveAllAdjustmentsError: string | null
   approveAllAdjustmentsSuccess: boolean
 
+  // Bill Adjustment Details state
+  billAdjustmentDetails: BillAdjustmentDetails | null
+  billAdjustmentDetailsLoading: boolean
+  billAdjustmentDetailsError: string | null
+  billAdjustmentDetailsSuccess: boolean
+
   // Vendor Summary Report state
   vendorSummaryReport: VendorSummaryReportData | null
   vendorSummaryReportLoading: boolean
@@ -1080,6 +1167,13 @@ const initialState: PostpaidBillingState = {
   approveAllAdjustmentsLoading: false,
   approveAllAdjustmentsError: null,
   approveAllAdjustmentsSuccess: false,
+
+  // Bill Adjustment Details state
+  billAdjustmentDetails: null,
+  billAdjustmentDetailsLoading: false,
+  billAdjustmentDetailsError: null,
+  billAdjustmentDetailsSuccess: false,
+
   vendorSummaryReport: null,
   vendorSummaryReportLoading: false,
   vendorSummaryReportError: null,
@@ -1690,9 +1784,12 @@ export const approveAllAdjustments = createAsyncThunk(
   "postpaidBilling/approveAllAdjustments",
   async (billingPeriodId: number, { rejectWithValue }) => {
     try {
-      const response = await api.post(buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.APPROVE_ALL_ADJUSTMENTS), {
-        billingPeriodId,
-      })
+      const response = await api.post<{ isSuccess: boolean; message: string }>(
+        buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.APPROVE_ALL_ADJUSTMENTS),
+        {
+          billingPeriodId,
+        }
+      )
 
       if (!response.data.isSuccess) {
         return rejectWithValue(response.data.message || "Failed to approve all adjustments")
@@ -1704,6 +1801,34 @@ export const approveAllAdjustments = createAsyncThunk(
         return rejectWithValue(error.response.data.message || "Failed to approve all adjustments")
       }
       return rejectWithValue(error.message || "Network error during approve all adjustments")
+    }
+  }
+)
+
+// Fetch Bill Adjustment Details Async Thunk
+export const fetchBillAdjustmentDetails = createAsyncThunk<BillAdjustmentDetails, number, { rejectValue: string }>(
+  "postpaidBilling/fetchBillAdjustmentDetails",
+  async (adjustmentId: number, { rejectWithValue }) => {
+    try {
+      const endpoint = buildEndpointWithParams(API_ENDPOINTS.POSTPAID_BILLING.BILL_ADJUSTMENT_DETAILS, {
+        id: adjustmentId,
+      })
+      const response = await api.get<BillAdjustmentDetailsResponse>(buildApiUrl(endpoint))
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch bill adjustment details")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("No bill adjustment details data received")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch bill adjustment details")
+      }
+      return rejectWithValue(error.message || "Network error during bill adjustment details fetch")
     }
   }
 )
@@ -2154,6 +2279,14 @@ const postpaidSlice = createSlice({
       state.approveAllAdjustmentsLoading = false
       state.approveAllAdjustmentsError = null
       state.approveAllAdjustmentsSuccess = false
+    },
+
+    // Clear bill adjustment details status
+    clearBillAdjustmentDetailsStatus: (state) => {
+      state.billAdjustmentDetailsLoading = false
+      state.billAdjustmentDetailsError = null
+      state.billAdjustmentDetailsSuccess = false
+      state.billAdjustmentDetails = null
     },
 
     // Clear vendor summary report status
@@ -2963,6 +3096,24 @@ const postpaidSlice = createSlice({
         state.approveAllAdjustmentsError = (action.payload as string) || "Failed to approve all adjustments"
         state.approveAllAdjustmentsSuccess = false
       })
+      // Fetch bill adjustment details cases
+      .addCase(fetchBillAdjustmentDetails.pending, (state) => {
+        state.billAdjustmentDetailsLoading = true
+        state.billAdjustmentDetailsError = null
+        state.billAdjustmentDetailsSuccess = false
+      })
+      .addCase(fetchBillAdjustmentDetails.fulfilled, (state, action: PayloadAction<BillAdjustmentDetails>) => {
+        state.billAdjustmentDetailsLoading = false
+        state.billAdjustmentDetailsSuccess = true
+        state.billAdjustmentDetailsError = null
+        state.billAdjustmentDetails = action.payload
+      })
+      .addCase(fetchBillAdjustmentDetails.rejected, (state, action) => {
+        state.billAdjustmentDetailsLoading = false
+        state.billAdjustmentDetailsError = (action.payload as string) || "Failed to fetch bill adjustment details"
+        state.billAdjustmentDetailsSuccess = false
+        state.billAdjustmentDetails = null
+      })
       // Fetch vendor summary report cases
       .addCase(fetchVendorSummaryReport.pending, (state) => {
         state.vendorSummaryReportLoading = true
@@ -3123,6 +3274,7 @@ export const {
   clearFinalizeSingleBillStatus,
   clearAdjustmentsStatus,
   clearApproveAllAdjustmentsStatus,
+  clearBillAdjustmentDetailsStatus,
   clearVendorSummaryReportStatus,
   clearDownloadARStatus,
   clearPrintingJobsStatus,

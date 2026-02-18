@@ -136,7 +136,7 @@ const SelectUserType: React.FC = () => {
                       }`}
                     >
                       <div className="flex size-6 items-center justify-center rounded-full bg-[#004B23]">
-                        <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="size-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
