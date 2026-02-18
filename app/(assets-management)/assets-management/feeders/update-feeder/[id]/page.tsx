@@ -27,6 +27,7 @@ interface FeederFormData {
   nercCode: string
   kaedcoFeederCode: string
   feederVoltage: number
+  band: number
 }
 
 const UpdateFeederPage = () => {
@@ -53,6 +54,7 @@ const UpdateFeederPage = () => {
     nercCode: "",
     kaedcoFeederCode: "",
     feederVoltage: 0,
+    band: 0,
   })
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
@@ -105,6 +107,7 @@ const UpdateFeederPage = () => {
         nercCode: currentFeeder.nercCode || "",
         kaedcoFeederCode: currentFeeder.kaedcoFeederCode || "",
         feederVoltage: currentFeeder.feederVoltage || 0,
+        band: (currentFeeder as any).band || 0,
       })
     }
   }, [currentFeeder])
@@ -154,6 +157,31 @@ const UpdateFeederPage = () => {
     })),
   ]
 
+  // Helper function to get band text
+  const getBandText = (band?: number): string => {
+    if (!band || band === 0) {
+      return "N/A"
+    }
+    const bandMap: { [key: number]: string } = {
+      1: "A",
+      2: "B",
+      3: "C",
+      4: "D",
+      5: "E",
+    }
+    return bandMap[band] || "N/A"
+  }
+
+  // Service band options
+  const bandOptions = [
+    { value: 0, label: "Select band" },
+    { value: 1, label: "Band A" },
+    { value: 2, label: "Band B" },
+    { value: 3, label: "Band C" },
+    { value: 4, label: "Band D" },
+    { value: 5, label: "Band E" },
+  ]
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: any } }
   ) => {
@@ -161,7 +189,7 @@ const UpdateFeederPage = () => {
 
     // Handle number fields
     let processedValue = value
-    if (["injectionSubstationId", "htPoleId", "feederVoltage"].includes(name)) {
+    if (["injectionSubstationId", "htPoleId", "feederVoltage", "band"].includes(name)) {
       processedValue = Number(value)
     }
 
@@ -208,6 +236,10 @@ const UpdateFeederPage = () => {
       errors.feederVoltage = "Feeder voltage must be a positive number"
     }
 
+    if (formData.band === 0) {
+      errors.band = "Band is required"
+    }
+
     setFormErrors(errors)
     return Object.keys(errors).length === 0
   }
@@ -251,6 +283,7 @@ const UpdateFeederPage = () => {
         nercCode: formData.nercCode,
         kaedcoFeederCode: formData.kaedcoFeederCode,
         feederVoltage: formData.feederVoltage,
+        band: formData.band,
       }
 
       const result = await dispatch(updateFeeder({ id: feederId, feederData: updateData })).unwrap()
@@ -273,6 +306,7 @@ const UpdateFeederPage = () => {
         nercCode: currentFeeder.nercCode || "",
         kaedcoFeederCode: currentFeeder.kaedcoFeederCode || "",
         feederVoltage: currentFeeder.feederVoltage || 0,
+        band: (currentFeeder as any).band || 0,
       })
     }
     setFormErrors({})
@@ -290,7 +324,8 @@ const UpdateFeederPage = () => {
       formData.name.trim() !== "" &&
       formData.nercCode.trim() !== "" &&
       formData.kaedcoFeederCode.trim() !== "" &&
-      formData.feederVoltage !== 0
+      formData.feederVoltage !== 0 &&
+      formData.band !== 0
     )
   }
 
@@ -498,6 +533,16 @@ const UpdateFeederPage = () => {
                           value={formData.feederVoltage}
                           onChange={handleInputChange}
                           error={formErrors.feederVoltage}
+                          required
+                        />
+
+                        <FormSelectModule
+                          label="Service Band"
+                          name="band"
+                          value={formData.band}
+                          onChange={handleInputChange}
+                          options={bandOptions}
+                          error={formErrors.band}
                           required
                         />
                       </div>

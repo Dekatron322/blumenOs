@@ -801,7 +801,7 @@ const FeedersTab: React.FC = () => {
                           <div className="flex items-center gap-2">Injection Substation</div>
                         </th>
                         <th className="whitespace-nowrap border-b p-4 text-sm">
-                          <div className="flex items-center gap-2">HT Pole</div>
+                          <div className="flex items-center gap-2">Service Band</div>
                         </th>
                         <th className="whitespace-nowrap border-b p-4 text-sm">
                           <div className="flex items-center gap-2">Status</div>
@@ -833,7 +833,7 @@ const FeedersTab: React.FC = () => {
                               {feeder?.injectionSubstation?.injectionSubstationCode || "-"}
                             </td>
                             <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                              {feeder.htPole?.htPoleNumber || "-"}
+                              {feeder.band ? String.fromCharCode(64 + parseInt(feeder.band.toString())) : "-"}
                             </td>
                             <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                               {(() => {
