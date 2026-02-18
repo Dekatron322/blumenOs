@@ -90,7 +90,7 @@ interface ExistingUserFormData {
   status: string
   cashCollectionLimit: string
   maxSingleAllowedCashAmount: string
-  canCollectCash: boolean
+  canCollectCash: boolean | undefined
 }
 
 // For CSV bulk upload
@@ -206,7 +206,7 @@ const AddNewAgent = () => {
     status: "ACTIVE",
     cashCollectionLimit: "",
     maxSingleAllowedCashAmount: "",
-    canCollectCash: false,
+    canCollectCash: undefined,
   })
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
@@ -746,7 +746,7 @@ const AddNewAgent = () => {
         ? parseFloat(existingUserFormData.cashCollectionLimit.replace(/[₦,]/g, "")) || 0
         : 0,
       maxSingleAllowedCashAmount: parseFloat(existingUserFormData.maxSingleAllowedCashAmount.replace(/[₦,]/g, "")) || 0,
-      canCollectCash: existingUserFormData.canCollectCash,
+      canCollectCash: existingUserFormData.canCollectCash ?? false,
     }
 
     dispatch(addExistingUserAsAgent(agentData))
@@ -903,10 +903,7 @@ const AddNewAgent = () => {
         )
 
       case "Cashier":
-        return (
-          existingUserFormData.maxSingleAllowedCashAmount.trim() !== "" &&
-          existingUserFormData.canCollectCash !== undefined
-        )
+        return existingUserFormData.canCollectCash !== undefined && existingUserFormData.canCollectCash !== null
 
       case "ClearingCashier":
         return existingUserFormData.maxSingleAllowedCashAmount.trim() !== "" // Manager agent now optional
@@ -2087,7 +2084,7 @@ const AddNewAgent = () => {
                               <FormSelectModule
                                 label="Can Collect Cash?"
                                 name="canCollectCash"
-                                value={existingUserFormData.canCollectCash.toString()}
+                                value={existingUserFormData.canCollectCash?.toString() || ""}
                                 onChange={(e) =>
                                   setExistingUserFormData((prev) => ({
                                     ...prev,
