@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { X, AlertCircle, Calendar, DollarSign, FileText, User } from "lucide-react"
+import { AlertCircle, Calendar, DollarSign, FileText, User, X } from "lucide-react"
 import { format } from "date-fns"
 import { BillAdjustmentDetails } from "lib/redux/postpaidSlice"
 
