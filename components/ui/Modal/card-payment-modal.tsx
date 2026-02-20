@@ -299,13 +299,13 @@ const CardPaymentModal: React.FC<CardPaymentModalProps> = ({
         <div class="double-divider"></div>
         <div class="center bold">TOKEN ${tokens.length > 1 ? index + 1 : ""}</div>
         <div class="token-box">
-          <div class="token-value">${token.token}</div>
+          <div class="token-value">${token?.token || ""}</div>
           <div style="margin-top: 8px; font-size: 11px;">
-            ${token.vendedAmount || token.amount} ${token.unit}
+            ${token?.vendedAmount || token?.amount || ""} ${token?.unit || ""}
           </div>
           ${
-            token.drn || token.meterNumber
-              ? `<div style="font-size: 10px; margin-top: 4px;">Meter: ${token.drn || token.meterNumber}</div>`
+            token?.drn || token?.meterNumber
+              ? `<div style="font-size: 10px; margin-top: 4px;">Meter: ${token?.drn || token?.meterNumber || ""}</div>`
               : ""
           }
         </div>

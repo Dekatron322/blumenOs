@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useRef } from "react"
+import React, { useRef, useState } from "react"
 import { motion } from "framer-motion"
 import CloseIcon from "public/close-icon"
 import { ButtonModule } from "components/ui/Button/Button"
@@ -17,6 +17,7 @@ interface PaymentReceiptModalProps {
 
 const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({ isOpen, onRequestClose, payment }) => {
   const receiptRef = useRef<HTMLDivElement>(null)
+  const [copiedToken, setCopiedToken] = useState<string | null>(null)
 
   if (!isOpen) return null
 
@@ -37,6 +38,16 @@ const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({ isOpen, onReq
       hour: "2-digit",
       minute: "2-digit",
     })
+  }
+
+  const handleCopyToken = async (token: string, tokenDec: string) => {
+    try {
+      await navigator.clipboard.writeText(tokenDec)
+      setCopiedToken(token)
+      setTimeout(() => setCopiedToken(null), 2000)
+    } catch (error) {
+      console.error("Failed to copy token:", error)
+    }
   }
 
   const handlePrint = () => {
@@ -264,7 +275,35 @@ const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({ isOpen, onReq
         </div>
         
         ${
-          payment.token
+          payment.shouldUpgrade && payment.receipt?.tokens
+            ? `
+        <div class="double-divider"></div>
+        <div class="center bold">METER UPGRADE TOKENS</div>
+        <div style="margin-bottom: 10px; font-size: 10px; text-align: center;">
+          Enter these tokens in order to upgrade your meter
+        </div>
+        ${payment.receipt.tokens
+          .map(
+            (token, index) => `
+        <div class="token-box" style="margin-bottom: 8px;">
+          <div style="font-size: 10px; margin-bottom: 3px;">${token.description}</div>
+          <div class="token-value">${token.token}</div>
+          ${
+            token.vendedAmount && token.unit
+              ? `
+          <div style="margin-top: 3px; font-size: 10px;">
+            ${token.vendedAmount} ${token.unit}
+          </div>
+          `
+              : ""
+          }
+          <div style="font-size: 10px;">Meter: ${token.drn}</div>
+        </div>
+        `
+          )
+          .join("")}
+        `
+            : payment.token
             ? `
         <div class="double-divider"></div>
         <div class="center bold">TOKEN</div>
@@ -513,13 +552,124 @@ const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({ isOpen, onReq
                 </div>
 
                 {/* Token Information */}
-                {payment.token && (
+                {payment.shouldUpgrade && (payment.receipt?.tokens || payment.tokens) ? (
+                  <div className="mt-4 rounded-lg bg-gray-50 text-xs">
+                    <p className="mb-2 font-medium text-gray-700">
+                      {payment.upgrade?.message || "Enter these tokens in order to upgrade your meter:"}
+                    </p>
+
+                    <div className="space-y-3">
+                      {(payment.receipt?.tokens || payment.tokens || [])?.map((token, index) => {
+                        const isCreditToken = token.description.includes("Credit") || (token.vendedAmount && token.unit)
+                        return (
+                          <div
+                            key={index}
+                            className={`rounded border p-2 ${
+                              isCreditToken ? "border-green-200 bg-green-50" : "border-orange-200 bg-orange-50"
+                            }`}
+                          >
+                            <div className="mb-1 text-xs font-medium">
+                              <span className={isCreditToken ? "text-green-700" : "text-orange-700"}>
+                                {token.description}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-gray-500">Token: </span>
+                              <div className="flex items-center gap-2">
+                                <span className="break-words font-mono font-semibold">{token.token}</span>
+                                <button
+                                  onClick={() => handleCopyToken(token.token, token.tokenDec)}
+                                  className={`rounded px-2 py-1 text-xs font-medium transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-1 ${
+                                    isCreditToken ? "focus:ring-green-500" : "focus:ring-orange-500"
+                                  }`}
+                                  title="Copy token"
+                                >
+                                  {copiedToken === token.token ? (
+                                    <span className="text-green-600">Copied!</span>
+                                  ) : (
+                                    <span className={isCreditToken ? "text-green-600" : "text-orange-600"}>Copy</span>
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                            {token.vendedAmount && token.unit && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-500">Vended Amount: </span>
+                                <span className="break-words font-semibold text-green-700">
+                                  {token.vendedAmount} {token.unit}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ) : payment.tokens && payment.tokens.length > 0 ? (
+                  <div className="mt-4 rounded-lg bg-gray-50 p-3 text-xs">
+                    <p className="mb-2 font-medium text-gray-700">Token Information</p>
+                    <div className="space-y-3">
+                      {payment.tokens.map((token, index) => (
+                        <div key={index} className="rounded border border-blue-200 bg-blue-50 p-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-gray-500">Token: </span>
+                            <div className="flex items-center gap-2">
+                              <span className="break-words font-mono font-semibold">{token.token}</span>
+                              <button
+                                onClick={() => token && handleCopyToken(token.token, token.tokenDec)}
+                                className="rounded px-2 py-1 text-xs font-medium transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                                title="Copy token"
+                              >
+                                {copiedToken === token?.token ? (
+                                  <span className="text-green-600">Copied!</span>
+                                ) : (
+                                  <span className="text-blue-600">Copy</span>
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                          {token.vendedAmount && token.unit && (
+                            <div className="flex justify-between">
+                              <span className="text-gray-500">Vended Amount: </span>
+                              <span className="break-words font-semibold">
+                                {token.vendedAmount} {token.unit}
+                              </span>
+                            </div>
+                          )}
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Description: </span>
+                            <span className="break-words font-semibold">{token.description}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Meter Number: </span>
+                            <span className="break-words font-mono font-semibold">{token.drn}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : payment.token ? (
                   <div className="mt-4 rounded-lg bg-gray-50 p-3 text-xs">
                     <p className="mb-2 font-medium text-gray-700">Token Information</p>
                     <div className="space-y-1">
-                      <div className="flex justify-between">
+                      <div className="flex items-center justify-between gap-2">
                         <span className="text-gray-500">Token: </span>
-                        <span className="break-words font-mono font-semibold">{payment.token.token}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="break-words font-mono font-semibold">{payment.token.token}</span>
+                          <button
+                            onClick={() =>
+                              payment.token && handleCopyToken(payment.token.token, payment.token.tokenDec)
+                            }
+                            className="rounded px-2 py-1 text-xs font-medium transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                            title="Copy token"
+                          >
+                            {copiedToken === payment.token?.token ? (
+                              <span className="text-green-600">Copied!</span>
+                            ) : (
+                              <span className="text-blue-600">Copy</span>
+                            )}
+                          </button>
+                        </div>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-500">Vended Amount: </span>
@@ -537,7 +687,7 @@ const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({ isOpen, onReq
                       </div>
                     </div>
                   </div>
-                )}
+                ) : null}
               </div>
               <div className="text-center text-xs text-gray-500">
                 <p>Thank you for your payment!</p>

@@ -69,6 +69,15 @@ export interface Payment {
   paymentTypeName: string
   collector: Collector
   token?: Token
+  tokens?: Token[]
+  // Meter upgrade properties
+  shouldUpgrade?: boolean
+  receipt?: {
+    tokens?: Token[]
+  }
+  upgrade?: {
+    message?: string
+  }
   // Legacy fields - keeping for backward compatibility
   collectorType?: CollectorType
   amount?: number
@@ -842,6 +851,29 @@ export interface VendCollector {
 }
 
 export interface VendData {
+  upgrade:
+    | {
+        upgradeId: number
+        message: string
+        keyChangeTokens: {
+          token: string
+          tokenDec: string
+          vendedAmount: string | null
+          unit: string | null
+          description: string
+          drn: string | null
+        }[]
+        creditToken: {
+          token: string
+          tokenDec: string
+          vendedAmount: string | null
+          unit: string | null
+          description: string
+          drn: string | null
+        }
+      }
+    | undefined
+  shouldUpgrade: boolean | undefined
   isPending: boolean
   externalReference: string
   bankReceiptNo: string

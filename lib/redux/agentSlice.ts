@@ -684,6 +684,7 @@ export interface PaymentToken {
 }
 
 export interface Payment {
+  selectedPayment: any
   paymentDetails: any
   isPending: boolean
   isPrepaid: boolean
@@ -729,6 +730,13 @@ export interface Payment {
   customerOutstandingDebtBalance?: number
   recoveryAmount?: number
   tokens?: PaymentToken[]
+  // Meter upgrade properties
+  shouldUpgrade?: boolean
+  upgrade?: {
+    message: string
+    keyChangeTokens: PaymentToken[]
+    creditToken: PaymentToken
+  }
   virtualAccount?: {
     accountNumber: string
     bankName: string
@@ -1478,6 +1486,27 @@ export interface VendData {
   channel?: string
   paidAtUtc?: string
   externalReference?: string
+  shouldUpgrade?: boolean
+  upgrade?: {
+    upgradeId: number
+    message: string
+    keyChangeTokens: {
+      token: string
+      tokenDec: string
+      vendedAmount: string | null
+      unit: string | null
+      description: string
+      drn: string | null
+    }[]
+    creditToken: {
+      token: string
+      tokenDec: string
+      vendedAmount: string | null
+      unit: string | null
+      description: string
+      drn: string | null
+    }
+  }
   paymentDetails?: {
     virtualAccount?: string
   }
@@ -1584,6 +1613,7 @@ export interface PrepaidPaymentToken {
 }
 
 export interface PrepaidPayment {
+  shouldUpgrade: boolean | undefined
   externalReference: string | null | undefined
   id: number
   reference: string
@@ -1635,6 +1665,11 @@ export interface PrepaidPayment {
   recoveryPolicyName: string | null
   collector: PrepaidPaymentCollector
   tokens: PrepaidPaymentToken[]
+  shouldUpgradeMeter?: boolean
+  upgrade?: {
+    message: string
+    keyChangeTokens: PrepaidPaymentToken[]
+  }
 }
 
 export interface PrepaidPaymentsResponse {

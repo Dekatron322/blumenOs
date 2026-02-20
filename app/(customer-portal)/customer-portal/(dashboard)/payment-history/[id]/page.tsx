@@ -414,11 +414,11 @@ const PaymentDetailsPage = () => {
         <div class="double-divider"></div>
         <div class="center bold">TOKEN</div>
         <div class="token-box">
-          <div class="token-value">${paymentData.token.token}</div>
+          <div class="token-value">${paymentData.token?.token || ""}</div>
           <div style="margin-top: 5px; font-size: 10px;">
-            ${paymentData.token.vendedAmount} ${paymentData.token.unit}
+            ${paymentData.token?.vendedAmount || ""} ${paymentData.token?.unit || ""}
           </div>
-          <div style="font-size: 10px;">Meter: ${paymentData.token.drn}</div>
+          <div style="font-size: 10px;">Meter: ${paymentData.token?.drn || ""}</div>
         </div>
         `
             : ""
@@ -721,27 +721,48 @@ const PaymentDetailsPage = () => {
       yPosition = (doc as any).lastAutoTable.finalY + 15
 
       // Token Information Section (if token exists)
-      if (paymentData.token) {
+      if (paymentData.token || (paymentData.tokens && paymentData.tokens.length > 0)) {
         doc.setFontSize(14)
         doc.setFont("helvetica", "bold")
         doc.text("TOKEN INFORMATION", 14, yPosition)
         yPosition += 10
 
-        autoTable(doc, {
-          startY: yPosition,
-          head: [["Field", "Details"]],
-          body: [
-            ["Token", paymentData.token?.token || ""],
-            ["Token Decimal", paymentData.token?.tokenDec || ""],
-            ["Vended Amount", `${paymentData.token?.vendedAmount || ""} ${paymentData.token?.unit || ""}`],
-            ["Description", paymentData.token?.description || "N/A"],
-            ["DRN", paymentData.token?.drn || "N/A"],
-          ],
-          theme: "grid",
-          headStyles: { fillColor: [139, 92, 246], textColor: 255 },
-          styles: { fontSize: 10 },
-          margin: { left: 14, right: 14 },
-        })
+        if (paymentData.tokens && paymentData.tokens.length > 0) {
+          paymentData.tokens.forEach((token, index) => {
+            autoTable(doc, {
+              startY: yPosition,
+              head: [[`Token ${index + 1}`, "Details"]],
+              body: [
+                ["Token", token?.token || ""],
+                ["Token Decimal", token?.tokenDec || ""],
+                ["Vended Amount", `${token?.vendedAmount || ""} ${token?.unit || ""}`],
+                ["Description", token?.description || "N/A"],
+                ["DRN", token?.drn || "N/A"],
+              ],
+              theme: "grid",
+              headStyles: { fillColor: [139, 92, 246], textColor: 255 },
+              styles: { fontSize: 10, cellPadding: 3 },
+              columnStyles: { 0: { fontStyle: "bold" } },
+            })
+            yPosition = (doc as any).lastAutoTable.finalY + 5
+          })
+        } else {
+          autoTable(doc, {
+            startY: yPosition,
+            head: [["Field", "Details"]],
+            body: [
+              ["Token", paymentData.token?.token || ""],
+              ["Token Decimal", paymentData.token?.tokenDec || ""],
+              ["Vended Amount", `${paymentData.token?.vendedAmount || ""} ${paymentData.token?.unit || ""}`],
+              ["Description", paymentData.token?.description || "N/A"],
+              ["DRN", paymentData.token?.drn || "N/A"],
+            ],
+            theme: "grid",
+            headStyles: { fillColor: [139, 92, 246], textColor: 255 },
+            styles: { fontSize: 10, cellPadding: 3 },
+            columnStyles: { 0: { fontStyle: "bold" } },
+          })
+        }
 
         yPosition = (doc as any).lastAutoTable.finalY + 15
       }
@@ -964,7 +985,7 @@ const PaymentDetailsPage = () => {
                   </motion.div>
 
                   {/* Token Card (if token exists) */}
-                  {paymentData.token && (
+                  {(paymentData.token || (paymentData.tokens && paymentData.tokens.length > 0)) && (
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -974,62 +995,136 @@ const PaymentDetailsPage = () => {
                       <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-900 sm:text-base">
                         Token Information
                       </h3>
-                      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                        <div className="mb-3 flex items-center justify-between">
-                          <div className="text-sm font-semibold text-gray-900 sm:text-base">Token</div>
-                          <div className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-800">
-                            {paymentData.token?.unit}
-                          </div>
-                        </div>
 
-                        {/* Token - Copyable */}
-                        <div className="mb-3">
-                          <label className="mb-1 block text-xs font-medium text-gray-600">Token Number</label>
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 break-all rounded-md border border-gray-200 bg-gray-50 px-3 py-2 font-mono text-sm text-gray-900">
-                              {paymentData.token?.token}
-                            </div>
-                            <button
-                              onClick={() => copyToClipboard(paymentData.token?.token || "", "token")}
-                              className={`flex items-center justify-center rounded-md p-2 transition-colors ${
-                                copiedItem === "token"
-                                  ? "bg-green-50 text-green-600"
-                                  : "text-gray-500 hover:bg-blue-50 hover:text-blue-600"
-                              }`}
-                              title={copiedItem === "token" ? "Copied!" : "Copy token"}
-                            >
-                              {copiedItem === "token" ? <Check className="size-4" /> : <Copy className="size-4" />}
-                            </button>
-                          </div>
-                        </div>
+                      {paymentData.tokens && paymentData.tokens.length > 0 ? (
+                        <div className="space-y-3">
+                          {paymentData.tokens.map((token, index) => (
+                            <div key={index} className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                              <div className="mb-3 flex items-center justify-between">
+                                <div className="text-sm font-semibold text-gray-900 sm:text-base">
+                                  Token {index + 1}
+                                </div>
+                                <div className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-800">
+                                  {token?.unit || "N/A"}
+                                </div>
+                              </div>
 
-                        {/* Other token details */}
-                        <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-                          <div>
-                            <label className="text-xs font-medium text-gray-600">Amount</label>
-                            <div className="font-medium text-gray-900">{paymentData.token?.vendedAmount}</div>
-                          </div>
-                          {paymentData.token?.drn && (
-                            <div>
-                              <label className="text-xs font-medium text-gray-600">Meter Number</label>
-                              <div className="flex items-center gap-2">
-                                <div className="font-mono text-xs text-gray-900">{paymentData.token?.drn}</div>
-                                <button
-                                  onClick={() => copyToClipboard(paymentData.token?.drn || "", "drn")}
-                                  className={`rounded p-1 transition-colors ${
-                                    copiedItem === "drn"
-                                      ? "bg-green-50 text-green-600"
-                                      : "text-gray-500 hover:bg-blue-50 hover:text-blue-600"
-                                  }`}
-                                  title={copiedItem === "drn" ? "Copied!" : "Copy DRN"}
-                                >
-                                  {copiedItem === "drn" ? <Check className="size-3" /> : <Copy className="size-3" />}
-                                </button>
+                              {/* Token - Copyable */}
+                              <div className="mb-3">
+                                <label className="mb-1 block text-xs font-medium text-gray-600">Token Number</label>
+                                <div className="flex items-center gap-2">
+                                  <div className="flex-1 break-all rounded-md border border-gray-200 bg-gray-50 px-3 py-2 font-mono text-sm text-gray-900">
+                                    {token?.token}
+                                  </div>
+                                  <button
+                                    onClick={() => copyToClipboard(token?.token || "", `token-${index}`)}
+                                    className={`flex items-center justify-center rounded-md p-2 transition-colors ${
+                                      copiedItem === `token-${index}`
+                                        ? "bg-green-50 text-green-600"
+                                        : "text-gray-500 hover:bg-blue-50 hover:text-blue-600"
+                                    }`}
+                                    title={copiedItem === `token-${index}` ? "Copied!" : "Copy token"}
+                                  >
+                                    {copiedItem === `token-${index}` ? (
+                                      <Check className="size-4" />
+                                    ) : (
+                                      <Copy className="size-4" />
+                                    )}
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Other token details */}
+                              <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                                <div>
+                                  <label className="text-xs font-medium text-gray-600">Amount</label>
+                                  <div className="font-medium text-gray-900">{token?.vendedAmount || "N/A"}</div>
+                                </div>
+                                {token?.drn && (
+                                  <div>
+                                    <label className="text-xs font-medium text-gray-600">Meter Number</label>
+                                    <div className="flex items-center gap-2">
+                                      <div className="font-mono text-xs text-gray-900">{token.drn}</div>
+                                      <button
+                                        onClick={() => copyToClipboard(token.drn || "", `drn-${index}`)}
+                                        className={`rounded p-1 transition-colors ${
+                                          copiedItem === `drn-${index}`
+                                            ? "bg-green-50 text-green-600"
+                                            : "text-gray-500 hover:bg-blue-50 hover:text-blue-600"
+                                        }`}
+                                        title={copiedItem === `drn-${index}` ? "Copied!" : "Copy DRN"}
+                                      >
+                                        {copiedItem === `drn-${index}` ? (
+                                          <Check className="size-3" />
+                                        ) : (
+                                          <Copy className="size-3" />
+                                        )}
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             </div>
-                          )}
+                          ))}
                         </div>
-                      </div>
+                      ) : (
+                        <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                          <div className="mb-3 flex items-center justify-between">
+                            <div className="text-sm font-semibold text-gray-900 sm:text-base">Token</div>
+                            <div className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-800">
+                              {paymentData.token?.unit}
+                            </div>
+                          </div>
+
+                          {/* Token - Copyable */}
+                          <div className="mb-3">
+                            <label className="mb-1 block text-xs font-medium text-gray-600">Token Number</label>
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1 break-all rounded-md border border-gray-200 bg-gray-50 px-3 py-2 font-mono text-sm text-gray-900">
+                                {paymentData.token?.token}
+                              </div>
+                              <button
+                                onClick={() => copyToClipboard(paymentData.token?.token || "", "token")}
+                                className={`flex items-center justify-center rounded-md p-2 transition-colors ${
+                                  copiedItem === "token"
+                                    ? "bg-green-50 text-green-600"
+                                    : "text-gray-500 hover:bg-blue-50 hover:text-blue-600"
+                                }`}
+                                title={copiedItem === "token" ? "Copied!" : "Copy token"}
+                              >
+                                {copiedItem === "token" ? <Check className="size-4" /> : <Copy className="size-4" />}
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Other token details */}
+                          <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                            <div>
+                              <label className="text-xs font-medium text-gray-600">Amount</label>
+                              <div className="font-medium text-gray-900">{paymentData.token?.vendedAmount}</div>
+                            </div>
+                            {paymentData.token?.drn && (
+                              <div>
+                                <label className="text-xs font-medium text-gray-600">Meter Number</label>
+                                <div className="flex items-center gap-2">
+                                  <div className="font-mono text-xs text-gray-900">{paymentData.token?.drn}</div>
+                                  <button
+                                    onClick={() => copyToClipboard(paymentData.token?.drn || "", "drn")}
+                                    className={`rounded p-1 transition-colors ${
+                                      copiedItem === "drn"
+                                        ? "bg-green-50 text-green-600"
+                                        : "text-gray-500 hover:bg-blue-50 hover:text-blue-600"
+                                    }`}
+                                    title={copiedItem === "drn" ? "Copied!" : "Copy DRN"}
+                                  >
+                                    {copiedItem === "drn" ? <Check className="size-3" /> : <Copy className="size-3" />}
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </motion.div>
                   )}
 
@@ -1644,27 +1739,56 @@ const PaymentDetailsPage = () => {
               </div>
 
               {/* Token Information */}
-              {paymentData?.token && (
+              {(paymentData?.token || (paymentData?.tokens && paymentData.tokens.length > 0)) && (
                 <div className="relative rounded-lg bg-white p-4 max-sm:p-3">
                   <div className="mb-4">
                     <p className="text-xs text-gray-500 max-sm:text-xs">Electricity Token</p>
-                    <p className="break-words font-mono text-xl font-bold text-gray-900 max-sm:break-all max-sm:text-lg">
-                      {paymentData.token?.token}
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-1 gap-4 max-sm:grid-cols-1 sm:grid-cols-2">
-                    <div>
-                      <p className="text-xs text-gray-500 max-sm:text-xs">Amount</p>
-                      <p className="font-semibold text-gray-900 max-sm:text-sm">
-                        {paymentData.token?.vendedAmount} {paymentData.token?.unit}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 max-sm:text-xs">Meter Number</p>
-                      <p className="font-mono font-semibold text-gray-900 max-sm:break-all max-sm:text-sm">
-                        {paymentData.token?.drn}
-                      </p>
-                    </div>
+                    {paymentData.tokens && paymentData.tokens.length > 0 ? (
+                      <div className="space-y-2">
+                        {paymentData.tokens.map((token, index) => (
+                          <div key={index} className="border-b border-gray-100 pb-2 last:border-b-0">
+                            <p className="mb-1 text-xs text-gray-500">Token {index + 1}</p>
+                            <p className="break-words font-mono text-lg font-bold text-gray-900 max-sm:break-all max-sm:text-base">
+                              {token?.token}
+                            </p>
+                            <div className="grid grid-cols-1 gap-2 max-sm:grid-cols-1 sm:grid-cols-2">
+                              <div>
+                                <p className="text-xs text-gray-500 max-sm:text-xs">Amount</p>
+                                <p className="font-semibold text-gray-900 max-sm:text-sm">
+                                  {token?.vendedAmount || "N/A"} {token?.unit || ""}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-gray-500 max-sm:text-xs">Meter Number</p>
+                                <p className="font-mono font-semibold text-gray-900 max-sm:break-all max-sm:text-sm">
+                                  {token?.drn || "N/A"}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <>
+                        <p className="break-words font-mono text-xl font-bold text-gray-900 max-sm:break-all max-sm:text-lg">
+                          {paymentData.token?.token}
+                        </p>
+                        <div className="grid grid-cols-1 gap-4 max-sm:grid-cols-1 sm:grid-cols-2">
+                          <div>
+                            <p className="text-xs text-gray-500 max-sm:text-xs">Amount</p>
+                            <p className="font-semibold text-gray-900 max-sm:text-sm">
+                              {paymentData.token?.vendedAmount} {paymentData.token?.unit}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500 max-sm:text-xs">Meter Number</p>
+                            <p className="font-mono font-semibold text-gray-900 max-sm:break-all max-sm:text-sm">
+                              {paymentData.token?.drn}
+                            </p>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               )}
@@ -1724,7 +1848,7 @@ const PaymentDetailsPage = () => {
               <div className="gap-4 rounded-lg bg-gray-50 p-4 max-sm:p-3">
                 <div className="grid w-full grid-cols-1 gap-4 border-b border-dashed border-gray-200 pb-2 max-sm:grid-cols-1 max-sm:gap-4 sm:grid-cols-2 sm:gap-10">
                   <p className="font-semibold text-gray-600 max-sm:text-sm">Payment Details</p>
-                  {paymentData?.token && (
+                  {(paymentData?.token || (paymentData?.tokens && paymentData.tokens.length > 0)) && (
                     <p className="mt-2 font-semibold text-gray-600 max-sm:hidden max-sm:text-sm sm:mt-0">
                       Token Information
                     </p>
