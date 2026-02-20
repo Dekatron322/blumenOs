@@ -66,7 +66,7 @@ const FileManagementPage = () => {
     { name: "Bill Recompute", value: 30 },
     { name: "Feeder Energy Cap", value: 3 },
     { name: "Customer Meter Reading", value: 2 },
-    { name: "Debt Recovery (No Energy Bill)", value: 32 },
+    { name: "Debt Recovery (No Energy Bill)", value: 36 },
   ]
 
   // Helper function to get bulkInsertType based on upload type
@@ -88,7 +88,7 @@ const FileManagementPage = () => {
         return "feeder-energy-cap"
       case 2:
         return "meter-readings-account"
-      case 32:
+      case 36:
         return "bill-debt-recovery-no-energy"
       default:
         return "bill-generate-missing" // fallback
@@ -114,7 +114,7 @@ const FileManagementPage = () => {
         return "feeder-energy-caps-bulk"
       case 2:
         return "postpaid-meter-readings-account-bulk"
-      case 32:
+      case 36:
         return "postpaid-bill-debt-recovery-no-energy-bulk"
       default:
         return "billing-bulk-import" // fallback
@@ -466,7 +466,7 @@ const FileManagementPage = () => {
                 } else if (selectedUploadType === 2 || selectedUploadType === "2") {
                   // Meter Reading Import - use meter reading account bulk upload endpoint
                   bulkResult = await dispatch(processMeterReadingBulkUpload({ fileId })).unwrap()
-                } else if (selectedUploadType === 32) {
+                } else if (selectedUploadType === 36) {
                   // Debt Recovery (No Energy Bill) - use debt recovery no energy endpoint
                   bulkResult = await dispatch(processDebtRecoveryNoEnergyBulkUpload({ fileId })).unwrap()
                 } else {
@@ -607,7 +607,7 @@ const FileManagementPage = () => {
       // Feeder Energy Cap template
       headers = "EnergyReceived,EnergyAdviced,FeederName"
       sampleRows = []
-    } else if (selectedUploadType === 32) {
+    } else if (selectedUploadType === 36) {
       // Debt Recovery (No Energy Bill) template
       headers = "CustomerAccountNo"
       sampleRows = []
@@ -642,7 +642,7 @@ const FileManagementPage = () => {
         ? "sample-customer-bills-reading.csv"
         : selectedUploadType === 3
         ? "sample-feeder-energy-cap.csv"
-        : selectedUploadType === 32
+        : selectedUploadType === 36
         ? "sample-debt-recovery-no-energy.csv"
         : "sample_billing_bulk.csv"
     )

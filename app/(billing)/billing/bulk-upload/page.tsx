@@ -28,7 +28,7 @@ const jobTypeOptions = [
   { value: "31", label: "Account To Be Billed" },
   { value: "3", label: "Feeder Energy Cap Import" },
   { value: "2", label: "Customer Meter Reading" },
-  { value: "32", label: "Debt Recovery (No Energy Bill)" },
+  { value: "36", label: "Debt Recovery (No Energy Bill)" },
 ]
 
 // Status options for filters
@@ -159,7 +159,7 @@ const BulkUploads: React.FC = () => {
   const [localFilters, setLocalFilters] = useState<Partial<CsvJobsParams>>({
     PageNumber: 1,
     PageSize: 50,
-    JobTypes: [15, 17, 18, 19, 20, 21, 30, 31, 3, 2, 32], // Default to billing job types
+    JobTypes: [15, 17, 18, 19, 20, 21, 30, 31, 3, 2, 36], // Default to billing job types
     Status: undefined,
     RequestedByUserId: undefined,
     RequestedFromUtc: undefined,
