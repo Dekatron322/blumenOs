@@ -389,6 +389,7 @@ export interface AddAgentRequest {
   maxSingleAllowedCashAmount?: number
   canCollectCash: boolean
   status: string
+  provinceId?: number
 }
 
 // Interface for Add Agent Response
@@ -411,6 +412,7 @@ export interface AddExistingUserAsAgentRequest {
   cashCollectionLimit: number
   maxSingleAllowedCashAmount: number
   canCollectCash: boolean
+  provinceId?: number
 }
 
 // Interface for Add Existing User as Agent Response
