@@ -209,6 +209,24 @@ export function SalesRepLinks({ isCollapsed }: SalesRepLinksProps) {
         return false
       }
 
+      // Hide Raise Ticket for FinanceManager and RegionalFinanceManager users
+      if (
+        link.href === "/sales-rep/raise-ticket" &&
+        agent &&
+        (agent.agentType === "FinanceManager" || agent.agentType === "RegionalFinanceManager")
+      ) {
+        return false
+      }
+
+      // Hide Make Change Request for FinanceManager and RegionalFinanceManager users
+      if (
+        link.href === "/sales-rep/make-change-request" &&
+        agent &&
+        (agent.agentType === "FinanceManager" || agent.agentType === "RegionalFinanceManager")
+      ) {
+        return false
+      }
+
       // Always show Dashboard (no permission required)
       if (!link.permission) return true
 
