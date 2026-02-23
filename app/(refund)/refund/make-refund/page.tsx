@@ -2,7 +2,14 @@
 
 import React, { useEffect, useState } from "react"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { clearMakeRefund, makeRefund, MakeRefundRequest } from "lib/redux/refundSlice"
+import {
+  clearMakeRefund,
+  clearManualRefund,
+  makeManualRefund,
+  makeRefund,
+  MakeRefundRequest,
+  ManualRefundRequest,
+} from "lib/redux/refundSlice"
 import { clearCustomerLookup, lookupCustomer } from "lib/redux/agentSlice"
 import { clearPayments, fetchPayments } from "lib/redux/paymentSlice"
 import { ButtonModule } from "components/ui/Button/Button"
@@ -13,13 +20,20 @@ import { FormTextAreaModule } from "components/ui/Input/FormTextAreaModule"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { notify } from "components/ui/Notification/Notification"
 import MakeRefundSuccessModal from "components/ui/Modal/make-refund-success-modal"
-import { ArrowLeft, FileText, RefreshCw, Zap } from "lucide-react"
+import { ArrowLeft, DollarSign, FileText, RefreshCw, Zap } from "lucide-react"
 
 const MakeRefundPage = () => {
   const dispatch = useAppDispatch()
-  const { makeRefundLoading, makeRefundError, makeRefundSuccess, makeRefundData } = useAppSelector(
-    (state) => state.refunds
-  )
+  const {
+    makeRefundLoading,
+    makeRefundError,
+    makeRefundSuccess,
+    makeRefundData,
+    manualRefundLoading,
+    manualRefundError,
+    manualRefundSuccess,
+    manualRefundData,
+  } = useAppSelector((state) => state.refunds)
   const { customerLookupLoading, customerLookup, customerLookupError, customerLookupSuccess } = useAppSelector(
     (state) => state.agents
   )
@@ -31,7 +45,30 @@ const MakeRefundPage = () => {
     refundTypeKey: "",
   })
 
-  const [activeTab, setActiveTab] = useState<"reference" | "meter">("reference")
+  const [manualForm, setManualForm] = useState<ManualRefundRequest>({
+    meterNumber: "",
+    amount: 0,
+    phoneNumber: "",
+    reason: "",
+  })
+
+  const [manualCustomerData, setManualCustomerData] = useState<{
+    id: number
+    accountNumber: string
+    fullName: string
+    phoneNumber: string
+    email: string
+    status: string
+    isSuspended: boolean
+    areaOfficeName: string
+    feederName: string
+    customerOutstandingDebtBalance: number
+    minimumPayment: number
+  } | null>(null)
+
+  const [showManualCustomerInfo, setShowManualCustomerInfo] = useState(false)
+
+  const [activeTab, setActiveTab] = useState<"reference" | "meter" | "manual">("reference")
   const [meterNumber, setMeterNumber] = useState("")
   const [customerData, setCustomerData] = useState<{
     id: number
@@ -61,6 +98,10 @@ const MakeRefundPage = () => {
     reason?: string
     refundTypeKey?: string
     selectedTransaction?: string
+    manualMeterNumber?: string
+    manualAmount?: string
+    manualPhoneNumber?: string
+    manualReason?: string
   }>({})
 
   const refundTypeOptions = [
@@ -82,45 +123,85 @@ const MakeRefundPage = () => {
     if (makeRefundError) {
       notify("error", makeRefundError)
     }
-  }, [makeRefundSuccess, makeRefundError, makeRefundData])
+
+    if (manualRefundSuccess && manualRefundData) {
+      setShowSuccessModal(true)
+      notify("success", "Manual refund processed successfully", {
+        description: "The manual refund has been created and processed.",
+      })
+    }
+
+    if (manualRefundError) {
+      notify("error", manualRefundError)
+    }
+  }, [makeRefundSuccess, makeRefundError, makeRefundData, manualRefundSuccess, manualRefundError, manualRefundData])
 
   useEffect(() => {
     if (customerLookupSuccess && customerLookup) {
-      setCustomerData({
-        id: customerLookup.id,
-        accountNumber: customerLookup.accountNumber,
-        fullName: customerLookup.fullName,
-        phoneNumber: customerLookup.phoneNumber,
-        email: customerLookup.email,
-        status: customerLookup.status,
-        isSuspended: customerLookup.isSuspended,
-        areaOfficeName: customerLookup.areaOfficeName,
-        feederName: customerLookup.feederName,
-        customerOutstandingDebtBalance: customerLookup.customerOutstandingDebtBalance,
-        minimumPayment: customerLookup.minimumPayment || 0,
-      })
-
-      setShowTransactionSelection(true)
-      setCurrentPage(1)
-      setSearchTerm("")
-      setSearchQuery("")
-
-      // Fetch customer transactions
-      dispatch(
-        fetchPayments({
-          pageNumber: 1,
-          pageSize: pageSize,
-          customerId: customerLookup.id,
-          search: searchQuery.trim() || undefined,
+      if (activeTab === "meter") {
+        setCustomerData({
+          id: customerLookup.id,
+          accountNumber: customerLookup.accountNumber,
+          fullName: customerLookup.fullName,
+          phoneNumber: customerLookup.phoneNumber,
+          email: customerLookup.email,
+          status: customerLookup.status,
+          isSuspended: customerLookup.isSuspended,
+          areaOfficeName: customerLookup.areaOfficeName,
+          feederName: customerLookup.feederName,
+          customerOutstandingDebtBalance: customerLookup.customerOutstandingDebtBalance,
+          minimumPayment: customerLookup.minimumPayment || 0,
         })
-      )
 
-      notify("success", "Customer validated successfully", {
-        description: `Customer found: ${customerLookup.fullName}`,
-        duration: 3000,
-      })
+        setShowTransactionSelection(true)
+        setCurrentPage(1)
+        setSearchTerm("")
+        setSearchQuery("")
+
+        // Fetch customer transactions
+        dispatch(
+          fetchPayments({
+            pageNumber: 1,
+            pageSize: pageSize,
+            customerId: customerLookup.id,
+            search: searchQuery.trim() || undefined,
+          })
+        )
+
+        notify("success", "Customer validated successfully", {
+          description: `Customer found: ${customerLookup.fullName}`,
+          duration: 3000,
+        })
+      } else if (activeTab === "manual") {
+        setManualCustomerData({
+          id: customerLookup.id,
+          accountNumber: customerLookup.accountNumber,
+          fullName: customerLookup.fullName,
+          phoneNumber: customerLookup.phoneNumber,
+          email: customerLookup.email,
+          status: customerLookup.status,
+          isSuspended: customerLookup.isSuspended,
+          areaOfficeName: customerLookup.areaOfficeName,
+          feederName: customerLookup.feederName,
+          customerOutstandingDebtBalance: customerLookup.customerOutstandingDebtBalance,
+          minimumPayment: customerLookup.minimumPayment || 0,
+        })
+
+        setShowManualCustomerInfo(true)
+
+        // Auto-fill phone number from customer data
+        setManualForm((prev) => ({
+          ...prev,
+          phoneNumber: customerLookup.phoneNumber || "",
+        }))
+
+        notify("success", "Customer validated successfully", {
+          description: `Customer found: ${customerLookup.fullName}`,
+          duration: 3000,
+        })
+      }
     }
-  }, [customerLookupSuccess, customerLookup, dispatch, pageSize])
+  }, [customerLookupSuccess, customerLookup, dispatch, pageSize, activeTab, searchQuery])
 
   useEffect(() => {
     if (customerLookupError) {
@@ -133,16 +214,17 @@ const MakeRefundPage = () => {
   useEffect(() => {
     return () => {
       dispatch(clearMakeRefund())
+      dispatch(clearManualRefund())
       dispatch(clearCustomerLookup())
       dispatch(clearPayments())
     }
   }, [dispatch])
 
-  const handleChange = (field: keyof MakeRefundRequest | "meterNumber", value: string) => {
+  const handleChange = (field: keyof MakeRefundRequest | "meterNumber", value: string | number) => {
     if (field === "meterNumber") {
       setForm((prev) => ({
         ...prev,
-        reference: value,
+        reference: value as string,
       }))
     } else {
       setForm((prev) => ({
@@ -159,6 +241,51 @@ const MakeRefundPage = () => {
     }
   }
 
+  const handleManualFormChange = (field: keyof ManualRefundRequest, value: string | number) => {
+    if (field === "amount") {
+      // Handle amount formatting for display
+      const numericValue = typeof value === "string" ? value.replace(/[^\d.]/g, "") : value.toString()
+      const parsedValue = parseFloat(numericValue) || 0
+
+      setManualForm((prev) => ({
+        ...prev,
+        [field]: parsedValue,
+      }))
+    } else {
+      setManualForm((prev) => ({
+        ...prev,
+        [field]: value,
+      }))
+    }
+
+    const errorField = `manual${field.charAt(0).toUpperCase() + field.slice(1)}` as keyof typeof errors
+    if (errors[errorField]) {
+      setErrors((prev) => ({
+        ...prev,
+        [errorField]: undefined,
+      }))
+    }
+  }
+
+  // Format amount for display with naira symbol and thousand separators
+  const formatAmountForDisplay = (amount: number): string => {
+    if (isNaN(amount) || amount === 0) return ""
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(amount)
+  }
+
+  // Handle amount input change with proper formatting
+  const handleAmountInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value
+    const numericValue = inputValue.replace(/[^\d.]/g, "")
+    const parsedValue = parseFloat(numericValue) || 0
+    handleManualFormChange("amount", parsedValue)
+  }
+
   const validate = () => {
     const newErrors: typeof errors = {}
 
@@ -166,18 +293,33 @@ const MakeRefundPage = () => {
       if (!form.reference.trim()) {
         newErrors.reference = "Payment reference is required"
       }
-    } else {
+    } else if (activeTab === "meter") {
       if (!selectedTransaction) {
         newErrors.selectedTransaction = "Please select a transaction to refund"
       }
+    } else if (activeTab === "manual") {
+      if (!manualForm.meterNumber.trim()) {
+        newErrors.manualMeterNumber = "Meter number is required"
+      }
+      if (!manualForm.amount || manualForm.amount <= 0) {
+        newErrors.manualAmount = "Amount must be greater than 0"
+      }
+      if (!manualForm.phoneNumber.trim()) {
+        newErrors.manualPhoneNumber = "Phone number is required"
+      }
+      if (!manualForm.reason.trim()) {
+        newErrors.manualReason = "Reason for manual refund is required"
+      }
     }
 
-    if (!form.reason.trim()) {
-      newErrors.reason = "Reason for refund is required"
-    }
+    if (activeTab !== "manual") {
+      if (!form.reason.trim()) {
+        newErrors.reason = "Reason for refund is required"
+      }
 
-    if (!form.refundTypeKey) {
-      newErrors.refundTypeKey = "Please select a refund type"
+      if (!form.refundTypeKey) {
+        newErrors.refundTypeKey = "Please select a refund type"
+      }
     }
 
     setErrors(newErrors)
@@ -189,7 +331,11 @@ const MakeRefundPage = () => {
 
     if (!validate()) return
 
-    await dispatch(makeRefund(form))
+    if (activeTab === "manual") {
+      await dispatch(makeManualRefund(manualForm))
+    } else {
+      await dispatch(makeRefund(form))
+    }
   }
 
   const formatCurrency = (amount: number, currency: string = "NGN") => {
@@ -217,8 +363,15 @@ const MakeRefundPage = () => {
       reason: "",
       refundTypeKey: "",
     })
+    setManualForm({
+      meterNumber: "",
+      amount: 0,
+      phoneNumber: "",
+      reason: "",
+    })
     setErrors({})
     dispatch(clearMakeRefund())
+    dispatch(clearManualRefund())
 
     if (activeTab === "meter") {
       setMeterNumber("")
@@ -230,18 +383,29 @@ const MakeRefundPage = () => {
       setCurrentPage(1)
       dispatch(clearCustomerLookup())
       dispatch(clearPayments())
+    } else if (activeTab === "manual") {
+      setManualCustomerData(null)
+      setShowManualCustomerInfo(false)
+      dispatch(clearCustomerLookup())
     }
   }
 
-  const handleTabChange = (tab: "reference" | "meter") => {
+  const handleTabChange = (tab: "reference" | "meter" | "manual") => {
     setActiveTab(tab)
     setForm({
       reference: "",
       reason: "",
       refundTypeKey: "",
     })
+    setManualForm({
+      meterNumber: "",
+      amount: 0,
+      phoneNumber: "",
+      reason: "",
+    })
     setErrors({})
     dispatch(clearMakeRefund())
+    dispatch(clearManualRefund())
     dispatch(clearCustomerLookup())
     dispatch(clearPayments())
     // Reset meter-specific state
@@ -252,11 +416,15 @@ const MakeRefundPage = () => {
     setSearchTerm("")
     setSearchQuery("")
     setCurrentPage(1)
+    // Reset manual customer state
+    setManualCustomerData(null)
+    setShowManualCustomerInfo(false)
   }
 
   const handleSuccessModalClose = () => {
     setShowSuccessModal(false)
     dispatch(clearMakeRefund())
+    dispatch(clearManualRefund())
     handleReset()
   }
 
@@ -272,11 +440,30 @@ const MakeRefundPage = () => {
     setSearchTerm("")
     setSearchQuery("")
     setCurrentPage(1)
+    setManualCustomerData(null)
+    setShowManualCustomerInfo(false)
     dispatch(clearCustomerLookup())
     dispatch(clearPayments())
 
     try {
       await dispatch(lookupCustomer(meterNumber.trim())).unwrap()
+    } catch (error: any) {
+      // Error is handled by the useEffect above
+    }
+  }
+
+  const handleManualCustomerLookup = async () => {
+    if (!manualForm.meterNumber.trim()) {
+      notify("error", "Please enter a meter number")
+      return
+    }
+
+    setManualCustomerData(null)
+    setShowManualCustomerInfo(false)
+    dispatch(clearCustomerLookup())
+
+    try {
+      await dispatch(lookupCustomer(manualForm.meterNumber.trim())).unwrap()
     } catch (error: any) {
       // Error is handled by the useEffect above
     }
@@ -395,16 +582,27 @@ const MakeRefundPage = () => {
                         <Zap className="size-4" />
                         Refund by Meter
                       </button>
+                      <button
+                        onClick={() => handleTabChange("manual")}
+                        className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors ${
+                          activeTab === "manual"
+                            ? "border border-green-200 bg-green-100 text-green-900"
+                            : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                        }`}
+                      >
+                        <DollarSign className="size-4" />
+                        Manual Refund
+                      </button>
                     </div>
                   </div>
 
                   {/* Form Content */}
                   <div className="flex-1 p-6">
                     <form onSubmit={handleSubmit} className="space-y-6">
-                      {makeRefundError && (
+                      {(makeRefundError || manualRefundError) && (
                         <div className="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
                           <div className="size-5 shrink-0 text-red-600">⚠️</div>
-                          <p className="text-sm text-red-700">{makeRefundError}</p>
+                          <p className="text-sm text-red-700">{makeRefundError || manualRefundError}</p>
                         </div>
                       )}
 
@@ -421,7 +619,7 @@ const MakeRefundPage = () => {
                               error={errors.reference}
                             />
                           </div>
-                        ) : (
+                        ) : activeTab === "meter" ? (
                           <>
                             {/* Customer Lookup Section */}
                             <div className="flex gap-2">
@@ -617,32 +815,137 @@ const MakeRefundPage = () => {
                               </div>
                             )}
                           </>
+                        ) : activeTab === "manual" ? (
+                          <>
+                            {/* Manual Refund Form */}
+                            <div className="flex gap-2">
+                              <div className="flex-1">
+                                <FormInputModule
+                                  label="Meter Number"
+                                  type="text"
+                                  required
+                                  value={manualForm.meterNumber}
+                                  onChange={(e) => handleManualFormChange("meterNumber", e.target.value)}
+                                  placeholder="Enter customer meter number"
+                                  error={errors.manualMeterNumber}
+                                />
+                              </div>
+                              <div className="flex items-end">
+                                <ButtonModule
+                                  type="button"
+                                  variant="primary"
+                                  onClick={handleManualCustomerLookup}
+                                  disabled={customerLookupLoading || !manualForm.meterNumber.trim()}
+                                  className="px-4"
+                                >
+                                  {customerLookupLoading ? (
+                                    <span className="flex items-center gap-2">
+                                      <RefreshCw className="size-4 animate-spin" />
+                                      Looking up...
+                                    </span>
+                                  ) : (
+                                    "Lookup"
+                                  )}
+                                </ButtonModule>
+                              </div>
+                            </div>
+
+                            {/* Manual Customer Info Display */}
+                            {manualCustomerData && (
+                              <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
+                                <div className="flex items-center justify-between">
+                                  <div className="grid grid-cols-2 gap-2 text-sm text-blue-800">
+                                    <div>
+                                      <span className="font-medium">{manualCustomerData.fullName}</span>
+                                      <p className="text-xs text-blue-600">Acc: {manualCustomerData.accountNumber}</p>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="text-xs">{manualCustomerData.phoneNumber}</p>
+                                      <p className="text-xs">{manualCustomerData.email}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-xs">Meter: {manualForm.meterNumber}</p>
+                                      <p className="text-xs">{manualCustomerData.areaOfficeName}</p>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="text-xs">Feeder: {manualCustomerData.feederName}</p>
+                                      <p className="text-xs">Status: {manualCustomerData.status}</p>
+                                      {manualCustomerData.isSuspended && (
+                                        <p className="text-xs font-medium text-red-600">Suspended</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            <div>
+                              <FormInputModule
+                                label="Refund Amount"
+                                type="text"
+                                required
+                                value={formatAmountForDisplay(manualForm.amount)}
+                                onChange={handleAmountInputChange}
+                                placeholder="₦0.00"
+                                error={errors.manualAmount}
+                              />
+                            </div>
+
+                            <div>
+                              <FormInputModule
+                                label="Phone Number"
+                                type="tel"
+                                required
+                                value={manualForm.phoneNumber}
+                                onChange={(e) => handleManualFormChange("phoneNumber", e.target.value)}
+                                placeholder="Enter customer phone number"
+                                error={errors.manualPhoneNumber}
+                              />
+                            </div>
+
+                            <div>
+                              <FormTextAreaModule
+                                label="Reason for Manual Refund"
+                                name="manualReason"
+                                required
+                                value={manualForm.reason}
+                                onChange={(e) => handleManualFormChange("reason", e.target.value)}
+                                placeholder="Enter reason for manual refund"
+                                rows={4}
+                                error={errors.manualReason}
+                              />
+                            </div>
+                          </>
+                        ) : null}
+
+                        {activeTab !== "manual" && (
+                          <>
+                            <div>
+                              <FormSelectModule
+                                label="Refund Type"
+                                name="refundTypeKey"
+                                required
+                                value={form.refundTypeKey}
+                                onChange={(e) => handleChange("refundTypeKey", e.target.value)}
+                                options={refundTypeOptions}
+                                error={errors.refundTypeKey}
+                              />
+                            </div>
+
+                            <div>
+                              <FormTextAreaModule
+                                label="Reason for Refund"
+                                name="reason"
+                                required
+                                value={form.reason}
+                                onChange={(e) => handleChange("reason", e.target.value)}
+                                placeholder="Enter reason for refund"
+                                rows={4}
+                                error={errors.reason}
+                              />
+                            </div>
+                          </>
                         )}
-
-                        <div>
-                          <FormSelectModule
-                            label="Refund Type"
-                            name="refundTypeKey"
-                            required
-                            value={form.refundTypeKey}
-                            onChange={(e) => handleChange("refundTypeKey", e.target.value)}
-                            options={refundTypeOptions}
-                            error={errors.refundTypeKey}
-                          />
-                        </div>
-
-                        <div>
-                          <FormTextAreaModule
-                            label="Reason for Refund"
-                            name="reason"
-                            required
-                            value={form.reason}
-                            onChange={(e) => handleChange("reason", e.target.value)}
-                            placeholder="Enter reason for refund"
-                            rows={4}
-                            error={errors.reason}
-                          />
-                        </div>
                       </div>
 
                       <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
@@ -653,7 +956,9 @@ const MakeRefundPage = () => {
                             <p className="mt-1">
                               {activeTab === "reference"
                                 ? "This action will process a refund for the selected payment. Refund attempts are limited. Please ensure this is a valid refund request."
-                                : "This action will process a refund for the selected transaction. Refund attempts are limited. Please ensure this is a valid refund request."}
+                                : activeTab === "meter"
+                                ? "This action will process a refund for the selected transaction. Refund attempts are limited. Please ensure this is a valid refund request."
+                                : "This action will process a manual refund. Manual refunds should only be used in specific circumstances. Please ensure this is a valid refund request."}
                             </p>
                           </div>
                         </div>
@@ -672,13 +977,15 @@ const MakeRefundPage = () => {
                           type="submit"
                           variant="primary"
                           className="w-full  sm:w-auto"
-                          disabled={makeRefundLoading}
+                          disabled={makeRefundLoading || manualRefundLoading}
                         >
-                          {makeRefundLoading ? (
+                          {makeRefundLoading || manualRefundLoading ? (
                             <span className="flex items-center gap-2">
                               <RefreshCw className="size-4 animate-spin" />
                               Processing...
                             </span>
+                          ) : activeTab === "manual" ? (
+                            "Process Manual Refund"
                           ) : (
                             "Process Refund"
                           )}
@@ -697,7 +1004,7 @@ const MakeRefundPage = () => {
       <MakeRefundSuccessModal
         isOpen={showSuccessModal}
         onRequestClose={handleSuccessModalClose}
-        refundData={makeRefundData}
+        refundData={makeRefundData || manualRefundData}
       />
     </>
   )

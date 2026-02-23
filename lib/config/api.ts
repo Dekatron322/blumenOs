@@ -386,6 +386,7 @@ export const API_ENDPOINTS = {
     SUMMARY: "/refunds/summary",
     REFUND_HISTORY: "/refunds",
     MAKE_REFUND: "/refunds",
+    MANUAL_BILLS: "/refunds/manual-vend",
   },
 
   PAYMENT_DUNNING: {
