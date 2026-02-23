@@ -1624,17 +1624,7 @@ const AllPrepaidPaymentsTable: React.FC<AllPrepaidPaymentsTableProps> = ({
         <CollectPaymentReceiptModal
           isOpen={showCollectPaymentReceiptModal}
           onRequestClose={handleCloseReceiptModals}
-          tokenData={
-            selectedPayment.tokens && selectedPayment.tokens.length > 0
-              ? {
-                  token: selectedPayment.tokens[0]?.token ?? "",
-                  vendedAmount: selectedPayment.tokens[0]?.vendedAmount ?? "",
-                  unit: selectedPayment.tokens[0]?.unit ?? "",
-                  description: selectedPayment.tokens[0]?.description ?? "",
-                  drn: selectedPayment.tokens[0]?.drn ?? "",
-                }
-              : undefined
-          }
+          tokenData={selectedPayment.tokens}
           paymentData={{
             reference: selectedPayment.reference,
             customerName: selectedPayment.customerName || "",
@@ -1643,7 +1633,7 @@ const AllPrepaidPaymentsTable: React.FC<AllPrepaidPaymentsTableProps> = ({
             customerPhoneNumber: selectedPayment.phoneNumber ?? undefined,
             customerMeterNumber:
               selectedPayment.tokens && selectedPayment.tokens.length > 0 ? selectedPayment.tokens[0]?.drn : undefined,
-            accountType: undefined,
+            accountType: selectedPayment.isPrepaid ? "prepaid" : "postpaid",
             tariffRate: undefined,
             units:
               selectedPayment.tokens && selectedPayment.tokens.length > 0
@@ -1661,6 +1651,21 @@ const AllPrepaidPaymentsTable: React.FC<AllPrepaidPaymentsTableProps> = ({
             paymentTypeName: selectedPayment.paymentTypeName,
             paidAtUtc: selectedPayment.paidAtUtc,
             externalReference: selectedPayment.externalReference ?? undefined,
+            shouldUpgrade: selectedPayment.shouldUpgrade,
+            tokens: selectedPayment.tokens,
+            upgrade: selectedPayment.upgrade
+              ? {
+                  message: selectedPayment.upgrade.message,
+                  keyChangeTokens: selectedPayment.upgrade.keyChangeTokens,
+                  creditToken: selectedPayment.upgrade.keyChangeTokens[0] || {
+                    token: "N/A",
+                    vendedAmount: "0",
+                    unit: "kWh",
+                    description: "Credit Token",
+                    drn: "N/A",
+                  },
+                }
+              : undefined,
           }}
         />
       )}

@@ -309,7 +309,8 @@ interface PaymentItem {
   recoveryAmount: number
   recoveryPolicyId: number
   recoveryPolicyName: string
-  token: PaymentToken
+  token?: PaymentToken
+  tokens?: PaymentToken[]
   customerAddress: string
   customerPhoneNumber: string
   customerMeterNumber: string

@@ -21,10 +21,10 @@ import Image from "next/image"
 
 // Status options for filtering (based on your API: 0, 1, 2)
 const statusOptions = [
-  { value: "", label: "All Status" },
-  { value: "0", label: "Pending" },
-  { value: "1", label: "Paid" },
-  { value: "2", label: "Overdue" },
+  { value: "", label: "All Statuses" },
+  { value: "0", label: "Draft" },
+  { value: "1", label: "Published" },
+  { value: "2", label: "Reversed" },
 ]
 
 // Category options for filtering (based on your API: 1, 2)
@@ -226,9 +226,9 @@ const PostpaidBillCard = ({
 }) => {
   const getStatusConfig = (status: number) => {
     const configs = {
-      0: { color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200", label: "PENDING" },
-      1: { color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200", label: "PAID" },
-      2: { color: "text-red-600", bg: "bg-red-50", border: "border-red-200", label: "OVERDUE" },
+      0: { color: "#6B7280", bg: "#F3F4F6", border: "border-gray-200", label: "DRAFT" },
+      1: { color: "#589E67", bg: "#EEF5F0", border: "border-green-200", label: "PUBLISHED" },
+      2: { color: "#AF4B4B", bg: "#F7EDED", border: "border-red-200", label: "REVERSED" },
     }
     return configs[status as keyof typeof configs] || configs[0]
   }
@@ -348,9 +348,9 @@ const PostpaidBillListItem = ({
 }) => {
   const getStatusConfig = (status: number) => {
     const configs = {
-      0: { color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200", label: "PENDING" },
-      1: { color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200", label: "PAID" },
-      2: { color: "text-red-600", bg: "bg-red-50", border: "border-red-200", label: "OVERDUE" },
+      0: { color: "#6B7280", bg: "#F3F4F6", border: "border-gray-200", label: "DRAFT" },
+      1: { color: "#589E67", bg: "#EEF5F0", border: "border-green-200", label: "PUBLISHED" },
+      2: { color: "#AF4B4B", bg: "#F7EDED", border: "border-red-200", label: "REVERSED" },
     }
     return configs[status as keyof typeof configs] || configs[0]
   }
@@ -726,7 +726,7 @@ const PostpaidBillingTab: React.FC<PostpaidBillingTabProps> = ({ customerId }) =
                 aria-expanded={isStatusOpen}
               >
                 <IoMdFunnel className="size-4 md:size-5" />
-                <span>{statusOptions.find((opt) => opt.value === selectedStatus)?.label || "All Status"}</span>
+                <span>{statusOptions.find((opt) => opt.value === selectedStatus)?.label || "All Statuses"}</span>
                 <ChevronDown
                   className={`size-3 text-gray-500 transition-transform md:size-4 ${isStatusOpen ? "rotate-180" : ""}`}
                 />

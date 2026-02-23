@@ -42,6 +42,27 @@ interface SuperAdminVendTokenModalProps {
     paymentTypeName?: string
     paidAtUtc: string
     externalReference?: string
+    shouldUpgrade?: boolean
+    upgrade?: {
+      upgradeId: number
+      message: string
+      keyChangeTokens: {
+        token: string
+        tokenDec: string
+        vendedAmount: string | null
+        unit: string | null
+        description: string
+        drn: string | null
+      }[]
+      creditToken: {
+        token: string
+        tokenDec: string
+        vendedAmount: string | null
+        unit: string | null
+        description: string
+        drn: string | null
+      }
+    }
   } | null
 }
 
@@ -320,6 +341,36 @@ const SuperAdminVendTokenModal: React.FC<SuperAdminVendTokenModalProps> = ({
         
         <div class="double-divider"></div>
         <div class="center bold">TOKEN</div>
+        ${
+          paymentData.shouldUpgrade && paymentData.upgrade
+            ? `
+        <div class="center" style="margin-bottom: 10px; font-size: 11px; color: #666;">
+          ${paymentData.upgrade.message}
+        </div>
+        
+        <div class="center bold" style="margin-bottom: 8px;">KEY CHANGE TOKENS</div>
+        ${paymentData.upgrade.keyChangeTokens
+          .map(
+            (keyToken, index) => `
+        <div class="token-box" style="margin-bottom: 8px;">
+          <div style="font-size: 11px; margin-bottom: 4px;">Key Change Token ${index + 1}</div>
+          <div class="token-value">${keyToken.token}</div>
+          <div style="margin-top: 4px; font-size: 10px;">${keyToken.description}</div>
+        </div>
+        `
+          )
+          .join("")}
+        
+        <div class="center bold" style="margin: 10px 0 8px 0;">CREDIT TOKEN</div>
+        <div class="token-box">
+          <div class="token-value">${paymentData.upgrade.creditToken.token}</div>
+          <div style="margin-top: 8px; font-size: 11px;">
+            ${paymentData.upgrade.creditToken.description}
+          </div>
+          ${tokenData.drn ? `<div style="font-size: 10px; margin-top: 4px;">Meter: ${tokenData.drn}</div>` : ""}
+        </div>
+        `
+            : `
         <div class="token-box">
           <div class="token-value">${tokenData.token}</div>
           <div style="margin-top: 8px; font-size: 11px;">
@@ -327,6 +378,8 @@ const SuperAdminVendTokenModal: React.FC<SuperAdminVendTokenModalProps> = ({
           </div>
           ${tokenData.drn ? `<div style="font-size: 10px; margin-top: 4px;">Meter: ${tokenData.drn}</div>` : ""}
         </div>
+        `
+        }
         
         <div class="double-divider"></div>
         
@@ -574,24 +627,57 @@ const SuperAdminVendTokenModal: React.FC<SuperAdminVendTokenModalProps> = ({
                   </div>
                 </div>
                 <div className="space-y-2 sm:mt-0">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Token: </span>
-                    <span className="break-words font-semibold">{tokenData.token}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Units: </span>
-                    <span className="break-words font-semibold">
-                      {tokenData.vendedAmount} {tokenData.unit}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Description: </span>
-                    <span className="break-words font-semibold">{tokenData.description}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Meter Number: </span>
-                    <span className="break-words font-semibold">{tokenData.drn}</span>
-                  </div>
+                  {paymentData.shouldUpgrade && paymentData.upgrade ? (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Key Change 1: </span>
+                        <span className="break-words font-semibold">
+                          {paymentData.upgrade.keyChangeTokens[0]?.token || "N/A"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Key Change 2: </span>
+                        <span className="break-words font-semibold">
+                          {paymentData.upgrade.keyChangeTokens[1]?.token || "N/A"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Credit Token: </span>
+                        <span className="break-words font-semibold">{paymentData.upgrade.creditToken.token}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Description: </span>
+                        <span className="break-words font-semibold">{paymentData.upgrade.creditToken.description}</span>
+                      </div>
+                      {tokenData.drn && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Meter Number: </span>
+                          <span className="break-words font-semibold">{tokenData.drn}</span>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Token: </span>
+                        <span className="break-words font-semibold">{tokenData.token}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Units: </span>
+                        <span className="break-words font-semibold">
+                          {tokenData.vendedAmount} {tokenData.unit}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Description: </span>
+                        <span className="break-words font-semibold">{tokenData.description}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Meter Number: </span>
+                        <span className="break-words font-semibold">{tokenData.drn}</span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -621,8 +707,13 @@ const SuperAdminVendTokenModal: React.FC<SuperAdminVendTokenModalProps> = ({
   // Show Token Modal
 
   const handleCopyToken = () => {
+    const tokenToCopy =
+      paymentData?.shouldUpgrade && paymentData?.upgrade
+        ? `Key Change Token 1: ${paymentData.upgrade.keyChangeTokens[0]?.token}\nKey Change Token 2: ${paymentData.upgrade.keyChangeTokens[1]?.token}\nCredit Token: ${paymentData.upgrade.creditToken.token}`
+        : tokenData.token
+
     if (navigator?.clipboard?.writeText) {
-      navigator.clipboard.writeText(tokenData.token).then(() => {
+      navigator.clipboard.writeText(tokenToCopy).then(() => {
         setIsCopyingToken(true)
         setTimeout(() => setIsCopyingToken(false), 2000)
       })
@@ -630,9 +721,15 @@ const SuperAdminVendTokenModal: React.FC<SuperAdminVendTokenModalProps> = ({
   }
 
   const handleCopyAll = () => {
-    const text = `Token: ${tokenData.token}\nAmount: ${tokenData.vendedAmount} ${tokenData.unit}\nDescription: ${
-      tokenData.description
-    }\nDRN: ${tokenData.drn}\nPayment Reference: ${paymentData.reference}\nCustomer: ${
+    let tokenInfo = ""
+
+    if (paymentData?.shouldUpgrade && paymentData?.upgrade) {
+      tokenInfo = `Key Change Token 1: ${paymentData.upgrade.keyChangeTokens[0]?.token}\nKey Change Token 2: ${paymentData.upgrade.keyChangeTokens[1]?.token}\nCredit Token: ${paymentData.upgrade.creditToken.token}\nDescription: ${paymentData.upgrade.creditToken.description}`
+    } else {
+      tokenInfo = `Token: ${tokenData.token}\nAmount: ${tokenData.vendedAmount} ${tokenData.unit}\nDescription: ${tokenData.description}\nDRN: ${tokenData.drn}`
+    }
+
+    const text = `${tokenInfo}\nPayment Reference: ${paymentData.reference}\nCustomer: ${
       paymentData.customerName
     }\nAccount Number: ${paymentData.customerAccountNumber}\nAmount Paid: ${
       paymentData.currency
@@ -675,51 +772,124 @@ const SuperAdminVendTokenModal: React.FC<SuperAdminVendTokenModalProps> = ({
         </div>
 
         <div className="p-6 max-sm:p-3">
-          {/* <div className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4">
-            <div className="flex items-center gap-2 text-green-800">
-              <svg className="size-5" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span className="font-semibold">Vend completed successfully</span>
-            </div>
-          </div> */}
-
           {/* Token Information */}
-          <div className="mb-6 max-sm:mb-4">
-            <h3 className="mb-3 text-base font-semibold text-gray-800">Token Details</h3>
-            <div className="space-y-3 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm">
-              <div className="flex flex-col gap-1 rounded-md bg-white p-3 text-center">
-                <span className="text-xs font-semibold uppercase tracking-wide text-blue-700">Electricity Token</span>
-                <span className="select-all text-3xl font-extrabold tracking-[0.12em] text-gray-900 max-sm:text-base sm:text-3xl">
-                  {tokenData.token}
-                </span>
+          {paymentData.shouldUpgrade && paymentData.upgrade ? (
+            <div className="mb-6 max-sm:mb-4">
+              <h3 className="mb-3 text-base font-semibold text-gray-800">Upgrade Tokens</h3>
+              <div className="mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-3">
+                <p className="text-sm text-yellow-800">{paymentData.upgrade.message}</p>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <span className="text-xs font-semibold uppercase tracking-wide text-gray-600 max-sm:text-xs">
-                    Amount
-                  </span>
-                  <p className="text-lg font-bold text-gray-900 max-sm:text-sm">
-                    {tokenData.vendedAmount} {tokenData.unit}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-xs font-semibold uppercase tracking-wide text-gray-600 max-sm:text-xs">
-                    Meter Number
-                  </span>
-                  <p className="font-mono text-lg font-bold text-gray-900 max-sm:text-sm">{tokenData.drn}</p>
-                </div>
-                {/* <div>
-                  <span className="text-xs font-semibold uppercase tracking-wide text-gray-600">Description</span>
-                  <p className="text-lg font-bold text-gray-900">{tokenData.description}</p>
-                </div> */}
+
+              <div className="space-y-3">
+                <div className="text-sm font-semibold text-gray-700">Key Change Tokens:</div>
+                {paymentData.upgrade.keyChangeTokens.map((keyToken, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between rounded-lg border border-orange-200 bg-orange-50 p-3"
+                  >
+                    <div className="flex-1">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-orange-700">
+                        Key Change Token {index + 1}
+                      </span>
+                      <div className="select-all font-mono text-lg font-bold tracking-wide text-gray-900 max-sm:text-base">
+                        {keyToken.token}
+                      </div>
+                    </div>
+                    <button
+                      onClick={(event) => {
+                        if (navigator?.clipboard?.writeText) {
+                          navigator.clipboard.writeText(keyToken.token).then(() => {
+                            // Show brief feedback
+                            const btn = event.currentTarget
+                            const originalText = btn.textContent
+                            btn.textContent = "Copied!"
+                            setTimeout(() => {
+                              btn.textContent = originalText
+                            }, 1500)
+                          })
+                        }
+                      }}
+                      className="ml-3 rounded bg-orange-600 px-3 py-1 text-xs text-white transition-colors hover:bg-orange-700"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                ))}
+
+                {paymentData.upgrade && (
+                  <div className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 p-3">
+                    <div className="flex-1">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+                        {paymentData.upgrade.creditToken.description}
+                      </span>
+                      <div className="select-all font-mono text-lg font-bold tracking-wide text-gray-900 max-sm:text-base">
+                        {paymentData.upgrade.creditToken.token}
+                      </div>
+                    </div>
+                    <button
+                      onClick={(event) => {
+                        if (navigator?.clipboard?.writeText) {
+                          const btn = event.currentTarget
+                          const originalText = btn.textContent
+                          navigator.clipboard.writeText(paymentData.upgrade!.creditToken.token).then(() => {
+                            btn.textContent = "Copied!"
+                            setTimeout(() => {
+                              btn.textContent = originalText
+                            }, 1500)
+                          })
+                        }
+                      }}
+                      className="ml-3 rounded bg-blue-600 px-3 py-1 text-xs text-white transition-colors hover:bg-blue-700"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="mb-6 max-sm:mb-4">
+              <h3 className="mb-3 text-base font-semibold text-gray-800">Token Details</h3>
+              <div className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 p-4">
+                <div className="flex-1">
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+                      Electricity Token
+                    </span>
+                    <button
+                      onClick={(event) => {
+                        if (navigator?.clipboard?.writeText) {
+                          const btn = event.currentTarget
+                          navigator.clipboard.writeText(tokenData.token).then(() => {
+                            const originalText = btn.textContent
+                            btn.textContent = "Copied!"
+                            setTimeout(() => {
+                              btn.textContent = originalText
+                            }, 1500)
+                          })
+                        }
+                      }}
+                      className="rounded bg-blue-600 px-2 py-1 text-xs text-white transition-colors hover:bg-blue-700"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                  <div className="select-all font-mono text-2xl font-bold tracking-wide text-gray-900 max-sm:text-lg">
+                    {tokenData.token}
+                  </div>
+                  <div className="mt-2 text-xs text-gray-600">{tokenData.description}</div>
+                </div>
+                <div className="ml-4 text-right">
+                  <div className="text-sm font-semibold text-gray-600 max-sm:text-xs">Amount</div>
+                  <div className="text-lg font-bold text-gray-900 max-sm:text-sm">
+                    {tokenData.vendedAmount} {tokenData.unit}
+                  </div>
+                  <div className="mt-2 text-sm font-semibold text-gray-600 max-sm:text-xs">Meter</div>
+                  <div className="font-mono text-lg font-bold text-gray-900 max-sm:text-sm">{tokenData.drn}</div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Payment Information */}
           <div>
@@ -757,7 +927,7 @@ const SuperAdminVendTokenModal: React.FC<SuperAdminVendTokenModalProps> = ({
 
         <div className="flex gap-3  border-t bg-white px-6 py-4 max-sm:px-3  sm:gap-4">
           <ButtonModule variant="secondary" className="flex w-full" size="md" onClick={handleCopyToken}>
-            {isCopyingToken ? "Copied!" : "Copy Token"}
+            {isCopyingToken ? "Copied!" : paymentData?.shouldUpgrade ? "Copy All Tokens" : "Copy Token"}
           </ButtonModule>
           <ButtonModule
             variant="primary"

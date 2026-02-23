@@ -50,6 +50,7 @@ export interface Feeder {
   nercCode: string
   kaedcoFeederCode: string
   feederVoltage: number
+  band: number
   injectionSubstation: InjectionSubstation
   htPole: HtPole
   distributionSubstations?: DistributionSubstation[]
@@ -107,6 +108,7 @@ export interface UpdateFeederRequest {
   nercCode: string
   kaedcoFeederCode: string
   feederVoltage: number
+  band: number
 }
 
 export type CreateFeederRequestPayload = CreateFeederRequest[]

@@ -12,6 +12,7 @@ import {
   processBillingBulkUpload,
   processBillManualEnergyBulkUpload,
   processBillRecomputeBulkUpload,
+  processDebtRecoveryNoEnergyBulkUpload,
   processFeederEnergyCapBulkUpload,
   processFinalizeBillingBulkUpload,
   processMeterReadingBulkUpload,
@@ -50,6 +51,9 @@ const FileManagementPage = () => {
     billManualEnergyBulkUploadLoading,
     billManualEnergyBulkUploadError,
     billManualEnergyBulkUploadSuccess,
+    debtRecoveryNoEnergyBulkUploadLoading,
+    debtRecoveryNoEnergyBulkUploadError,
+    debtRecoveryNoEnergyBulkUploadSuccess,
   } = useAppSelector((state: { fileManagement: any }) => state.fileManagement)
 
   // Upload type options
@@ -62,6 +66,7 @@ const FileManagementPage = () => {
     { name: "Bill Recompute", value: 30 },
     { name: "Feeder Energy Cap", value: 3 },
     { name: "Customer Meter Reading", value: 2 },
+    { name: "Debt Recovery (No Energy Bill)", value: 36 },
   ]
 
   // Helper function to get bulkInsertType based on upload type
@@ -83,6 +88,8 @@ const FileManagementPage = () => {
         return "feeder-energy-cap"
       case 2:
         return "meter-readings-account"
+      case 36:
+        return "bill-debt-recovery-no-energy"
       default:
         return "bill-generate-missing" // fallback
     }
@@ -107,6 +114,8 @@ const FileManagementPage = () => {
         return "feeder-energy-caps-bulk"
       case 2:
         return "postpaid-meter-readings-account-bulk"
+      case 36:
+        return "postpaid-bill-debt-recovery-no-energy-bulk"
       default:
         return "billing-bulk-import" // fallback
     }
@@ -457,6 +466,9 @@ const FileManagementPage = () => {
                 } else if (selectedUploadType === 2 || selectedUploadType === "2") {
                   // Meter Reading Import - use meter reading account bulk upload endpoint
                   bulkResult = await dispatch(processMeterReadingBulkUpload({ fileId })).unwrap()
+                } else if (selectedUploadType === 36) {
+                  // Debt Recovery (No Energy Bill) - use debt recovery no energy endpoint
+                  bulkResult = await dispatch(processDebtRecoveryNoEnergyBulkUpload({ fileId })).unwrap()
                 } else {
                   // Other billing bulk upload types - fallback to general billing endpoint
                   bulkResult = await dispatch(processBillingBulkUpload({ fileId })).unwrap()
@@ -595,6 +607,10 @@ const FileManagementPage = () => {
       // Feeder Energy Cap template
       headers = "EnergyReceived,EnergyAdviced,FeederName"
       sampleRows = []
+    } else if (selectedUploadType === 36) {
+      // Debt Recovery (No Energy Bill) template
+      headers = "CustomerAccountNo"
+      sampleRows = []
     } else {
       // Default template for other upload types
       headers = "CustomerAccountNo,CustomerName,Address,Phone,Email,TariffCode,FeederCode,Status"
@@ -626,6 +642,8 @@ const FileManagementPage = () => {
         ? "sample-customer-bills-reading.csv"
         : selectedUploadType === 3
         ? "sample-feeder-energy-cap.csv"
+        : selectedUploadType === 36
+        ? "sample-debt-recovery-no-energy.csv"
         : "sample_billing_bulk.csv"
     )
     link.style.visibility = "hidden"
@@ -708,7 +726,8 @@ const FileManagementPage = () => {
                       finalizeFileLoading ||
                       billingBulkUploadLoading ||
                       billRecomputeBulkUploadLoading ||
-                      billManualEnergyBulkUploadLoading
+                      billManualEnergyBulkUploadLoading ||
+                      debtRecoveryNoEnergyBulkUploadLoading
                     }
                     icon={<VscAdd />}
                     iconPosition="start"
@@ -869,7 +888,8 @@ const FileManagementPage = () => {
                                   !finalizeFileError &&
                                   !billingBulkUploadError &&
                                   !billRecomputeBulkUploadError &&
-                                  !billManualEnergyBulkUploadError)
+                                  !billManualEnergyBulkUploadError &&
+                                  !debtRecoveryNoEnergyBulkUploadError)
                               }
                             >
                               Choose Different File
@@ -888,7 +908,8 @@ const FileManagementPage = () => {
                                 finalizeFileLoading ||
                                 billingBulkUploadLoading ||
                                 billRecomputeBulkUploadLoading ||
-                                billManualEnergyBulkUploadLoading
+                                billManualEnergyBulkUploadLoading ||
+                                debtRecoveryNoEnergyBulkUploadLoading
                               }
                             >
                               {isUploading ? "Uploading..." : "Upload File"}
@@ -986,7 +1007,8 @@ const FileManagementPage = () => {
                       finalizeFileError ||
                       billingBulkUploadError ||
                       billRecomputeBulkUploadError ||
-                      billManualEnergyBulkUploadError) && (
+                      billManualEnergyBulkUploadError ||
+                      debtRecoveryNoEnergyBulkUploadError) && (
                       <div className="mb-6 rounded-md border border-red-200 bg-red-50 p-4">
                         <div className="flex">
                           <div className="shrink-0">{/* Error icon could go here */}</div>
@@ -998,7 +1020,8 @@ const FileManagementPage = () => {
                                 finalizeFileError ||
                                 billingBulkUploadError ||
                                 billRecomputeBulkUploadError ||
-                                billManualEnergyBulkUploadError}
+                                billManualEnergyBulkUploadError ||
+                                debtRecoveryNoEnergyBulkUploadError}
                             </div>
                           </div>
                         </div>
@@ -1048,7 +1071,8 @@ const FileManagementPage = () => {
                 finalizeFileLoading ||
                 billingBulkUploadLoading ||
                 billRecomputeBulkUploadLoading ||
-                billManualEnergyBulkUploadLoading
+                billManualEnergyBulkUploadLoading ||
+                debtRecoveryNoEnergyBulkUploadLoading
               }
               className="flex items-center gap-1 rounded-lg bg-[#004B23] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#003618] disabled:cursor-not-allowed disabled:opacity-50"
             >

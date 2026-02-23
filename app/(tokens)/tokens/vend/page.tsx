@@ -786,6 +786,8 @@ const VendPage: React.FC = () => {
                 paymentTypeName: vendData.paymentTypeName,
                 paidAtUtc: vendData.paidAtUtc!,
                 externalReference: vendData.externalReference,
+                shouldUpgrade: vendData.shouldUpgrade,
+                upgrade: vendData.upgrade,
               }
             : null
         }

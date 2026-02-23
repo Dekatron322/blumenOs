@@ -21,6 +21,7 @@ interface FeederFormData {
   nercCode: string
   kaedcoFeederCode: string
   feederVoltage: number
+  band: number
 }
 
 interface CSVFeeder {
@@ -30,6 +31,7 @@ interface CSVFeeder {
   nercCode: string
   kaedcoFeederCode: string
   feederVoltage: number
+  band: number
 }
 
 const AddFeederPage = () => {
@@ -64,6 +66,7 @@ const AddFeederPage = () => {
     nercCode: "",
     kaedcoFeederCode: "",
     feederVoltage: 0,
+    band: 0,
   })
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
@@ -108,6 +111,31 @@ const AddFeederPage = () => {
     })),
   ]
 
+  // Helper function to get band text
+  const getBandText = (band?: number): string => {
+    if (!band || band === 0) {
+      return "N/A"
+    }
+    const bandMap: { [key: number]: string } = {
+      1: "A",
+      2: "B",
+      3: "C",
+      4: "D",
+      5: "E",
+    }
+    return bandMap[band] || "N/A"
+  }
+
+  // Service band options
+  const bandOptions = [
+    { value: 0, label: "Select band" },
+    { value: 1, label: "Band A (1)" },
+    { value: 2, label: "Band B (2)" },
+    { value: 3, label: "Band C (3)" },
+    { value: 4, label: "Band D (4)" },
+    { value: 5, label: "Band E (5)" },
+  ]
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: any } }
   ) => {
@@ -115,7 +143,7 @@ const AddFeederPage = () => {
 
     // Handle number fields
     let processedValue = value
-    if (["injectionSubstationId", "htPoleId", "feederVoltage"].includes(name)) {
+    if (["injectionSubstationId", "htPoleId", "feederVoltage", "band"].includes(name)) {
       processedValue = Number(value)
     }
 
@@ -140,16 +168,8 @@ const AddFeederPage = () => {
       errors.injectionSubstationId = "Injection substation is required"
     }
 
-    if (formData.htPoleId === 0) {
-      errors.htPoleId = "HT pole is required"
-    }
-
     if (!formData.name.trim()) {
       errors.name = "Feeder name is required"
-    }
-
-    if (!formData.nercCode.trim()) {
-      errors.nercCode = "NERC code is required"
     }
 
     if (!formData.kaedcoFeederCode.trim()) {
@@ -160,6 +180,10 @@ const AddFeederPage = () => {
       errors.feederVoltage = "Feeder voltage is required"
     } else if (formData.feederVoltage < 0) {
       errors.feederVoltage = "Feeder voltage must be a positive number"
+    }
+
+    if (formData.band === 0) {
+      errors.band = "Band is required"
     }
 
     setFormErrors(errors)
@@ -197,6 +221,7 @@ const AddFeederPage = () => {
           nercCode: "",
           kaedcoFeederCode: "",
           feederVoltage: 0,
+          band: 0,
         })
         setFormErrors({})
 
@@ -227,6 +252,7 @@ const AddFeederPage = () => {
       nercCode: "",
       kaedcoFeederCode: "",
       feederVoltage: 0,
+      band: 0,
     })
     setFormErrors({})
     dispatch(clearCreateState())
@@ -276,14 +302,9 @@ const AddFeederPage = () => {
         const headers = lines[0]!.split(",").map((header) => header.trim().toLowerCase())
 
         // Validate headers
-        const expectedHeaders = [
-          "injectionsubstationid",
-          "htpoleid",
-          "name",
-          "nerccode",
-          "kaedcofeedercode",
-          "feedervoltage",
-        ]
+        const expectedHeaders = ["injectionsubstationid", "name", "kaedcofeedercode", "feedervoltage", "band"]
+
+        const optionalHeaders = ["htpoleid", "nerccode"]
 
         const missingHeaders = expectedHeaders.filter((header) => !headers.includes(header))
         if (missingHeaders.length > 0) {
@@ -295,30 +316,44 @@ const AddFeederPage = () => {
         const errors: string[] = []
 
         for (let i = 1; i < lines.length; i++) {
-          const values = lines[i]!.split(",").map((value) => value.trim())
-          if (values.length !== headers.length) {
-            errors.push(`Row ${i + 1}: Incorrect number of columns`)
+          const line = lines[i]!.trim()
+          if (!line) continue
+
+          const values = line.split(",").map((val) => val.trim())
+          if (values.length < 5) {
+            errors.push(`Row ${i + 1}: Not enough columns`)
             continue
           }
 
-          const row: any = {}
-          headers.forEach((header, index) => {
-            row[header] = values[index]
-          })
+          const feederData: CSVFeeder = {
+            injectionSubstationId: Number(values[headers.indexOf("injectionsubstationid")]) || 0,
+            name: values[headers.indexOf("name")] || "",
+            kaedcoFeederCode: values[headers.indexOf("kaedcofeedercode")] || "",
+            feederVoltage: Number(values[headers.indexOf("feedervoltage")]) || 0,
+            band: Number(values[headers.indexOf("band")]) || 0,
+            htPoleId: headers.includes("htpoleid") ? Number(values[headers.indexOf("htpoleid")]) || 0 : 0,
+            nercCode: headers.includes("nerccode") ? values[headers.indexOf("nerccode")] || "" : "",
+          }
 
-          // Validate row data
-          const rowErrors = validateCSVRow(row, i + 1)
-          if (rowErrors.length > 0) {
-            errors.push(...rowErrors)
-          } else {
-            parsedData.push({
-              injectionSubstationId: parseInt(row.injectionsubstationid),
-              htPoleId: parseInt(row.htpoleid),
-              name: row.name,
-              nercCode: row.nerccode,
-              kaedcoFeederCode: row.kaedcofeedercode,
-              feederVoltage: parseFloat(row.feedervoltage),
-            })
+          // Validate required fields
+          if (feederData.injectionSubstationId === 0) {
+            errors.push(`Row ${i + 1}: Injection substation ID is required`)
+          }
+          if (!feederData.name.trim()) {
+            errors.push(`Row ${i + 1}: Feeder name is required`)
+          }
+          if (!feederData.kaedcoFeederCode.trim()) {
+            errors.push(`Row ${i + 1}: KAEDCO feeder code is required`)
+          }
+          if (feederData.feederVoltage === 0) {
+            errors.push(`Row ${i + 1}: Feeder voltage is required`)
+          }
+          if (feederData.band === 0) {
+            errors.push(`Row ${i + 1}: Band is required`)
+          }
+
+          if (errors.length === 0 || !errors.some((err) => err.includes(`Row ${i + 1}:`))) {
+            parsedData.push(feederData)
           }
         }
 
@@ -475,39 +510,32 @@ const AddFeederPage = () => {
         name: "Feeder 003",
         nercCode: "NERC_FDR_003",
         kaedcoFeederCode: "KAEDCO_FDR_003",
-        feederVoltage: "33000",
+        feederVoltage: "11000",
       },
     ]
+  }
 
-    let csvContent = headers.join(",") + "\n"
-    exampleData.forEach((row) => {
-      csvContent += headers.map((header) => row[header as keyof typeof row]).join(",") + "\n"
-    })
-
-    const blob = new Blob([csvContent], { type: "text/csv" })
-    const url = URL.createObjectURL(blob)
+  const downloadCSVTemplate = () => {
+    const csvTemplate =
+      "injectionSubstationId,htPoleId,name,nercCode,kaedcoFeederCode,feederVoltage,band\n1,123,Main Feeder,NYC001,KAEDCO001,33000,1"
+    const blob = new Blob([csvTemplate], { type: "text/csv" })
+    const url = window.URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = "feeder_template.csv"
+    a.download = "feeder-template.csv"
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-
-    notify("success", "Template downloaded", {
-      description: "CSV template has been downloaded successfully",
-      duration: 3000,
-    })
+    window.URL.revokeObjectURL(url)
   }
 
   const isFormValid = (): boolean => {
     return (
       formData.injectionSubstationId !== 0 &&
-      formData.htPoleId !== 0 &&
       formData.name.trim() !== "" &&
-      formData.nercCode.trim() !== "" &&
       formData.kaedcoFeederCode.trim() !== "" &&
-      formData.feederVoltage !== 0
+      formData.feederVoltage !== 0 &&
+      formData.band !== 0
     )
   }
 
@@ -629,13 +657,12 @@ const AddFeederPage = () => {
                           />
 
                           <FormSelectModule
-                            label="HT Pole"
+                            label="HT Pole (Optional)"
                             name="htPoleId"
                             value={formData.htPoleId}
                             onChange={handleInputChange}
                             options={htPoleOptions}
                             error={formErrors.htPoleId}
-                            required
                             disabled={polesLoading}
                           />
                         </div>
@@ -667,14 +694,13 @@ const AddFeederPage = () => {
                           />
 
                           <FormInputModule
-                            label="NERC Code"
+                            label="NERC Code (Optional)"
                             name="nercCode"
                             type="text"
                             placeholder="Enter NERC code"
                             value={formData.nercCode}
                             onChange={handleInputChange}
                             error={formErrors.nercCode}
-                            required
                           />
 
                           <FormInputModule
@@ -696,6 +722,16 @@ const AddFeederPage = () => {
                             value={formData.feederVoltage}
                             onChange={handleInputChange}
                             error={formErrors.feederVoltage}
+                            required
+                          />
+
+                          <FormSelectModule
+                            label="Service Band"
+                            name="band"
+                            value={formData.band}
+                            onChange={handleInputChange}
+                            options={bandOptions}
+                            error={formErrors.band}
                             required
                           />
                         </div>
@@ -896,19 +932,22 @@ const AddFeederPage = () => {
                                   Injection Substation ID
                                 </th>
                                 <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
-                                  HT Pole ID
+                                  HT Pole ID (Optional)
                                 </th>
                                 <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
                                   Name
                                 </th>
                                 <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
-                                  NERC Code
+                                  NERC Code (Optional)
                                 </th>
                                 <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
                                   KAEDCO Code
                                 </th>
                                 <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
                                   Voltage
+                                </th>
+                                <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
+                                  Service Band
                                 </th>
                               </tr>
                             </thead>
@@ -930,6 +969,9 @@ const AddFeederPage = () => {
                                   </td>
                                   <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">
                                     {feeder.feederVoltage}V
+                                  </td>
+                                  <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">
+                                    {getBandText(feeder.band)}
                                   </td>
                                 </tr>
                               ))}

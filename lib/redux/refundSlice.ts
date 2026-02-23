@@ -249,6 +249,108 @@ export interface MakeRefundResponse {
   data: MakeRefundData
 }
 
+// Interfaces for Manual Refund
+export interface ManualRefundRequest {
+  meterNumber: string
+  amount: number
+  phoneNumber: string
+  reason: string
+}
+
+export interface ManualRefundData {
+  refundTypeKey: string
+  refundTypeName: string
+  refundReference: string
+  receipt: {
+    isPending: boolean
+    isMd: boolean
+    externalReference: string
+    bankReceiptNo: string
+    reference: string
+    paidAtUtc: string
+    customerName: string
+    customerAccountNumber: string
+    customerAddress: string
+    customerPhoneNumber: string
+    customerMeterNumber: string
+    customerId: number
+    accountType: string
+    tariffRate: number
+    units: number
+    vatRate: number
+    vatAmount: number
+    electricityAmount: number
+    outstandingDebt: number
+    debtPayable: number
+    totalAmountPaid: number
+    currency: string
+    channel: "Cash"
+    status: "Pending"
+    paymentTypeName: string
+    shouldUpgrade: boolean
+    receipt: {
+      reference: string
+      bankReceiptNo: string
+      paidAtUtc: string
+      customerName: string
+      customerAccountNumber: string
+      customerAddress: string
+      customerPhoneNumber: string
+      customerMeterNumber: string
+      accountType: string
+      tariffRate: number
+      units: number
+      vatRate: number
+      vatAmount: number
+      electricityAmount: number
+      outstandingDebt: number
+      debtPayable: number
+      totalAmountPaid: number
+      currency: string
+      channel: "Cash"
+      status: "Pending"
+      tokens: Token[]
+      serviceCharge: number
+      discountBonus: number
+    }
+    paymentDetails: {
+      reference: string
+      checkoutUrl: string
+      virtualAccount: {
+        accountNumber: string
+        bankName: string
+        reference: string
+        expiresAtUtc: string
+      }
+    }
+    collector: {
+      type: string
+      name: string
+      agentId: number
+      agentCode: string
+      agentType: "SalesRep"
+      vendorId: number
+      vendorName: string
+      staffName: string
+      customerId: number
+      customerName: string
+    }
+    token: Token
+    upgrade: {
+      upgradeId: number
+      message: string
+      keyChangeTokens: Token[]
+      creditToken: Token
+    }
+  }
+}
+
+export interface ManualRefundResponse {
+  isSuccess: boolean
+  message: string
+  data: ManualRefundData
+}
+
 // Refund State
 interface RefundState {
   // Refund Summary state
@@ -279,6 +381,12 @@ interface RefundState {
   makeRefundError: string | null
   makeRefundSuccess: boolean
 
+  // Manual Refund state
+  manualRefundData: ManualRefundData | null
+  manualRefundLoading: boolean
+  manualRefundError: string | null
+  manualRefundSuccess: boolean
+
   // General refund state
   loading: boolean
   error: string | null
@@ -304,6 +412,12 @@ const initialState: RefundState = {
   makeRefundLoading: false,
   makeRefundError: null,
   makeRefundSuccess: false,
+
+  // Manual Refund state
+  manualRefundData: null,
+  manualRefundLoading: false,
+  manualRefundError: null,
+  manualRefundSuccess: false,
 
   loading: false,
   error: null,
@@ -415,6 +529,27 @@ export const makeRefund = createAsyncThunk(
   }
 )
 
+// Async thunk for making a manual refund
+export const makeManualRefund = createAsyncThunk(
+  "refunds/makeManualRefund",
+  async (refundData: ManualRefundRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<ManualRefundResponse>(buildApiUrl(API_ENDPOINTS.REFUND.MANUAL_BILLS), refundData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to make manual refund")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to make manual refund")
+      }
+      return rejectWithValue(error.message || "Network error during manual refund creation")
+    }
+  }
+)
+
 // Refund slice
 const refundSlice = createSlice({
   name: "refunds",
@@ -457,11 +592,21 @@ const refundSlice = createSlice({
       state.makeRefundLoading = false
     },
 
+    // Clear manual refund state
+    clearManualRefund: (state) => {
+      state.manualRefundData = null
+      state.manualRefundError = null
+      state.manualRefundSuccess = false
+      state.manualRefundLoading = false
+    },
+
     // Clear all errors
     clearError: (state) => {
       state.error = null
       state.refundSummaryError = null
       state.refundHistoryError = null
+      state.makeRefundError = null
+      state.manualRefundError = null
     },
 
     // Reset refund state
@@ -481,6 +626,10 @@ const refundSlice = createSlice({
       state.makeRefundLoading = false
       state.makeRefundError = null
       state.makeRefundSuccess = false
+      state.manualRefundData = null
+      state.manualRefundLoading = false
+      state.manualRefundError = null
+      state.manualRefundSuccess = false
       state.loading = false
       state.error = null
     },
@@ -542,6 +691,24 @@ const refundSlice = createSlice({
         state.makeRefundError = action.payload as string
         state.makeRefundSuccess = false
       })
+
+    // Make manual refund
+    builder
+      .addCase(makeManualRefund.pending, (state) => {
+        state.manualRefundLoading = true
+        state.manualRefundError = null
+        state.manualRefundSuccess = false
+      })
+      .addCase(makeManualRefund.fulfilled, (state, action) => {
+        state.manualRefundLoading = false
+        state.manualRefundSuccess = true
+        state.manualRefundData = action.payload
+      })
+      .addCase(makeManualRefund.rejected, (state, action) => {
+        state.manualRefundLoading = false
+        state.manualRefundError = action.payload as string
+        state.manualRefundSuccess = false
+      })
   },
 })
 
@@ -551,6 +718,7 @@ export const {
   clearRefundHistory,
   setRefundHistoryParams,
   clearMakeRefund,
+  clearManualRefund,
   clearError,
   resetRefundState,
 } = refundSlice.actions

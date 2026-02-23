@@ -10,6 +10,7 @@ import html2canvas from "html2canvas"
 
 interface TokenData {
   token: string
+  tokenDec?: string
   vendedAmount: string
   unit: string
   description: string
@@ -19,7 +20,7 @@ interface TokenData {
 interface CollectPaymentReceiptModalProps {
   isOpen: boolean
   onRequestClose: () => void
-  tokenData?: TokenData | null
+  tokenData?: TokenData | TokenData[] | null
   paymentData: {
     reference: string
     customerName: string
@@ -42,6 +43,16 @@ interface CollectPaymentReceiptModalProps {
     paymentTypeName?: string
     paidAtUtc: string
     externalReference?: string
+    shouldUpgrade?: boolean
+    tokens?: TokenData[]
+    upgrade?: {
+      message: string
+      keyChangeTokens: TokenData[]
+      creditToken: TokenData
+    }
+    receipt?: {
+      tokens: TokenData[]
+    }
   } | null
 }
 
@@ -52,6 +63,7 @@ const CollectPaymentReceiptModal: React.FC<CollectPaymentReceiptModalProps> = ({
   paymentData,
 }) => {
   const [isCopyingAll, setIsCopyingAll] = useState(false)
+  const [copiedToken, setCopiedToken] = useState<string | null>(null)
   const receiptRef = useRef<HTMLDivElement>(null)
 
   const formatCurrency = (amount: number, currency: string) => {
@@ -71,6 +83,36 @@ const CollectPaymentReceiptModal: React.FC<CollectPaymentReceiptModalProps> = ({
       hour: "2-digit",
       minute: "2-digit",
     })
+  }
+
+  const handleCopyToken = async (token: string, tokenDec: string) => {
+    try {
+      await navigator.clipboard.writeText(tokenDec)
+      setCopiedToken(token)
+      setTimeout(() => setCopiedToken(null), 2000)
+    } catch (error) {
+      console.error("Failed to copy token:", error)
+    }
+  }
+
+  const getTokens = (): TokenData[] => {
+    // Handle upgrade case - check if paymentData has tokens array directly
+    if (paymentData?.shouldUpgrade && paymentData?.tokens && Array.isArray(paymentData.tokens)) {
+      return paymentData.tokens
+    }
+    // Handle upgrade case with nested receipt structure
+    if (paymentData?.shouldUpgrade && paymentData?.receipt?.tokens) {
+      return paymentData.receipt.tokens
+    }
+    // Handle array tokenData
+    if (Array.isArray(tokenData)) {
+      return tokenData
+    }
+    // Handle single tokenData
+    if (tokenData) {
+      return [tokenData]
+    }
+    return []
   }
 
   const handlePrint = () => {
@@ -297,30 +339,88 @@ const CollectPaymentReceiptModal: React.FC<CollectPaymentReceiptModalProps> = ({
         </div>
         
         ${
-          tokenData
+          paymentData?.shouldUpgrade && paymentData?.tokens && Array.isArray(paymentData.tokens)
             ? `
         <div class="double-divider"></div>
-        <div class="center bold">TOKEN INFORMATION</div>
-        <div style="border: 2px solid #000; padding: 10px; margin: 10px 0; text-align: center; background: #f5f5f5;">
-          <div style="font-size: 16px; font-weight: bold; letter-spacing: 2px; font-family: monospace; word-break: break-all;">
-            ${tokenData.token}
+        <div class="center bold">METER UPGRADE TOKENS</div>
+        <div style="margin-bottom: 10px; font-size: 10px; text-align: center;">
+          ${paymentData.upgrade?.message || "Enter these tokens in order to upgrade your meter"}
+        </div>
+        ${paymentData.tokens
+          .map(
+            (token, index) => `
+        <div class="token-box" style="margin-bottom: 8px;">
+          <div style="font-size: 10px; margin-bottom: 3px;">${token.description}</div>
+          <div class="token-value">${token.token}</div>
+          ${
+            token.vendedAmount && token.unit
+              ? `
+          <div style="margin-top: 3px; font-size: 10px;">
+            ${token.vendedAmount} ${token.unit}
           </div>
-          <div style="margin-top: 8px; font-size: 11px;">
-            ${tokenData.vendedAmount} ${tokenData.unit}
-          </div>
-          <div style="font-size: 10px; margin-top: 4px;">Meter: ${tokenData.drn}</div>
+          `
+              : ""
+          }
+          <div style="font-size: 10px;">Meter: ${token.drn}</div>
         </div>
         `
+          )
+          .join("")}
+        `
+            : paymentData?.shouldUpgrade && paymentData?.receipt?.tokens
+            ? `
+        <div class="double-divider"></div>
+        <div class="center bold">METER UPGRADE TOKENS</div>
+        <div style="margin-bottom: 10px; font-size: 10px; text-align: center;">
+          ${paymentData.upgrade?.message || "Enter these tokens in order to upgrade your meter"}
+        </div>
+        ${paymentData.receipt.tokens
+          .map(
+            (token, index) => `
+        <div class="token-box" style="margin-bottom: 8px;">
+          <div style="font-size: 10px; margin-bottom: 3px;">${token.description}</div>
+          <div class="token-value">${token.token}</div>
+          ${
+            token.vendedAmount && token.unit
+              ? `
+          <div style="margin-top: 3px; font-size: 10px;">
+            ${token.vendedAmount} ${token.unit}
+          </div>
+          `
+              : ""
+          }
+          <div style="font-size: 10px;">Meter: ${token.drn}</div>
+        </div>
+        `
+          )
+          .join("")}
+        `
+            : getTokens().length > 0
+            ? getTokens()
+                .map(
+                  (token, index) => `
+        <div class="double-divider"></div>
+        <div class="center bold">TOKEN ${getTokens().length > 1 ? index + 1 : ""}</div>
+        <div class="token-box">
+          <div class="token-value">${token.token}</div>
+          <div style="margin-top: 8px; font-size: 11px;">
+            ${token.vendedAmount || ""} ${token.unit || ""}
+          </div>
+          ${token?.drn ? `<div style="font-size: 10px; margin-top: 4px;">Meter: ${token.drn}</div>` : ""}
+        </div>
+        `
+                )
+                .join("")
             : ""
         }
         
         <div class="double-divider"></div>
         
-        <div class="center footer">
-          <p>Thank you for your payment!</p>
-          <p>This receipt serves as proof of payment.</p>
-          <p style="margin-top: 10px;">--------------------------------</p>
-          <p>Powered by BlumenOS</p>
+        <div class="center">
+          <div class="bold">COPY ALL</div>
+          <button class="token-box" style="margin-bottom: 8px;" onclick="handleCopyAll()">
+            <div class="token-value">COPY ALL</div>
+          </button>
         </div>
       </body>
       </html>
@@ -417,12 +517,15 @@ const CollectPaymentReceiptModal: React.FC<CollectPaymentReceiptModalProps> = ({
       (paymentData.externalReference ? `External Reference: ${paymentData.externalReference}\n` : "")
 
     if (tokenData) {
-      text +=
-        `\nToken Information:\n` +
-        `Token: ${tokenData.token}\n` +
-        `Units: ${tokenData.vendedAmount} ${tokenData.unit}\n` +
-        `Meter: ${tokenData.drn}\n` +
-        `Description: ${tokenData.description}\n`
+      const tokens = Array.isArray(tokenData) ? tokenData : [tokenData]
+      tokens.forEach((token, index) => {
+        text +=
+          `\nToken Information${tokens.length > 1 ? ` ${index + 1}` : ""}:\n` +
+          `Token: ${token.token}\n` +
+          `Units: ${token.vendedAmount} ${token.unit}\n` +
+          `Meter: ${token.drn}\n` +
+          `Description: ${token.description}\n`
+      })
     }
 
     if (navigator?.clipboard?.writeText) {
@@ -448,10 +551,13 @@ const CollectPaymentReceiptModal: React.FC<CollectPaymentReceiptModalProps> = ({
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 20, opacity: 0 }}
         transition={{ type: "spring", damping: 25 }}
-        className="relative w-full max-w-2xl overflow-hidden bg-[#EFEFEF] shadow-2xl"
+        className="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden bg-[#EFEFEF] shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div ref={receiptRef} className="relative space-y-4 px-4 pb-4 text-sm text-gray-800 sm:space-y-6 sm:px-6">
+        <div
+          ref={receiptRef}
+          className="flex-1 space-y-2 overflow-y-auto px-4 pb-4 text-sm text-gray-800 sm:space-y-3 sm:px-6"
+        >
           {/* Header */}
           <div className="flex flex-col items-center justify-between bg-[#EFEFEF]  pt-4 sm:flex-row ">
             <Image src="/kadco.svg" alt="" height={120} width={123} className="max-sm:w-20" />
@@ -476,8 +582,8 @@ const CollectPaymentReceiptModal: React.FC<CollectPaymentReceiptModalProps> = ({
           </div>
 
           {/* Customer and Payment Summary */}
-          <div className="relative flex flex-col items-start justify-between rounded-lg bg-white p-4 sm:flex-row sm:items-center">
-            <div className="mb-3 w-full sm:mb-0 sm:w-auto">
+          <div className="relative flex flex-col items-start justify-between rounded-lg bg-white p-3 sm:flex-row sm:items-center">
+            <div className="mb-2 w-full sm:mb-0 sm:w-auto">
               <p className="text-xs text-gray-500">Customer</p>
               <p className="break-words font-semibold text-gray-900">{paymentData.customerName}</p>
               <p className="text-xs text-gray-500">Account: {paymentData.customerAccountNumber}</p>
@@ -505,9 +611,9 @@ const CollectPaymentReceiptModal: React.FC<CollectPaymentReceiptModalProps> = ({
           </div>
 
           {/* Billing Details */}
-          <div className="rounded-lg bg-white p-4">
-            <h4 className="mb-3 font-semibold text-gray-600">Billing Details</h4>
-            <div className="grid grid-cols-1 gap-3 text-xs sm:grid-cols-2">
+          <div className="rounded-lg bg-white p-3">
+            <h4 className="mb-2 font-semibold text-gray-600">Billing Details</h4>
+            <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
               <div className="flex justify-between">
                 <span className="text-gray-500">Payment Type:</span>
                 <span className="font-medium">{paymentData.paymentTypeName}</span>
@@ -538,9 +644,9 @@ const CollectPaymentReceiptModal: React.FC<CollectPaymentReceiptModalProps> = ({
           </div>
 
           {/* Financial Breakdown */}
-          <div className="rounded-lg bg-white p-4">
-            <h4 className="mb-3 font-semibold text-gray-600">Financial Breakdown</h4>
-            <div className="space-y-2 text-xs">
+          <div className="rounded-lg bg-white p-3">
+            <h4 className="mb-2 font-semibold text-gray-600">Financial Breakdown</h4>
+            <div className="space-y-1 text-xs">
               <div className="flex justify-between">
                 <span className="text-gray-500">Electricity Amount:</span>
                 <span className="font-medium">
@@ -575,34 +681,109 @@ const CollectPaymentReceiptModal: React.FC<CollectPaymentReceiptModalProps> = ({
           </div>
 
           {/* Token Information */}
-          {tokenData && (
-            <div className="rounded-lg border-2 border-blue-200 bg-blue-50 p-4">
-              <h4 className="mb-3 font-semibold text-blue-800">Token Information</h4>
-              <div className="mb-3 rounded-md bg-white p-3 text-center">
-                <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Electricity Token</p>
-                <p className="select-all font-mono text-2xl font-extrabold tracking-[0.12em] text-gray-900 sm:text-3xl">
-                  {tokenData.token}
-                </p>
+          {(paymentData?.tokens && Array.isArray(paymentData.tokens)) ||
+          (paymentData?.shouldUpgrade && paymentData?.receipt?.tokens) ? (
+            <div className="rounded-lg bg-gray-50 p-3">
+              <h4 className="mb-3 text-sm font-semibold text-gray-700">
+                {paymentData.upgrade?.message || "Enter these tokens in order to upgrade your meter:"}
+              </h4>
+              <div className="space-y-2">
+                {(paymentData?.tokens && Array.isArray(paymentData.tokens)
+                  ? paymentData.tokens
+                  : paymentData.receipt?.tokens || []
+                ).map((token, index) => {
+                  const isCreditToken = token.description.includes("Credit") || (token.vendedAmount && token.unit)
+                  return (
+                    <div
+                      key={index}
+                      className={`rounded border p-2 ${
+                        isCreditToken ? "border-green-200 bg-green-50" : "border-orange-200 bg-orange-50"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-1 flex items-center gap-2">
+                            <span
+                              className={`text-xs font-medium ${isCreditToken ? "text-green-700" : "text-orange-700"}`}
+                            >
+                              {token.description}
+                            </span>
+                            {token.vendedAmount && token.unit && (
+                              <span
+                                className={`text-xs font-bold ${isCreditToken ? "text-green-600" : "text-gray-600"}`}
+                              >
+                                {token.vendedAmount} {token.unit}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="flex-1 truncate font-mono text-sm font-bold text-gray-900">
+                              {token.token}
+                            </span>
+                            <button
+                              onClick={() => handleCopyToken(token.token, token.tokenDec || token.token)}
+                              className={`flex-shrink-0 rounded px-2 py-1 text-xs font-medium transition-colors hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-offset-1 ${
+                                isCreditToken ? "focus:ring-green-500" : "focus:ring-orange-500"
+                              }`}
+                              title="Copy token"
+                            >
+                              {copiedToken === token.token ? (
+                                <span className="text-green-600">Copied!</span>
+                              ) : (
+                                <span className={isCreditToken ? "text-green-600" : "text-orange-600"}>Copy</span>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
-              <div className="grid grid-cols-2 gap-4 text-xs">
-                <div>
-                  <span className="font-semibold uppercase tracking-wide text-gray-600">Units</span>
-                  <p className="text-lg font-bold text-gray-900">
-                    {tokenData.vendedAmount} {tokenData.unit}
-                  </p>
-                </div>
-                <div>
-                  <span className="font-semibold uppercase tracking-wide text-gray-600">Meter Number</span>
-                  <p className="font-mono text-lg font-bold text-gray-900">{tokenData.drn}</p>
-                </div>
-              </div>
-              {tokenData.description && (
-                <div className="mt-2 text-xs text-gray-600">
-                  <span className="font-medium">Description:</span> {tokenData.description}
-                </div>
-              )}
             </div>
-          )}
+          ) : getTokens().length > 0 ? (
+            <div className="rounded-lg bg-gray-50 p-3">
+              <h4 className="mb-3 text-sm font-semibold text-gray-700">
+                Token Information {getTokens().length > 1 ? `(${getTokens().length} tokens)` : ""}
+              </h4>
+              <div className="space-y-2">
+                {getTokens().map((token, index) => (
+                  <div key={index} className="rounded border border-blue-200 bg-blue-50 p-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-1 flex items-center gap-2">
+                          <span className="text-xs font-medium text-blue-700">
+                            Electricity Token {getTokens().length > 1 ? index + 1 : ""}
+                          </span>
+                          {token.vendedAmount && token.unit && (
+                            <span className="text-xs font-bold text-blue-600">
+                              {token.vendedAmount} {token.unit}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="flex-1 truncate font-mono text-sm font-bold text-gray-900">
+                            {token.token}
+                          </span>
+                          <button
+                            onClick={() => handleCopyToken(token.token, token.tokenDec || token.token)}
+                            className="flex-shrink-0 rounded px-2 py-1 text-xs font-medium transition-colors hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-offset-1"
+                            title="Copy token"
+                          >
+                            {copiedToken === token.token ? (
+                              <span className="text-green-600">Copied!</span>
+                            ) : (
+                              <span className="text-blue-600">Copy</span>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
 
           {/* Footer */}
           <div className="text-center text-xs text-gray-500">

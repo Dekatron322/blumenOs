@@ -1999,17 +1999,7 @@ const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({
         <CollectPaymentReceiptModal
           isOpen={showCollectPaymentReceiptModal}
           onRequestClose={handleCloseReceiptModals}
-          tokenData={
-            selectedPayment.tokens && selectedPayment.tokens.length > 0
-              ? {
-                  token: selectedPayment.tokens[0]?.token ?? "",
-                  vendedAmount: selectedPayment.tokens[0]?.vendedAmount ?? "",
-                  unit: selectedPayment.tokens[0]?.unit ?? "",
-                  description: selectedPayment.tokens[0]?.description ?? "",
-                  drn: selectedPayment.tokens[0]?.drn ?? "",
-                }
-              : undefined
-          }
+          tokenData={selectedPayment.tokens}
           paymentData={{
             reference: selectedPayment.reference,
             customerName: selectedPayment.customerName || "",
@@ -2018,7 +2008,7 @@ const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({
             customerPhoneNumber: selectedPayment.phoneNumber ?? undefined,
             customerMeterNumber:
               selectedPayment.tokens && selectedPayment.tokens.length > 0 ? selectedPayment.tokens[0]?.drn : undefined,
-            accountType: undefined,
+            accountType: selectedPayment.isPrepaid ? "prepaid" : "postpaid",
             tariffRate: undefined,
             units:
               selectedPayment.tokens && selectedPayment.tokens.length > 0
@@ -2036,6 +2026,9 @@ const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({
             paymentTypeName: selectedPayment.paymentTypeName,
             paidAtUtc: selectedPayment.paidAtUtc,
             externalReference: selectedPayment.externalReference ?? undefined,
+            shouldUpgrade: selectedPayment.shouldUpgrade,
+            tokens: selectedPayment.tokens,
+            upgrade: selectedPayment.upgrade,
           }}
         />
       )}

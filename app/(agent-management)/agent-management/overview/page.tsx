@@ -510,7 +510,7 @@ export default function AgentManagementDashboard() {
             {/* Page Header - Always Visible */}
             <div className="my-4 flex w-full flex-col items-start justify-between  gap-4 md:flex-row md:gap-6">
               <div className="flex-1">
-                <h4 className="text-lg font-semibold sm:text-xl md:text-2xl">Sales Rep Management</h4>
+                <h4 className="text-lg font-semibold sm:text-xl md:text-2xl">Cashier Management</h4>
                 <p className="text-sm text-gray-600 sm:text-base">
                   Field sales reps onboarding, commissions, and performance tracking
                 </p>
@@ -860,7 +860,7 @@ export default function AgentManagementDashboard() {
                       transition={{ duration: 0.5 }}
                     >
                       <div className="w-full">
-                        <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                           {/* Active Agents Card */}
                           <motion.div
                             className="small-card rounded-md bg-white p-4 shadow-sm transition duration-500 md:border"
@@ -949,7 +949,7 @@ export default function AgentManagementDashboard() {
                           </motion.div>
 
                           {/* Outstanding Cash Card */}
-                          <motion.div
+                          {/* <motion.div
                             className="small-card rounded-md bg-white p-4 shadow-sm transition duration-500 md:border"
                             whileHover={{ y: -3, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
                           >
@@ -973,7 +973,7 @@ export default function AgentManagementDashboard() {
                                 </p>
                               </div>
                             </div>
-                          </motion.div>
+                          </motion.div> */}
                         </div>
                       </div>
                     </motion.div>

@@ -25,6 +25,21 @@ import type {
 } from "lib/redux/feedersSlice"
 import ViewFeederChangeRequestModal from "components/ui/Modal/view-feeder-change-request-modal"
 
+// Helper function to get band text
+const getBandText = (band?: number): string => {
+  if (!band || band === 0) {
+    return "N/A"
+  }
+  const bandMap: { [key: number]: string } = {
+    1: "A",
+    2: "B",
+    3: "C",
+    4: "D",
+    5: "E",
+  }
+  return bandMap[band] || "N/A"
+}
+
 // Distribution Substation Card Component
 const DistributionSubstationCard = ({ substation }: { substation: any }) => {
   return (
@@ -1147,6 +1162,7 @@ const FeederDetailsPage = () => {
           ["NERC Code", currentFeeder.nercCode],
           ["KAEDCO Feeder Code", currentFeeder.kaedcoFeederCode],
           ["Feeder Voltage", `${currentFeeder.feederVoltage}V`],
+          ["Service Band", `Band ${getBandText(currentFeeder.band)}`],
           ["Feeder ID", currentFeeder.id.toString()],
         ],
         theme: "grid",
@@ -1411,6 +1427,9 @@ const FeederDetailsPage = () => {
                         <div className="flex items-center gap-3 text-gray-600">
                           <span className="font-medium">Voltage:</span> {currentFeeder.feederVoltage}V
                         </div>
+                        <div className="flex items-center gap-3 text-gray-600">
+                          <span className="font-medium">Service Band:</span> Band {getBandText(currentFeeder.band)}
+                        </div>
                       </div>
                     </div>
                   </motion.div>
@@ -1501,6 +1520,10 @@ const FeederDetailsPage = () => {
                       <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                         <label className="text-sm font-medium text-gray-600">Feeder Voltage</label>
                         <p className="font-semibold text-gray-900">{currentFeeder.feederVoltage}V</p>
+                      </div>
+                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                        <label className="text-sm font-medium text-gray-600">Service Band</label>
+                        <p className="font-semibold text-gray-900">Band {getBandText(currentFeeder.band)}</p>
                       </div>
                       <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                         <label className="text-sm font-medium text-gray-600">KAEDCO Feeder Code</label>

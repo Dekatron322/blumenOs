@@ -674,6 +674,17 @@ export interface TestTokenBulkUploadResponse {
   }
 }
 
+// Debt Recovery No Energy Bulk Upload interfaces
+export interface DebtRecoveryNoEnergyBulkUploadRequest {
+  fileId: number
+}
+
+export interface DebtRecoveryNoEnergyBulkUploadResponse {
+  isSuccess: boolean
+  message: string
+  data: BulkUploadJob
+}
+
 export interface BulkUploadPreview {
   fileId: number
   fileName: string
@@ -1145,6 +1156,12 @@ interface FileManagementState {
   downloadTestTokenError: string | null
   downloadTestTokenSuccess: boolean
   downloadTestTokenResponse: DownloadTestTokenResponse | null
+
+  // Debt Recovery No Energy Bulk Upload state
+  debtRecoveryNoEnergyBulkUploadLoading: boolean
+  debtRecoveryNoEnergyBulkUploadError: string | null
+  debtRecoveryNoEnergyBulkUploadSuccess: boolean
+  debtRecoveryNoEnergyBulkUploadResponse: DebtRecoveryNoEnergyBulkUploadResponse | null
 }
 
 // Initial state
@@ -1399,6 +1416,12 @@ const initialState: FileManagementState = {
   downloadTestTokenError: null,
   downloadTestTokenSuccess: false,
   downloadTestTokenResponse: null,
+
+  // Debt Recovery No Energy Bulk Upload state
+  debtRecoveryNoEnergyBulkUploadLoading: false,
+  debtRecoveryNoEnergyBulkUploadError: null,
+  debtRecoveryNoEnergyBulkUploadSuccess: false,
+  debtRecoveryNoEnergyBulkUploadResponse: null,
 }
 
 // Async thunks
@@ -1942,6 +1965,21 @@ export const processTestTokenBulkUpload = createAsyncThunk(
   }
 )
 
+export const processDebtRecoveryNoEnergyBulkUpload = createAsyncThunk(
+  "fileManagement/processDebtRecoveryNoEnergyBulkUpload",
+  async (request: DebtRecoveryNoEnergyBulkUploadRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<DebtRecoveryNoEnergyBulkUploadResponse>(
+        "/billing/postpaid/bills/bulk/debt-recovery-no-energy",
+        request
+      )
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to process debt recovery no energy bulk upload")
+    }
+  }
+)
+
 // CSV Jobs async thunk
 export const fetchCsvJobs = createAsyncThunk(
   "fileManagement/fetchCsvJobs",
@@ -2376,6 +2414,13 @@ const fileManagementSlice = createSlice({
       state.testTokenBulkUploadError = null
       state.testTokenBulkUploadSuccess = false
       state.testTokenBulkUploadResponse = null
+    },
+    // Reset Debt Recovery No Energy Bulk Upload state
+    resetDebtRecoveryNoEnergyBulkUploadState: (state) => {
+      state.debtRecoveryNoEnergyBulkUploadLoading = false
+      state.debtRecoveryNoEnergyBulkUploadError = null
+      state.debtRecoveryNoEnergyBulkUploadSuccess = false
+      state.debtRecoveryNoEnergyBulkUploadResponse = null
     },
     // Reset all file management state
     resetFileManagementState: (state) => {
@@ -3113,6 +3158,23 @@ const fileManagementSlice = createSlice({
         state.testTokenBulkUploadLoading = false
         state.testTokenBulkUploadError = action.payload as string
         state.testTokenBulkUploadSuccess = false
+      })
+
+      // Debt Recovery No Energy Bulk Upload reducers
+      .addCase(processDebtRecoveryNoEnergyBulkUpload.pending, (state) => {
+        state.debtRecoveryNoEnergyBulkUploadLoading = true
+        state.debtRecoveryNoEnergyBulkUploadError = null
+        state.debtRecoveryNoEnergyBulkUploadSuccess = false
+      })
+      .addCase(processDebtRecoveryNoEnergyBulkUpload.fulfilled, (state, action) => {
+        state.debtRecoveryNoEnergyBulkUploadLoading = false
+        state.debtRecoveryNoEnergyBulkUploadSuccess = true
+        state.debtRecoveryNoEnergyBulkUploadResponse = action.payload
+      })
+      .addCase(processDebtRecoveryNoEnergyBulkUpload.rejected, (state, action) => {
+        state.debtRecoveryNoEnergyBulkUploadLoading = false
+        state.debtRecoveryNoEnergyBulkUploadError = action.payload as string
+        state.debtRecoveryNoEnergyBulkUploadSuccess = false
       })
 
       // CSV Jobs reducers
