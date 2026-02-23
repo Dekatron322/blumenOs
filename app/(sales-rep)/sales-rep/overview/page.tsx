@@ -6,28 +6,27 @@ import { useRouter } from "next/navigation"
 import { useSelector } from "react-redux"
 import { RootState } from "lib/redux/store"
 import { motion } from "framer-motion"
+import { AnimatePresence } from "framer-motion"
+import { Calendar, Download, X } from "lucide-react"
 import DisputesChangesCard from "components/Cards/DisputesChangesCard"
-import {
-  AddAgentIcon,
-  CollectCash,
-  MetersProgrammedIcon,
-  PerformanceIcon,
-  TamperIcon,
-  TargetIcon,
-  VendingIcon,
-  VendingIconOutline,
-} from "components/Icons/Icons"
+import { CollectCash, MetersProgrammedIcon, TargetIcon, VendingIcon, VendingIconOutline } from "components/Icons/Icons"
 import AddAgentModal from "components/ui/Modal/add-agent-modal"
 import { ButtonModule } from "components/ui/Button/Button"
 import AllPaymentsTable from "components/Tables/AllPaymentsTable"
 import { formatCurrency } from "utils/formatCurrency"
 import { useAppDispatch } from "lib/hooks/useRedux"
+import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 
 import {
   AgentDailyPerformance,
+  clearExportAgentPayments,
+  ExportAgentPaymentsRequest,
+  exportAgentPayments,
   fetchAgentInfo,
   fetchAgentPerformanceDaily,
   fetchAgentSummary,
+  fetchSalesRepAreaOffices,
+  fetchSalesRepFeeders,
   TimeRange,
 } from "lib/redux/agentSlice"
 // Chart Component for Agent Performance
@@ -674,6 +673,16 @@ export default function AgentManagementDashboard() {
   const [chartType, setChartType] = useState<"score" | "collections" | "clearances">("score")
   const [performanceChartType, setPerformanceChartType] = useState<"year" | "month" | "week">("year")
 
+  // Export modal state
+  const [showExportModal, setShowExportModal] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
+  const [exportDateRange, setExportDateRange] = useState<"all" | "today" | "week" | "month" | "custom">("month")
+  const [exportFromDate, setExportFromDate] = useState("")
+  const [exportToDate, setExportToDate] = useState("")
+  const [exportAreaOfficeId, setExportAreaOfficeId] = useState("")
+  const [exportFeederId, setExportFeederId] = useState("")
+  const [exportPaymentCategory, setExportPaymentCategory] = useState<"all" | "prepaid" | "postpaid">("all")
+
   const { user } = useSelector((state: RootState) => state.auth)
   const {
     agentInfo,
@@ -685,11 +694,21 @@ export default function AgentManagementDashboard() {
     agentPerformanceDaily,
     agentPerformanceDailyLoading,
     agentPerformanceDailyError,
+    exportAgentPaymentsLoading,
+    exportAgentPaymentsError,
+    exportAgentPaymentsSuccess,
+    exportAgentPaymentsData,
+    salesRepAreaOffices,
+    salesRepAreaOfficesLoading,
+    salesRepFeeders,
+    salesRepFeedersLoading,
   } = useSelector((state: RootState) => state.agents)
 
   useEffect(() => {
     dispatch(fetchAgentInfo())
     dispatch(fetchAgentSummary())
+    dispatch(fetchSalesRepAreaOffices())
+    dispatch(fetchSalesRepFeeders())
 
     // Fetch performance data for the current year
     const { startUtc, endUtc } = getStartAndEndOfYear()
@@ -799,6 +818,106 @@ export default function AgentManagementDashboard() {
     )
   }
 
+  // Export date range utility
+  const getExportDateRange = () => {
+    const now = new Date()
+    let from: Date | null = null
+    let to: Date | null = null
+
+    switch (exportDateRange) {
+      case "today":
+        from = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+        to = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
+        break
+      case "week":
+        from = new Date(now)
+        from.setDate(now.getDate() - 7)
+        to = new Date()
+        break
+      case "month":
+        from = new Date(now.getFullYear(), now.getMonth(), 1)
+        to = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+        break
+      case "custom":
+        if (exportFromDate) {
+          from = new Date(exportFromDate)
+        }
+        if (exportToDate) {
+          to = new Date(exportToDate)
+          to.setDate(to.getDate() + 1) // Include the end date
+        }
+        break
+      case "all":
+        from = new Date(2000, 0, 1) // Very old date for "all time"
+        to = new Date()
+        break
+    }
+
+    return {
+      from: from?.toISOString() || "",
+      to: to?.toISOString() || "",
+    }
+  }
+
+  // Export function
+  const exportAgentPaymentsToCSV = async () => {
+    setIsExporting(true)
+
+    try {
+      const dateRange = getExportDateRange()
+
+      // Build export request using the new API parameters
+      const exportRequest: ExportAgentPaymentsRequest = {
+        fromUtc: dateRange.from || new Date(0).toISOString(),
+        toUtc: dateRange.to || new Date().toISOString(),
+        ...(exportAreaOfficeId && { areaOfficeId: parseInt(exportAreaOfficeId) }),
+        ...(exportFeederId && { feederId: parseInt(exportFeederId) }),
+        ...(exportPaymentCategory !== "all" && { prepaidOrPostpaid: exportPaymentCategory }),
+      }
+
+      // Dispatch the export action
+      const result = await dispatch(exportAgentPayments(exportRequest))
+
+      if (exportAgentPayments.fulfilled.match(result)) {
+        // Create download link from blob
+        const { data: blob, fileName } = result.payload
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement("a")
+        link.href = url
+        link.setAttribute("download", fileName)
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+        setShowExportModal(false)
+      } else {
+        throw new Error((result.payload as string) || "Export failed")
+      }
+    } catch (error) {
+      console.error("Failed to export agent payments:", error)
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  // Handle export state changes
+  useEffect(() => {
+    if (exportAgentPaymentsSuccess && exportAgentPaymentsData) {
+      setIsExporting(false)
+      setShowExportModal(false)
+      dispatch(clearExportAgentPayments())
+    }
+  }, [exportAgentPaymentsSuccess, exportAgentPaymentsData, dispatch])
+
+  // Handle export errors
+  useEffect(() => {
+    if (exportAgentPaymentsError) {
+      setIsExporting(false)
+      setShowExportModal(false)
+      dispatch(clearExportAgentPayments())
+    }
+  }, [exportAgentPaymentsError, dispatch])
+
   const _agentLastName = user?.fullName
     ? user.fullName
         .trim()
@@ -891,6 +1010,18 @@ export default function AgentManagementDashboard() {
                     <span className="hidden sm:inline">Collect Payment</span>
                   </ButtonModule>
                 )}
+                {/* Export button for Finance Managers */}
+
+                <ButtonModule
+                  variant="primary"
+                  size="md"
+                  className="w-full sm:w-auto"
+                  icon={<Download />}
+                  onClick={() => setShowExportModal(true)}
+                >
+                  <span className="hidden sm:inline">Export</span>
+                </ButtonModule>
+
                 {/* )} */}
               </motion.div>
             </div>
@@ -1488,6 +1619,204 @@ export default function AgentManagementDashboard() {
         onRequestClose={() => setIsAddAgentModalOpen(false)}
         onSuccess={handleAddAgentSuccess}
       />
+
+      {/* Export Modal */}
+      <AnimatePresence>
+        {showExportModal && (
+          <motion.div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowExportModal(false)}
+          >
+            <motion.div
+              className="w-full max-w-lg rounded-lg bg-white shadow-xl"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="border-b border-gray-200 p-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">Export Agent Payments</h3>
+                  <button onClick={() => setShowExportModal(false)} className="rounded-full p-1 hover:bg-gray-100">
+                    <X className="size-5 text-gray-500" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-4">
+                {/* Date Range */}
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Date Range</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { value: "all", label: "All Time" },
+                      { value: "today", label: "Today" },
+                      { value: "week", label: "Last 7 Days" },
+                      { value: "month", label: "Last 30 Days" },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => setExportDateRange(option.value as typeof exportDateRange)}
+                        className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                          exportDateRange === option.value
+                            ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
+                            : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => setExportDateRange("custom")}
+                    className={`mt-2 w-full rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                      exportDateRange === "custom"
+                        ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
+                        : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <Calendar className="mr-2 inline-block size-4" />
+                    Custom Date Range
+                  </button>
+                </div>
+
+                {exportDateRange === "custom" && (
+                  <div className="mt-4 grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-gray-700">From</label>
+                      <input
+                        type="date"
+                        value={exportFromDate}
+                        onChange={(e) => setExportFromDate(e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-gray-700">To</label>
+                      <input
+                        type="date"
+                        value={exportToDate}
+                        onChange={(e) => setExportToDate(e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Payment Category */}
+                <div className="mt-4">
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Payment Category</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { value: "all", label: "All" },
+                      { value: "prepaid", label: "Prepaid" },
+                      { value: "postpaid", label: "Postpaid" },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => setExportPaymentCategory(option.value as typeof exportPaymentCategory)}
+                        className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                          exportPaymentCategory === option.value
+                            ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
+                            : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Area Office */}
+                <div className="mt-4">
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Area Office</label>
+                  {salesRepAreaOfficesLoading ? (
+                    <div className="h-9 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500">
+                      Loading area offices...
+                    </div>
+                  ) : (
+                    <FormSelectModule
+                      name="exportAreaOfficeId"
+                      value={exportAreaOfficeId}
+                      onChange={(e) => setExportAreaOfficeId(e.target.value)}
+                      options={[
+                        { value: "", label: "All Area Offices" },
+                        ...salesRepAreaOffices.map((office) => ({
+                          value: office.id.toString(),
+                          label: office.name || `Office ${office.id}`,
+                        })),
+                      ]}
+                      className="w-full"
+                      controlClassName="h-9 text-sm"
+                    />
+                  )}
+                </div>
+
+                {/* Feeder */}
+                <div className="mt-4">
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Feeder</label>
+                  {salesRepFeedersLoading ? (
+                    <div className="h-9 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500">
+                      Loading feeders...
+                    </div>
+                  ) : (
+                    <FormSelectModule
+                      name="exportFeederId"
+                      value={exportFeederId}
+                      onChange={(e) => setExportFeederId(e.target.value)}
+                      options={[
+                        { value: "", label: "All Feeders" },
+                        ...salesRepFeeders.map((feeder) => ({
+                          value: feeder.id.toString(),
+                          label: feeder.name || `Feeder ${feeder.id}`,
+                        })),
+                      ]}
+                      className="w-full"
+                      controlClassName="h-9 text-sm"
+                    />
+                  )}
+                </div>
+              </div>
+
+              <div className="border-t border-gray-200 p-4">
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowExportModal(false)}
+                    className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={exportAgentPaymentsToCSV}
+                    disabled={
+                      (exportDateRange === "custom" && !exportFromDate && !exportToDate) ||
+                      isExporting ||
+                      exportAgentPaymentsLoading
+                    }
+                    className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors ${
+                      (exportDateRange === "custom" && !exportFromDate && !exportToDate) ||
+                      isExporting ||
+                      exportAgentPaymentsLoading
+                        ? "cursor-not-allowed bg-gray-400"
+                        : "bg-[#004B23] hover:bg-[#003a1b]"
+                    }`}
+                  >
+                    <Download
+                      className={`mr-2 inline-block size-4 ${
+                        isExporting || exportAgentPaymentsLoading ? "animate-pulse" : ""
+                      }`}
+                    />
+                    {isExporting || exportAgentPaymentsLoading ? "Exporting..." : "Export"}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   )
 }

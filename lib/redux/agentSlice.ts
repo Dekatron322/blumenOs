@@ -795,6 +795,49 @@ export interface AgentPaymentResponse {
   data: Payment
 }
 
+// Interface for Export Agent Payments Request
+export interface ExportAgentPaymentsRequest {
+  fromUtc: string
+  toUtc: string
+  areaOfficeId?: number
+  feederId?: number
+  prepaidOrPostpaid?: string
+}
+
+// Interface for Export Agent Payments Response
+export interface ExportAgentPaymentsResponse {
+  isSuccess: boolean
+  message: string
+  data: Blob // Direct file response as Blob
+  fileName: string
+}
+
+// Interface for Sales Rep Area Office
+export interface SalesRepAreaOffice {
+  id: number
+  name: string
+}
+
+// Interface for Sales Rep Area Offices Response
+export interface SalesRepAreaOfficesResponse {
+  isSuccess: boolean
+  message: string
+  data: SalesRepAreaOffice[]
+}
+
+// Interface for Sales Rep Feeder
+export interface SalesRepFeeder {
+  id: number
+  name: string
+}
+
+// Interface for Sales Rep Feeders Response
+export interface SalesRepFeedersResponse {
+  isSuccess: boolean
+  message: string
+  data: SalesRepFeeder[]
+}
+
 // ========== BILL LOOKUP INTERFACES ==========
 
 // Interfaces for Bill Lookup
@@ -1962,6 +2005,24 @@ interface AgentState {
   assignCashiersLoading: boolean
   assignCashiersError: string | null
   assignCashiersSuccess: boolean
+
+  // Export Agent Payments state
+  exportAgentPaymentsLoading: boolean
+  exportAgentPaymentsError: string | null
+  exportAgentPaymentsSuccess: boolean
+  exportAgentPaymentsData: { data: Blob; fileName: string } | null
+
+  // Sales Rep Area Offices state
+  salesRepAreaOffices: SalesRepAreaOffice[]
+  salesRepAreaOfficesLoading: boolean
+  salesRepAreaOfficesError: string | null
+  salesRepAreaOfficesSuccess: boolean
+
+  // Sales Rep Feeders state
+  salesRepFeeders: SalesRepFeeder[]
+  salesRepFeedersLoading: boolean
+  salesRepFeedersError: string | null
+  salesRepFeedersSuccess: boolean
 }
 
 // Initial state
@@ -2152,6 +2213,24 @@ const initialState: AgentState = {
   assignCashiersLoading: false,
   assignCashiersError: null,
   assignCashiersSuccess: false,
+
+  // Export Agent Payments initial state
+  exportAgentPaymentsLoading: false,
+  exportAgentPaymentsError: null,
+  exportAgentPaymentsSuccess: false,
+  exportAgentPaymentsData: null,
+
+  // Sales Rep Area Offices initial state
+  salesRepAreaOffices: [],
+  salesRepAreaOfficesLoading: false,
+  salesRepAreaOfficesError: null,
+  salesRepAreaOfficesSuccess: false,
+
+  // Sales Rep Feeders initial state
+  salesRepFeeders: [],
+  salesRepFeedersLoading: false,
+  salesRepFeedersError: null,
+  salesRepFeedersSuccess: false,
 }
 
 // Async thunks
@@ -3120,6 +3199,95 @@ export const assignCashiers = createAsyncThunk(
   }
 )
 
+// Export Agent Payments Async Thunk
+export const exportAgentPayments = createAsyncThunk(
+  "agents/exportAgentPayments",
+  async (exportData: ExportAgentPaymentsRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.get(buildApiUrl(API_ENDPOINTS.AGENTS.REGIONAL_FINANCE_MANAGER_EXPORT), {
+        params: {
+          FromUtc: exportData.fromUtc,
+          ToUtc: exportData.toUtc,
+          ...(exportData.areaOfficeId && { AreaOfficeId: exportData.areaOfficeId }),
+          ...(exportData.feederId && { FeederId: exportData.feederId }),
+          ...(exportData.prepaidOrPostpaid && { prepaidOrPostpaid: exportData.prepaidOrPostpaid }),
+        },
+        responseType: "blob", // Important for file downloads
+      })
+
+      // Extract filename from Content-Disposition header if available
+      const contentDisposition = response.headers["content-disposition"]
+      let fileName = "agent-payments-export.csv"
+
+      if (contentDisposition) {
+        const fileNameMatch = contentDisposition.match(/filename="?([^"]+)"?/)
+        if (fileNameMatch) {
+          fileName = fileNameMatch[1]
+        }
+      }
+
+      return {
+        data: response.data,
+        fileName,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to export agent payments")
+      }
+      return rejectWithValue(error.message || "Network error during export")
+    }
+  }
+)
+
+// Sales Rep Area Offices Async Thunk
+export const fetchSalesRepAreaOffices = createAsyncThunk(
+  "agents/fetchSalesRepAreaOffices",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get<SalesRepAreaOfficesResponse>(
+        buildApiUrl(API_ENDPOINTS.AGENTS.GET_AREA_OFFICE_FOR_SALES_REP)
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch sales rep area offices")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Sales rep area offices not found")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch sales rep area offices")
+      }
+      return rejectWithValue(error.message || "Network error during sales rep area offices fetch")
+    }
+  }
+)
+
+// Sales Rep Feeders Async Thunk
+export const fetchSalesRepFeeders = createAsyncThunk("agents/fetchSalesRepFeeders", async (_, { rejectWithValue }) => {
+  try {
+    const response = await api.get<SalesRepFeedersResponse>(buildApiUrl(API_ENDPOINTS.AGENTS.GET_FEEDER_FOR_SALES_REP))
+
+    if (!response.data.isSuccess) {
+      return rejectWithValue(response.data.message || "Failed to fetch sales rep feeders")
+    }
+
+    if (!response.data.data) {
+      return rejectWithValue("Sales rep feeders not found")
+    }
+
+    return response.data.data
+  } catch (error: any) {
+    if (error.response?.data) {
+      return rejectWithValue(error.response.data.message || "Failed to fetch sales rep feeders")
+    }
+    return rejectWithValue(error.message || "Network error during sales rep feeders fetch")
+  }
+})
+
 // Agent slice
 const agentSlice = createSlice({
   name: "agents",
@@ -3395,6 +3563,30 @@ const agentSlice = createSlice({
       state.assignCashiersLoading = false
       state.assignCashiersError = null
       state.assignCashiersSuccess = false
+    },
+
+    // Clear export agent payments state
+    clearExportAgentPayments: (state) => {
+      state.exportAgentPaymentsLoading = false
+      state.exportAgentPaymentsError = null
+      state.exportAgentPaymentsSuccess = false
+      state.exportAgentPaymentsData = null
+    },
+
+    // Clear sales rep area offices state
+    clearSalesRepAreaOffices: (state) => {
+      state.salesRepAreaOffices = []
+      state.salesRepAreaOfficesLoading = false
+      state.salesRepAreaOfficesError = null
+      state.salesRepAreaOfficesSuccess = false
+    },
+
+    // Clear sales rep feeders state
+    clearSalesRepFeeders: (state) => {
+      state.salesRepFeeders = []
+      state.salesRepFeedersLoading = false
+      state.salesRepFeedersError = null
+      state.salesRepFeedersSuccess = false
     },
 
     // Reset agent state
@@ -4910,6 +5102,57 @@ const agentSlice = createSlice({
         state.assignCashiersError = (action.payload as string) || "Failed to assign cashiers"
         state.assignCashiersSuccess = false
       })
+      // Export Agent Payments cases
+      .addCase(exportAgentPayments.pending, (state) => {
+        state.exportAgentPaymentsLoading = true
+        state.exportAgentPaymentsError = null
+        state.exportAgentPaymentsSuccess = false
+      })
+      .addCase(exportAgentPayments.fulfilled, (state, action) => {
+        state.exportAgentPaymentsLoading = false
+        state.exportAgentPaymentsSuccess = true
+        state.exportAgentPaymentsError = null
+        state.exportAgentPaymentsData = action.payload
+      })
+      .addCase(exportAgentPayments.rejected, (state, action) => {
+        state.exportAgentPaymentsLoading = false
+        state.exportAgentPaymentsError = (action.payload as string) || "Failed to export agent payments"
+        state.exportAgentPaymentsSuccess = false
+      })
+      // Sales Rep Area Offices cases
+      .addCase(fetchSalesRepAreaOffices.pending, (state) => {
+        state.salesRepAreaOfficesLoading = true
+        state.salesRepAreaOfficesError = null
+        state.salesRepAreaOfficesSuccess = false
+      })
+      .addCase(fetchSalesRepAreaOffices.fulfilled, (state, action) => {
+        state.salesRepAreaOfficesLoading = false
+        state.salesRepAreaOfficesSuccess = true
+        state.salesRepAreaOfficesError = null
+        state.salesRepAreaOffices = action.payload
+      })
+      .addCase(fetchSalesRepAreaOffices.rejected, (state, action) => {
+        state.salesRepAreaOfficesLoading = false
+        state.salesRepAreaOfficesError = (action.payload as string) || "Failed to fetch sales rep area offices"
+        state.salesRepAreaOfficesSuccess = false
+      })
+      // Sales Rep Feeders cases
+      .addCase(fetchSalesRepFeeders.pending, (state) => {
+        state.salesRepFeedersLoading = true
+        state.salesRepFeedersError = null
+        state.salesRepFeedersSuccess = false
+      })
+      .addCase(fetchSalesRepFeeders.fulfilled, (state, action) => {
+        state.salesRepFeedersLoading = false
+        state.salesRepFeedersSuccess = true
+        state.salesRepFeedersError = null
+        state.salesRepFeeders = action.payload
+      })
+      .addCase(fetchSalesRepFeeders.rejected, (state, action) => {
+        state.salesRepFeedersLoading = false
+        state.salesRepFeedersError = (action.payload as string) || "Failed to fetch sales rep feeders"
+        state.salesRepFeedersSuccess = false
+      })
   },
 })
 
@@ -4971,6 +5214,9 @@ export const {
   clearPrepaidPayments,
   setPrepaidPaymentsPagination,
   clearAssignCashiers,
+  clearExportAgentPayments,
+  clearSalesRepAreaOffices,
+  clearSalesRepFeeders,
 } = agentSlice.actions
 
 export default agentSlice.reducer

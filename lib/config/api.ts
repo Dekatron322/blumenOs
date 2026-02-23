@@ -47,6 +47,9 @@ export const API_ENDPOINTS = {
     CASH_AT_HAND: "/agents/cash-at-hand",
     PREPAID_PAYMENT: "/agents/payments/prepaid",
     ASSIGN_CASHIERS: "/agents/{id}/cashiers",
+    REGIONAL_FINANCE_MANAGER_EXPORT: "/agents/payments/export",
+    GET_AREA_OFFICE_FOR_SALES_REP: "/agents/payments/export/area-offices",
+    GET_FEEDER_FOR_SALES_REP: "/agents/payments/export/feeders",
   },
 
   BILLING_DISPUTE: {
