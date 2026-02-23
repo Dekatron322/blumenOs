@@ -536,7 +536,7 @@ export default function Dashboard() {
   const TimeFilterButton = ({ filter, label }: { filter: TimeFilter; label: string }) => (
     <button
       onClick={() => handleTimeFilterChange(filter)}
-      className={`shrink-0 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+      className={`shrink-0 rounded-md px-4 py-2 text-xs font-medium transition-colors ${
         timeFilter === filter ? "bg-[#004B23] text-[#FFFFFF]" : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
       }`}
     >
@@ -561,7 +561,7 @@ export default function Dashboard() {
 
             <div className="mx-auto w-full px-3 py-8 2xl:container sm:px-4 md:px-6 2xl:px-16">
               <div className="mb-6 flex w-full flex-col gap-4">
-                <div className="flex w-full items-start justify-between gap-4 2xl:flex-col">
+                <div className="flex w-full items-start justify-between gap-4 xl:flex-col">
                   <div className="flex w-full items-center justify-between gap-4">
                     <div>
                       <h1 className="text-lg font-bold text-gray-900 sm:text-xl md:text-2xl lg:text-3xl">
@@ -622,7 +622,7 @@ export default function Dashboard() {
                   <div className="hidden rounded-lg p-3 sm:bg-white sm:p-2 sm:shadow-sm xl:flex">
                     <div className="flex flex-row items-center gap-4 max-sm:justify-between sm:gap-4">
                       <div className="flex flex-row items-center gap-2 max-sm:justify-between sm:gap-3">
-                        <span className="text-sm  font-medium text-gray-500">Time Range:</span>
+                        <span className="text-xs  font-medium text-gray-500">Time Range:</span>
 
                         {/* Desktop Layout */}
                         <div className="hidden items-center gap-2 sm:flex">

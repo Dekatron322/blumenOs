@@ -29,6 +29,7 @@ import companyReducer from "./companySlice"
 import backgroundJobsReducer from "./backgroundJobsSlice"
 import statusMapReducer from "./statusMapSlice"
 import billingDisputeReducer from "./billingDisputeSlice"
+import paymentDisputeReducer from "./paymentDisputeSlice"
 import reportingReducer from "./reportingSlice"
 import revenueAnalyticsReducer from "./revenueAnalyticsSlice"
 import consumptionAnalyticsReducer from "./consumptionAnalyticsSlice"
@@ -79,6 +80,7 @@ export const store = configureStore({
     backgroundJobs: backgroundJobsReducer,
     statusMap: statusMapReducer,
     billingDispute: billingDisputeReducer,
+    paymentDispute: paymentDisputeReducer,
     reporting: reportingReducer,
     revenueAnalytics: revenueAnalyticsReducer,
     consumptionAnalytics: consumptionAnalyticsReducer,

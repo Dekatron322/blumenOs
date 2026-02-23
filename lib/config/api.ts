@@ -65,6 +65,10 @@ export const API_ENDPOINTS = {
     DECLINE_CHANGE_REQUEST: "/billing/disputes/change-requests/{publicId}/decline",
   },
 
+  PAYMENT_DISPUTE: {
+    GET_PAYMENT_DISPUTES: "/payments/disputes",
+  },
+
   EMPLOYEE: {
     EMPLOYEE: "/identity/users",
     INVITE: "/identity/users/invite",
