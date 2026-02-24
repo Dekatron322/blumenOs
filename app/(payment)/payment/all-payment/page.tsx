@@ -2175,10 +2175,10 @@ const AllPayments: React.FC = () => {
                     <button
                       onClick={() => setShowExportModal(true)}
                       disabled={isExporting || exportPaymentsLoading}
-                      className={`flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium transition-colors ${
+                      className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
                         isExporting || exportPaymentsLoading
-                          ? "cursor-not-allowed text-gray-400"
-                          : "text-gray-700 hover:bg-gray-50"
+                          ? "cursor-not-allowed bg-gray-400 text-white"
+                          : "border-[#004B23] bg-[#004B23] text-white hover:bg-[#003a1b]"
                       }`}
                     >
                       <Download className={`size-4 ${isExporting || exportPaymentsLoading ? "animate-pulse" : ""}`} />
