@@ -49,6 +49,7 @@ import { clearDistributionSubstations, fetchDistributionSubstations } from "lib/
 import { clearFeeders, fetchFeeders } from "lib/redux/feedersSlice"
 import { clearServiceStations, fetchServiceStations } from "lib/redux/serviceStationsSlice"
 import { clearBills, fetchPostpaidBills } from "lib/redux/postpaidSlice"
+import { fetchCountries, clearCountries } from "lib/redux/countriesSlice"
 import { VscEye, VscTrash } from "react-icons/vsc"
 import { API_ENDPOINTS, buildApiUrl } from "lib/config/api"
 import { api } from "lib/redux/authSlice"
@@ -1073,6 +1074,7 @@ const AllPayments: React.FC = () => {
   const { feeders } = useAppSelector((state) => state.feeders)
   const { serviceStations } = useAppSelector((state) => state.serviceStations)
   const { bills: postpaidBills } = useAppSelector((state) => state.postpaidBilling)
+  const { countries } = useAppSelector((state) => state.countries)
 
   const router = useRouter()
 
@@ -1113,6 +1115,7 @@ const AllPayments: React.FC = () => {
   const [exportServiceCenterId, setExportServiceCenterId] = useState<string>("")
   const [exportPostpaidBillId, setExportPostpaidBillId] = useState<string>("")
   const [exportCustomerProvinceId, setExportCustomerProvinceId] = useState<string>("")
+  const [exportRegionId, setExportRegionId] = useState<string>("")
 
   // Cancel payment state
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false)
@@ -1234,6 +1237,7 @@ const AllPayments: React.FC = () => {
         pageSize: 100,
       })
     )
+    dispatch(fetchCountries())
     dispatch(
       fetchServiceStations({
         pageNumber: 1,
@@ -1257,6 +1261,7 @@ const AllPayments: React.FC = () => {
       dispatch(clearPayments())
       dispatch(clearDistributionSubstations())
       dispatch(clearFeeders())
+      dispatch(clearCountries())
       dispatch(clearServiceStations())
       dispatch(clearBills())
     }
@@ -1826,6 +1831,17 @@ const AllPayments: React.FC = () => {
     ),
   ]
 
+  // Create region options from countries data
+  const regionOptions = [
+    { value: "", label: "All Regions" },
+    ...countries.flatMap((country) =>
+      country.provinces.map((province) => ({
+        value: province.id.toString(),
+        label: province.name,
+      }))
+    ),
+  ]
+
   // Generate channel options from payment channels endpoint
   const channelOptions = [
     { value: "", label: "All Channels" },
@@ -1958,6 +1974,9 @@ const AllPayments: React.FC = () => {
         toUtc: dateRange.to || new Date().toISOString(),
         ...(exportAreaOfficeId && { areaOfficeId: parseInt(exportAreaOfficeId) }),
         ...(exportPaymentCategory !== "all" && { prepaidOrPostpaid: exportPaymentCategory }),
+        ...(exportDistributionSubstationId && { dssId: parseInt(exportDistributionSubstationId) }),
+        ...(exportFeederId && { feederId: parseInt(exportFeederId) }),
+        ...(exportRegionId && { regionId: parseInt(exportRegionId) }),
       }
 
       console.log("Exporting payments with request:", exportRequest)
@@ -3267,6 +3286,75 @@ const AllPayments: React.FC = () => {
                               label: office.nameOfNewOAreaffice || `Office ${office.id}`,
                             })),
                           ]}
+                          className="w-full"
+                          controlClassName="h-9 text-sm"
+                        />
+                      )}
+                    </div>
+
+                    {/* Distribution Substation */}
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-700">Distribution Substation</label>
+                      {distributionSubstations.length === 0 ? (
+                        <div className="h-9 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500">
+                          Loading distribution substations...
+                        </div>
+                      ) : (
+                        <FormSelectModule
+                          name="exportDistributionSubstationId"
+                          value={exportDistributionSubstationId}
+                          onChange={(e) => setExportDistributionSubstationId(e.target.value)}
+                          options={[
+                            { value: "", label: "All Distribution Substations" },
+                            ...distributionSubstations.map((dss) => ({
+                              value: dss.id.toString(),
+                              label: dss.name || `DSS ${dss.id}`,
+                            })),
+                          ]}
+                          className="w-full"
+                          controlClassName="h-9 text-sm"
+                        />
+                      )}
+                    </div>
+
+                    {/* Feeder */}
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-700">Feeder</label>
+                      {feeders.length === 0 ? (
+                        <div className="h-9 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500">
+                          Loading feeders...
+                        </div>
+                      ) : (
+                        <FormSelectModule
+                          name="exportFeederId"
+                          value={exportFeederId}
+                          onChange={(e) => setExportFeederId(e.target.value)}
+                          options={[
+                            { value: "", label: "All Feeders" },
+                            ...feeders.map((feeder) => ({
+                              value: feeder.id.toString(),
+                              label: feeder.name || `Feeder ${feeder.id}`,
+                            })),
+                          ]}
+                          className="w-full"
+                          controlClassName="h-9 text-sm"
+                        />
+                      )}
+                    </div>
+
+                    {/* Region */}
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-700">Region</label>
+                      {countries.length === 0 ? (
+                        <div className="h-9 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500">
+                          Loading regions...
+                        </div>
+                      ) : (
+                        <FormSelectModule
+                          name="exportRegionId"
+                          value={exportRegionId}
+                          onChange={(e) => setExportRegionId(e.target.value)}
+                          options={regionOptions}
                           className="w-full"
                           controlClassName="h-9 text-sm"
                         />
