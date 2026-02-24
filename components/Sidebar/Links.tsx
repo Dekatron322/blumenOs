@@ -525,7 +525,7 @@ export const allLinks: LinkItem[] = [
     privilegeKey: "disputes",
     requiredActions: ["R"],
     children: [
-      { name: "Overview", href: "/disputes/overview", privilegeKey: "disputes", requiredActions: ["R"] },
+      // { name: "Overview", href: "/disputes/overview", privilegeKey: "disputes", requiredActions: ["R"] },
       {
         name: "Billing Disputes",
         href: "/disputes/billing-disputes",

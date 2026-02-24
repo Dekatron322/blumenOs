@@ -1464,17 +1464,6 @@ const AddNewAgent = () => {
                     <UserCog className="size-4" />
                     <span>Convert Existing</span>
                   </button>
-                  <button
-                    onClick={() => setActiveTab("bulk")}
-                    className={`flex flex-1 items-center justify-center gap-2 whitespace-nowrap p-3 text-sm font-medium transition-colors sm:px-6 sm:py-4 ${
-                      activeTab === "bulk"
-                        ? "border-b-2 border-[#004B23] text-[#004B23]"
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
-                  >
-                    <Users className="size-4" />
-                    <span>Bulk Upload</span>
-                  </button>
                 </div>
               </div>
             </div>

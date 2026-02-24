@@ -513,6 +513,9 @@ export interface ExportPaymentsRequest {
   toUtc: string
   areaOfficeId?: number
   prepaidOrPostpaid?: string
+  dssId?: number
+  feederId?: number
+  regionId?: number
 }
 
 // Interface for Export Payments Response

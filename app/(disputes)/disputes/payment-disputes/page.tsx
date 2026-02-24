@@ -4,10 +4,11 @@ import { AnimatePresence, motion } from "framer-motion"
 import { SearchModule } from "components/ui/Search/search-module"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
-import { BillsIcon, MapIcon, PhoneIcon, PlusIcon, UserIcon } from "components/Icons/Icons"
+import { PlusIcon, UserIcon } from "components/Icons/Icons"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"
 import AddAgentModal from "components/ui/Modal/add-agent-modal"
+import { PaymentDisputeSource, PaymentDisputeStatus, usePaymentDispute } from "lib/hooks/usePaymentDispute"
 
 const CyclesIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -25,9 +26,9 @@ interface Dispute {
   accountNumber: string
   disputeAmount: string
   originalAmount: string
-  status: "pending" | "under-review" | "resolved" | "rejected" | "escalated"
-  disputeType: "double-charge" | "service-not-rendered" | "incorrect-amount" | "unauthorized-transaction" | "other"
-  paymentMethod: "Bank Transfer" | "Mobile Money" | "POS Agent" | "Card Payment"
+  status: PaymentDisputeStatus
+  source: PaymentDisputeSource
+  paymentMethod: "Bank Transfer" | "Mobile Money" | "POS Agent" | "Card Payment" | "Cash" | "Vendor Wallet"
   reference: string
   timestamp: string
   submittedDate: string
@@ -36,6 +37,14 @@ interface Dispute {
   assignedTo: string
   description: string
   resolution?: string
+  paymentTransactionId: number
+  requestedAmount: number
+  resolvedAmount: number
+  reason: string
+  details: string
+  resolutionNotes: string
+  resolvedAtUtc: string
+  createdAt: string
 }
 
 interface ActionDropdownProps {
@@ -345,15 +354,6 @@ const LoadingSkeleton = () => {
   )
 }
 
-const generateDisputeData = () => {
-  return {
-    totalDisputes: 24,
-    pendingDisputes: 8,
-    resolvedDisputes: 12,
-    escalatedDisputes: 4,
-  }
-}
-
 const AllDisputes: React.FC = () => {
   const [isAddDisputeModalOpen, setIsAddDisputeModalOpen] = useState(false)
   const [sortColumn, setSortColumn] = useState<string | null>(null)
@@ -361,147 +361,114 @@ const AllDisputes: React.FC = () => {
   const [searchText, setSearchText] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedDispute, setSelectedDispute] = useState<Dispute | null>(null)
-  const [disputeData, setDisputeData] = useState(generateDisputeData())
+  const [statusFilter, setStatusFilter] = useState<PaymentDisputeStatus | undefined>(undefined)
+  const [sourceFilter, setSourceFilter] = useState<PaymentDisputeSource | undefined>(undefined)
+  const [customerIdFilter, setCustomerIdFilter] = useState<number | undefined>(undefined)
   const pageSize = 10
 
-  const disputes: Dispute[] = [
-    {
-      id: 1,
-      customerName: "Fatima Hassan",
-      accountNumber: "2301567890",
-      disputeAmount: "₦425",
-      originalAmount: "₦425",
-      status: "pending",
-      disputeType: "double-charge",
-      paymentMethod: "Bank Transfer",
-      reference: "TXN789456123",
-      timestamp: "2024-01-15 16:45",
-      submittedDate: "2024-01-16",
-      dueDate: "2024-01-23",
-      priority: "medium",
-      assignedTo: "John Adebayo",
-      description: "Customer claims they were charged twice for the same service",
-    },
-    {
-      id: 2,
-      customerName: "Tech Solutions Ltd",
-      accountNumber: "2301789012",
-      disputeAmount: "₦1,250",
-      originalAmount: "₦1,250",
-      status: "under-review",
-      disputeType: "service-not-rendered",
-      paymentMethod: "Bank Transfer",
-      reference: "TXN321654987",
-      timestamp: "2024-01-15 15:45",
-      submittedDate: "2024-01-16",
-      dueDate: "2024-01-25",
-      priority: "high",
-      assignedTo: "Sarah Johnson",
-      description: "Commercial customer claims service was not provided after payment",
-    },
-    {
-      id: 3,
-      customerName: "Michael Johnson",
-      accountNumber: "2301890123",
-      disputeAmount: "₦320",
-      originalAmount: "₦320",
-      status: "resolved",
-      disputeType: "incorrect-amount",
-      paymentMethod: "Card Payment",
-      reference: "CARD123456789",
-      timestamp: "2024-01-15 15:30",
-      submittedDate: "2024-01-15",
-      dueDate: "2024-01-22",
-      priority: "low",
-      assignedTo: "James Okafor",
-      description: "Customer claims incorrect amount was charged",
-      resolution: "Refund processed - system error confirmed",
-    },
-    {
-      id: 4,
-      customerName: "Grace Okonkwo",
-      accountNumber: "2301678901",
-      disputeAmount: "₦187",
-      originalAmount: "₦187",
-      status: "escalated",
-      disputeType: "unauthorized-transaction",
-      paymentMethod: "POS Agent",
-      reference: "POS456789012",
-      timestamp: "2024-01-15 16:15",
-      submittedDate: "2024-01-16",
-      dueDate: "2024-01-30",
-      priority: "critical",
-      assignedTo: "Legal Department",
-      description: "Customer claims transaction was not authorized",
-    },
-    {
-      id: 5,
-      customerName: "Sarah Blumenthal",
-      accountNumber: "2301901234",
-      disputeAmount: "₦550",
-      originalAmount: "₦550",
-      status: "rejected",
-      disputeType: "other",
-      paymentMethod: "Mobile Money",
-      reference: "MM456123789",
-      timestamp: "2024-01-15 15:15",
-      submittedDate: "2024-01-15",
-      dueDate: "2024-01-22",
-      priority: "medium",
-      assignedTo: "John Adebayo",
-      description: "Customer dissatisfied with service quality",
-      resolution: "Dispute rejected - service was rendered as described",
-    },
-    {
-      id: 6,
-      customerName: "Adebayo Enterprises",
-      accountNumber: "2302012345",
-      disputeAmount: "₦2,150",
-      originalAmount: "₦2,150",
-      status: "under-review",
-      disputeType: "double-charge",
-      paymentMethod: "Bank Transfer",
-      reference: "TXN987654321",
-      timestamp: "2024-01-14 14:20",
-      submittedDate: "2024-01-15",
-      dueDate: "2024-01-24",
-      priority: "high",
-      assignedTo: "Sarah Johnson",
-      description: "Large commercial account duplicate charge dispute",
-    },
-  ]
+  // Use the payment dispute hook
+  const {
+    disputes,
+    loading,
+    error,
+    totalCount,
+    totalPages,
+    hasNext,
+    hasPrevious,
+    getPaymentDisputes,
+    clearError,
+    reset,
+  } = usePaymentDispute()
 
-  const isLoading = false
-  const isError = false
-  const totalRecords = disputes.length
-  const totalPages = Math.ceil(totalRecords / pageSize)
+  // Transform payment dispute data to match the interface
+  const transformedDisputes: Dispute[] = disputes.map((dispute) => ({
+    id: dispute.id,
+    customerName: dispute.customerName,
+    accountNumber: dispute.customerAccountNumber,
+    disputeAmount: `₦${dispute.requestedAmount.toLocaleString()}`,
+    originalAmount: `₦${dispute.requestedAmount.toLocaleString()}`,
+    status: dispute.status,
+    source: dispute.source,
+    paymentMethod:
+      dispute.payment.channel === "Cash"
+        ? "Cash"
+        : dispute.payment.channel === "BankTransfer"
+        ? "Bank Transfer"
+        : dispute.payment.channel === "VendorWallet"
+        ? "Mobile Money"
+        : dispute.payment.channel === "Pos"
+        ? "POS Agent"
+        : dispute.payment.channel === "Card"
+        ? "Card Payment"
+        : "Bank Transfer",
+    reference: dispute.paymentReference,
+    timestamp: new Date(dispute.createdAt).toLocaleString(),
+    submittedDate: new Date(dispute.createdAt).toLocaleDateString(),
+    dueDate: new Date(dispute.createdAt).toLocaleDateString(), // You might want to calculate actual due date
+    priority: dispute.requestedAmount > 1000 ? "high" : dispute.requestedAmount > 500 ? "medium" : "low",
+    assignedTo: "Unassigned", // This would come from the API if available
+    description: dispute.reason,
+    resolution: dispute.resolutionNotes,
+    paymentTransactionId: dispute.paymentTransactionId,
+    requestedAmount: dispute.requestedAmount,
+    resolvedAmount: dispute.resolvedAmount,
+    reason: dispute.reason,
+    details: dispute.details,
+    resolutionNotes: dispute.resolutionNotes,
+    resolvedAtUtc: dispute.resolvedAtUtc,
+    createdAt: dispute.createdAt,
+  }))
 
-  const getStatusStyle = (status: Dispute["status"]) => {
+  // Filter disputes based on search text
+  const filteredDisputes = transformedDisputes.filter((dispute) => {
+    const matchesSearch =
+      searchText === "" ||
+      dispute.customerName.toLowerCase().includes(searchText.toLowerCase()) ||
+      dispute.accountNumber.includes(searchText) ||
+      dispute.reference.toLowerCase().includes(searchText.toLowerCase())
+
+    return matchesSearch
+  })
+
+  // Apply pagination to filtered results
+  const startIndex = (currentPage - 1) * pageSize
+  const endIndex = startIndex + pageSize
+  const paginatedDisputes = filteredDisputes.slice(startIndex, endIndex)
+  const totalRecords = filteredDisputes.length
+  const calculatedTotalPages = Math.ceil(totalRecords / pageSize)
+
+  // Fetch payment disputes on component mount and when filters change
+  useEffect(() => {
+    getPaymentDisputes({
+      pageNumber: currentPage,
+      pageSize: pageSize,
+      customerId: customerIdFilter,
+      status: statusFilter,
+      source: sourceFilter,
+    })
+  }, [currentPage, pageSize, customerIdFilter, statusFilter, sourceFilter])
+
+  const getStatusStyle = (status: PaymentDisputeStatus) => {
     switch (status) {
-      case "pending":
+      case PaymentDisputeStatus.Open:
         return {
           backgroundColor: "#FEF6E6",
           color: "#D97706",
         }
-      case "under-review":
+      case PaymentDisputeStatus.InReview:
         return {
           backgroundColor: "#EFF6FF",
           color: "#2563EB",
         }
-      case "resolved":
+      case PaymentDisputeStatus.Resolved:
         return {
           backgroundColor: "#EEF5F0",
           color: "#589E67",
         }
-      case "rejected":
+      case PaymentDisputeStatus.Rejected:
         return {
           backgroundColor: "#F7EDED",
           color: "#AF4B4B",
-        }
-      case "escalated":
-        return {
-          backgroundColor: "#FDF2F8",
-          color: "#DB2777",
         }
       default:
         return {
@@ -532,41 +499,6 @@ const AllDisputes: React.FC = () => {
         return {
           backgroundColor: "#FDF2F8",
           color: "#DB2777",
-        }
-      default:
-        return {
-          backgroundColor: "#F3F4F6",
-          color: "#6B7280",
-        }
-    }
-  }
-
-  const getDisputeTypeStyle = (type: Dispute["disputeType"]) => {
-    switch (type) {
-      case "double-charge":
-        return {
-          backgroundColor: "#F7EDED",
-          color: "#AF4B4B",
-        }
-      case "service-not-rendered":
-        return {
-          backgroundColor: "#FEF6E6",
-          color: "#D97706",
-        }
-      case "incorrect-amount":
-        return {
-          backgroundColor: "#EFF6FF",
-          color: "#2563EB",
-        }
-      case "unauthorized-transaction":
-        return {
-          backgroundColor: "#FDF2F8",
-          color: "#DB2777",
-        }
-      case "other":
-        return {
-          backgroundColor: "#F3F4F6",
-          color: "#6B7280",
         }
       default:
         return {
@@ -625,13 +557,44 @@ const AllDisputes: React.FC = () => {
   const handleAddDisputeSuccess = async () => {
     setIsAddDisputeModalOpen(false)
     // Refresh data after adding dispute
-    setDisputeData(generateDisputeData())
+    getPaymentDisputes({
+      pageNumber: currentPage,
+      pageSize: pageSize,
+      customerId: customerIdFilter,
+      status: statusFilter,
+      source: sourceFilter,
+    })
+  }
+
+  const handleRetry = () => {
+    clearError()
+    getPaymentDisputes({
+      pageNumber: currentPage,
+      pageSize: pageSize,
+      customerId: customerIdFilter,
+      status: statusFilter,
+      source: sourceFilter,
+    })
   }
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
 
-  if (isLoading) return <LoadingSkeleton />
-  if (isError) return <div>Error loading disputes</div>
+  if (loading && paginatedDisputes.length === 0) return <LoadingSkeleton />
+  if (error)
+    return (
+      <div className="p-4">
+        <div className="rounded-md border border-red-200 bg-red-50 p-4">
+          <h3 className="font-medium text-red-800">Error loading payment disputes</h3>
+          <p className="mt-1 text-sm text-red-600">{error}</p>
+          <button
+            onClick={handleRetry}
+            className="mt-3 rounded-md bg-red-600 px-4 py-2 text-white transition-colors hover:bg-red-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    )
 
   return (
     <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200">
@@ -678,17 +641,45 @@ const AllDisputes: React.FC = () => {
                 >
                   <div className="mb-6">
                     <h3 className="mb-3 text-lg font-semibold">Dispute Directory</h3>
-                    <div className="max-w-md">
-                      <SearchModule
-                        placeholder="Search customers or references..."
-                        value={searchText}
-                        onChange={handleSearch}
-                        onCancel={handleCancelSearch}
-                      />
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:gap-4">
+                      <div className="max-w-md flex-1">
+                        <SearchModule
+                          placeholder="Search customers or references..."
+                          value={searchText}
+                          onChange={handleSearch}
+                          onCancel={handleCancelSearch}
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <select
+                          value={statusFilter || ""}
+                          onChange={(e) =>
+                            setStatusFilter(e.target.value ? (e.target.value as PaymentDisputeStatus) : undefined)
+                          }
+                          className="rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">All Statuses</option>
+                          <option value={PaymentDisputeStatus.Open}>Open</option>
+                          <option value={PaymentDisputeStatus.InReview}>In Review</option>
+                          <option value={PaymentDisputeStatus.Resolved}>Resolved</option>
+                          <option value={PaymentDisputeStatus.Rejected}>Rejected</option>
+                        </select>
+                        <select
+                          value={sourceFilter || ""}
+                          onChange={(e) =>
+                            setSourceFilter(e.target.value ? (e.target.value as PaymentDisputeSource) : undefined)
+                          }
+                          className="rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">All Sources</option>
+                          <option value={PaymentDisputeSource.Employee}>Employee</option>
+                          <option value={PaymentDisputeSource.Customer}>Customer</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
 
-                  {disputes.length === 0 ? (
+                  {paginatedDisputes.length === 0 ? (
                     <motion.div
                       className="flex h-60 flex-col items-center justify-center gap-2 rounded-lg bg-[#F6F6F9]"
                       initial={{ opacity: 0, scale: 0.95 }}
@@ -732,14 +723,6 @@ const AllDisputes: React.FC = () => {
                                 >
                                   <div className="flex items-center gap-2">
                                     Status <RxCaretSort className="text-gray-400" />
-                                  </div>
-                                </th>
-                                <th
-                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("disputeType")}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    Dispute Type <RxCaretSort className="text-gray-400" />
                                   </div>
                                 </th>
                                 <th
@@ -789,7 +772,7 @@ const AllDisputes: React.FC = () => {
                             </thead>
                             <tbody className="bg-white">
                               <AnimatePresence>
-                                {disputes.map((dispute, index) => (
+                                {paginatedDisputes.map((dispute, index) => (
                                   <motion.tr
                                     key={dispute.id}
                                     initial={{ opacity: 0, y: 10 }}
@@ -823,32 +806,18 @@ const AllDisputes: React.FC = () => {
                                           className="size-2 rounded-full"
                                           style={{
                                             backgroundColor:
-                                              dispute.status === "pending"
+                                              dispute.status === PaymentDisputeStatus.Open
                                                 ? "#D97706"
-                                                : dispute.status === "under-review"
+                                                : dispute.status === PaymentDisputeStatus.InReview
                                                 ? "#2563EB"
-                                                : dispute.status === "resolved"
+                                                : dispute.status === PaymentDisputeStatus.Resolved
                                                 ? "#589E67"
-                                                : dispute.status === "rejected"
+                                                : dispute.status === PaymentDisputeStatus.Rejected
                                                 ? "#AF4B4B"
                                                 : "#DB2777",
                                           }}
                                         ></span>
-                                        {dispute.status.charAt(0).toUpperCase() +
-                                          dispute.status.slice(1).replace("-", " ")}
-                                      </motion.div>
-                                    </td>
-                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                                      <motion.div
-                                        style={getDisputeTypeStyle(dispute.disputeType)}
-                                        className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs"
-                                        whileHover={{ scale: 1.05 }}
-                                        transition={{ duration: 0.1 }}
-                                      >
-                                        {dispute.disputeType
-                                          .split("-")
-                                          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                                          .join(" ")}
+                                        {dispute.status.charAt(0).toUpperCase() + dispute.status.slice(1)}
                                       </motion.div>
                                     </td>
                                     <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
@@ -936,14 +905,14 @@ const AllDisputes: React.FC = () => {
                             <MdOutlineArrowBackIosNew size={16} />
                           </motion.button>
 
-                          {Array.from({ length: Math.min(5, totalPages) }).map((_, index) => {
+                          {Array.from({ length: Math.min(5, calculatedTotalPages) }).map((_, index) => {
                             let pageNum
-                            if (totalPages <= 5) {
+                            if (calculatedTotalPages <= 5) {
                               pageNum = index + 1
                             } else if (currentPage <= 3) {
                               pageNum = index + 1
-                            } else if (currentPage >= totalPages - 2) {
-                              pageNum = totalPages - 4 + index
+                            } else if (currentPage >= calculatedTotalPages - 2) {
+                              pageNum = calculatedTotalPages - 4 + index
                             } else {
                               pageNum = currentPage - 2 + index
                             }
@@ -968,35 +937,35 @@ const AllDisputes: React.FC = () => {
                             )
                           })}
 
-                          {totalPages > 5 && currentPage < totalPages - 2 && (
+                          {calculatedTotalPages > 5 && currentPage < calculatedTotalPages - 2 && (
                             <span className="px-1 text-gray-500">...</span>
                           )}
 
-                          {totalPages > 5 && currentPage < totalPages - 1 && (
+                          {calculatedTotalPages > 5 && currentPage < calculatedTotalPages - 1 && (
                             <motion.button
-                              onClick={() => paginate(totalPages)}
+                              onClick={() => paginate(calculatedTotalPages)}
                               className={`flex size-8 items-center justify-center rounded-md text-sm ${
-                                currentPage === totalPages
+                                currentPage === calculatedTotalPages
                                   ? "bg-[#004B23] text-white"
                                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                               }`}
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.95 }}
                             >
-                              {totalPages}
+                              {calculatedTotalPages}
                             </motion.button>
                           )}
 
                           <motion.button
                             onClick={() => paginate(currentPage + 1)}
-                            disabled={currentPage === totalPages}
+                            disabled={currentPage === calculatedTotalPages}
                             className={`flex items-center justify-center rounded-md p-2 ${
-                              currentPage === totalPages
+                              currentPage === calculatedTotalPages
                                 ? "cursor-not-allowed text-gray-400"
                                 : "text-[#003F9F] hover:bg-gray-100"
                             }`}
-                            whileHover={{ scale: currentPage === totalPages ? 1 : 1.1 }}
-                            whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
+                            whileHover={{ scale: currentPage === calculatedTotalPages ? 1 : 1.1 }}
+                            whileTap={{ scale: currentPage === calculatedTotalPages ? 1 : 0.95 }}
                           >
                             <MdOutlineArrowForwardIos size={16} />
                           </motion.button>
