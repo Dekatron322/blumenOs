@@ -49,7 +49,7 @@ import { clearDistributionSubstations, fetchDistributionSubstations } from "lib/
 import { clearFeeders, fetchFeeders } from "lib/redux/feedersSlice"
 import { clearServiceStations, fetchServiceStations } from "lib/redux/serviceStationsSlice"
 import { clearBills, fetchPostpaidBills } from "lib/redux/postpaidSlice"
-import { fetchCountries, clearCountries } from "lib/redux/countriesSlice"
+import { clearCountries, fetchCountries } from "lib/redux/countriesSlice"
 import { VscEye, VscTrash } from "react-icons/vsc"
 import { API_ENDPOINTS, buildApiUrl } from "lib/config/api"
 import { api } from "lib/redux/authSlice"
