@@ -11,8 +11,8 @@ import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
   clearError,
-  clearPrepaidPayments,
   clearExportAgentPayments,
+  clearPrepaidPayments,
   exportAgentPayments,
   ExportAgentPaymentsRequest,
   fetchPrepaidPayments,
