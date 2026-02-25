@@ -142,7 +142,7 @@ export const FinalizeSingleBillModal: React.FC<FinalizeSingleBillModalProps> = (
             </p>
           </div>
 
-          <form onSubmit={handleFormSubmit} className="space-y-6">
+          <form id="finalizeBillForm" onSubmit={handleFormSubmit} className="space-y-6">
             <div>
               <label className="mb-2 block text-sm font-medium text-gray-700">Effective Date & Time</label>
               <FormInputModule
@@ -188,7 +188,7 @@ export const FinalizeSingleBillModal: React.FC<FinalizeSingleBillModalProps> = (
           <ButtonModule
             variant="primary"
             className="flex-1"
-            type="submit"
+            onClick={() => (document.getElementById("finalizeBillForm") as HTMLFormElement)?.requestSubmit()}
             disabled={finalizeSingleBillLoading}
             loading={finalizeSingleBillLoading}
           >
