@@ -223,7 +223,12 @@ const statusMapSlice = createSlice({
       })
       .addCase(fetchStatusMapCustomers.fulfilled, (state, action: PayloadAction<StatusMapResponse>) => {
         state.loading = false
-        state.customers = action.payload.data
+        // Append new data if it's not the first page, otherwise replace
+        if (action.payload.currentPage === 1) {
+          state.customers = action.payload.data
+        } else {
+          state.customers = [...state.customers, ...action.payload.data]
+        }
         state.totalCount = action.payload.totalCount
         state.totalPages = action.payload.totalPages
         state.currentPage = action.payload.currentPage
@@ -249,7 +254,12 @@ const statusMapSlice = createSlice({
       })
       .addCase(fetchStatusMapAssets.fulfilled, (state, action: PayloadAction<StatusMapAssetsResponse>) => {
         state.assetsLoading = false
-        state.assets = action.payload.data
+        // Append new data if it's not the first page, otherwise replace
+        if (action.payload.currentPage === 1) {
+          state.assets = action.payload.data
+        } else {
+          state.assets = [...state.assets, ...action.payload.data]
+        }
         state.assetsTotalCount = action.payload.totalCount
         state.assetsTotalPages = action.payload.totalPages
         state.assetsCurrentPage = action.payload.currentPage

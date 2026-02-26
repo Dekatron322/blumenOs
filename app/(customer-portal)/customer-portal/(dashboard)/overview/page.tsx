@@ -1099,12 +1099,12 @@ export default function AgentManagementDashboard() {
                     <p className="text-xs text-gray-500 sm:hidden">Balance & Transactions</p>
                   </div>
                 </div>
-                <button
+                {/* <button
                   onClick={() => router.push("/customer-portal/wallet")}
                   className="rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-indigo-700 sm:px-4 sm:py-2 sm:text-sm"
                 >
                   Manage
-                </button>
+                </button> */}
               </div>
 
               {/* Balance Display - Mobile Optimized */}

@@ -23,27 +23,6 @@ const formatMonth = (dateString: string) => {
   return date.toLocaleDateString("en-NG", { month: "short" })
 }
 
-const getLast365Days = () => {
-  const dates = []
-  for (let i = 364; i >= 0; i--) {
-    const date = new Date()
-    date.setDate(date.getDate() - i)
-    dates.push(date.toISOString().split("T")[0])
-  }
-  return dates
-}
-
-const getStartAndEndOfYear = () => {
-  const now = new Date()
-  const startOfYear = new Date(now.getFullYear(), 0, 1)
-  const endOfYear = new Date(now.getFullYear(), 11, 31)
-
-  return {
-    startUtc: startOfYear.toISOString(),
-    endUtc: endOfYear.toISOString(),
-  }
-}
-
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
   return (
@@ -76,27 +55,6 @@ const SkeletonLoader = () => {
           </div>
         </motion.div>
       ))}
-    </div>
-  )
-}
-
-// Skeleton for Performance Chart
-const ChartSkeleton = () => {
-  return (
-    <div className="w-full rounded-lg border bg-white p-4 shadow-sm sm:p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <div className="h-6 w-40 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
-        <div className="h-10 w-32 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
-      </div>
-      <div className="h-64 w-full animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%] sm:h-80"></div>
-      <div className="mt-4 flex justify-center gap-4">
-        {[...Array(4)].map((_, i) => (
-          <div
-            key={i}
-            className="h-4 w-16 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"
-          ></div>
-        ))}
-      </div>
     </div>
   )
 }
@@ -598,91 +556,12 @@ export default function AgentManagementDashboard() {
   const [performanceChartType, setPerformanceChartType] = useState<"year" | "month" | "week">("year")
 
   const { user } = useSelector((state: RootState) => state.auth)
-  const {
-    agentInfo,
-    agentInfoLoading,
-    agentInfoError,
-    agentSummary,
-    agentSummaryLoading,
-    agentSummaryError,
-    agentPerformanceDaily,
-    agentPerformanceDailyLoading,
-    agentPerformanceDailyError,
-  } = useSelector((state: RootState) => state.agents)
+  const { agentInfo, agentInfoLoading, agentSummary, agentSummaryLoading } = useSelector(
+    (state: RootState) => state.agents
+  )
 
   // Get the active period from agent summary based on the selected time range
   const activePeriod = agentSummary?.periods?.find((period) => period.range === activeTimeRange)
-
-  // Fallback to the first available period if the selected one isn't present
-  const kpiSource = activePeriod || agentSummary?.periods?.[0]
-
-  // Derive KPI metrics for the summary cards from the summary data (AGENT_SUMMARY response)
-  const summary = kpiSource ?? {
-    collectedAmount: 0,
-    collectedCount: 0,
-    pendingAmount: 0,
-    pendingCount: 0,
-    cashClearedAmount: 0,
-    cashClearanceCount: 0,
-    billingDisputesRaised: 0,
-    billingDisputesResolved: 0,
-    changeRequestsRaised: 0,
-    changeRequestsResolved: 0,
-    outstandingCashEstimate: 0,
-    collectionsByChannel: [],
-  }
-
-  // Format currency
-  const formatSummaryCurrency = (amount: number) => {
-    return (
-      new Intl.NumberFormat("en-NG", {
-        style: "currency",
-        currency: "NGN",
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 1,
-      }).format(amount / 1000000) + "M"
-    ) // Convert from kobo to millions
-  }
-
-  const formatDateTime = (value?: string | null) => {
-    if (!value) return "N/A"
-    const date = new Date(value)
-    if (Number.isNaN(date.getTime())) return value
-    return date.toLocaleString("en-NG", {
-      year: "numeric",
-      month: "short",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
-  }
-
-  const formatNumber = (num: number) => {
-    return num.toLocaleString()
-  }
-
-  const handleAddAgentSuccess = async () => {
-    setIsAddAgentModalOpen(false)
-    // In template mode, no API refresh is triggered.
-  }
-
-  const handleRefreshData = () => {
-    // Template-only: simulate a short loading state without making API calls.
-    setIsLoading(true)
-    setTimeout(() => setIsLoading(false), 500)
-  }
-
-  const handlePerformanceTimeRangeChange = (range: "year" | "month" | "week") => {
-    setPerformanceChartType(range)
-  }
-
-  const _agentLastName = user?.fullName
-    ? user.fullName
-        .trim()
-        .split(" ")
-        .filter((part) => part.length > 0)
-        .slice(-1)[0]
-    : "Agent"
 
   const timeRanges = [
     { value: TimeRange.Today, label: "Today" },
