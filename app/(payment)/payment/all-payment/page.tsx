@@ -3143,7 +3143,7 @@ const AllPayments: React.FC = () => {
             onClick={() => setShowExportModal(false)}
           >
             <motion.div
-              className="w-full max-w-lg rounded-lg bg-white shadow-xl"
+              className="flex max-h-[80vh] w-full max-w-lg flex-col rounded-lg bg-white shadow-xl"
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
@@ -3181,7 +3181,7 @@ const AllPayments: React.FC = () => {
                 </div> */}
               </div>
 
-              <div className=" p-4">
+              <div className="flex-1 overflow-y-auto p-4">
                 {exportModalTab === "basic" ? (
                   <div className="space-y-4">
                     {/* Date Range */}
