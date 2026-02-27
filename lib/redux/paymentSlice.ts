@@ -1131,10 +1131,27 @@ interface PaymentState {
   editPaymentError: string | null
   editPaymentSuccess: boolean
   editPaymentData: {
+    totalAmountPaid: number
     newAmount: number
     reason: string
     effectiveAtUtc: string
-    paymentId: number
+    collector?: {
+      type: string
+      name: string
+      agentId: number | null
+      agentCode: string | null
+      agentType: string | null
+      vendorId: number | null
+      vendorName: string | null
+      staffName: string | null
+      customerId: number | null
+      customerName: string | null
+    }
+    token?: {
+      token: string
+      vendedAmount: string
+      unit: string
+    } | null
   } | null
 }
 
@@ -3294,7 +3311,7 @@ const paymentSlice = createSlice({
           state.editPaymentError = null
           state.editPaymentData = {
             ...action.payload.data,
-            paymentId: action.payload.paymentId,
+            totalAmountPaid: action.payload.data.newAmount,
           }
 
           // Update the payment amount in the payments list if it exists

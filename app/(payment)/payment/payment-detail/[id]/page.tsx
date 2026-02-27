@@ -1186,7 +1186,7 @@ const PaymentDetailsPage = () => {
                       </ButtonModule>
                     )}
 
-                    {canExecute && (
+                    {/* {canExecute && (
                       <ButtonModule
                         variant="outlineDanger"
                         size="sm"
@@ -1196,7 +1196,7 @@ const PaymentDetailsPage = () => {
                       >
                         Cancel Payment
                       </ButtonModule>
-                    )}
+                    )} */}
                   </div>
                 </div>
               </div>
