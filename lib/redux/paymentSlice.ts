@@ -525,6 +525,23 @@ export interface ExportPaymentsResponse {
   data: Blob // Direct file response as Blob
 }
 
+// Interfaces for Edit Payment
+export interface EditPaymentRequest {
+  newAmount: number
+  reason: string
+  effectiveAtUtc: string
+}
+
+export interface EditPaymentResponse {
+  isSuccess: boolean
+  message: string
+  data: {
+    newAmount: number
+    reason: string
+    effectiveAtUtc: string
+  }
+}
+
 // Interfaces for Top Performers
 export interface TopPerformerAgent {
   id: number
@@ -938,6 +955,12 @@ interface PaymentState {
   currentPaymentError: string | null
   currentPaymentSuccess: boolean
 
+  // Payment lookup by reference state
+  paymentByReference: Payment | null
+  paymentByReferenceLoading: boolean
+  paymentByReferenceError: string | null
+  paymentByReferenceSuccess: boolean
+
   // Create payment state
   createPaymentLoading: boolean
   createPaymentError: string | null
@@ -1102,6 +1125,17 @@ interface PaymentState {
   exportPaymentsError: string | null
   exportPaymentsSuccess: boolean
   exportPaymentsData: { data: Blob; fileName: string } | null
+
+  // Edit Payment state
+  editPaymentLoading: boolean
+  editPaymentError: string | null
+  editPaymentSuccess: boolean
+  editPaymentData: {
+    newAmount: number
+    reason: string
+    effectiveAtUtc: string
+    paymentId: number
+  } | null
 }
 
 // Initial state
@@ -1115,6 +1149,12 @@ const initialState: PaymentState = {
   currentPaymentLoading: false,
   currentPaymentError: null,
   currentPaymentSuccess: false,
+
+  // Payment lookup by reference
+  paymentByReference: null,
+  paymentByReferenceLoading: false,
+  paymentByReferenceError: null,
+  paymentByReferenceSuccess: false,
 
   createPaymentLoading: false,
   createPaymentError: null,
@@ -1272,6 +1312,12 @@ const initialState: PaymentState = {
   exportPaymentsError: null,
   exportPaymentsSuccess: false,
   exportPaymentsData: null,
+
+  // Edit Payment
+  editPaymentLoading: false,
+  editPaymentError: null,
+  editPaymentSuccess: false,
+  editPaymentData: null,
 }
 
 // Async thunk for fetching payments
@@ -2067,6 +2113,62 @@ export const exportPayments = createAsyncThunk(
   }
 )
 
+// Async thunk for editing payment amount
+export const editPayment = createAsyncThunk(
+  "payments/editPayment",
+  async ({ id, editData }: { id: number; editData: EditPaymentRequest }, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.PAYMENTS.EDIT_HISTORY.replace("{id}", id.toString())
+      const response = await api.post<EditPaymentResponse>(buildApiUrl(endpoint), editData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to edit payment")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Edit payment data not found")
+      }
+
+      return {
+        paymentId: id,
+        data: response.data.data,
+        message: response.data.message,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to edit payment")
+      }
+      return rejectWithValue(error.message || "Network error during payment edit")
+    }
+  }
+)
+
+// Async thunk for fetching payment by reference
+export const fetchPaymentByReference = createAsyncThunk(
+  "payments/fetchPaymentByReference",
+  async (reference: string, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.PAYMENTS.LOOKUP_BY_REFERENCE.replace("{reference}", reference)
+      const response = await api.get<PaymentResponse>(buildApiUrl(endpoint))
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Payment not found")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Payment data not found")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Payment not found")
+      }
+      return rejectWithValue(error.message || "Network error during payment lookup")
+    }
+  }
+)
+
 // Payment slice
 const paymentSlice = createSlice({
   name: "payments",
@@ -2122,6 +2224,8 @@ const paymentSlice = createSlice({
       state.cancelPaymentError = null
       state.paymentAnomaliesError = null
       state.resolveAnomalyError = null
+      state.editPaymentError = null
+      state.paymentByReferenceError = null
     },
 
     // Reset payment state
@@ -2237,6 +2341,18 @@ const paymentSlice = createSlice({
       state.resolveAnomalyLoading = false
       state.resolveAnomalyError = null
       state.resolveAnomalySuccess = false
+
+      // Edit Payment
+      state.editPaymentLoading = false
+      state.editPaymentError = null
+      state.editPaymentSuccess = false
+      state.editPaymentData = null
+
+      // Payment lookup by reference
+      state.paymentByReferenceLoading = false
+      state.paymentByReferenceError = null
+      state.paymentByReferenceSuccess = false
+      state.paymentByReference = null
     },
 
     // Clear payment tracking state
@@ -2261,6 +2377,22 @@ const paymentSlice = createSlice({
       state.topPerformersLoading = false
       state.topPerformersError = null
       state.topPerformersSuccess = false
+    },
+
+    // Clear edit payment state
+    clearEditPayment: (state) => {
+      state.editPaymentLoading = false
+      state.editPaymentError = null
+      state.editPaymentSuccess = false
+      state.editPaymentData = null
+    },
+
+    // Clear payment lookup by reference state
+    clearPaymentByReference: (state) => {
+      state.paymentByReferenceLoading = false
+      state.paymentByReferenceError = null
+      state.paymentByReferenceSuccess = false
+      state.paymentByReference = null
     },
 
     // Clear confirm payment state
@@ -3135,6 +3267,73 @@ const paymentSlice = createSlice({
         state.exportPaymentsError = (action.payload as string) || "Failed to export payments"
         state.exportPaymentsSuccess = false
       })
+
+      // Edit payment cases
+      .addCase(editPayment.pending, (state) => {
+        state.editPaymentLoading = true
+        state.editPaymentError = null
+        state.editPaymentSuccess = false
+        state.editPaymentData = null
+      })
+      .addCase(
+        editPayment.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            paymentId: number
+            data: {
+              newAmount: number
+              reason: string
+              effectiveAtUtc: string
+            }
+            message: string
+          }>
+        ) => {
+          state.editPaymentLoading = false
+          state.editPaymentSuccess = true
+          state.editPaymentError = null
+          state.editPaymentData = {
+            ...action.payload.data,
+            paymentId: action.payload.paymentId,
+          }
+
+          // Update the payment amount in the payments list if it exists
+          const index = state.payments.findIndex((p) => p.id === action.payload.paymentId)
+          if (index !== -1 && state.payments[index]) {
+            state.payments[index]!.totalAmountPaid = action.payload.data.newAmount
+          }
+
+          // Update the current payment if it's the same one
+          if (state.currentPayment && state.currentPayment.id === action.payload.paymentId) {
+            state.currentPayment.totalAmountPaid = action.payload.data.newAmount
+          }
+        }
+      )
+      .addCase(editPayment.rejected, (state, action) => {
+        state.editPaymentLoading = false
+        state.editPaymentError = (action.payload as string) || "Failed to edit payment"
+        state.editPaymentSuccess = false
+        state.editPaymentData = null
+      })
+
+      // Fetch payment by reference cases
+      .addCase(fetchPaymentByReference.pending, (state) => {
+        state.paymentByReferenceLoading = true
+        state.paymentByReferenceError = null
+        state.paymentByReferenceSuccess = false
+      })
+      .addCase(fetchPaymentByReference.fulfilled, (state, action: PayloadAction<Payment>) => {
+        state.paymentByReferenceLoading = false
+        state.paymentByReferenceSuccess = true
+        state.paymentByReferenceError = null
+        state.paymentByReference = action.payload
+      })
+      .addCase(fetchPaymentByReference.rejected, (state, action) => {
+        state.paymentByReferenceLoading = false
+        state.paymentByReferenceError = (action.payload as string) || "Payment not found"
+        state.paymentByReferenceSuccess = false
+        state.paymentByReference = null
+      })
   },
 })
 
@@ -3156,6 +3355,8 @@ export const {
   clearPaymentTracking,
   clearCashHolders,
   clearTopPerformers,
+  clearEditPayment,
+  clearPaymentByReference,
   clearConfirmPayment,
   clearBankLists,
   clearRefundPayment,

@@ -387,6 +387,8 @@ export const API_ENDPOINTS = {
     RESOLVE_ANOMALY: "/payments/anomalies/{id}/resolve",
     EXPORT: "/payments/export",
     CANCEL_BY_REFERENCE: "/payments/reference/{reference}/cancel",
+    EDIT_HISTORY: "/payments/{id}/edit-amount",
+    LOOKUP_BY_REFERENCE: "/payments/reference/{reference}",
   },
 
   REFUND: {
