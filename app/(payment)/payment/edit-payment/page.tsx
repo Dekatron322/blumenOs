@@ -694,7 +694,7 @@ const EditPaymentPage = () => {
                                               </div>
                                               <div className="text-right">
                                                 <p className="text-sm font-medium text-gray-900">
-                                                  {formatCurrency(payment.totalAmountPaid)}
+                                                  {formatCurrency(payment.amount)}
                                                 </p>
                                                 <p className="text-xs text-gray-500">{payment.status}</p>
                                               </div>
