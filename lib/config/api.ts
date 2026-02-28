@@ -389,6 +389,7 @@ export const API_ENDPOINTS = {
     CANCEL_BY_REFERENCE: "/payments/reference/{reference}/cancel",
     EDIT_HISTORY: "/payments/{id}/edit-amount",
     LOOKUP_BY_REFERENCE: "/payments/reference/{reference}",
+    PAYMENT_HEALTH: "/payments/health",
   },
 
   REFUND: {

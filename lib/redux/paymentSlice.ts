@@ -941,6 +941,35 @@ export interface CancelPaymentByReferenceResponse {
   data: CancelPaymentData
 }
 
+// Interfaces for Payment Health
+export interface PaymentHealthCategory {
+  category: string
+  totalRequests: number
+  failedRequests: number
+  failureRatePercent: number
+  lastFailureAtUtc: string
+  severity: string
+  colorCode: string
+}
+
+export interface PaymentHealthData {
+  windowMinutes: number
+  fromUtc: string
+  toUtc: string
+  prepaid: PaymentHealthCategory
+  nonPrepaid: PaymentHealthCategory
+}
+
+export interface PaymentHealthResponse {
+  isSuccess: boolean
+  message: string
+  data: PaymentHealthData
+}
+
+export interface PaymentHealthRequest {
+  windowMinutes: number
+}
+
 // Payment State
 interface PaymentState {
   // Payments list state
@@ -1153,6 +1182,12 @@ interface PaymentState {
       unit: string
     } | null
   } | null
+
+  // Payment Health state
+  paymentHealth: PaymentHealthData | null
+  paymentHealthLoading: boolean
+  paymentHealthError: string | null
+  paymentHealthSuccess: boolean
 }
 
 // Initial state
@@ -1335,6 +1370,12 @@ const initialState: PaymentState = {
   editPaymentError: null,
   editPaymentSuccess: false,
   editPaymentData: null,
+
+  // Payment Health
+  paymentHealth: null,
+  paymentHealthLoading: false,
+  paymentHealthError: null,
+  paymentHealthSuccess: false,
 }
 
 // Async thunk for fetching payments
@@ -2186,6 +2227,35 @@ export const fetchPaymentByReference = createAsyncThunk(
   }
 )
 
+// Async thunk for fetching payment health
+export const fetchPaymentHealth = createAsyncThunk(
+  "payments/fetchPaymentHealth",
+  async (params: PaymentHealthRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.get<PaymentHealthResponse>(buildApiUrl(API_ENDPOINTS.PAYMENTS.PAYMENT_HEALTH), {
+        params: {
+          WindowMinutes: params.windowMinutes,
+        },
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch payment health")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Payment health data not found")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch payment health")
+      }
+      return rejectWithValue(error.message || "Network error during payment health fetch")
+    }
+  }
+)
+
 // Payment slice
 const paymentSlice = createSlice({
   name: "payments",
@@ -2569,6 +2639,14 @@ const paymentSlice = createSlice({
       state.declineChangeRequestSuccess = false
       state.declineChangeRequestLoading = false
       state.declineChangeRequestResponse = null
+    },
+
+    // Clear payment health state
+    clearPaymentHealth: (state) => {
+      state.paymentHealth = null
+      state.paymentHealthLoading = false
+      state.paymentHealthError = null
+      state.paymentHealthSuccess = false
     },
   },
   extraReducers: (builder) => {
@@ -3351,6 +3429,25 @@ const paymentSlice = createSlice({
         state.paymentByReferenceSuccess = false
         state.paymentByReference = null
       })
+
+      // Fetch payment health cases
+      .addCase(fetchPaymentHealth.pending, (state) => {
+        state.paymentHealthLoading = true
+        state.paymentHealthError = null
+        state.paymentHealthSuccess = false
+      })
+      .addCase(fetchPaymentHealth.fulfilled, (state, action: PayloadAction<PaymentHealthData>) => {
+        state.paymentHealthLoading = false
+        state.paymentHealthSuccess = true
+        state.paymentHealthError = null
+        state.paymentHealth = action.payload
+      })
+      .addCase(fetchPaymentHealth.rejected, (state, action) => {
+        state.paymentHealthLoading = false
+        state.paymentHealthError = (action.payload as string) || "Failed to fetch payment health"
+        state.paymentHealthSuccess = false
+        state.paymentHealth = null
+      })
   },
 })
 
@@ -3384,6 +3481,7 @@ export const {
   clearPaymentAnomalies,
   clearResolveAnomaly,
   clearExportPayments,
+  clearPaymentHealth,
 } = paymentSlice.actions
 
 export default paymentSlice.reducer
