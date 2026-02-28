@@ -946,6 +946,7 @@ export interface PaymentHealthCategory {
   category: string
   totalRequests: number
   failedRequests: number
+  stalledPendingRequests: number
   failureRatePercent: number
   lastFailureAtUtc: string
   severity: string

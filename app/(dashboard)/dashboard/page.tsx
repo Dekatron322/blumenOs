@@ -142,6 +142,8 @@ const PaymentHealthCard = ({
         return "text-green-600"
       case "yellow":
         return "text-yellow-600"
+      case "orange":
+        return "text-orange-600"
       case "red":
         return "text-red-600"
       default:
@@ -155,6 +157,8 @@ const PaymentHealthCard = ({
         return "bg-green-50 border-green-200"
       case "yellow":
         return "bg-yellow-50 border-yellow-200"
+      case "orange":
+        return "bg-orange-50 border-orange-200"
       case "red":
         return "bg-red-50 border-red-200"
       default:
@@ -233,7 +237,7 @@ const PaymentHealthCard = ({
                   <div className="h-6 w-6 rounded-full" style={{ backgroundColor: paymentHealth.prepaid.colorCode }} />
                 )}
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                 <div>
                   <p className="mb-1 text-xs text-gray-500">Total Requests</p>
                   <p className="text-lg font-bold text-gray-900">
@@ -244,6 +248,12 @@ const PaymentHealthCard = ({
                   <p className="mb-1 text-xs text-gray-500">Failed Requests</p>
                   <p className={`text-lg font-bold ${getHealthColor(paymentHealth.prepaid?.severity)}`}>
                     {paymentHealth.prepaid?.failedRequests?.toLocaleString() || "0"}
+                  </p>
+                </div>
+                <div>
+                  <p className="mb-1 text-xs text-gray-500">Stalled Pending</p>
+                  <p className={`text-lg font-bold ${getHealthColor(paymentHealth.prepaid?.severity)}`}>
+                    {paymentHealth.prepaid?.stalledPendingRequests?.toLocaleString() || "0"}
                   </p>
                 </div>
                 <div>
@@ -287,7 +297,7 @@ const PaymentHealthCard = ({
                   />
                 )}
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                 <div>
                   <p className="mb-1 text-xs text-gray-500">Total Requests</p>
                   <p className="text-lg font-bold text-gray-900">
@@ -298,6 +308,12 @@ const PaymentHealthCard = ({
                   <p className="mb-1 text-xs text-gray-500">Failed Requests</p>
                   <p className={`text-lg font-bold ${getHealthColor(paymentHealth.nonPrepaid?.severity)}`}>
                     {paymentHealth.nonPrepaid?.failedRequests?.toLocaleString() || "0"}
+                  </p>
+                </div>
+                <div>
+                  <p className="mb-1 text-xs text-gray-500">Stalled Pending</p>
+                  <p className={`text-lg font-bold ${getHealthColor(paymentHealth.nonPrepaid?.severity)}`}>
+                    {paymentHealth.nonPrepaid?.stalledPendingRequests?.toLocaleString() || "0"}
                   </p>
                 </div>
                 <div>
