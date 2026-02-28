@@ -102,7 +102,7 @@ const EditPaymentPage = () => {
       // Pre-fill the current amount
       setForm((prev) => ({
         ...prev,
-        newAmount: paymentByReference.totalAmountPaid || 0,
+        newAmount: paymentByReference.amount || 0,
       }))
 
       notify("success", "Payment found successfully", {
@@ -331,29 +331,30 @@ const EditPaymentPage = () => {
 
   const handleTabChange = (tab: "reference" | "meter") => {
     setActiveTab(tab)
-    setForm({
-      newAmount: 0,
+    // Only reset reason and effective date, preserve amount if it's already set
+    setForm((prev) => ({
+      ...prev,
       reason: "",
       effectiveAtUtc: new Date().toISOString(),
-    })
-    setErrors({})
-    dispatch(clearEditPayment())
-    dispatch(clearCustomerLookup())
-    dispatch(clearPayments())
-
-    // Reset meter-specific state
-    setMeterNumber("")
-    setCustomerData(null)
+    }))
+    // Clear tab-specific data
+    setPaymentData(null)
+    setShowPaymentInfo(false)
     setSelectedTransaction(null)
     setShowTransactionSelection(false)
+    setReference("")
+    setMeterNumber("")
+    setCustomerData(null)
     setSearchTerm("")
     setSearchQuery("")
     setCurrentPage(1)
-    // Reset reference-specific state
-    setReference("")
-    setPaymentData(null)
-    setShowPaymentInfo(false)
-    dispatch(clearPaymentByReference())
+    // Clear tab-specific errors
+    setErrors((prev) => ({
+      ...prev,
+      reference: undefined,
+      meterNumber: undefined,
+      selectedTransaction: undefined,
+    }))
   }
 
   const handleSuccessModalClose = () => {
@@ -396,7 +397,7 @@ const EditPaymentPage = () => {
     // Pre-fill the current amount
     setForm((prev) => ({
       ...prev,
-      newAmount: payment.totalAmountPaid || 0,
+      newAmount: payment.amount || 0,
     }))
     setErrors((prev) => ({
       ...prev,
@@ -755,7 +756,7 @@ const EditPaymentPage = () => {
                                       <div>
                                         <p className="text-sm font-medium text-green-800">
                                           Selected Transaction: {selectedTransaction.reference} -{" "}
-                                          {formatCurrency(selectedTransaction.totalAmountPaid)}
+                                          {formatCurrency(selectedTransaction.amount)}
                                         </p>
                                         <p className="mt-1 text-xs text-green-600">
                                           {formatDateTime(selectedTransaction.paidAtUtc)} •{" "}
@@ -792,10 +793,7 @@ const EditPaymentPage = () => {
                           />
                           {(paymentData || selectedTransaction) && (
                             <p className="mt-1 text-xs text-gray-500">
-                              Current amount:{" "}
-                              {formatCurrency(
-                                paymentData?.totalAmountPaid || selectedTransaction?.totalAmountPaid || 0
-                              )}
+                              Current amount: {formatCurrency(paymentData?.amount || selectedTransaction?.amount || 0)}
                             </p>
                           )}
                         </div>
