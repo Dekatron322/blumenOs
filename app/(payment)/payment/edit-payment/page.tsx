@@ -46,6 +46,8 @@ const EditPaymentPage = () => {
     effectiveAtUtc: new Date().toISOString(),
   })
 
+  const [amountInputValue, setAmountInputValue] = useState("")
+
   const [activeTab, setActiveTab] = useState<"reference" | "meter">("reference")
   const [reference, setReference] = useState("")
   const [meterNumber, setMeterNumber] = useState("")
@@ -100,10 +102,14 @@ const EditPaymentPage = () => {
       setShowPaymentInfo(true)
 
       // Pre-fill the current amount
+      const currentAmount = paymentByReference.totalAmountPaid || 0
       setForm((prev) => ({
         ...prev,
-        newAmount: paymentByReference.amount || 0,
+        newAmount: currentAmount,
       }))
+
+      // Set the input display value
+      setAmountInputValue(currentAmount.toString())
 
       notify("success", "Payment found successfully", {
         description: `Payment: ${paymentByReference.reference} - ${formatCurrency(paymentByReference.totalAmountPaid)}`,
@@ -189,7 +195,13 @@ const EditPaymentPage = () => {
   // Handle amount input change with proper formatting
   const handleAmountInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e?.target?.value || ""
+    // Allow only digits and decimal point
     const numericValue = inputValue.replace(/[^\d.]/g, "")
+
+    // Update the input display value
+    setAmountInputValue(inputValue)
+
+    // Parse as float to preserve decimal places
     const parsedValue = parseFloat(numericValue) || 0
     handleFormChange("newAmount", parsedValue)
   }
@@ -786,14 +798,15 @@ const EditPaymentPage = () => {
                             label="New Amount"
                             type="text"
                             required
-                            value={formatAmountForDisplay(form.newAmount)}
+                            value={amountInputValue}
                             onChange={handleAmountInputChange}
                             placeholder="₦0.00"
                             error={errors.newAmount}
                           />
                           {(paymentData || selectedTransaction) && (
                             <p className="mt-1 text-xs text-gray-500">
-                              Current amount: {formatCurrency(paymentData?.amount || selectedTransaction?.amount || 0)}
+                              Current amount:{" "}
+                              {formatCurrency(paymentData?.totalAmountPaid || selectedTransaction?.amount || 0)}
                             </p>
                           )}
                         </div>

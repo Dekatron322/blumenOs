@@ -685,6 +685,17 @@ export interface DebtRecoveryNoEnergyBulkUploadResponse {
   data: BulkUploadJob
 }
 
+// Vending Payment Migration Bulk Upload interfaces
+export interface VendingPaymentMigrationBulkUploadRequest {
+  fileId: number
+}
+
+export interface VendingPaymentMigrationBulkUploadResponse {
+  isSuccess: boolean
+  message: string
+  data: BulkUploadJob
+}
+
 export interface BulkUploadPreview {
   fileId: number
   fileName: string
@@ -1162,6 +1173,12 @@ interface FileManagementState {
   debtRecoveryNoEnergyBulkUploadError: string | null
   debtRecoveryNoEnergyBulkUploadSuccess: boolean
   debtRecoveryNoEnergyBulkUploadResponse: DebtRecoveryNoEnergyBulkUploadResponse | null
+
+  // Vending Payment Migration Bulk Upload state
+  vendingPaymentMigrationBulkUploadLoading: boolean
+  vendingPaymentMigrationBulkUploadError: string | null
+  vendingPaymentMigrationBulkUploadSuccess: boolean
+  vendingPaymentMigrationBulkUploadResponse: VendingPaymentMigrationBulkUploadResponse | null
 }
 
 // Initial state
@@ -1422,6 +1439,12 @@ const initialState: FileManagementState = {
   debtRecoveryNoEnergyBulkUploadError: null,
   debtRecoveryNoEnergyBulkUploadSuccess: false,
   debtRecoveryNoEnergyBulkUploadResponse: null,
+
+  // Vending Payment Migration Bulk Upload state
+  vendingPaymentMigrationBulkUploadLoading: false,
+  vendingPaymentMigrationBulkUploadError: null,
+  vendingPaymentMigrationBulkUploadSuccess: false,
+  vendingPaymentMigrationBulkUploadResponse: null,
 }
 
 // Async thunks
@@ -1980,6 +2003,21 @@ export const processDebtRecoveryNoEnergyBulkUpload = createAsyncThunk(
   }
 )
 
+export const processVendingPaymentMigrationImport = createAsyncThunk(
+  "fileManagement/processVendingPaymentMigrationImport",
+  async (request: VendingPaymentMigrationBulkUploadRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<VendingPaymentMigrationBulkUploadResponse>(
+        "/payments/bulk/vending-migration",
+        request
+      )
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to process vending payment migration import")
+    }
+  }
+)
+
 // CSV Jobs async thunk
 export const fetchCsvJobs = createAsyncThunk(
   "fileManagement/fetchCsvJobs",
@@ -2421,6 +2459,13 @@ const fileManagementSlice = createSlice({
       state.debtRecoveryNoEnergyBulkUploadError = null
       state.debtRecoveryNoEnergyBulkUploadSuccess = false
       state.debtRecoveryNoEnergyBulkUploadResponse = null
+    },
+    // Reset Vending Payment Migration Bulk Upload state
+    resetVendingPaymentMigrationBulkUploadState: (state) => {
+      state.vendingPaymentMigrationBulkUploadLoading = false
+      state.vendingPaymentMigrationBulkUploadError = null
+      state.vendingPaymentMigrationBulkUploadSuccess = false
+      state.vendingPaymentMigrationBulkUploadResponse = null
     },
     // Reset all file management state
     resetFileManagementState: (state) => {
@@ -3175,6 +3220,23 @@ const fileManagementSlice = createSlice({
         state.debtRecoveryNoEnergyBulkUploadLoading = false
         state.debtRecoveryNoEnergyBulkUploadError = action.payload as string
         state.debtRecoveryNoEnergyBulkUploadSuccess = false
+      })
+
+      // Vending Payment Migration Bulk Upload reducers
+      .addCase(processVendingPaymentMigrationImport.pending, (state) => {
+        state.vendingPaymentMigrationBulkUploadLoading = true
+        state.vendingPaymentMigrationBulkUploadError = null
+        state.vendingPaymentMigrationBulkUploadSuccess = false
+      })
+      .addCase(processVendingPaymentMigrationImport.fulfilled, (state, action) => {
+        state.vendingPaymentMigrationBulkUploadLoading = false
+        state.vendingPaymentMigrationBulkUploadSuccess = true
+        state.vendingPaymentMigrationBulkUploadResponse = action.payload
+      })
+      .addCase(processVendingPaymentMigrationImport.rejected, (state, action) => {
+        state.vendingPaymentMigrationBulkUploadLoading = false
+        state.vendingPaymentMigrationBulkUploadError = action.payload as string
+        state.vendingPaymentMigrationBulkUploadSuccess = false
       })
 
       // CSV Jobs reducers

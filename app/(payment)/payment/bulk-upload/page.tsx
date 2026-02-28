@@ -11,12 +11,16 @@ import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { SearchModule } from "components/ui/Search/search-module"
 
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { CsvJobsParams, downloadCsv, fetchCsvJobs } from "lib/redux/fileManagementSlice"
+import { CsvJob, CsvJobsParams, downloadCsv, fetchCsvJobs } from "lib/redux/fileManagementSlice"
 import { VscCloudUpload, VscEye } from "react-icons/vsc"
 import CsvUploadFailuresModal from "components/ui/Modal/CsvUploadFailuresModal"
 
-// Job Type options for filters - Only Payment Import (4) for this page
-const jobTypeOptions = [{ value: "4", label: "Payment Import" }]
+// Job Type options for filters - Payment related job types
+const jobTypeOptions = [
+  { value: "", label: "All Job Types" },
+  { value: "4", label: "Payment Import" },
+  { value: "38", label: "Vending Payment Migration" },
+]
 
 // Status options for filters
 const statusOptions = [
@@ -148,7 +152,7 @@ const BulkUploads: React.FC = () => {
   const [localFilters, setLocalFilters] = useState<Partial<CsvJobsParams>>({
     PageNumber: 1,
     PageSize: 10,
-    JobType: 4,
+    JobType: undefined,
     Status: undefined,
     RequestedByUserId: undefined,
     RequestedFromUtc: undefined,
@@ -388,7 +392,7 @@ const BulkUploads: React.FC = () => {
                   </div>
 
                   {/* Job Type Filter */}
-                  {/* <div>
+                  <div>
                     <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Job Type</label>
                     <FormSelectModule
                       name="jobType"
@@ -400,7 +404,7 @@ const BulkUploads: React.FC = () => {
                       className="w-full"
                       controlClassName="h-9 text-sm"
                     />
-                  </div> */}
+                  </div>
 
                   {/* Status Filter */}
                   <div>
@@ -537,7 +541,7 @@ const BulkUploads: React.FC = () => {
                           </td>
                         </tr>
                       ) : (
-                        csvJobs.map((job) => (
+                        csvJobs.map((job: CsvJob) => (
                           <tr key={job.id} className="border-b hover:bg-gray-50">
                             <td className="border-b p-3 text-sm">
                               <div className="max-w-xs truncate whitespace-nowrap" title={job.fileName}>
