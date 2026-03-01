@@ -1106,39 +1106,6 @@ const FileManagementPage = () => {
                             View Upload History
                           </ButtonModule>
                         </div>
-
-                        {/* Bulk Upload Results */}
-                        {/* {bulkUploadResponse && bulkUploadResponse.data && (
-                          <div className="mt-4 rounded-lg border border-green-200 bg-white p-4">
-                            <p className="mb-3 font-medium text-green-900">Processing Summary</p>
-                            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                              <div>
-                                <p className="text-xs text-gray-500">Total Rows</p>
-                                <p className="text-lg font-semibold text-gray-900">
-                                  {bulkUploadResponse.data?.preview?.totalRows || 0}
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-xs text-gray-500">Valid Rows</p>
-                                <p className="text-lg font-semibold text-green-600">
-                                  {bulkUploadResponse.data?.preview?.validRows || 0}
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-xs text-gray-500">Invalid Rows</p>
-                                <p className="text-lg font-semibold text-red-600">
-                                  {bulkUploadResponse.data?.preview?.invalidRows || 0}
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-xs text-gray-500">Total Amount</p>
-                                <p className="text-lg font-semibold text-gray-900">
-                                  ₦{bulkUploadResponse.data?.preview?.totalAmount?.toFixed(2) || "0.00"}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        )} */}
                       </motion.div>
                     )}
                   </AnimatePresence>

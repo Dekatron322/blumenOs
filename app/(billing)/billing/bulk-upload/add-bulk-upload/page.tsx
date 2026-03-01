@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useCallback, useRef, useState } from "react"
-import { motion } from "framer-motion"
+import React, { useCallback, useEffect, useRef, useState } from "react"
+import { AnimatePresence, motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
@@ -19,14 +19,26 @@ import {
   processMeterReadingGeneralBulkUpload,
   processMissingPostpaidBillingBulkUpload,
   processPastPostpaidBillingBulkUpload,
+  resetFileManagementState,
 } from "lib/redux/fileManagementSlice"
 import * as XLSX from "xlsx"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"
 import { notify } from "components/ui/Notification/Notification"
-import { CloudUpload } from "lucide-react"
+import {
+  AlertCircle,
+  ArrowLeft,
+  CheckCircle,
+  CloudUpload,
+  Download,
+  FileSpreadsheet,
+  FileText,
+  HelpCircle,
+  Info,
+  Upload,
+  X,
+} from "lucide-react"
 import { VscAdd } from "react-icons/vsc"
-import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 
 interface UploadProgress {
   loaded: number
@@ -34,9 +46,19 @@ interface UploadProgress {
   percentage: number
 }
 
+interface UploadTypeOption {
+  name: string
+  value: number | string
+  description: string
+  requiredColumns: string[]
+  sampleData: string[]
+}
+
 const FileManagementPage = () => {
   const dispatch = useAppDispatch()
   const router = useRouter()
+
+  // Redux state
   const {
     fileIntentLoading,
     fileIntentError,
@@ -56,17 +78,84 @@ const FileManagementPage = () => {
     debtRecoveryNoEnergyBulkUploadSuccess,
   } = useAppSelector((state: { fileManagement: any }) => state.fileManagement)
 
-  // Upload type options
-  const uploadTypeOptions = [
-    { name: "Generate Missing Bills", value: 17 },
-    // { name: "Bill Generate Past", value: 18 },
-    { name: "Bill Adjustment", value: 19 },
-    { name: "Mark Bills for Printing", value: 20 },
-    { name: "Bill Crucial Ops", value: 21 },
-    { name: "Bill Recompute", value: 30 },
-    { name: "Feeder Energy Cap", value: 3 },
-    { name: "Customer Meter Reading", value: 2 },
-    { name: "Debt Recovery (No Energy Bill)", value: 36 },
+  // Upload type options with enhanced metadata
+  const uploadTypeOptions: UploadTypeOption[] = [
+    {
+      name: "Generate Missing Bills",
+      value: 17,
+      description: "Generate missing bills for postpaid customers based on account numbers",
+      requiredColumns: ["CustomerAccountNo"],
+      sampleData: ["CustomerAccountNo", "123456789", "987654321", "555666777"],
+    },
+    {
+      name: "Bill Adjustment",
+      value: 19,
+      description: "Apply bill adjustments to customer accounts for specific billing periods",
+      requiredColumns: ["CustomerAccountNo", "MonthYear", "Amount"],
+      sampleData: [
+        "CustomerAccountNo,MonthYear,Amount",
+        "123456789,2026-01,150.50",
+        "987654321,2026-01,-75.25",
+        "555666777,2026-02,200.00",
+      ],
+    },
+    {
+      name: "Mark Bills for Printing",
+      value: 20,
+      description: "Mark specific bills as ready for printing and dispatch",
+      requiredColumns: ["CustomerAccountNo", "MonthYear"],
+      sampleData: ["CustomerAccountNo,MonthYear", "123456789,2026-01", "987654321,2026-01", "555666777,2026-02"],
+    },
+    {
+      name: "Bill Crucial Ops",
+      value: 21,
+      description: "Process crucial billing operations for selected accounts",
+      requiredColumns: ["CustomerAccountNo", "MonthYear"],
+      sampleData: ["CustomerAccountNo,MonthYear", "123456789,2026-01", "987654321,2026-01", "555666777,2026-02"],
+    },
+    {
+      name: "Bill Recompute",
+      value: 30,
+      description: "Recompute bills for specific accounts and billing periods",
+      requiredColumns: ["CustomerAccountNo", "MonthYear", "UsePaymentsFromTransactions"],
+      sampleData: [
+        "CustomerAccountNo,MonthYear,UsePaymentsFromTransactions",
+        "123456789,2026-01,true",
+        "987654321,2026-01,false",
+        "555666777,2026-02,true",
+      ],
+    },
+    {
+      name: "Feeder Energy Cap",
+      value: 3,
+      description: "Upload feeder energy cap limits and allocations",
+      requiredColumns: ["EnergyReceived", "EnergyAdviced", "FeederName"],
+      sampleData: [
+        "EnergyReceived,EnergyAdviced,FeederName",
+        "1500.5,1450.75,Feeder A",
+        "2000.0,1950.25,Feeder B",
+        "1750.25,1700.5,Feeder C",
+      ],
+    },
+    {
+      name: "Customer Meter Reading",
+      value: 2,
+      description: "Upload meter readings for customer accounts",
+      requiredColumns: ["CustomerAccountNo", "PresentReading", "PreviousReading", "MonthYear"],
+      sampleData: [
+        "CustomerAccountNo,PresentReading,PreviousReading,MonthYear",
+        "123456789,4567.5,4321.2,2026-01",
+        "987654321,7890.1,7654.3,2026-01",
+        "555666777,3210.8,2987.4,2026-02",
+      ],
+    },
+    {
+      name: "Debt Recovery (No Energy Bill)",
+      value: 36,
+      description: "Process debt recovery for accounts without energy bills",
+      requiredColumns: ["CustomerAccountNo"],
+      sampleData: ["CustomerAccountNo", "123456789", "987654321", "555666777"],
+    },
   ]
 
   // Helper function to get bulkInsertType based on upload type
@@ -91,7 +180,7 @@ const FileManagementPage = () => {
       case 36:
         return "bill-debt-recovery-no-energy"
       default:
-        return "bill-generate-missing" // fallback
+        return "bill-generate-missing"
     }
   }
 
@@ -117,10 +206,11 @@ const FileManagementPage = () => {
       case 36:
         return "postpaid-bill-debt-recovery-no-energy-bulk"
       default:
-        return "billing-bulk-import" // fallback
+        return "billing-bulk-import"
     }
   }
 
+  // Local state
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [selectedUploadType, setSelectedUploadType] = useState<number | string | null>(null)
   const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null)
@@ -129,10 +219,23 @@ const FileManagementPage = () => {
   const [uploadSuccess, setUploadSuccess] = useState(false)
   const [finalizedFile, setFinalizedFile] = useState<any>(null)
   const [bulkUploadProcessed, setBulkUploadProcessed] = useState(false)
+  const [bulkUploadResponse, setBulkUploadResponse] = useState<any>(null)
   const [isDragOver, setIsDragOver] = useState(false)
-  const [isDragging, setIsDragging] = useState(false)
   const [hasCompletedUploadTypeSelection, setHasCompletedUploadTypeSelection] = useState(false)
+  const [extractedColumns, setExtractedColumns] = useState<string[]>([])
+  const [isValidatingFile, setIsValidatingFile] = useState(false)
+  const [showColumnHelp, setShowColumnHelp] = useState(false)
+
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const dropZoneRef = useRef<HTMLDivElement>(null)
+
+  // Reset states on unmount
+  useEffect(() => {
+    return () => {
+      dispatch(resetFileManagementState())
+      dispatch({ type: "fileManagement/resetBillingBulkUploadState" })
+    }
+  }, [dispatch])
 
   // Extract column names from Excel or CSV file
   const extractColumnsFromFile = useCallback(async (file: File): Promise<string[]> => {
@@ -145,18 +248,14 @@ const FileManagementPage = () => {
           if (file.type === "text/csv" || file.name.endsWith(".csv")) {
             // Handle CSV files
             const text = e.target?.result as string
-            console.log("CSV text content (first 200 chars):", text.substring(0, 200))
-
             const lines = text.split("\n")
-            console.log("CSV lines count:", lines.length)
-            console.log("First line:", lines[0])
 
             if (lines.length > 0) {
-              const headers = lines[0]!.split(",").map((h) => h.trim().replace(/"/g, ""))
-              console.log("Parsed headers:", headers)
-              const filteredHeaders = headers.filter((header) => header && header !== "")
-              console.log("Filtered headers:", filteredHeaders)
-              resolve(filteredHeaders)
+              const headers = lines[0]!
+                .split(",")
+                .map((h) => h.trim().replace(/^["']|["']$/g, ""))
+                .filter((header) => header && header !== "")
+              resolve(headers)
             } else {
               resolve([])
             }
@@ -181,107 +280,210 @@ const FileManagementPage = () => {
             const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
 
             if (jsonData.length > 0) {
-              const headers = jsonData[0] as string[]
-              resolve(headers.filter((header) => header && header.toString().trim() !== ""))
+              const headers = (jsonData[0] as string[])
+                .filter((header) => header && header.toString().trim() !== "")
+                .map((h) => h.toString().trim())
+              resolve(headers)
             } else {
               resolve([])
             }
           }
         } catch (error) {
           console.error("Error reading file:", error)
-          resolve([])
+          reject(error)
         }
       }
 
       reader.onerror = (error) => {
         console.error("FileReader error:", error)
-        resolve([])
+        reject(error)
       }
 
       if (file.type === "text/csv" || file.name.endsWith(".csv")) {
-        console.log("Reading file as text")
         reader.readAsText(file)
       } else {
-        console.log("Reading file as array buffer")
         reader.readAsArrayBuffer(file)
       }
     })
   }, [])
 
+  // Validate file columns against required columns
+  const validateFileColumns = useCallback(
+    async (file: File): Promise<{ isValid: boolean; missingColumns: string[]; extractedColumns: string[] }> => {
+      if (!selectedUploadType) {
+        return { isValid: false, missingColumns: [], extractedColumns: [] }
+      }
+
+      setIsValidatingFile(true)
+      try {
+        const columns = await extractColumnsFromFile(file)
+        const uploadType = uploadTypeOptions.find((t) => t.value === selectedUploadType)
+
+        if (!uploadType) {
+          return { isValid: false, missingColumns: [], extractedColumns: columns }
+        }
+
+        // Case-insensitive column matching
+        const missingColumns = uploadType.requiredColumns.filter(
+          (required) => !columns.some((col) => col.toLowerCase() === required.toLowerCase())
+        )
+
+        setExtractedColumns(columns)
+        return {
+          isValid: missingColumns.length === 0,
+          missingColumns,
+          extractedColumns: columns,
+        }
+      } catch (error) {
+        return { isValid: false, missingColumns: [], extractedColumns: [] }
+      } finally {
+        setIsValidatingFile(false)
+      }
+    },
+    [selectedUploadType, uploadTypeOptions, extractColumnsFromFile]
+  )
+
   // Handle file selection
   const handleFileSelect = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0]
       if (file) {
+        // Validate file size (max 50MB)
+        if (file.size > 50 * 1024 * 1024) {
+          notify("error", "File Too Large", {
+            description: "Maximum file size is 50MB",
+            duration: 5000,
+          })
+          return
+        }
+
+        // Validate file type
+        const isValidType =
+          file.type === "text/csv" ||
+          file.name.endsWith(".csv") ||
+          file.name.endsWith(".xlsx") ||
+          file.name.endsWith(".xls")
+
+        if (!isValidType) {
+          notify("error", "Invalid File Type", {
+            description: "Please upload CSV or Excel files only",
+            duration: 5000,
+          })
+          return
+        }
+
         setSelectedFile(file)
         setUploadError(null)
         setUploadSuccess(false)
         setFinalizedFile(null)
         setUploadProgress(null)
-        // Don't reset upload type when new file is selected - only reset on manual change
+        setBulkUploadResponse(null)
+
+        // Validate columns if upload type is selected
+        if (selectedUploadType) {
+          const validation = await validateFileColumns(file)
+          if (!validation.isValid && validation.missingColumns.length > 0) {
+            notify("warning", "Missing Required Columns", {
+              description: `Missing: ${validation.missingColumns.join(", ")}`,
+              duration: 7000,
+            })
+          } else if (validation.isValid) {
+            notify("success", "File Validation Passed", {
+              description: "All required columns found",
+              duration: 3000,
+            })
+          }
+        }
       } else {
         // Handle case where user cancels file selection
-        // Keep the current selected file and restore the file input value
         if (fileInputRef.current && selectedFile) {
-          // Create a new FileList to restore the file input
           const dataTransfer = new DataTransfer()
           dataTransfer.items.add(selectedFile)
           fileInputRef.current.files = dataTransfer.files
         }
       }
     },
-    [selectedFile]
+    [selectedFile, selectedUploadType, validateFileColumns]
   )
 
   // Handle file drop
-  const handleFileDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragOver(false)
-    setIsDragging(false)
+  const handleFileDrop = useCallback(
+    async (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault()
+      e.stopPropagation()
+      setIsDragOver(false)
 
-    const files = e.dataTransfer.files
-    if (files && files.length > 0) {
-      const file = files[0]
-      if (file) {
+      const files = e.dataTransfer.files
+      if (files && files.length > 0) {
+        const file = files[0]
+
+        if (!file) {
+          return
+        }
+
+        // Validate file type
+        const isValidType =
+          file.type === "text/csv" ||
+          file.name.endsWith(".csv") ||
+          file.name.endsWith(".xlsx") ||
+          file.name.endsWith(".xls")
+
+        if (!isValidType) {
+          notify("error", "Invalid File Type", {
+            description: "Please upload CSV or Excel files only",
+            duration: 5000,
+          })
+          return
+        }
+
+        // Validate file size
+        if (file.size > 50 * 1024 * 1024) {
+          notify("error", "File Too Large", {
+            description: "Maximum file size is 50MB",
+            duration: 5000,
+          })
+          return
+        }
+
         setSelectedFile(file)
         setUploadError(null)
         setUploadSuccess(false)
         setFinalizedFile(null)
         setUploadProgress(null)
-        // Don't reset upload type when new file is dropped - only reset on manual change
-      }
-    }
-  }, [])
+        setBulkUploadResponse(null)
 
-  // Handle drag over
+        // Validate columns if upload type is selected
+        if (selectedUploadType) {
+          const validation = await validateFileColumns(file)
+          if (!validation.isValid && validation.missingColumns.length > 0) {
+            notify("warning", "Missing Required Columns", {
+              description: `Missing: ${validation.missingColumns.join(", ")}`,
+              duration: 7000,
+            })
+          }
+        }
+      }
+    },
+    [selectedUploadType, validateFileColumns]
+  )
+
+  // Drag and drop handlers
   const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     e.stopPropagation()
     setIsDragOver(true)
   }, [])
 
-  // Handle drag leave
   const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     e.stopPropagation()
     setIsDragOver(false)
   }, [])
 
-  // Handle drag enter
   const handleDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     e.stopPropagation()
-    setIsDragging(true)
     setIsDragOver(true)
-  }, [])
-
-  // Handle drag exit
-  const handleDragExit = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(false)
-    setIsDragOver(false)
   }, [])
 
   // Remove selected file
@@ -291,15 +493,15 @@ const FileManagementPage = () => {
     setUploadSuccess(false)
     setFinalizedFile(null)
     setUploadProgress(null)
-    setSelectedUploadType(null)
+    setBulkUploadResponse(null)
+    setExtractedColumns([])
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
     }
   }, [])
 
-  // Calculate file checksum (simple implementation)
+  // Calculate file checksum
   const calculateChecksum = async (file: File): Promise<string> => {
-    // For now, return a simple hash - in production, use SHA-256
     const buffer = await file.arrayBuffer()
     const hashBuffer = await crypto.subtle.digest("SHA-256", buffer)
     const hashArray = Array.from(new Uint8Array(hashBuffer))
@@ -308,7 +510,14 @@ const FileManagementPage = () => {
 
   // Start upload process
   const handleUpload = useCallback(async () => {
-    if (!selectedFile) return
+    if (!selectedFile) {
+      notify("error", "No File Selected", {
+        description: "Please select a file to upload",
+        duration: 5000,
+      })
+      return
+    }
+
     if (!selectedUploadType) {
       notify("error", "Upload Type Required", {
         description: "Please select an upload type before proceeding",
@@ -324,7 +533,7 @@ const FileManagementPage = () => {
     setIsUploading(true)
     setUploadError(null)
     setUploadSuccess(false)
-    setUploadProgress(null)
+    setUploadProgress({ loaded: 0, total: selectedFile.size, percentage: 0 })
 
     try {
       console.log("=== Extracting Columns ===")
@@ -335,7 +544,6 @@ const FileManagementPage = () => {
       console.log("Extracted columns length:", extractedColumns.length)
 
       if (extractedColumns.length === 0) {
-        // Show error notification
         notify("error", "File Processing Failed", {
           description: "No columns found in the file. Please ensure your file has headers.",
           duration: 5000,
@@ -355,7 +563,7 @@ const FileManagementPage = () => {
 
       const intentRequest = {
         fileName: selectedFile.name,
-        contentType: selectedFile.type,
+        contentType: selectedFile.type || "application/octet-stream",
         sizeBytes: selectedFile.size,
         purpose: getPurpose(selectedUploadType),
         checksum,
@@ -364,7 +572,6 @@ const FileManagementPage = () => {
         columns: paymentColumns,
       }
 
-      // Debug: Log what we're sending
       console.log("=== Final Intent Request ===")
       console.log("Sending intent request:", intentRequest)
 
@@ -373,12 +580,6 @@ const FileManagementPage = () => {
         intentResult = await dispatch(createFileIntent(intentRequest)).unwrap()
       } catch (error: any) {
         console.log("API Call Failed:", error)
-        console.log("Error details:", error.message)
-        if (error.response) {
-          console.log("Response data:", error.response.data)
-          console.log("Response status:", error.response.status)
-        }
-        // Show error notification
         notify("error", "Upload Failed", {
           description: error.message || "Failed to create file intent",
           duration: 5000,
@@ -388,7 +589,6 @@ const FileManagementPage = () => {
 
       if (!intentResult.isSuccess) {
         console.log("API Response Error:", intentResult)
-        // Show error notification
         notify("error", "Upload Failed", {
           description: intentResult.message || "File intent creation failed",
           duration: 5000,
@@ -402,7 +602,7 @@ const FileManagementPage = () => {
       // Create XMLHttpRequest for progress tracking
       const xhr = new XMLHttpRequest()
 
-      return new Promise<void>((resolve, reject) => {
+      await new Promise<void>((resolve, reject) => {
         xhr.upload.addEventListener("progress", (event) => {
           if (event.lengthComputable) {
             const progress: UploadProgress = {
@@ -427,7 +627,6 @@ const FileManagementPage = () => {
               setFinalizedFile(finalizeResult.data)
               setUploadSuccess(true)
 
-              // Show success notification
               notify("success", "Upload Successfully Queued!", {
                 description: `File ${selectedFile.name} has been queued for processing`,
                 duration: 5000,
@@ -479,30 +678,33 @@ const FileManagementPage = () => {
                 }
 
                 setBulkUploadProcessed(true)
+                setBulkUploadResponse(bulkResult)
                 console.log("=== Bulk Upload Complete ===")
                 console.log("Bulk upload data:", bulkResult.data)
 
                 // Show bulk upload success notification
                 const succeededRows =
-                  (bulkResult.data as any)?.succeededRows || (bulkResult.data as any)?.job?.succeededRows || 0
+                  (bulkResult.data as any)?.succeededRows ||
+                  (bulkResult.data as any)?.job?.succeededRows ||
+                  (bulkResult.data as any)?.preview?.validRows ||
+                  0
+
                 notify("success", "Processing Started!", {
                   description: `${succeededRows} billing records queued for processing`,
                   duration: 6000,
                 })
-              } catch (bulkError) {
+              } catch (bulkError: any) {
                 console.error("Bulk upload failed:", bulkError)
-                // Show error notification
-                notify("error", "Bulk Upload Failed", {
-                  description: bulkError instanceof Error ? bulkError.message : "Failed to process bulk upload",
+                notify("warning", "Upload Queued", {
+                  description: "File uploaded but processing failed. Please check bulk upload page.",
                   duration: 5000,
                 })
                 setUploadError(bulkError instanceof Error ? bulkError.message : "Failed to process bulk upload")
               }
 
               resolve()
-            } catch (finalizeError) {
+            } catch (finalizeError: any) {
               console.error("Finalize error:", finalizeError)
-              // Show error notification
               notify("error", "Finalization Failed", {
                 description: finalizeError instanceof Error ? finalizeError.message : "Failed to finalize upload",
                 duration: 5000,
@@ -512,7 +714,6 @@ const FileManagementPage = () => {
             }
           } else {
             const error = new Error(`Upload failed with status ${xhr.status}`)
-            // Show error notification
             notify("error", "Upload Failed", {
               description: `Upload failed with status ${xhr.status}`,
               duration: 5000,
@@ -523,7 +724,6 @@ const FileManagementPage = () => {
 
         xhr.addEventListener("error", () => {
           const error = new Error("Network error during upload")
-          // Show error notification
           notify("error", "Network Error", {
             description: "Network error during upload",
             duration: 5000,
@@ -533,12 +733,11 @@ const FileManagementPage = () => {
 
         // Open and send the request
         xhr.open("PUT", uploadUrl)
-        xhr.setRequestHeader("Content-Type", selectedFile.type)
+        xhr.setRequestHeader("Content-Type", selectedFile.type || "application/octet-stream")
         xhr.send(selectedFile)
       })
-    } catch (error) {
+    } catch (error: any) {
       console.error("Upload process error:", error)
-      // Show error notification
       notify("error", "Upload Failed", {
         description: error instanceof Error ? error.message : "Upload failed",
         duration: 5000,
@@ -547,111 +746,53 @@ const FileManagementPage = () => {
     } finally {
       setIsUploading(false)
     }
-  }, [selectedFile, dispatch, selectedUploadType, extractColumnsFromFile])
+  }, [selectedFile, selectedUploadType, dispatch, extractColumnsFromFile])
 
   // Reset form
   const handleReset = useCallback(() => {
     setSelectedFile(null)
+    setSelectedUploadType(null)
     setUploadProgress(null)
     setIsUploading(false)
     setUploadError(null)
     setUploadSuccess(false)
     setFinalizedFile(null)
     setBulkUploadProcessed(false)
+    setBulkUploadResponse(null)
     setIsDragOver(false)
-    setIsDragging(false)
-    setSelectedUploadType(null)
     setHasCompletedUploadTypeSelection(false)
+    setExtractedColumns([])
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
     }
-    dispatch({ type: "fileManagement/resetFileManagementState" })
+    dispatch(resetFileManagementState())
     dispatch({ type: "fileManagement/resetBillingBulkUploadState" })
   }, [dispatch])
 
   // Generate and download sample CSV file
   const downloadSampleFile = useCallback(() => {
-    let headers: string
-    let sampleRows: string[]
+    if (!selectedUploadType) return
 
-    // Generate different templates based on upload type
-    if (selectedUploadType === 17) {
-      // Generate Missing Bills template
-      headers = "CustomerAccountNo"
-      sampleRows = []
-    } else if (selectedUploadType === 19) {
-      // Bill Adjustment template
-      headers = "CustomerAccountNo,MonthYear,Amount"
-      sampleRows = []
-    } else if (selectedUploadType === 20) {
-      // Mark Bills for Printing template
-      headers = "CustomerAccountNo,MonthYear"
-      sampleRows = []
-    } else if (selectedUploadType === 21) {
-      // Bill Crucial Ops template
-      headers = "CustomerAccountNo,MonthYear"
-      sampleRows = []
-    } else if (selectedUploadType === 30) {
-      // Bill Recompute template
-      headers = "CustomerAccountNo,MonthYear,UsePaymentsFromTransactions"
-      sampleRows = []
-    } else if (selectedUploadType === 31) {
-      // Account To Be Billed template
-      headers = "CustomerAccountNo,EnergyKwhToBeBilled"
-      sampleRows = ["123456789,150.50", "987654321,200.75", "555666777,100.00"]
-    } else if (selectedUploadType === 2) {
-      // Customer Bills Reading template
-      headers = "CustomerAccountNo,PresentReading,PreviousReading,MonthYear"
-      sampleRows = []
-    } else if (selectedUploadType === 3) {
-      // Feeder Energy Cap template
-      headers = "EnergyReceived,EnergyAdviced,FeederName"
-      sampleRows = []
-    } else if (selectedUploadType === 36) {
-      // Debt Recovery (No Energy Bill) template
-      headers = "CustomerAccountNo"
-      sampleRows = []
-    } else {
-      // Default template for other upload types
-      headers = "CustomerAccountNo,CustomerName,Address,Phone,Email,TariffCode,FeederCode,Status"
-      sampleRows = []
-    }
+    const uploadType = uploadTypeOptions.find((t) => t.value === selectedUploadType)
+    if (!uploadType) return
 
-    const sampleData = [headers, ...sampleRows].join("\n")
-
+    const sampleData = uploadType.sampleData.join("\n")
     const blob = new Blob([sampleData], { type: "text/csv;charset=utf-8;" })
-    const link = document.createElement("a")
     const url = URL.createObjectURL(blob)
 
-    link.setAttribute("href", url)
-    link.setAttribute(
-      "download",
-      selectedUploadType === 17
-        ? "sample-generate-missing-bills.csv"
-        : selectedUploadType === 19
-        ? "sample-bill-adjustment.csv"
-        : selectedUploadType === 20
-        ? "sample-mark-bills-for-printing.csv"
-        : selectedUploadType === 21
-        ? "sample-bill-crucial-ops.csv"
-        : selectedUploadType === 30
-        ? "sample-bill-recompute.csv"
-        : selectedUploadType === 31
-        ? "sample-account-to-be-billed.csv"
-        : selectedUploadType === 2
-        ? "sample-customer-bills-reading.csv"
-        : selectedUploadType === 3
-        ? "sample-feeder-energy-cap.csv"
-        : selectedUploadType === 36
-        ? "sample-debt-recovery-no-energy.csv"
-        : "sample_billing_bulk.csv"
-    )
-    link.style.visibility = "hidden"
-
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `sample-${uploadType.name.toLowerCase().replace(/\s+/g, "-")}.csv`
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
-  }, [selectedUploadType])
+    URL.revokeObjectURL(url)
+
+    notify("success", "Template Downloaded", {
+      description: "Sample CSV file has been downloaded",
+      duration: 3000,
+    })
+  }, [selectedUploadType, uploadTypeOptions])
 
   // Format file size
   const formatFileSize = (bytes: number): string => {
@@ -662,75 +803,60 @@ const FileManagementPage = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
   }
 
+  // Get selected upload type details
+  const selectedUploadTypeDetails = uploadTypeOptions.find((t) => t.value === selectedUploadType)
+
+  // Check if any loading state is active
+  const isLoading =
+    fileIntentLoading ||
+    finalizeFileLoading ||
+    billingBulkUploadLoading ||
+    billRecomputeBulkUploadLoading ||
+    billManualEnergyBulkUploadLoading ||
+    debtRecoveryNoEnergyBulkUploadLoading ||
+    isUploading ||
+    isValidatingFile
+
   return (
-    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+    <section className="min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100 pb-24 sm:pb-20">
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
 
-          <div className="mx-auto flex w-full flex-col px-3 py-4 2xl:container sm:px-4 md:px-6 md:py-4 2xl:px-16">
-            {/* Page Header - Mobile Optimized */}
-            <div className="mb-6">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
+          <div className="w-full px-4 py-6 sm:px-6 lg:px-8">
+            {/* Page Header */}
+            <div className="mb-8">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-4">
                   <button
-                    type="button"
                     onClick={() => router.back()}
-                    className="flex size-8 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 sm:hidden"
+                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     aria-label="Go back"
                   >
-                    <svg
-                      width="1em"
-                      height="1em"
-                      viewBox="0 0 17 17"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="new-arrow-right rotate-180 transform"
-                    >
-                      <path
-                        d="M9.1497 0.80204C9.26529 3.95101 13.2299 6.51557 16.1451 8.0308L16.1447 9.43036C13.2285 10.7142 9.37889 13.1647 9.37789 16.1971L7.27855 16.1978C7.16304 12.8156 10.6627 10.4818 13.1122 9.66462L0.049716 9.43565L0.0504065 7.33631L13.1129 7.56528C10.5473 6.86634 6.93261 4.18504 7.05036 0.80273L9.1497 0.80204Z"
-                        fill="currentColor"
-                      />
-                    </svg>
+                    <ArrowLeft className="h-5 w-5" />
                   </button>
                   <div>
-                    <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">Bulk Upload Billing</h1>
-                    <p className="text-sm text-gray-600">Upload billing records in bulk using CSV or Excel files</p>
+                    <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Bulk Upload Billing</h1>
+                    <p className="mt-1 text-sm text-gray-600">
+                      Upload billing records in bulk using CSV or Excel files
+                    </p>
                   </div>
                 </div>
 
+                {/* Desktop Actions */}
                 <div className="hidden items-center gap-3 sm:flex">
                   <ButtonModule variant="outline" size="sm" onClick={() => router.push("/billing/bulk-upload")}>
-                    Go to Bulk Upload Page
+                    View Upload History
                   </ButtonModule>
-                  <ButtonModule
-                    variant="outline"
-                    size="sm"
-                    onClick={handleReset}
-                    disabled={isUploading || uploadSuccess}
-                  >
-                    Reset Form
+                  <ButtonModule variant="outline" size="sm" onClick={handleReset} disabled={isLoading}>
+                    Reset
                   </ButtonModule>
                   <ButtonModule
                     variant="primary"
                     size="sm"
-                    onClick={() => {
-                      void handleUpload()
-                    }}
-                    disabled={
-                      !selectedFile ||
-                      !selectedUploadType ||
-                      isUploading ||
-                      uploadSuccess ||
-                      fileIntentLoading ||
-                      finalizeFileLoading ||
-                      billingBulkUploadLoading ||
-                      billRecomputeBulkUploadLoading ||
-                      billManualEnergyBulkUploadLoading ||
-                      debtRecoveryNoEnergyBulkUploadLoading
-                    }
-                    icon={<VscAdd />}
-                    iconPosition="start"
+                    onClick={handleUpload}
+                    disabled={!selectedFile || !selectedUploadType || isLoading || uploadSuccess}
+                    icon={<Upload className="h-4 w-4" />}
                   >
                     {isUploading ? "Uploading..." : "Upload File"}
                   </ButtonModule>
@@ -738,349 +864,499 @@ const FileManagementPage = () => {
               </div>
             </div>
 
-            {/* Main Content Area */}
-            <div className="w-full">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="rounded-lg bg-white p-4 shadow-sm sm:p-6"
-              >
-                {/* Upload Type Selection - Only show if user hasn't completed initial selection */}
-                {!hasCompletedUploadTypeSelection && (
-                  <div className="mb-6 rounded-lg border-2 border-dashed border-gray-300 bg-[#f9f9f9] p-6">
-                    <h3 className="mb-4 text-lg font-semibold text-gray-900">Select Upload Type</h3>
-                    <p className="mb-6 text-sm text-gray-600">
-                      Choose the type of customer bulk upload you want to perform. This determines how the system will
-                      process your file.
-                    </p>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                      {uploadTypeOptions.map((type) => (
-                        <button
-                          key={type.value}
-                          onClick={() => {
-                            setSelectedUploadType(type.value)
-                            setHasCompletedUploadTypeSelection(true)
-                          }}
-                          className="rounded-lg border border-gray-200 bg-white p-4 text-left transition-all hover:border-blue-300 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                        >
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h4 className="font-medium text-gray-900">{type.name}</h4>
-                              {/* <p className="mt-1 text-xs text-gray-500">Type {type.value}</p> */}
-                            </div>
-                            <div className="flex size-8 items-center justify-center rounded-full border-2 border-gray-300">
-                              {selectedUploadType === type.value && <div className="size-4 rounded-full bg-blue-600" />}
-                            </div>
-                          </div>
-                        </button>
-                      ))}
+            {/* Main Content */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="overflow-hidden rounded-xl bg-white shadow-lg"
+            >
+              {/* Upload Type Selection */}
+              {!hasCompletedUploadTypeSelection && (
+                <div className="p-6">
+                  <div className="mb-6 flex items-center justify-between">
+                    <div>
+                      <h2 className="text-lg font-semibold text-gray-900">Select Upload Type</h2>
+                      <p className="text-sm text-gray-600">Choose the type of billing upload you want to perform</p>
+                    </div>
+                    <div className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-800">
+                      {uploadTypeOptions.length} options
                     </div>
                   </div>
-                )}
 
-                {/* File Upload Area - Only show after upload type selection is completed */}
-                {hasCompletedUploadTypeSelection && selectedUploadType && (
-                  <>
-                    {/* Selected Upload Type Display */}
-                    <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="text-sm font-medium text-blue-800">Selected Upload Type</h3>
-                          <p className="text-sm text-blue-600">
-                            {uploadTypeOptions.find((t) => t.value === selectedUploadType)?.name} (Type{" "}
-                            {selectedUploadType})
-                          </p>
-                        </div>
-                        <ButtonModule
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedUploadType(null)
-                            setHasCompletedUploadTypeSelection(false)
-                          }}
-                        >
-                          Change Type
-                        </ButtonModule>
-                      </div>
-                    </div>
-
-                    {/* Template Download */}
-                    <div className="mb-6 rounded-lg bg-blue-50 p-4">
-                      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-                        <div>
-                          <h3 className="text-sm font-medium text-blue-800">Need a template?</h3>
-                          <p className="text-sm text-blue-600">
-                            Download our customer CSV template with the required columns for the selected upload type.
-                          </p>
-                        </div>
-                        <ButtonModule variant="primary" size="sm" onClick={downloadSampleFile}>
-                          Download Template
-                        </ButtonModule>
-                      </div>
-                    </div>
-
-                    {/* File Upload Area */}
-                    <div className="mb-6 rounded-lg border-2 border-dashed border-gray-300 bg-[#f9f9f9] p-6 text-center sm:p-8">
-                      <input
-                        ref={fileInputRef}
-                        id="file-upload"
-                        type="file"
-                        onChange={handleFileSelect}
-                        disabled={isUploading}
-                        className="hidden"
-                      />
-
-                      {!selectedFile ? (
-                        <div>
-                          <svg
-                            className="mx-auto size-12 text-gray-400"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                            />
-                          </svg>
-                          <div className="mt-4 flex w-full flex-col items-center justify-center">
-                            <ButtonModule variant="primary" onClick={() => fileInputRef.current?.click()}>
-                              Choose File
-                            </ButtonModule>
-                            <p className="mt-2 text-sm text-gray-600">or drag and drop your file here</p>
-                          </div>
-                          <p className="mt-1 text-xs text-gray-500">
-                            Supports CSV, Excel (.xlsx, .xls) files (max 50MB)
-                          </p>
-                        </div>
-                      ) : (
-                        <div>
-                          <svg
-                            className="mx-auto size-12 text-green-500"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
-                          <p className="mt-2 text-sm font-medium text-gray-900">{selectedFile.name}</p>
-                          <p className="text-sm text-gray-500">
-                            {formatFileSize(selectedFile.size)} • {selectedFile.type || "Unknown type"}
-                          </p>
-                          <div className="mt-4 flex flex-col justify-center gap-3 sm:flex-row">
-                            <ButtonModule
-                              variant="secondary"
-                              onClick={() => fileInputRef.current?.click()}
-                              disabled={
-                                isUploading ||
-                                (!!uploadProgress &&
-                                  uploadProgress.percentage !== 100 &&
-                                  !uploadError &&
-                                  !fileIntentError &&
-                                  !finalizeFileError &&
-                                  !billingBulkUploadError &&
-                                  !billRecomputeBulkUploadError &&
-                                  !billManualEnergyBulkUploadError &&
-                                  !debtRecoveryNoEnergyBulkUploadError)
-                              }
-                            >
-                              Choose Different File
-                            </ButtonModule>
-                            <ButtonModule
-                              variant="primary"
-                              onClick={() => {
-                                void handleUpload()
-                              }}
-                              disabled={
-                                isUploading ||
-                                uploadSuccess ||
-                                !!uploadProgress ||
-                                !selectedUploadType ||
-                                fileIntentLoading ||
-                                finalizeFileLoading ||
-                                billingBulkUploadLoading ||
-                                billRecomputeBulkUploadLoading ||
-                                billManualEnergyBulkUploadLoading ||
-                                debtRecoveryNoEnergyBulkUploadLoading
-                              }
-                            >
-                              {isUploading ? "Uploading..." : "Upload File"}
-                            </ButtonModule>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Upload Progress */}
-                    {uploadProgress && (
-                      <div
-                        className={`mb-6 rounded-lg border p-4 ${
-                          uploadProgress.percentage === 100
-                            ? "border-green-200 bg-green-50"
-                            : "border-blue-200 bg-blue-50"
-                        }`}
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {uploadTypeOptions.map((type) => (
+                      <motion.button
+                        key={type.value}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          setSelectedUploadType(type.value)
+                          setHasCompletedUploadTypeSelection(true)
+                        }}
+                        className="group relative rounded-xl border-2 border-gray-200 bg-white p-6 text-left transition-all hover:border-blue-400 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                       >
-                        <div className="mb-3 flex items-center">
-                          <div
-                            className={`mr-3 flex h-8 w-8 items-center justify-center rounded-full ${
-                              uploadProgress.percentage === 100 ? "bg-green-100" : "bg-blue-100"
-                            }`}
-                          >
-                            <CloudUpload
-                              className={`h-4 w-4 ${
-                                uploadProgress.percentage === 100 ? "text-green-600" : "animate-pulse text-blue-600"
-                              }`}
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <p
-                              className={`text-sm font-medium ${
-                                uploadProgress.percentage === 100 ? "text-green-900" : "text-blue-900"
-                              }`}
-                            >
-                              {uploadProgress.percentage === 100 ? "Upload complete!" : "Uploading file..."}
-                            </p>
-                            <p
-                              className={`text-xs ${
-                                uploadProgress.percentage === 100 ? "text-green-700" : "text-blue-700"
-                              }`}
-                            >
-                              {uploadProgress.percentage}% complete
-                            </p>
-                          </div>
-                          <span
-                            className={`text-sm font-semibold ${
-                              uploadProgress.percentage === 100 ? "text-green-800" : "text-blue-800"
-                            }`}
-                          >
-                            {uploadProgress.percentage}%
-                          </span>
+                        <div className="mb-4 flex items-center justify-between">
+                          <FileSpreadsheet className="h-8 w-8 text-gray-400 group-hover:text-blue-500" />
+                          <div className="h-5 w-5 rounded-full border-2 border-gray-300 group-hover:border-blue-400" />
                         </div>
-                        <div
-                          className={`h-2 w-full rounded-full ${
-                            uploadProgress.percentage === 100 ? "bg-green-200" : "bg-blue-200"
-                          }`}
-                        >
-                          <div
-                            className={`h-2 rounded-full transition-all duration-300 ease-out ${
-                              uploadProgress.percentage === 100 ? "bg-green-600" : "bg-blue-600"
-                            }`}
-                            style={{ width: `${uploadProgress.percentage}%` }}
-                          />
+                        <h3 className="mb-2 font-semibold text-gray-900 group-hover:text-blue-600">{type.name}</h3>
+                        <p className="mb-4 text-sm text-gray-600">{type.description}</p>
+                        <div className="space-y-2">
+                          <p className="text-xs font-medium text-gray-700">Required columns:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {type.requiredColumns.slice(0, 4).map((col, idx) => (
+                              <span key={idx} className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+                                {col}
+                              </span>
+                            ))}
+                            {type.requiredColumns.length > 4 && (
+                              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+                                +{type.requiredColumns.length - 4} more
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <p
-                          className={`mt-2 text-xs ${
-                            uploadProgress.percentage === 100 ? "text-green-700" : "text-blue-700"
-                          }`}
-                        >
-                          {formatFileSize(uploadProgress.loaded)} of {formatFileSize(uploadProgress.total)} uploaded
-                        </p>
-                      </div>
-                    )}
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-                    {/* Go to Bulk Upload Page - shown after upload progress */}
-                    {uploadProgress && uploadProgress.percentage === 100 && (
-                      <div className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium text-green-900">Upload completed successfully!</p>
-                            <p className="text-xs text-green-700">View your upload history and manage bulk uploads</p>
+              {/* File Upload Section */}
+              {hasCompletedUploadTypeSelection && selectedUploadTypeDetails && (
+                <div className="p-6">
+                  {/* Selected Type Header */}
+                  <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
+                    <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+                      <div className="flex items-start gap-3">
+                        <div className="rounded-full bg-blue-200 p-2">
+                          <FileSpreadsheet className="h-5 w-5 text-blue-700" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="rounded-full bg-blue-200 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                              Selected Type
+                            </span>
+                            <h3 className="font-semibold text-blue-900">{selectedUploadTypeDetails.name}</h3>
                           </div>
-                          <ButtonModule variant="primary" size="sm" onClick={() => router.push("/billing/bulk-upload")}>
-                            Go to Bulk Upload Page
+                          <p className="mt-1 text-sm text-blue-700">{selectedUploadTypeDetails.description}</p>
+                        </div>
+                      </div>
+                      <ButtonModule
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedUploadType(null)
+                          setHasCompletedUploadTypeSelection(false)
+                          setSelectedFile(null)
+                          setExtractedColumns([])
+                        }}
+                        className="border-blue-300 bg-white text-blue-700 hover:bg-blue-100"
+                      >
+                        Change Type
+                      </ButtonModule>
+                    </div>
+                  </div>
+
+                  {/* Template Download & Column Info */}
+                  <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+                    <div className="lg:col-span-2">
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+                          <div className="flex items-start gap-3">
+                            <Download className="mt-0.5 h-5 w-5 text-gray-500" />
+                            <div>
+                              <p className="font-medium text-gray-900">Need a template?</p>
+                              <p className="text-sm text-gray-600">Download a sample CSV with the correct format</p>
+                            </div>
+                          </div>
+                          <ButtonModule
+                            variant="primary"
+                            size="sm"
+                            onClick={downloadSampleFile}
+                            icon={<Download className="h-4 w-4" />}
+                          >
+                            Download Template
                           </ButtonModule>
                         </div>
                       </div>
-                    )}
+                    </div>
 
-                    {/* Error Messages */}
-                    {(fileIntentError ||
-                      uploadError ||
+                    <div>
+                      <button
+                        onClick={() => setShowColumnHelp(!showColumnHelp)}
+                        className="flex w-full items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 p-4 text-left transition-colors hover:bg-gray-100"
+                      >
+                        <HelpCircle className="h-5 w-5 text-gray-500" />
+                        <div>
+                          <p className="font-medium text-gray-900">Required Columns</p>
+                          <p className="text-sm text-gray-600">Click to view all</p>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Column Help Modal */}
+                  <AnimatePresence>
+                    {showColumnHelp && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="mb-6 overflow-hidden"
+                      >
+                        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+                          <div className="mb-3 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Info className="h-5 w-5 text-blue-600" />
+                              <h4 className="font-medium text-blue-900">Required Columns</h4>
+                            </div>
+                            <button
+                              onClick={() => setShowColumnHelp(false)}
+                              className="rounded-full p-1 text-blue-600 hover:bg-blue-200"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+                            {selectedUploadTypeDetails.requiredColumns.map((col, idx) => (
+                              <div key={idx} className="flex items-center gap-2 rounded-lg bg-white p-2 shadow-sm">
+                                <div className="h-2 w-2 rounded-full bg-green-500" />
+                                <span className="text-sm text-gray-700">{col}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* File Upload Drop Zone */}
+                  <div
+                    ref={dropZoneRef}
+                    onDrop={handleFileDrop}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDragEnter={handleDragEnter}
+                    className={`relative mb-6 rounded-xl border-2 border-dashed p-8 text-center transition-all ${
+                      isDragOver
+                        ? "border-blue-400 bg-blue-50"
+                        : selectedFile
+                        ? "border-green-300 bg-green-50"
+                        : "border-gray-300 bg-gray-50 hover:border-gray-400"
+                    }`}
+                  >
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                      disabled={isLoading}
+                    />
+
+                    {!selectedFile ? (
+                      <div>
+                        <CloudUpload
+                          className={`mx-auto h-16 w-16 ${isDragOver ? "text-blue-500" : "text-gray-400"}`}
+                        />
+                        <p className="mt-4 text-base text-gray-700">
+                          <span
+                            onClick={() => fileInputRef.current?.click()}
+                            className="cursor-pointer font-semibold text-blue-600 hover:text-blue-700 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          >
+                            Click to upload
+                          </span>{" "}
+                          or drag and drop
+                        </p>
+                        <p className="mt-2 text-sm text-gray-500">CSV or Excel files (max 50MB)</p>
+                      </div>
+                    ) : (
+                      <div className="relative">
+                        <button
+                          onClick={removeSelectedFile}
+                          className="absolute -right-2 -top-2 rounded-full bg-red-100 p-1.5 text-red-600 transition-colors hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                          disabled={isLoading}
+                          aria-label="Remove file"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+
+                        <FileText className="mx-auto h-16 w-16 text-green-500" />
+                        <p className="mt-2 font-medium text-gray-900">{selectedFile.name}</p>
+                        <p className="text-sm text-gray-500">{formatFileSize(selectedFile.size)}</p>
+
+                        {/* Extracted Columns Display */}
+                        {extractedColumns.length > 0 && (
+                          <div className="mt-4">
+                            <p className="mb-2 text-xs font-medium text-gray-700">Found columns:</p>
+                            <div className="flex flex-wrap justify-center gap-1">
+                              {extractedColumns.map((col, idx) => {
+                                const isRequired = selectedUploadTypeDetails.requiredColumns.some(
+                                  (rc) => rc.toLowerCase() === col.toLowerCase()
+                                )
+                                return (
+                                  <span
+                                    key={idx}
+                                    className={`rounded-full px-2 py-0.5 text-xs ${
+                                      isRequired ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
+                                    }`}
+                                  >
+                                    {col}
+                                  </span>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Validation Status */}
+                        {isValidatingFile && (
+                          <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-600">
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+                            <span>Validating file...</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Upload Progress */}
+                  <AnimatePresence>
+                    {uploadProgress && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="mb-6 overflow-hidden"
+                      >
+                        <div
+                          className={`rounded-lg border p-4 ${
+                            uploadProgress.percentage === 100
+                              ? "border-green-200 bg-green-50"
+                              : "border-blue-200 bg-blue-50"
+                          }`}
+                        >
+                          <div className="mb-3 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div
+                                className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                                  uploadProgress.percentage === 100 ? "bg-green-200" : "bg-blue-200"
+                                }`}
+                              >
+                                {uploadProgress.percentage === 100 ? (
+                                  <CheckCircle className="h-5 w-5 text-green-600" />
+                                ) : (
+                                  <CloudUpload className="h-5 w-5 animate-pulse text-blue-600" />
+                                )}
+                              </div>
+                              <div>
+                                <p
+                                  className={`text-sm font-medium ${
+                                    uploadProgress.percentage === 100 ? "text-green-900" : "text-blue-900"
+                                  }`}
+                                >
+                                  {uploadProgress.percentage === 100 ? "Upload Complete!" : "Uploading file..."}
+                                </p>
+                                <p
+                                  className={`text-xs ${
+                                    uploadProgress.percentage === 100 ? "text-green-700" : "text-blue-700"
+                                  }`}
+                                >
+                                  {uploadProgress.percentage}% • {formatFileSize(uploadProgress.loaded)} of{" "}
+                                  {formatFileSize(uploadProgress.total)}
+                                </p>
+                              </div>
+                            </div>
+                            <span
+                              className={`text-2xl font-bold ${
+                                uploadProgress.percentage === 100 ? "text-green-800" : "text-blue-800"
+                              }`}
+                            >
+                              {uploadProgress.percentage}%
+                            </span>
+                          </div>
+                          <div className="h-2.5 w-full overflow-hidden rounded-full bg-gray-200">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${uploadProgress.percentage}%` }}
+                              transition={{ duration: 0.3 }}
+                              className={`h-full ${uploadProgress.percentage === 100 ? "bg-green-500" : "bg-blue-500"}`}
+                            />
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Success Message */}
+                  <AnimatePresence>
+                    {uploadSuccess && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4"
+                      >
+                        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+                          <div className="flex items-start gap-3">
+                            <CheckCircle className="mt-0.5 h-5 w-5 text-green-600" />
+                            <div>
+                              <p className="font-medium text-green-900">Upload Successful!</p>
+                              <p className="text-sm text-green-700">
+                                Your file has been uploaded and queued for processing
+                              </p>
+                            </div>
+                          </div>
+                          <ButtonModule
+                            variant="primary"
+                            size="sm"
+                            onClick={() => router.push("/billing/bulk-upload")}
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            View Upload History
+                          </ButtonModule>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Error Messages */}
+                  <AnimatePresence>
+                    {(uploadError ||
+                      fileIntentError ||
                       finalizeFileError ||
                       billingBulkUploadError ||
                       billRecomputeBulkUploadError ||
                       billManualEnergyBulkUploadError ||
                       debtRecoveryNoEnergyBulkUploadError) && (
-                      <div className="mb-6 rounded-md border border-red-200 bg-red-50 p-4">
-                        <div className="flex">
-                          <div className="shrink-0">{/* Error icon could go here */}</div>
-                          <div className="ml-3 flex-1">
-                            <h3 className="text-sm font-medium text-red-800">Upload Failed</h3>
-                            <div className="mt-2 text-sm text-red-700">
-                              {fileIntentError ||
-                                uploadError ||
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4"
+                      >
+                        <div className="flex items-start gap-3">
+                          <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-600" />
+                          <div>
+                            <p className="font-medium text-red-900">Upload Failed</p>
+                            <p className="text-sm text-red-700">
+                              {uploadError ||
+                                fileIntentError ||
                                 finalizeFileError ||
                                 billingBulkUploadError ||
                                 billRecomputeBulkUploadError ||
                                 billManualEnergyBulkUploadError ||
                                 debtRecoveryNoEnergyBulkUploadError}
-                            </div>
+                            </p>
                           </div>
                         </div>
-                      </div>
+                      </motion.div>
                     )}
-                  </>
-                )}
-              </motion.div>
-            </div>
+                  </AnimatePresence>
+
+                  {/* File Info Card */}
+                  {selectedFile && !uploadSuccess && (
+                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                      <div className="flex items-center gap-2">
+                        <Info className="h-4 w-4 text-gray-500" />
+                        <p className="text-xs text-gray-600">
+                          Maximum file size: 50MB • Supported formats: CSV, XLSX, XLS
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </motion.div>
           </div>
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation Bar */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-white p-3 shadow-lg sm:hidden">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => router.push("/billing/bulk-upload")}
-              className="rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-50"
+      {/* Additional Upload Button */}
+      <div className="hidden sm:block">
+        <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-8 flex justify-center">
+            <ButtonModule
+              variant="primary"
+              size="lg"
+              onClick={handleUpload}
+              disabled={!selectedFile || !selectedUploadType || isLoading || uploadSuccess}
+              icon={<Upload className="h-5 w-5" />}
             >
-              Go to Bulk Upload Page
+              {isUploading ? "Uploading..." : "Upload File"}
+            </ButtonModule>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Bottom Navigation */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-white p-4 shadow-lg sm:hidden">
+        <div className="flex flex-col gap-3">
+          <div className="flex gap-3">
+            <button
+              onClick={() => router.push("/billing/bulk-upload")}
+              className="flex-1 rounded-lg border border-blue-300 bg-white px-4 py-2.5 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-50"
+            >
+              Upload History
             </button>
             <button
-              type="button"
               onClick={handleReset}
-              disabled={isUploading || uploadSuccess}
-              className="rounded-lg border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={isLoading}
+              className="flex-1 rounded-lg border border-red-300 bg-white px-4 py-2.5 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Reset
             </button>
           </div>
-
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                void handleUpload()
-              }}
-              disabled={
-                !selectedFile ||
-                !selectedUploadType ||
-                isUploading ||
-                uploadSuccess ||
-                fileIntentLoading ||
-                finalizeFileLoading ||
-                billingBulkUploadLoading ||
-                billRecomputeBulkUploadLoading ||
-                billManualEnergyBulkUploadLoading ||
-                debtRecoveryNoEnergyBulkUploadLoading
-              }
-              className="flex items-center gap-1 rounded-lg bg-[#004B23] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#003618] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {isUploading ? "Uploading..." : "Upload File"}
-            </button>
-          </div>
+          <button
+            onClick={handleUpload}
+            disabled={!selectedFile || !selectedUploadType || isLoading || uploadSuccess}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#004B23] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[#003618] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isUploading ? (
+              <>
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                <span>Uploading...</span>
+              </>
+            ) : (
+              <>
+                <Upload className="h-4 w-4" />
+                <span>Upload File</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
+
+      {/* Loading Overlay */}
+      <AnimatePresence>
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="rounded-xl bg-white p-6 shadow-xl"
+            >
+              <div className="flex flex-col items-center gap-4">
+                <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+                <div className="text-center">
+                  <p className="font-medium text-gray-900">
+                    {isValidatingFile ? "Validating file..." : "Processing..."}
+                  </p>
+                  <p className="text-sm text-gray-600">Please wait</p>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   )
 }
