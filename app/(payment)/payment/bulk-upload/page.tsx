@@ -152,6 +152,7 @@ const BulkUploads: React.FC = () => {
   const [localFilters, setLocalFilters] = useState<Partial<CsvJobsParams>>({
     PageNumber: 1,
     PageSize: 10,
+    JobTypes: [4, 38], // Default to payment job types
     JobType: undefined,
     Status: undefined,
     RequestedByUserId: undefined,
@@ -170,6 +171,8 @@ const BulkUploads: React.FC = () => {
     const fetchParams: CsvJobsParams = {
       PageNumber: currentPage,
       PageSize: 10,
+      // Only send JobTypes array if no specific JobType is selected
+      ...(localFilters.JobType ? {} : { JobTypes: localFilters.JobTypes }),
       ...(localFilters.JobType && { JobType: localFilters.JobType }),
       ...(localFilters.Status && { Status: localFilters.Status }),
       ...(localFilters.RequestedByUserId && { RequestedByUserId: localFilters.RequestedByUserId }),
@@ -195,6 +198,8 @@ const BulkUploads: React.FC = () => {
     const fetchParams: CsvJobsParams = {
       PageNumber: currentPage,
       PageSize: 10,
+      // Only send JobTypes array if no specific JobType is selected
+      ...(localFilters.JobType ? {} : { JobTypes: localFilters.JobTypes }),
       ...(localFilters.JobType && { JobType: localFilters.JobType }),
       ...(localFilters.Status && { Status: localFilters.Status }),
       ...(localFilters.RequestedByUserId && { RequestedByUserId: localFilters.RequestedByUserId }),
@@ -211,6 +216,8 @@ const BulkUploads: React.FC = () => {
     const fetchParams: CsvJobsParams = {
       PageNumber: 1,
       PageSize: 10,
+      // Only send JobTypes array if no specific JobType is selected
+      ...(localFilters.JobType ? {} : { JobTypes: localFilters.JobTypes }),
       ...(localFilters.JobType && { JobType: localFilters.JobType }),
       ...(localFilters.Status && { Status: localFilters.Status }),
       ...(localFilters.RequestedByUserId && { RequestedByUserId: localFilters.RequestedByUserId }),
@@ -241,6 +248,7 @@ const BulkUploads: React.FC = () => {
     setLocalFilters({
       PageNumber: 1,
       PageSize: 10,
+      JobTypes: [4, 38], // Default to payment job types
       JobType: undefined,
       Status: undefined,
       RequestedByUserId: undefined,
@@ -331,6 +339,9 @@ const BulkUploads: React.FC = () => {
   if (csvJobsLoading && !hasInitialLoad) {
     return <LoadingSkeleton />
   }
+
+  // Use server-side data directly since we're now filtering at API level
+  const filteredCsvJobs = csvJobs
 
   return (
     <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200">
@@ -494,7 +505,7 @@ const BulkUploads: React.FC = () => {
                     <h3 className="text-lg font-semibold">CSV Jobs</h3>
                     {csvJobsPagination && (
                       <p className="text-sm text-gray-600">
-                        Showing {csvJobs.length} of {csvJobsPagination.totalCount} jobs
+                        Showing {csvJobs.length} of {csvJobsPagination.totalCount} payment jobs
                       </p>
                     )}
                   </div>
