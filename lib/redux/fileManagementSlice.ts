@@ -754,6 +754,13 @@ export interface CsvJob {
   lastError: string
   errorBlobKey: string
   payloadJson: string
+  requestedByUser?: {
+    id: number
+    fullName: string
+    email: string
+    phoneNumber: string
+    accountId: string
+  }
 }
 
 export interface CsvJobsParams {

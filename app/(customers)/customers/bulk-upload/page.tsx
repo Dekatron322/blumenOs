@@ -11,7 +11,7 @@ import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { SearchModule } from "components/ui/Search/search-module"
 
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { CsvJobsParams, downloadCsv, fetchCsvJobs } from "lib/redux/fileManagementSlice"
+import { CsvJob, CsvJobsParams, downloadCsv, fetchCsvJobs } from "lib/redux/fileManagementSlice"
 import { VscCloudUpload, VscEye } from "react-icons/vsc"
 import CsvUploadFailuresModal from "components/ui/Modal/CsvUploadFailuresModal"
 
@@ -530,13 +530,14 @@ const BulkUploads: React.FC = () => {
 
               {/* Table */}
               <div className="max-h-[70vh] w-full overflow-x-auto overflow-y-hidden ">
-                <div className="min-w-[1200px]">
+                <div className="min-w-[1300px]">
                   <table className="w-full border-separate border-spacing-0">
                     <thead>
                       <tr className="border-b bg-gray-50">
                         <th className="border-b p-3 text-left text-sm font-medium text-gray-700">File Name</th>
                         <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Job Type</th>
                         <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Status</th>
+                        <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Requested By</th>
                         <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Requested</th>
                         <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Progress</th>
                         <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Processed</th>
@@ -549,7 +550,7 @@ const BulkUploads: React.FC = () => {
                     <tbody>
                       {csvJobs.length === 0 ? (
                         <tr>
-                          <td colSpan={10} className="border-b p-8 text-center">
+                          <td colSpan={11} className="border-b p-8 text-center">
                             <div className="text-gray-500">
                               <FileIcon className="mx-auto mb-2 size-12 text-gray-300" />
                               <p>No CSV jobs found</p>
@@ -574,6 +575,14 @@ const BulkUploads: React.FC = () => {
                               >
                                 {getStatusLabel(job.status)}
                               </span>
+                            </td>
+                            <td className="whitespace-nowrap border-b p-3 text-sm">
+                              <div
+                                className="max-w-xs truncate whitespace-nowrap"
+                                title={job.requestedByUser?.fullName || "Unknown"}
+                              >
+                                {job.requestedByUser?.fullName || "Unknown"}
+                              </div>
                             </td>
                             <td className="whitespace-nowrap border-b p-3 text-sm">
                               {new Date(job.requestedAtUtc).toLocaleString()}

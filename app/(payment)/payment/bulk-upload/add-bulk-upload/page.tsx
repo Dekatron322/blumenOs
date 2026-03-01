@@ -1108,7 +1108,7 @@ const FileManagementPage = () => {
                         </div>
 
                         {/* Bulk Upload Results */}
-                        {bulkUploadResponse && bulkUploadResponse.data && (
+                        {/* {bulkUploadResponse && bulkUploadResponse.data && (
                           <div className="mt-4 rounded-lg border border-green-200 bg-white p-4">
                             <p className="mb-3 font-medium text-green-900">Processing Summary</p>
                             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -1138,7 +1138,7 @@ const FileManagementPage = () => {
                               </div>
                             </div>
                           </div>
-                        )}
+                        )} */}
                       </motion.div>
                     )}
                   </AnimatePresence>
