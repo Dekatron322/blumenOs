@@ -1043,12 +1043,13 @@ const FileManagementPage = () => {
                           className={`mx-auto h-16 w-16 ${isDragOver ? "text-blue-500" : "text-gray-400"}`}
                         />
                         <p className="mt-4 text-base text-gray-700">
-                          <span
+                          <button
                             onClick={() => fileInputRef.current?.click()}
-                            className="cursor-pointer font-semibold text-blue-600 hover:text-blue-700 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                            className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                            disabled={isLoading}
                           >
                             Click to upload
-                          </span>{" "}
+                          </button>{" "}
                           or drag and drop
                         </p>
                         <p className="mt-2 text-sm text-gray-500">CSV or Excel files (max 50MB)</p>
@@ -1097,6 +1098,29 @@ const FileManagementPage = () => {
                           <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-600">
                             <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
                             <span>Validating file...</span>
+                          </div>
+                        )}
+
+                        {/* Upload File Button */}
+                        {!isValidatingFile && (
+                          <div className="mt-6 flex justify-center">
+                            <button
+                              onClick={handleUpload}
+                              disabled={!selectedFile || !selectedUploadType || isLoading || uploadSuccess}
+                              className="flex items-center gap-2 rounded-lg bg-green-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {isUploading ? (
+                                <>
+                                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                  <span>Uploading...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Upload className="h-4 w-4" />
+                                  <span>Upload File</span>
+                                </>
+                              )}
+                            </button>
                           </div>
                         )}
                       </div>
@@ -1251,23 +1275,6 @@ const FileManagementPage = () => {
                 </div>
               )}
             </motion.div>
-          </div>
-        </div>
-      </div>
-
-      {/* Additional Upload Button */}
-      <div className="hidden sm:block">
-        <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-8 flex justify-center">
-            <ButtonModule
-              variant="primary"
-              size="lg"
-              onClick={handleUpload}
-              disabled={!selectedFile || !selectedUploadType || isLoading || uploadSuccess}
-              icon={<Upload className="h-5 w-5" />}
-            >
-              {isUploading ? "Uploading..." : "Upload File"}
-            </ButtonModule>
           </div>
         </div>
       </div>
