@@ -8,12 +8,12 @@ import {
   createFileIntent,
   CsvJob,
   downloadCsv,
+  fetchCsvJobs,
+  fetchJobTypeTemplate,
   finalizeFile,
   processBulkUpload,
   processVendingPaymentMigrationImport,
   resetFileManagementState,
-  fetchCsvJobs,
-  fetchJobTypeTemplate,
 } from "lib/redux/fileManagementSlice"
 import * as XLSX from "xlsx"
 import DashboardNav from "components/Navbar/DashboardNav"
@@ -35,8 +35,8 @@ import {
   HelpCircle,
   Info,
   Loader2,
-  Upload,
   RefreshCw,
+  Upload,
   X,
 } from "lucide-react"
 import { VscAdd, VscCloudUpload, VscEye } from "react-icons/vsc"
