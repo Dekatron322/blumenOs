@@ -43,7 +43,7 @@ export default function DevModePage() {
             {/* Success Message */}
             <div className="mt-6 rounded-xl border border-green-500/20 bg-green-500/10 p-4">
               <div className="flex items-start space-x-3">
-                <svg className="mt-0.5 h-5 w-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="mt-0.5 size-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -75,7 +75,7 @@ export default function DevModePage() {
                   "Network request logging",
                 ].map((feature, index) => (
                   <div key={index} className="flex items-center space-x-2 text-sm text-gray-400">
-                    <svg className="h-4 w-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="size-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     <span>{feature}</span>
@@ -91,7 +91,7 @@ export default function DevModePage() {
               onClick={() => router.push("/")}
               className="inline-flex items-center space-x-2 text-gray-400 transition-colors hover:text-white"
             >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
               <span>Back to Home</span>

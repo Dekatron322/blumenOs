@@ -657,7 +657,7 @@ const PdfPrintModal: React.FC<PdfPrintModalProps> = ({
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
             >
-              <X className="h-5 w-5" />
+              <X className="size-5" />
             </motion.button>
           </div>
         </div>
@@ -672,7 +672,7 @@ const PdfPrintModal: React.FC<PdfPrintModalProps> = ({
               animate={{ opacity: 1, y: 0 }}
             >
               <div className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5" />
+                <AlertCircle className="size-5" />
                 <p className="font-medium">Error</p>
               </div>
               <p className="mt-1 text-sm">{error}</p>
@@ -686,7 +686,7 @@ const PdfPrintModal: React.FC<PdfPrintModalProps> = ({
               animate={{ opacity: 1, y: 0 }}
             >
               <div className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5" />
+                <AlertCircle className="size-5" />
                 <p className="font-medium">Success</p>
               </div>
               <p className="mt-1 text-sm">{message}</p>
@@ -1157,7 +1157,7 @@ const PdfPrintModal: React.FC<PdfPrintModalProps> = ({
                       }`}
                     >
                       <CloudUpload
-                        className={`h-4 w-4 ${
+                        className={`size-4 ${
                           uploadProgress.percentage === 100 ? "text-green-600" : "animate-pulse text-blue-600"
                         }`}
                       />

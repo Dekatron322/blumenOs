@@ -1078,7 +1078,7 @@ export default function AgentManagementDashboard() {
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 sm:h-12 sm:w-12">
                     <svg
-                      className="h-5 w-5 text-white sm:h-6 sm:w-6"
+                      className="size-5 text-white sm:h-6 sm:w-6"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -1113,7 +1113,7 @@ export default function AgentManagementDashboard() {
                   <p className="mb-1 text-xs font-medium text-gray-500 sm:text-sm">Available Balance</p>
                   <p className="text-2xl font-bold text-gray-900 sm:text-3xl">₦12,500.00</p>
                   <div className="mt-2 flex items-center justify-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                    <div className="size-2 rounded-full bg-green-500"></div>
                     <p className="text-xs text-green-600 sm:text-sm">+2.5% from last month</p>
                   </div>
                 </div>
@@ -1132,7 +1132,7 @@ export default function AgentManagementDashboard() {
                 <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                   <p className="mb-1 text-xs font-medium text-gray-500">Status</p>
                   <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                    <div className="size-2 rounded-full bg-green-500"></div>
                     <p className="text-lg font-bold text-gray-900">Active</p>
                   </div>
                   <p className="mt-1 text-xs text-gray-500">Operational</p>
@@ -1159,7 +1159,7 @@ export default function AgentManagementDashboard() {
                 <div className="text-center sm:text-left">
                   <p className="mb-1 text-sm font-medium text-gray-500">Wallet Status</p>
                   <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                    <div className="size-2 rounded-full bg-green-500"></div>
                     <p className="text-2xl font-bold text-gray-900">Active</p>
                   </div>
                   <p className="mt-1 text-xs text-gray-500">All systems operational</p>
@@ -1258,7 +1258,7 @@ export default function AgentManagementDashboard() {
                   className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/20 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-white/30 sm:p-2"
                   aria-label="Previous slide"
                 >
-                  <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="size-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
@@ -1267,7 +1267,7 @@ export default function AgentManagementDashboard() {
                   className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/20 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-white/30 sm:p-2"
                   aria-label="Next slide"
                 >
-                  <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="size-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>

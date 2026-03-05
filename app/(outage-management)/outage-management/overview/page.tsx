@@ -206,7 +206,7 @@ const ListSkeleton = () => {
                       <div key={i} className="h-4 w-16 rounded bg-gray-200 sm:w-24"></div>
                     ))}
                   </div>
-                  <div className="mt-2 h-4 w-48 rounded bg-gray-200 sm:w-64"></div>
+                  <div className="mt-2 size-48 rounded bg-gray-200 sm:w-64"></div>
                 </div>
               </div>
 

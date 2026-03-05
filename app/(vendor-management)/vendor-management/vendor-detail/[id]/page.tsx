@@ -1175,7 +1175,7 @@ const VendorDetailsPage = () => {
                                   }`}
                                   title={isCopied ? "Copied!" : "Copy API Key"}
                                 >
-                                  {isCopied ? <CheckCircle className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                                  {isCopied ? <CheckCircle className="size-4" /> : <Copy className="size-4" />}
                                 </button>
                                 <button
                                   type="button"
@@ -1183,7 +1183,7 @@ const VendorDetailsPage = () => {
                                   className="rounded p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
                                   title={isApiKeyVisible ? "Hide API Key" : "Show API Key"}
                                 >
-                                  {isApiKeyVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                  {isApiKeyVisible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                                 </button>
                               </div>
                             </div>

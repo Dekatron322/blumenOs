@@ -824,7 +824,7 @@ const UpdateAgentPage = () => {
                               name="enforceJurisdiction"
                               checked={formData.enforceJurisdiction}
                               onChange={(e) => handleInputChange(e)}
-                              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              className="size-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                             />
                             <span className="text-sm font-medium text-gray-900">Enforce Jurisdiction Restrictions</span>
                           </label>

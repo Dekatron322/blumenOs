@@ -300,11 +300,11 @@ const SupportTicket: React.FC = () => {
             <div key={index} className="animate-pulse">
               <div className="flex flex-col items-start rounded-lg border-2 border-gray-200 p-4">
                 <div className="mb-3 flex items-center gap-2">
-                  <div className="h-5 w-5 rounded bg-gray-300"></div>
+                  <div className="size-5 rounded bg-gray-300"></div>
                   <div className="h-4 w-24 rounded bg-gray-300"></div>
                 </div>
                 <div className="h-3 w-full rounded bg-gray-300"></div>
-                <div className="mt-1 h-3 w-3/4 rounded bg-gray-300"></div>
+                <div className="mt-1 size-3/4 rounded bg-gray-300"></div>
               </div>
             </div>
           ))
@@ -687,7 +687,7 @@ const SupportTicket: React.FC = () => {
 
       {isLoadingTickets ? (
         <div className="flex justify-center py-4">
-          <div className="h-4 w-4 animate-spin rounded-full border border-gray-300 border-t-gray-600"></div>
+          <div className="size-4 animate-spin rounded-full border border-gray-300 border-t-gray-600"></div>
         </div>
       ) : ticketsError ? (
         <div className="text-xs text-red-600">{ticketsError}</div>

@@ -312,6 +312,16 @@ export const API_ENDPOINTS = {
     SINGLE_BILLING_PRINT: "/billing/postpaid/print/batch",
     DOWNLOAD_PRINT_JOB: "/billing/postpaid/print/batch/{id}/download",
     BILL_ADJUSTMENT_DETAILS: "/billing/postpaid/bills/adjustments/{id}/financial-statement",
+    CREATE_BILLING_SCHEDULE_RUN: "/billing/schedules/{id}/runs",
+    GET_BILLING_SCHEDULE_RUN: "/billing/schedules/{id}",
+    START_BILLING_SCHEDULE_RUN: "/billing/schedules/runs/{runId}/start",
+    PUBLISH_BILLING_SCHEDULE_RUN: "/billing/schedules/runs/{runId}/publish",
+    EXPORT_AR_SCHEDULE_RUN: "/billing/schedules/runs/{runId}/ar/export-job",
+    RUN_PDF_GENERATION: "/billing/schedules/runs/{runId}/print/batch",
+    GET_BILLING_SCHEDULE_PROGRESS: "/billing/schedules/runs/{runId}/progress",
+    GET_BILLING_SCHEDULES_RUNS: "/billing/schedules/{id}/runs",
+    EXPORT_AR: "/billing/schedules/runs/{runId}/ar/csv",
+    DOWNLOAD_PDF: "/billing/schedules/runs/{runId}/print/downloads",
   },
 
   BILLING_PERIODS: {

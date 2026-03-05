@@ -645,7 +645,7 @@ const FileManagementPage = () => {
                         }`}
                       >
                         <CloudUpload
-                          className={`h-4 w-4 ${
+                          className={`size-4 ${
                             uploadProgress.percentage === 100 ? "text-green-600" : "animate-pulse text-blue-600"
                           }`}
                         />

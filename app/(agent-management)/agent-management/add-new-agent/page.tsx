@@ -2322,7 +2322,7 @@ const AddNewAgent = () => {
                                             enforceJurisdiction: e.target.checked,
                                           }))
                                         }
-                                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                        className="size-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                                       />
                                       <span className="text-sm font-medium text-gray-900">
                                         Enforce Jurisdiction Restrictions

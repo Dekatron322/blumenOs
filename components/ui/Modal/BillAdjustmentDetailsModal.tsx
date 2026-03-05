@@ -111,7 +111,7 @@ const BillAdjustmentDetailsModal: React.FC<BillAdjustmentDetailsModalProps> = ({
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
             >
-              <X className="h-5 w-5" />
+              <X className="size-5" />
             </motion.button>
           </div>
         </div>
@@ -126,7 +126,7 @@ const BillAdjustmentDetailsModal: React.FC<BillAdjustmentDetailsModalProps> = ({
               animate={{ opacity: 1, y: 0 }}
             >
               <div className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5" />
+                <AlertCircle className="size-5" />
                 <p className="font-medium">Error</p>
               </div>
               <p className="mt-1 text-sm">{error}</p>
@@ -152,7 +152,7 @@ const BillAdjustmentDetailsModal: React.FC<BillAdjustmentDetailsModalProps> = ({
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   <div className="rounded-lg bg-white p-4 shadow-sm">
                     <div className="flex items-center gap-2">
-                      <DollarSign className="h-5 w-5 text-blue-600" />
+                      <DollarSign className="size-5 text-blue-600" />
                       <span className="text-sm font-medium text-gray-600">Adjustment Amount</span>
                     </div>
                     <p className="mt-2 text-xl font-bold text-gray-900">
@@ -161,7 +161,7 @@ const BillAdjustmentDetailsModal: React.FC<BillAdjustmentDetailsModalProps> = ({
                   </div>
                   <div className="rounded-lg bg-white p-4 shadow-sm">
                     <div className="flex items-center gap-2">
-                      <User className="h-5 w-5 text-green-600" />
+                      <User className="size-5 text-green-600" />
                       <span className="text-sm font-medium text-gray-600">Approved By</span>
                     </div>
                     <p className="mt-2 text-sm font-semibold text-gray-900">
@@ -170,7 +170,7 @@ const BillAdjustmentDetailsModal: React.FC<BillAdjustmentDetailsModalProps> = ({
                   </div>
                   <div className="rounded-lg bg-white p-4 shadow-sm">
                     <div className="flex items-center gap-2">
-                      <Calendar className="h-5 w-5 text-purple-600" />
+                      <Calendar className="size-5 text-purple-600" />
                       <span className="text-sm font-medium text-gray-600">Approved At</span>
                     </div>
                     <p className="mt-2 text-sm font-semibold text-gray-900">
@@ -179,7 +179,7 @@ const BillAdjustmentDetailsModal: React.FC<BillAdjustmentDetailsModalProps> = ({
                   </div>
                   <div className="rounded-lg bg-white p-4 shadow-sm">
                     <div className="flex items-center gap-2">
-                      <FileText className="h-5 w-5 text-orange-600" />
+                      <FileText className="size-5 text-orange-600" />
                       <span className="text-sm font-medium text-gray-600">Statement Generated</span>
                     </div>
                     <p className="mt-2 text-sm font-semibold text-gray-900">

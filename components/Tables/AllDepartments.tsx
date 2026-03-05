@@ -296,7 +296,7 @@ const CardsLoadingSkeleton = () => {
             <div className="size-7 rounded-full bg-gray-200" />
           </div>
           <div className="space-y-4">
-            <div className="h-4 w-48 rounded bg-gray-200" />
+            <div className="size-48 rounded bg-gray-200" />
             <div className="h-3 w-full rounded bg-gray-200" />
             <div className="space-y-3">
               <div className="h-4 w-full rounded bg-gray-200" />
@@ -974,9 +974,9 @@ const DepartmentsTable: React.FC = () => {
                 <div className="max-h-[calc(100vh-300px)] overflow-y-auto p-4">
                   {currentDepartmentLoading ? (
                     <div className="space-y-4">
-                      <div className="h-4 w-48 rounded bg-gray-200" />
+                      <div className="size-48 rounded bg-gray-200" />
                       <div className="space-y-2">
-                        <div className="h-3 w-32 rounded bg-gray-200" />
+                        <div className="size-32 rounded bg-gray-200" />
                         <div className="h-3 w-full rounded bg-gray-200" />
                         <div className="h-3 w-40 rounded bg-gray-200" />
                       </div>

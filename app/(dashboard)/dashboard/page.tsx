@@ -234,7 +234,7 @@ const PaymentHealthCard = ({
                   {paymentHealth.prepaid?.category || "Prepaid Payments"}
                 </h4>
                 {paymentHealth.prepaid?.colorCode && (
-                  <div className="h-6 w-6 rounded-full" style={{ backgroundColor: paymentHealth.prepaid.colorCode }} />
+                  <div className="size-6 rounded-full" style={{ backgroundColor: paymentHealth.prepaid.colorCode }} />
                 )}
               </div>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -278,7 +278,7 @@ const PaymentHealthCard = ({
               )}
               {paymentHealth.prepaid?.colorCode && (
                 <div className="mt-2 flex items-center gap-1">
-                  <div className="h-3 w-3 rounded-full" style={{ backgroundColor: paymentHealth.prepaid.colorCode }} />
+                  <div className="size-3 rounded-full" style={{ backgroundColor: paymentHealth.prepaid.colorCode }} />
                   <span className="text-xs text-gray-500">Status indicator</span>
                 </div>
               )}
@@ -292,7 +292,7 @@ const PaymentHealthCard = ({
                 </h4>
                 {paymentHealth.nonPrepaid?.colorCode && (
                   <div
-                    className="h-6 w-6 rounded-full"
+                    className="size-6 rounded-full"
                     style={{ backgroundColor: paymentHealth.nonPrepaid.colorCode }}
                   />
                 )}
@@ -339,7 +339,7 @@ const PaymentHealthCard = ({
               {paymentHealth.nonPrepaid?.colorCode && (
                 <div className="mt-2 flex items-center gap-1">
                   <div
-                    className="h-3 w-3 rounded-full"
+                    className="size-3 rounded-full"
                     style={{ backgroundColor: paymentHealth.nonPrepaid.colorCode }}
                   />
                   <span className="text-xs text-gray-500">Status indicator</span>
@@ -2022,11 +2022,11 @@ export default function Dashboard() {
                             {customerSegmentsData && (
                               <div className="mt-3 flex justify-center gap-6 text-xs text-gray-600">
                                 <div className="flex items-center gap-1">
-                                  <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                                  <div className="size-2 rounded-full bg-green-500"></div>
                                   <span>Active: {customerSegmentsData.activeCustomers.toLocaleString()}</span>
                                 </div>
                                 <div className="flex items-center gap-1">
-                                  <div className="h-2 w-2 rounded-full bg-yellow-500"></div>
+                                  <div className="size-2 rounded-full bg-yellow-500"></div>
                                   <span>Suspended: {customerSegmentsData.suspendedCustomers.toLocaleString()}</span>
                                 </div>
                               </div>

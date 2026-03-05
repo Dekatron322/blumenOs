@@ -471,7 +471,7 @@ export default function MeteringDashboard() {
                   variant="primary"
                   size="md"
                   className="mt-2"
-                  icon={<Download className="h-4 w-4" />}
+                  icon={<Download className="size-4" />}
                   onClick={() => setIsDownloadARModalOpen(true)}
                 >
                   Download AR
@@ -653,7 +653,7 @@ export default function MeteringDashboard() {
                     id="isMd"
                     checked={isMd}
                     onChange={(e) => setIsMd(e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300 text-[#004B23] focus:ring-[#004B23]"
+                    className="size-4 rounded border-gray-300 text-[#004B23] focus:ring-[#004B23]"
                   />
                   <label htmlFor="isMd" className="ml-2 block text-sm text-gray-700">
                     MD Customers Only

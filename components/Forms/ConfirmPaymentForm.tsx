@@ -112,7 +112,7 @@ const ConfirmPaymentForm: React.FC<ConfirmPaymentFormProps> = ({
               disabled={confirmPaymentLoading}
               className="rounded-full p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 disabled:opacity-50"
             >
-              <X className="h-5 w-5" />
+              <X className="size-5" />
             </button>
           </div>
 

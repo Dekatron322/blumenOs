@@ -138,7 +138,7 @@ const SetControlModal: React.FC<SetControlModalProps> = ({
                 id="isFlag"
                 checked={controlData.isFlag}
                 onChange={(e) => handleInputChange("isFlag", e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="size-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 disabled={loading}
               />
               <label htmlFor="isFlag" className="text-sm font-medium text-gray-900">

@@ -126,7 +126,7 @@ const ConfirmBankTransferModal: React.FC<ConfirmBankTransferModalProps> = ({
                 onClick={handleClose}
                 className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
               >
-                <X className="h-5 w-5" />
+                <X className="size-5" />
               </button>
             </div>
 

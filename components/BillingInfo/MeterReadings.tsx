@@ -56,7 +56,7 @@ const MeterReadingCardSkeleton = () => (
           <div className="h-6 w-20 rounded-full bg-gray-200"></div>
         </div>
         <div className="space-y-1">
-          <div className="h-4 w-40 rounded bg-gray-200 sm:w-48"></div>
+          <div className="size-40 rounded bg-gray-200 sm:w-48"></div>
           <div className="flex items-center gap-2">
             <div className="size-4 rounded-full bg-gray-200"></div>
             <div className="h-3 w-56 rounded bg-gray-200 sm:w-64"></div>
@@ -107,7 +107,7 @@ const MobileMeterReadingCardSkeleton = () => (
           <div className="h-5 w-16 rounded-full bg-gray-200"></div>
         </div>
         <div className="mt-2 space-y-1">
-          <div className="h-3 w-32 rounded bg-gray-200"></div>
+          <div className="size-32 rounded bg-gray-200"></div>
           <div className="flex items-center gap-1">
             <div className="size-3 rounded-full bg-gray-200"></div>
             <div className="h-3 w-40 rounded bg-gray-200"></div>
@@ -116,7 +116,7 @@ const MobileMeterReadingCardSkeleton = () => (
       </div>
       <div className="ml-2 flex flex-col items-end gap-1">
         <div className="space-y-1 text-right">
-          <div className="h-2 w-20 rounded bg-gray-200"></div>
+          <div className="size-20 rounded bg-gray-200"></div>
           <div className="w-22 h-2 rounded bg-gray-200"></div>
           <div className="h-3 w-24 rounded bg-gray-200"></div>
         </div>

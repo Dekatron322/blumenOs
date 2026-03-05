@@ -953,7 +953,7 @@ export default function DataQualityPage() {
                         )}
                       </div>
                       <ChevronDown
-                        className={`h-5 w-5 text-white/70 transition-transform ${
+                        className={`size-5 text-white/70 transition-transform ${
                           qualityAccordionOpen ? "rotate-180" : "rotate-0"
                         }`}
                       />

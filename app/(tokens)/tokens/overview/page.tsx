@@ -311,7 +311,7 @@ const PrepaidSummaryAnalytics = () => {
             <div className="border-r border-gray-200 pr-6 last:border-r-0">
               <div className="flex items-center justify-between">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
-                  <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="size-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -321,7 +321,7 @@ const PrepaidSummaryAnalytics = () => {
                   </svg>
                 </div>
                 <div className="flex items-center gap-1 text-green-600">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
                   </svg>
                   <span className="text-sm font-medium">
@@ -351,7 +351,7 @@ const PrepaidSummaryAnalytics = () => {
             <div className="border-r border-gray-200 pr-6 last:border-r-0">
               <div className="flex items-center justify-between">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
-                  <svg className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="size-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -361,7 +361,7 @@ const PrepaidSummaryAnalytics = () => {
                   </svg>
                 </div>
                 <div className="flex items-center gap-1 text-green-600">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
                   </svg>
                   <span className="text-sm font-medium">
@@ -397,7 +397,7 @@ const PrepaidSummaryAnalytics = () => {
             <div className="border-r border-gray-200 pr-6 last:border-r-0">
               <div className="flex items-center justify-between">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100">
-                  <svg className="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="size-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -407,7 +407,7 @@ const PrepaidSummaryAnalytics = () => {
                   </svg>
                 </div>
                 <div className="flex items-center gap-1 text-green-600">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
                   </svg>
                   <span className="text-sm font-medium">
@@ -437,12 +437,12 @@ const PrepaidSummaryAnalytics = () => {
             <div className="last:border-r-0">
               <div className="flex items-center justify-between">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100">
-                  <svg className="h-5 w-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="size-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
                 <div className="flex items-center gap-1 text-green-600">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
                   </svg>
                   <span className="text-sm font-medium">
@@ -477,14 +477,14 @@ const PrepaidSummaryAnalytics = () => {
           <h4 className="text-md font-semibold text-gray-900">Payment Queue Status</h4>
           <div className="flex items-center gap-2 text-sm text-gray-500">
             <span>Live Status</span>
-            <div className={`h-2 w-2 rounded-full ${prepaidStatsSuccess ? "bg-green-500" : "bg-gray-400"}`}></div>
+            <div className={`size-2 rounded-full ${prepaidStatsSuccess ? "bg-green-500" : "bg-gray-400"}`}></div>
           </div>
         </div>
         <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">
           {/* Pending Payments */}
           <div className="text-center">
             <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100">
-              <svg className="h-5 w-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="size-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -500,7 +500,7 @@ const PrepaidSummaryAnalytics = () => {
           {/* Processing Payments */}
           <div className="text-center">
             <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
-              <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="size-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -516,7 +516,7 @@ const PrepaidSummaryAnalytics = () => {
           {/* Retry Pending */}
           <div className="text-center">
             <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100">
-              <svg className="h-5 w-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="size-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -532,7 +532,7 @@ const PrepaidSummaryAnalytics = () => {
           {/* Redis Queue Length */}
           <div className="text-center">
             <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100">
-              <svg className="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="size-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -577,7 +577,7 @@ const PrepaidSummaryAnalytics = () => {
           <div className="mb-4 flex items-center justify-between">
             <h4 className="text-md font-semibold text-gray-900">By Channel</h4>
             {/* <div className="flex items-center gap-1 text-green-600">
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
               </svg>
               <span className="text-sm font-medium">+12.5%</span>
@@ -631,7 +631,7 @@ const PrepaidSummaryAnalytics = () => {
           <div className="mb-4 flex items-center justify-between">
             <h4 className="text-md font-semibold text-gray-900">Top Agents</h4>
             {/* <div className="flex items-center gap-1 text-green-600">
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
               </svg>
               <span className="text-sm font-medium">+18.2%</span>
@@ -686,7 +686,7 @@ const PrepaidSummaryAnalytics = () => {
         <div className="mb-4 flex items-center justify-between">
           <h4 className="text-md font-semibold text-gray-900">Daily Trend (Last 7 Days)</h4>
           <div className="flex items-center gap-1 text-green-600">
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
             </svg>
             <span className="text-sm font-medium">+6.8%</span>

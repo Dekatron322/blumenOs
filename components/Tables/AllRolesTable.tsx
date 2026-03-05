@@ -405,7 +405,7 @@ const CardsLoadingSkeleton = () => {
             <div className="size-7 rounded-full bg-gray-200" />
           </div>
           <div className="space-y-4">
-            <div className="h-4 w-48 rounded bg-gray-200" />
+            <div className="size-48 rounded bg-gray-200" />
             <div className="h-3 w-full rounded bg-gray-200" />
             <div className="grid grid-cols-2 gap-3 border-t pt-3">
               <div className="h-8 w-full rounded bg-gray-200" />

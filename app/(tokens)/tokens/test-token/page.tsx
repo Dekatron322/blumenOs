@@ -725,7 +725,7 @@ const TestToken = () => {
                   {loading && (
                     <div className="mb-6 flex items-center justify-center py-8">
                       <div className="flex items-center gap-2">
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
+                        <div className="size-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
                         <span className="text-sm text-gray-600">Searching meters...</span>
                       </div>
                     </div>
@@ -1210,7 +1210,7 @@ const TestToken = () => {
                                     </td>
                                     <td className="border-b p-3 text-sm">
                                       <div className="flex items-center gap-2">
-                                        <div className="h-2 w-24 rounded-full bg-gray-200">
+                                        <div className="size-24 rounded-full bg-gray-200">
                                           <div
                                             className="h-2 rounded-full bg-blue-600"
                                             style={{
@@ -1272,7 +1272,7 @@ const TestToken = () => {
                                           <ButtonModule
                                             variant="outline"
                                             size="sm"
-                                            icon={<Download className="h-4 w-4" />}
+                                            icon={<Download className="size-4" />}
                                             onClick={() => handleDownloadCsv(job)}
                                             className="whitespace-nowrap"
                                             disabled={downloadCsvLoading}

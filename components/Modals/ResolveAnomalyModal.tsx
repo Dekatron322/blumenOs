@@ -247,11 +247,11 @@ const ResolveAnomalyModal: React.FC<ResolveAnomalyModalProps> = ({ isOpen, onClo
                           </div>
                           {formData.action === action.value && (
                             <motion.div
-                              className="flex h-5 w-5 items-center justify-center rounded-full bg-[#004B23]"
+                              className="flex size-5 items-center justify-center rounded-full bg-[#004B23]"
                               initial={{ scale: 0 }}
                               animate={{ scale: 1 }}
                             >
-                              <div className="h-2 w-2 rounded-full bg-white" />
+                              <div className="size-2 rounded-full bg-white" />
                             </motion.div>
                           )}
                         </motion.button>

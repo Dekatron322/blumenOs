@@ -518,7 +518,7 @@ const DebtManagementSummary = ({
         transition={{ duration: 0.3 }}
       >
         <div className="flex items-center gap-3 border-b pb-3">
-          <div className="h-6 w-6 animate-pulse rounded-full bg-gray-200"></div>
+          <div className="size-6 animate-pulse rounded-full bg-gray-200"></div>
           <div className="h-5 w-32 animate-pulse rounded bg-gray-200"></div>
         </div>
         <div className="mt-4 space-y-3">

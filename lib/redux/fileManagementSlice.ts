@@ -696,6 +696,89 @@ export interface VendingPaymentMigrationBulkUploadResponse {
   data: BulkUploadJob
 }
 
+// Create Billing Schedule Run interfaces
+export interface CreateBillingScheduleRunRequest {
+  billingPeriodId: number
+  areaOfficeId: number
+  feederId: number
+  distributionSubstationId: number
+  title: string
+}
+
+export interface CreateBillingScheduleRunResponse {
+  isSuccess: boolean
+  message: string
+  data: {
+    id: number
+    postpaidBillingScheduleId: number
+    title: string
+    billingPeriodId: number
+    period: string
+    areaOfficeId: number
+    feederId: number
+    distributionSubstationId: number
+    status: number
+    currentStep: number
+    postpaidBillingJobRunId: number
+    lastError: string
+    createdById: number
+    startedAtUtc: string
+    completedAtUtc: string
+    createdAt: string
+    lastUpdated: string
+    createdByUser: {
+      id: number
+      fullName: string
+      email: string
+      phoneNumber: string
+      accountId: string
+    }
+    jobProgress: {
+      postpaidBillingJobRunId: number
+      status: number
+      totalCustomers: number
+      processedCustomers: number
+      pendingCustomers: number
+      draftedCount: number
+      finalizedCount: number
+      skippedCount: number
+      requestedAtUtc: string
+      startedAtUtc: string
+      completedAtUtc: string
+      lastError: string
+      arRefresh: {
+        viewName: string
+        lastRefreshedAtUtc: string
+        isRefreshing: boolean
+        hasPendingRequest: boolean
+        isReady: boolean
+      }
+    }
+    showPublishButton: boolean
+    showExportArButton: boolean
+    showGeneratePdfButton: boolean
+    steps: [
+      {
+        stepType: number
+        status: number
+        startedAtUtc: string
+        completedAtUtc: string
+        lastError: string
+      },
+    ]
+    bulkActions: [
+      {
+        actionType: number
+        lastStatus: number
+        lastUsedJobId: number
+        lastUsedAtUtc: string
+        lastUsedByUserId: number
+        lastError: string
+      },
+    ]
+  }
+}
+
 export interface BulkUploadPreview {
   fileId: number
   fileName: string
@@ -1203,6 +1286,12 @@ interface FileManagementState {
   vendingPaymentMigrationBulkUploadError: string | null
   vendingPaymentMigrationBulkUploadSuccess: boolean
   vendingPaymentMigrationBulkUploadResponse: VendingPaymentMigrationBulkUploadResponse | null
+
+  // Create Billing Schedule Run state
+  createBillingScheduleRunLoading: boolean
+  createBillingScheduleRunError: string | null
+  createBillingScheduleRunSuccess: boolean
+  createBillingScheduleRunResponse: CreateBillingScheduleRunResponse | null
 }
 
 // Initial state
@@ -1475,6 +1564,12 @@ const initialState: FileManagementState = {
   vendingPaymentMigrationBulkUploadError: null,
   vendingPaymentMigrationBulkUploadSuccess: false,
   vendingPaymentMigrationBulkUploadResponse: null,
+
+  // Create Billing Schedule Run state
+  createBillingScheduleRunLoading: false,
+  createBillingScheduleRunError: null,
+  createBillingScheduleRunSuccess: false,
+  createBillingScheduleRunResponse: null,
 }
 
 // Async thunks
@@ -2048,6 +2143,19 @@ export const processVendingPaymentMigrationImport = createAsyncThunk(
   }
 )
 
+export const createBillingScheduleRun = createAsyncThunk(
+  "fileManagement/createBillingScheduleRun",
+  async ({ id, request }: { id: number; request: CreateBillingScheduleRunRequest }, { rejectWithValue }) => {
+    try {
+      const endpoint = buildEndpointWithParams(API_ENDPOINTS.POSTPAID_BILLING.CREATE_BILLING_SCHEDULE_RUN, { id })
+      const response = await api.post<CreateBillingScheduleRunResponse>(endpoint, request)
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to create billing schedule run")
+    }
+  }
+)
+
 // CSV Jobs async thunk
 export const fetchCsvJobs = createAsyncThunk(
   "fileManagement/fetchCsvJobs",
@@ -2554,6 +2662,13 @@ const fileManagementSlice = createSlice({
       state.vendingPaymentMigrationBulkUploadSuccess = false
       state.vendingPaymentMigrationBulkUploadResponse = null
     },
+    // Reset Create Billing Schedule Run state
+    resetCreateBillingScheduleRunState: (state) => {
+      state.createBillingScheduleRunLoading = false
+      state.createBillingScheduleRunError = null
+      state.createBillingScheduleRunSuccess = false
+      state.createBillingScheduleRunResponse = null
+    },
     // Reset all file management state
     resetFileManagementState: (state) => {
       state.fileIntent = null
@@ -2675,6 +2790,14 @@ const fileManagementSlice = createSlice({
       state.csvJobsResponse = null
       state.csvJobs = []
       state.csvJobsPagination = null
+      state.vendingPaymentMigrationBulkUploadLoading = false
+      state.vendingPaymentMigrationBulkUploadError = null
+      state.vendingPaymentMigrationBulkUploadSuccess = false
+      state.vendingPaymentMigrationBulkUploadResponse = null
+      state.createBillingScheduleRunLoading = false
+      state.createBillingScheduleRunError = null
+      state.createBillingScheduleRunSuccess = false
+      state.createBillingScheduleRunResponse = null
     },
   },
   extraReducers: (builder) => {
@@ -3326,6 +3449,23 @@ const fileManagementSlice = createSlice({
         state.vendingPaymentMigrationBulkUploadSuccess = false
       })
 
+      // Create Billing Schedule Run reducers
+      .addCase(createBillingScheduleRun.pending, (state) => {
+        state.createBillingScheduleRunLoading = true
+        state.createBillingScheduleRunError = null
+        state.createBillingScheduleRunSuccess = false
+      })
+      .addCase(createBillingScheduleRun.fulfilled, (state, action) => {
+        state.createBillingScheduleRunLoading = false
+        state.createBillingScheduleRunSuccess = true
+        state.createBillingScheduleRunResponse = action.payload
+      })
+      .addCase(createBillingScheduleRun.rejected, (state, action) => {
+        state.createBillingScheduleRunLoading = false
+        state.createBillingScheduleRunError = action.payload as string
+        state.createBillingScheduleRunSuccess = false
+      })
+
       // CSV Jobs reducers
       .addCase(fetchCsvJobs.pending, (state) => {
         state.csvJobsLoading = true
@@ -3483,6 +3623,8 @@ export const {
   resetJobTypeTemplateState,
   resetClearTamperBulkUploadState,
   resetTestTokenBulkUploadState,
+  resetVendingPaymentMigrationBulkUploadState,
+  resetCreateBillingScheduleRunState,
 } = fileManagementSlice.actions
 
 export default fileManagementSlice.reducer

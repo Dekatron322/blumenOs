@@ -231,7 +231,7 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
             {loading ? (
               <div className="flex items-center justify-center py-4">
                 <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-[#004B23]"></div>
+                  <div className="size-4 animate-spin rounded-full border-2 border-gray-300 border-t-[#004B23]"></div>
                   Searching...
                 </div>
               </div>

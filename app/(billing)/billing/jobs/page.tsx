@@ -1295,7 +1295,7 @@ const BillingJobs: React.FC = () => {
                                     </td>
                                     <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
                                       <div className="flex items-center gap-2">
-                                        <div className="h-2 w-20 rounded-full bg-gray-200">
+                                        <div className="size-20 rounded-full bg-gray-200">
                                           <div
                                             className="h-2 rounded-full bg-green-500 transition-all duration-300"
                                             style={{ width: `${calculateProgress(job)}%` }}

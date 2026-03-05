@@ -1137,7 +1137,7 @@ const MeterInventoryTable: React.FC<MeterInventoryTableProps> = ({ pageSize: pro
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <MdOutlineArrowBackIosNew className="h-4 w-4" />
+                    <MdOutlineArrowBackIosNew className="size-4" />
                     Export
                   </motion.button> */}
                   <button

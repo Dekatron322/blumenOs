@@ -780,7 +780,7 @@ export default function PerformanceAnalyticsDashboard() {
                 {collectionByBandLoading ? (
                   <div className="flex h-64 items-center justify-center">
                     <div className="w-full">
-                      <div className="mb-4 h-4 w-48 animate-pulse rounded bg-gray-200"></div>
+                      <div className="mb-4 size-48 animate-pulse rounded bg-gray-200"></div>
                       <div className="space-y-2">
                         {[...Array(5)].map((_, i) => (
                           <div key={i} className="flex items-center gap-4">
@@ -901,7 +901,7 @@ export default function PerformanceAnalyticsDashboard() {
                 {cboPerformanceLoading ? (
                   <div className="flex h-64 items-center justify-center">
                     <div className="w-full">
-                      <div className="mb-4 h-4 w-48 animate-pulse rounded bg-gray-200"></div>
+                      <div className="mb-4 size-48 animate-pulse rounded bg-gray-200"></div>
                       <div className="h-48 w-full animate-pulse rounded bg-gray-200"></div>
                     </div>
                   </div>
