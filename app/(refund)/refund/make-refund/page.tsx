@@ -67,6 +67,7 @@ const MakeRefundPage = () => {
   } | null>(null)
 
   const [showManualCustomerInfo, setShowManualCustomerInfo] = useState(false)
+  const [amountInputValue, setAmountInputValue] = useState("")
 
   const [activeTab, setActiveTab] = useState<"reference" | "meter" | "manual">("reference")
   const [meterNumber, setMeterNumber] = useState("")
@@ -267,23 +268,45 @@ const MakeRefundPage = () => {
     }
   }
 
-  // Format amount for display with naira symbol and thousand separators
-  const formatAmountForDisplay = (amount: number): string => {
-    if (isNaN(amount) || amount === 0) return ""
-    return new Intl.NumberFormat("en-NG", {
-      style: "currency",
-      currency: "NGN",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(amount)
-  }
-
   // Handle amount input change with proper formatting
   const handleAmountInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const inputValue = e.target.value
-    const numericValue = inputValue.replace(/[^\d.]/g, "")
-    const parsedValue = parseFloat(numericValue) || 0
+    let inputValue = e.target.value
+    // Remove currency symbol and spaces, keep digits, decimal point, and commas
+    inputValue = inputValue.replace(/[₦\s]/g, "")
+    // Remove commas for processing
+    const withoutCommas = inputValue.replace(/,/g, "")
+    // Only allow digits and one decimal point
+    const numericValue = withoutCommas.replace(/[^\d.]/g, "")
+    // Handle multiple decimal points - keep only the first one
+    const parts = numericValue.split(".")
+    let sanitizedValue = numericValue
+    if (parts.length > 2) {
+      sanitizedValue = `${parts[0]}.${parts.slice(1).join("")}`
+    }
+    // Limit decimal places to 2
+    if (sanitizedValue.includes(".")) {
+      const [whole, decimal = ""] = sanitizedValue.split(".")
+      sanitizedValue = `${whole}.${decimal.slice(0, 2)}`
+    }
+
+    // Update the display value (with thousand separators but preserving decimal input)
+    const displayValue = formatAmountInput(sanitizedValue)
+    setAmountInputValue(displayValue)
+
+    // Update the numeric value in form state
+    const parsedValue = parseFloat(sanitizedValue) || 0
     handleManualFormChange("amount", parsedValue)
+  }
+
+  // Format amount input with thousand separators while preserving decimal typing
+  const formatAmountInput = (value: string): string => {
+    if (!value) return ""
+    const parts = value.split(".")
+    const wholePart = (parts[0] ?? "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+    if (parts.length > 1) {
+      return `${wholePart}.${parts[1]}`
+    }
+    return wholePart
   }
 
   const validate = () => {
@@ -369,6 +392,7 @@ const MakeRefundPage = () => {
       phoneNumber: "",
       reason: "",
     })
+    setAmountInputValue("")
     setErrors({})
     dispatch(clearMakeRefund())
     dispatch(clearManualRefund())
@@ -403,6 +427,7 @@ const MakeRefundPage = () => {
       phoneNumber: "",
       reason: "",
     })
+    setAmountInputValue("")
     setErrors({})
     dispatch(clearMakeRefund())
     dispatch(clearManualRefund())
@@ -884,9 +909,9 @@ const MakeRefundPage = () => {
                                 label="Refund Amount"
                                 type="text"
                                 required
-                                value={formatAmountForDisplay(manualForm.amount)}
+                                value={amountInputValue}
                                 onChange={handleAmountInputChange}
-                                placeholder="₦0.00"
+                                placeholder="0.00"
                                 error={errors.manualAmount}
                               />
                             </div>
