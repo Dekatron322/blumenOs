@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { fetchBillingSchedules } from "lib/redux/billingPeriodsSlice"
+import { fetchBillingSchedules, Stage } from "lib/redux/billingPeriodsSlice"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"
 import { notify } from "components/ui/Notification/Notification"
@@ -346,42 +346,42 @@ const GenerateBillPage = () => {
                                       className="h-2 rounded-full bg-blue-600 transition-all duration-300"
                                       style={{
                                         width: `${
-                                          (schedule.latestRunProgress.processedStages /
-                                            schedule.latestRunProgress.totalStages) *
-                                          100
+                                          schedule.latestRunProgress.stages.reduce(
+                                            (acc: number, stage: Stage) => acc + (stage.processed / stage.total) * 100,
+                                            0
+                                          ) / schedule.latestRunProgress.stages.length
                                         }%`,
                                       }}
                                     />
                                   </div>
 
                                   {/* Individual Stages */}
-                                  <div className="mt-3 space-y-1">
-                                    {schedule.latestRunProgress.stages
-                                      .slice(0, 3)
-                                      .map((stage: any, stageIndex: number) => {
-                                        const stepInfo = getStepInfo(stage.stage)
-                                        return (
-                                          <div key={stageIndex} className="flex items-center justify-between text-xs">
-                                            <span className="text-gray-500">{stepInfo.name}</span>
-                                            <div className="flex items-center space-x-2">
-                                              <span className="text-gray-400">
-                                                {stage.processed}/{stage.total}
-                                              </span>
-                                              <div className="h-1 w-12 rounded-full bg-gray-200">
-                                                <div
-                                                  className={`bg-${stepInfo.color}-500 h-1 rounded-full transition-all duration-300`}
-                                                  style={{ width: `${(stage.processed / stage.total) * 100}%` }}
-                                                />
-                                              </div>
+                                  <div className="mt-3 space-y-2">
+                                    {schedule.latestRunProgress.stages.map((stage: Stage) => (
+                                      <div key={stage.stage} className="space-y-1">
+                                        {/* Stage Progress Details */}
+                                        {stage.total > 0 && stage.state !== 0 && (
+                                          <div className="mt-2 grid grid-cols-4 gap-2 text-xs">
+                                            <div>
+                                              <span className="opacity-70">Total:</span>
+                                              <span className="ml-1 font-medium">{stage.total}</span>
+                                            </div>
+                                            <div>
+                                              <span className="text-green-700 opacity-70">Success:</span>
+                                              <span className="ml-1 font-medium text-green-800">{stage.succeeded}</span>
+                                            </div>
+                                            <div>
+                                              <span className="text-red-700 opacity-70">Failed:</span>
+                                              <span className="ml-1 font-medium text-red-800">{stage.failed}</span>
+                                            </div>
+                                            <div>
+                                              <span className="text-orange-700 opacity-70">Pending:</span>
+                                              <span className="ml-1 font-medium text-orange-800">{stage.pending}</span>
                                             </div>
                                           </div>
-                                        )
-                                      })}
-                                    {schedule.latestRunProgress.stages.length > 3 && (
-                                      <div className="text-center text-xs text-gray-400">
-                                        +{schedule.latestRunProgress.stages.length - 3} more stages
+                                        )}
                                       </div>
-                                    )}
+                                    ))}
                                   </div>
                                 </div>
                               </div>
@@ -516,25 +516,27 @@ const GenerateBillPage = () => {
 
                     <div className="space-y-2">
                       <p className="text-xs font-medium text-gray-500">Stages Progress</p>
-                      {selectedSchedule.latestRunProgress.stages.map((stage: any, index: number) => {
-                        const stepInfo = getStepInfo(stage.stage)
-                        return (
-                          <div key={index} className="flex items-center justify-between text-xs">
-                            <span className="font-medium text-gray-700">{stepInfo.name}</span>
-                            <div className="flex items-center space-x-2">
-                              <span className="text-gray-500">
-                                {stage.processed}/{stage.total}
-                              </span>
-                              <div className="h-2 w-16 rounded-full bg-gray-200">
-                                <div
-                                  className={`bg-${stepInfo.color}-500 h-2 rounded-full transition-all duration-300`}
-                                  style={{ width: `${(stage.processed / stage.total) * 100}%` }}
-                                />
+                      {selectedSchedule.latestRunProgress.stages
+                        .filter((stage: Stage) => stage.stage !== 1 && stage.stage !== 2 && stage.stage !== 3)
+                        .map((stage: Stage, index: number) => {
+                          const stepInfo = getStepInfo(stage.stage)
+                          return (
+                            <div key={index} className="flex items-center justify-between text-xs">
+                              <span className="font-medium text-gray-700">{stepInfo.name}</span>
+                              <div className="flex items-center space-x-2">
+                                <span className="text-gray-500">
+                                  {stage.processed}/{stage.total}
+                                </span>
+                                <div className="h-2 w-16 rounded-full bg-gray-200">
+                                  <div
+                                    className={`bg-${stepInfo.color}-500 h-2 rounded-full transition-all duration-300`}
+                                    style={{ width: `${(stage.processed / stage.total) * 100}%` }}
+                                  />
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        )
-                      })}
+                          )
+                        })}
                     </div>
                   </div>
                 </div>

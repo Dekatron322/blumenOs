@@ -74,7 +74,7 @@ const useLatestJobs = () => {
   const fetchLatestJobs = useCallback(async () => {
     setIsLoading(true)
     try {
-      const jobTypes = [17, 19, 20, 21, 30, 3, 2, 36] // All billing job types
+      const jobTypes = [19, 20, 30, 3, 2, 36] // All billing job types (excluding generate missing bills and bill crucial ops)
       const jobsData: Record<number, CsvJob | null> = {}
 
       // Fetch latest job for each type
@@ -800,13 +800,13 @@ const FileManagementPage = () => {
 
   // Upload type options with enhanced metadata
   const uploadTypeOptions: UploadTypeOption[] = [
-    {
-      name: "Generate Missing Bills",
-      value: 17,
-      description: "Generate missing bills for postpaid customers based on account numbers",
-      requiredColumns: ["CustomerAccountNo"],
-      sampleData: ["CustomerAccountNo", "123456789", "987654321", "555666777"],
-    },
+    // {
+    //   name: "Generate Missing Bills",
+    //   value: 17,
+    //   description: "Generate missing bills for postpaid customers based on account numbers",
+    //   requiredColumns: ["CustomerAccountNo"],
+    //   sampleData: ["CustomerAccountNo", "123456789", "987654321", "555666777"],
+    // },
     {
       name: "Bill Adjustment",
       value: 19,
@@ -826,13 +826,13 @@ const FileManagementPage = () => {
       requiredColumns: ["CustomerAccountNo", "MonthYear"],
       sampleData: ["CustomerAccountNo,MonthYear", "123456789,2026-01", "987654321,2026-01", "555666777,2026-02"],
     },
-    {
-      name: "Bill Crucial Ops",
-      value: 21,
-      description: "Process crucial billing operations for selected accounts",
-      requiredColumns: ["CustomerAccountNo", "MonthYear"],
-      sampleData: ["CustomerAccountNo,MonthYear", "123456789,2026-01", "987654321,2026-01", "555666777,2026-02"],
-    },
+    // {
+    //   name: "Bill Crucial Ops",
+    //   value: 21,
+    //   description: "Process crucial billing operations for selected accounts",
+    //   requiredColumns: ["CustomerAccountNo", "MonthYear"],
+    //   sampleData: ["CustomerAccountNo,MonthYear", "123456789,2026-01", "987654321,2026-01", "555666777,2026-02"],
+    // },
     {
       name: "Bill Recompute",
       value: 30,
@@ -881,16 +881,16 @@ const FileManagementPage = () => {
   // Helper function to get bulkInsertType based on upload type
   const getBulkInsertType = (uploadType: number | string | null): string => {
     switch (uploadType) {
-      case 17:
-        return "bill-generate-missing"
+      // case 17:
+      //   return "bill-generate-missing"
       case 18:
         return "bill-generate-past"
       case 19:
         return "bill-adjustment"
       case 20:
         return "bill-finalize"
-      case 21:
-        return "bill-crucial-ops"
+      // case 21:
+      //   return "bill-crucial-ops"
       case 30:
         return "bill-recompute"
       case 3:
@@ -907,16 +907,16 @@ const FileManagementPage = () => {
   // Helper function to get purpose based on upload type
   const getPurpose = (uploadType: number | string | null): string => {
     switch (uploadType) {
-      case 17:
-        return "postpaid-missing-bills-bulk"
+      // case 17:
+      //   return "postpaid-missing-bills-bulk"
       case 18:
         return "postpaid-past-bills-bulk"
       case 19:
         return "postpaid-bill-adjustments-bulk"
       case 20:
         return "postpaid-bill-finalize-bulk"
-      case 21:
-        return "postpaid-bill-crucial-bulk"
+      // case 21:
+      //   return "postpaid-bill-crucial-bulk"
       case 30:
         return "postpaid-bill-recompute-bulk"
       case 3:
@@ -1363,11 +1363,12 @@ const FileManagementPage = () => {
               try {
                 let bulkResult
 
-                // Use different endpoint based on upload type
-                if (selectedUploadType === 17) {
-                  // Bill Generate Missing - use missing postpaid billing endpoint
-                  bulkResult = await dispatch(processMissingPostpaidBillingBulkUpload({ fileId })).unwrap()
-                } else if (selectedUploadType === 18) {
+                // // Use different endpoint based on upload type
+                // if (selectedUploadType === 17) {
+                //   // Bill Generate Missing - use missing postpaid billing endpoint
+                //   bulkResult = await dispatch(processMissingPostpaidBillingBulkUpload({ fileId })).unwrap()
+                // } else
+                if (selectedUploadType === 18) {
                   // Bill Generate Past - use past postpaid billing endpoint
                   bulkResult = await dispatch(processPastPostpaidBillingBulkUpload({ fileId })).unwrap()
                 } else if (selectedUploadType === 19) {
@@ -1376,9 +1377,9 @@ const FileManagementPage = () => {
                 } else if (selectedUploadType === 20) {
                   // Bill Finalize - use finalize billing endpoint
                   bulkResult = await dispatch(processFinalizeBillingBulkUpload({ fileId })).unwrap()
-                } else if (selectedUploadType === 21) {
-                  // Bill Crucial Ops - use bill crucial ops endpoint
-                  bulkResult = await dispatch(processBillCrucialOpsBulkUpload({ fileId })).unwrap()
+                  // } else if (selectedUploadType === 21) {
+                  //   // Bill Crucial Ops - use bill crucial ops endpoint
+                  //   bulkResult = await dispatch(processBillCrucialOpsBulkUpload({ fileId })).unwrap()
                 } else if (selectedUploadType === 30) {
                   // Bill Recompute - use bill recompute endpoint
                   bulkResult = await dispatch(processBillRecomputeBulkUpload({ fileId })).unwrap()

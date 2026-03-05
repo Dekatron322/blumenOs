@@ -29,6 +29,7 @@ import { fetchFeeders } from "lib/redux/feedersSlice"
 import { fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
 import { fetchBillingPeriods, Stage } from "lib/redux/billingPeriodsSlice"
 import {
+  BillingScheduleRunStage,
   clearExportArScheduleRunStatus,
   clearRunPdfGenerationStatus,
   exportArScheduleRun,
@@ -715,25 +716,11 @@ const JobTypeUploadsTable = ({ jobType }: { jobType: number | null }) => {
                       {new Date(job.requestedAtUtc).toLocaleString()}
                     </td>
                     <td className="border-b p-3 text-sm">
-                      <div className="flex items-center gap-2">
-                        <div className="size-24 rounded-full bg-gray-200">
-                          <div
-                            className="h-2 rounded-full bg-blue-600"
-                            style={{
-                              width: `${
-                                job.totalRows !== null && job.totalRows > 0
-                                  ? (job.processedRows / job.totalRows) * 100
-                                  : 0
-                              }%`,
-                            }}
-                          ></div>
-                        </div>
-                        <span className="text-xs text-gray-600">
-                          {job.totalRows !== null && job.totalRows > 0
-                            ? Math.round((job.processedRows / job.totalRows) * 100)
-                            : "Processing"}
-                        </span>
-                      </div>
+                      <span className="text-xs text-gray-600">
+                        {job.totalRows !== null && job.totalRows > 0
+                          ? Math.round((job.succeededRows / job.totalRows) * 100) + "%"
+                          : "Processing"}
+                      </span>
                     </td>
                     <td className="border-b p-3 text-sm">
                       <div className="font-medium text-blue-600">
@@ -2276,7 +2263,7 @@ const FileManagementPage = () => {
                       </div>
                     </div>
 
-                    {hasNoRunningJobs && (
+                    {billingScheduleRun?.latestRunProgress === null && (
                       <div className="mb-4 flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
                         <Info className="size-5 shrink-0 text-amber-600" />
                         <p className="text-sm text-amber-800">
@@ -2290,7 +2277,7 @@ const FileManagementPage = () => {
                         const latestJob =
                           latestJobs[typeof type.value === "number" ? type.value : parseInt(type.value)] || null
                         const isLoading = jobsLoading
-                        const isCardDisabled = isRunInProgress || hasNoRunningJobs
+                        const isCardDisabled = isRunInProgress || billingScheduleRun?.latestRunProgress === null
 
                         return (
                           <motion.button
@@ -2915,12 +2902,163 @@ const FileManagementPage = () => {
                       )}
                     </div>
                   )}
+
+                  {/* Detailed Stages Progress */}
+                  {billingScheduleRun?.latestRunProgress?.stages && (
+                    <div className="mt-4 border-t border-blue-200 pt-4">
+                      <h5 className="mb-3 text-sm font-medium text-blue-900">All Stages Progress</h5>
+                      <div className="space-y-3">
+                        {billingScheduleRun.latestRunProgress.stages.map((stage: BillingScheduleRunStage) => {
+                          const stageProgress = stage.total > 0 ? Math.round((stage.processed / stage.total) * 100) : 0
+                          const getStatusColor = (state: number, failed: number, succeeded: number) => {
+                            // Handle failed stages that might have state 2 but failed > 0
+                            if (failed > 0 && succeeded === 0) {
+                              return "text-red-600 bg-red-50 border-red-200" // Failed
+                            }
+                            switch (state) {
+                              case 0:
+                                return "text-gray-500 bg-gray-50 border-gray-200" // Pending
+                              case 1:
+                                return "text-blue-600 bg-blue-50 border-blue-200" // Running
+                              case 2:
+                                return "text-green-600 bg-green-50 border-green-200" // Succeeded
+                              case 3:
+                                return "text-red-600 bg-red-50 border-red-200" // Failed
+                              default:
+                                return "text-gray-500 bg-gray-50 border-gray-200"
+                            }
+                          }
+                          const getStatusIcon = (state: number, failed: number, succeeded: number) => {
+                            // Handle failed stages that might have state 2 but failed > 0
+                            if (failed > 0 && succeeded === 0) {
+                              return <X className="size-3 text-red-600" />
+                            }
+                            switch (state) {
+                              case 0:
+                                return <div className="size-3 rounded-full bg-gray-400" />
+                              case 1:
+                                return (
+                                  <div className="size-3 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+                                )
+                              case 2:
+                                return <CheckCircle className="size-3 text-green-600" />
+                              case 3:
+                                return <X className="size-3 text-red-600" />
+                              default:
+                                return <div className="size-3 rounded-full bg-gray-400" />
+                            }
+                          }
+                          const getStatusText = (state: number, failed: number, succeeded: number) => {
+                            // Handle failed stages that might have state 2 but failed > 0
+                            if (failed > 0 && succeeded === 0) {
+                              return "Failed"
+                            }
+                            switch (state) {
+                              case 0:
+                                return "Pending"
+                              case 1:
+                                return "Running"
+                              case 2:
+                                return "Completed"
+                              case 3:
+                                return "Failed"
+                              default:
+                                return "Unknown"
+                            }
+                          }
+
+                          return (
+                            <div
+                              key={stage.stage}
+                              className={`rounded-lg border p-3 ${getStatusColor(
+                                stage.state,
+                                stage.failed,
+                                stage.succeeded
+                              )}`}
+                            >
+                              <div className="mb-2 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  {getStatusIcon(stage.state, stage.failed, stage.succeeded)}
+                                  <span className="text-sm font-medium">{getStageName(stage.stage)}</span>
+                                  <span className="rounded-full bg-white/60 px-2 py-1 text-xs font-medium">
+                                    {getStatusText(stage.state, stage.failed, stage.succeeded)}
+                                  </span>
+                                </div>
+                                {stage.total > 0 && (
+                                  <div className="text-xs font-medium">
+                                    {stage.processed} / {stage.total} ({stageProgress}%)
+                                  </div>
+                                )}
+                              </div>
+
+                              <p className="mb-2 text-xs opacity-80">{stage.message}</p>
+
+                              {stage.total > 0 && stage.state !== 0 && (
+                                <div className="space-y-1">
+                                  <div className="h-1.5 w-full rounded-full bg-white/60">
+                                    <div
+                                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                                        stage.state === 1
+                                          ? "bg-blue-600"
+                                          : stage.state === 2
+                                          ? "bg-green-600"
+                                          : stage.state === 3
+                                          ? "bg-red-600"
+                                          : "bg-gray-400"
+                                      }`}
+                                      style={{ width: `${stageProgress}%` }}
+                                    />
+                                  </div>
+                                  <div className="grid grid-cols-4 gap-2 text-xs">
+                                    <div>
+                                      <span className="opacity-70">Total:</span>
+                                      <span className="ml-1 font-medium">{stage.total}</span>
+                                    </div>
+                                    <div>
+                                      <span className="text-green-700 opacity-70">Success:</span>
+                                      <span className="ml-1 font-medium text-green-800">{stage.succeeded}</span>
+                                    </div>
+                                    <div>
+                                      <span className="text-red-700 opacity-70">Failed:</span>
+                                      <span className="ml-1 font-medium text-red-800">{stage.failed}</span>
+                                    </div>
+                                    <div>
+                                      <span className="text-orange-700 opacity-70">Pending:</span>
+                                      <span className="ml-1 font-medium text-orange-800">{stage.pending}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
+                              {stage.lastError && (
+                                <div className="mt-2 rounded bg-red-100 p-2 text-xs text-red-700">
+                                  <strong>Error:</strong> {stage.lastError}
+                                </div>
+                              )}
+
+                              <div className="mt-2 text-xs opacity-60">
+                                {stage.requestedAtUtc && (
+                                  <div>Requested: {new Date(stage.requestedAtUtc).toLocaleString()}</div>
+                                )}
+                                {stage.startedAtUtc && (
+                                  <div>Started: {new Date(stage.startedAtUtc).toLocaleString()}</div>
+                                )}
+                                {stage.completedAtUtc && (
+                                  <div>Completed: {new Date(stage.completedAtUtc).toLocaleString()}</div>
+                                )}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )
             })()}
 
             <div className="flex w-full gap-3 ">
-              {hasNoRunningJobs ? (
+              {billingScheduleRun?.latestRunProgress === null ? (
                 <button
                   className="flex w-full items-center justify-center rounded-lg bg-blue-600 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                   onClick={() => {
