@@ -201,7 +201,7 @@ const GenerateBillPage = () => {
                     className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     aria-label="Go back"
                   >
-                    <ArrowLeft className="h-5 w-5" />
+                    <ArrowLeft className="size-5" />
                   </button>
                   <div>
                     <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Billing Schedule Templates</h1>
@@ -216,7 +216,7 @@ const GenerateBillPage = () => {
                     size="sm"
                     onClick={handleRefresh}
                     disabled={billingSchedulesLoading}
-                    icon={<RefreshCw className={`h-4 w-4 ${billingSchedulesLoading ? "animate-spin" : ""}`} />}
+                    icon={<RefreshCw className={`size-4 ${billingSchedulesLoading ? "animate-spin" : ""}`} />}
                   >
                     {billingSchedulesLoading ? "Refreshing..." : "Refresh"}
                   </ButtonModule>
@@ -260,7 +260,7 @@ const GenerateBillPage = () => {
                   {billingSchedulesError && (
                     <div className="rounded-lg border border-red-200 bg-red-50 p-4">
                       <div className="flex items-center">
-                        <AlertCircle className="mr-2 h-5 w-5 text-red-600" />
+                        <AlertCircle className="mr-2 size-5 text-red-600" />
                         <div>
                           <h3 className="text-sm font-medium text-red-800">Error loading billing schedules</h3>
                           <p className="mt-1 text-sm text-red-600">{billingSchedulesError}</p>
@@ -291,7 +291,7 @@ const GenerateBillPage = () => {
                           <div className="border-b border-gray-100 p-6">
                             <div className="mb-4 flex items-start justify-between">
                               <div className="flex items-center">
-                                <Calendar className="h-6 w-6 text-blue-600" />
+                                <Calendar className="size-6 text-blue-600" />
 
                                 <div className="ml-3">
                                   <h3 className="text-lg font-semibold text-gray-900">{schedule.name}</h3>
@@ -324,7 +324,7 @@ const GenerateBillPage = () => {
                                       <span
                                         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-${statusInfo.color}-100 text-${statusInfo.color}-800`}
                                       >
-                                        <Icon className="mr-1 h-3 w-3" />
+                                        <Icon className="mr-1 size-3" />
                                         {statusInfo.text}
                                       </span>
                                     )
@@ -437,7 +437,7 @@ const GenerateBillPage = () => {
             <div className="mb-6 flex items-center justify-between">
               <h3 className="text-xl font-semibold text-gray-900">{selectedSchedule.name}</h3>
               <button onClick={() => setSelectedSchedule(null)} className="text-gray-400 hover:text-gray-600">
-                <XCircle className="h-5 w-5" />
+                <XCircle className="size-5" />
               </button>
             </div>
 
@@ -457,7 +457,7 @@ const GenerateBillPage = () => {
                     >
                       {(() => {
                         const Icon = getScheduleTypeInfo(selectedSchedule.scheduleType).icon
-                        return <Icon className="mr-2 h-4 w-4" />
+                        return <Icon className="mr-2 size-4" />
                       })()}
                       {getScheduleTypeInfo(selectedSchedule.scheduleType).name}
                     </span>

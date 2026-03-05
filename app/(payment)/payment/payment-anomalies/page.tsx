@@ -1259,7 +1259,7 @@ export default function PaymentAnomaliesPage() {
                         )}
                       </div>
                       <ChevronDown
-                        className={`h-5 w-5 text-white/70 transition-transform ${
+                        className={`size-5 text-white/70 transition-transform ${
                           anomaliesAccordionOpen ? "rotate-180" : "rotate-0"
                         }`}
                       />

@@ -620,7 +620,7 @@ const AllAssignedOfficers: React.FC<AllAssignedOfficersProps> = ({
                         <ButtonModule
                           variant="outline"
                           size="sm"
-                          icon={<VscEye className="h-4 w-4" />}
+                          icon={<VscEye className="size-4" />}
                           onClick={() => handleViewAgentDetails(agent)}
                         >
                           View

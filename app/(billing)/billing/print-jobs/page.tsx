@@ -253,7 +253,7 @@ const MarkAsReadyToPrintModal: React.FC<{
               animate={{ opacity: 1, y: 0 }}
             >
               <div className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5" />
+                <AlertCircle className="size-5" />
                 <p className="font-medium">Error</p>
               </div>
               <p className="mt-1 text-sm">{error}</p>
@@ -309,7 +309,7 @@ const MarkAsReadyToPrintModal: React.FC<{
                 <div className="mb-4 rounded-md bg-yellow-50 p-3">
                   <div className="flex">
                     <div className="flex-shrink-0">
-                      <AlertCircle className="h-4 w-4 text-yellow-400" />
+                      <AlertCircle className="size-4 text-yellow-400" />
                     </div>
                     <div className="ml-3">
                       <p className="text-sm text-yellow-800">
@@ -372,7 +372,7 @@ const MarkAsReadyToPrintModal: React.FC<{
                             checked={selectedCustomers.includes(customer.accountNumber)}
                             onChange={() => {}} // Controlled by parent click
                             disabled={selectedFilterCount > 0 && !hasCustomersSelected}
-                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
+                            className="size-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
                           />
                           <div className="ml-3 flex-1">
                             <div className="flex items-center justify-between">
@@ -1345,7 +1345,7 @@ const PrintJobs = () => {
                             </td>
                             <td className="border-b p-3 text-sm">
                               <div className="flex items-center gap-2">
-                                <div className="h-2 w-24 rounded-full bg-gray-200">
+                                <div className="size-24 rounded-full bg-gray-200">
                                   <div
                                     className="h-2 rounded-full bg-blue-600"
                                     style={{
@@ -1367,7 +1367,7 @@ const PrintJobs = () => {
                                   <ButtonModule
                                     variant="outline"
                                     size="sm"
-                                    icon={<Download className="h-4 w-4" />}
+                                    icon={<Download className="size-4" />}
                                     onClick={() => handleDownloadZip(job)}
                                     loading={downloadPrintJobLoading}
                                     className="whitespace-nowrap"

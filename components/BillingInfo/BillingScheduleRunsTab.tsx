@@ -54,17 +54,17 @@ const getRunStatusColor = (status: number): string => {
 const getRunStatusIcon = (status: number) => {
   switch (status) {
     case 0:
-      return <Clock className="h-4 w-4 text-yellow-600" />
+      return <Clock className="size-4 text-yellow-600" />
     case 1:
-      return <RefreshCw className="h-4 w-4 animate-spin text-blue-600" />
+      return <RefreshCw className="size-4 animate-spin text-blue-600" />
     case 2:
-      return <CheckCircle className="h-4 w-4 text-green-600" />
+      return <CheckCircle className="size-4 text-green-600" />
     case 3:
-      return <XCircle className="h-4 w-4 text-red-600" />
+      return <XCircle className="size-4 text-red-600" />
     case 4:
-      return <AlertCircle className="h-4 w-4 text-gray-600" />
+      return <AlertCircle className="size-4 text-gray-600" />
     default:
-      return <Clock className="h-4 w-4 text-gray-600" />
+      return <Clock className="size-4 text-gray-600" />
   }
 }
 
@@ -164,14 +164,14 @@ const BillingScheduleRunsTab: React.FC<BillingScheduleRunsTabProps> = ({ schedul
       <div className="flex items-center justify-center py-16">
         <div className="flex flex-col items-center gap-4 text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-            <AlertCircle className="h-6 w-6 text-red-600" />
+            <AlertCircle className="size-6 text-red-600" />
           </div>
           <div>
             <p className="font-medium text-gray-900">Failed to load schedule runs</p>
             <p className="mt-1 text-sm text-gray-500">{billingScheduleRunsError}</p>
           </div>
           <ButtonModule variant="outline" size="sm" onClick={handleRefresh}>
-            <RefreshCw className="mr-2 h-4 w-4" />
+            <RefreshCw className="mr-2 size-4" />
             Retry
           </ButtonModule>
         </div>
@@ -184,7 +184,7 @@ const BillingScheduleRunsTab: React.FC<BillingScheduleRunsTabProps> = ({ schedul
       <div className="flex items-center justify-center py-16">
         <div className="flex flex-col items-center gap-4 text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-            <FileText className="h-6 w-6 text-gray-400" />
+            <FileText className="size-6 text-gray-400" />
           </div>
           <div>
             <p className="font-medium text-gray-900">No schedule runs found</p>
@@ -193,7 +193,7 @@ const BillingScheduleRunsTab: React.FC<BillingScheduleRunsTabProps> = ({ schedul
             </p>
           </div>
           <ButtonModule variant="outline" size="sm" onClick={handleRefresh}>
-            <RefreshCw className="mr-2 h-4 w-4" />
+            <RefreshCw className="mr-2 size-4" />
             Refresh
           </ButtonModule>
         </div>
@@ -210,7 +210,7 @@ const BillingScheduleRunsTab: React.FC<BillingScheduleRunsTabProps> = ({ schedul
           <p className="text-sm text-gray-500">{billingScheduleRuns.length} run(s) found</p>
         </div>
         <ButtonModule variant="outline" size="sm" onClick={handleRefresh} disabled={billingScheduleRunsLoading}>
-          <RefreshCw className={`mr-2 h-4 w-4 ${billingScheduleRunsLoading ? "animate-spin" : ""}`} />
+          <RefreshCw className={`mr-2 size-4 ${billingScheduleRunsLoading ? "animate-spin" : ""}`} />
           Refresh
         </ButtonModule>
       </div>
@@ -283,7 +283,7 @@ const BillingScheduleRunsTab: React.FC<BillingScheduleRunsTabProps> = ({ schedul
                     {/* Expand Icon */}
                     <td className="px-4 py-3">
                       <svg
-                        className={`h-4 w-4 text-gray-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                        className={`size-4 text-gray-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -357,7 +357,7 @@ const BillingScheduleRunsTab: React.FC<BillingScheduleRunsTabProps> = ({ schedul
                             onClick={(e) => handleDownloadAR(e, run)}
                             className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
                           >
-                            <Download className="h-4 w-4" />
+                            <Download className="size-4" />
                             Download AR
                           </button>
                         )}
@@ -366,7 +366,7 @@ const BillingScheduleRunsTab: React.FC<BillingScheduleRunsTabProps> = ({ schedul
                             onClick={(e) => handleDownloadPDF(e, run)}
                             className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-purple-700"
                           >
-                            <Download className="h-4 w-4" />
+                            <Download className="size-4" />
                             Download PDF
                           </button>
                         )}

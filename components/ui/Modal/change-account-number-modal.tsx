@@ -183,7 +183,7 @@ const ChangeAccountNumberModal: React.FC<ChangeAccountNumberModalProps> = ({
             className="flex size-7 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600 sm:size-8"
             disabled={changeAccountNumberLoading}
           >
-            <CloseIcon className="h-5 w-5" />
+            <CloseIcon className="size-5" />
           </button>
         </div>
 

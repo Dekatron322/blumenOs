@@ -125,7 +125,7 @@ const ChangeTechnicalConfigModal: React.FC<ChangeTechnicalConfigModalProps> = ({
         <div className="flex items-center justify-between border-b border-gray-200 p-6">
           <div className="flex items-center gap-3">
             <div className="rounded-lg bg-red-100 p-2">
-              <Settings className="h-5 w-5 text-red-600" />
+              <Settings className="size-5 text-red-600" />
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900">Change Technical Config</h3>
@@ -137,7 +137,7 @@ const ChangeTechnicalConfigModal: React.FC<ChangeTechnicalConfigModalProps> = ({
             disabled={loading}
             className="p-1 text-gray-400 transition-colors hover:text-gray-600 disabled:opacity-50"
           >
-            <CloseIcon className="h-5 w-5" />
+            <CloseIcon className="size-5" />
           </button>
         </div>
 
@@ -152,7 +152,7 @@ const ChangeTechnicalConfigModal: React.FC<ChangeTechnicalConfigModalProps> = ({
           {errorMessage && (
             <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-red-500" />
+                <AlertTriangle className="size-4 text-red-500" />
                 <p className="text-sm text-red-800">{errorMessage}</p>
               </div>
             </div>

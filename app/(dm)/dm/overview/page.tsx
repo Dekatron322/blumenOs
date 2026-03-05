@@ -261,7 +261,7 @@ const DebtManagementSummary = ({
         transition={{ duration: 0.3 }}
       >
         <div className="flex items-center gap-3 border-b pb-3">
-          <div className="h-6 w-6 animate-pulse rounded-full bg-gray-200"></div>
+          <div className="size-6 animate-pulse rounded-full bg-gray-200"></div>
           <div className="h-5 w-32 animate-pulse rounded bg-gray-200"></div>
         </div>
         <div className="mt-4 space-y-3">
@@ -337,7 +337,7 @@ const DebtManagementSummary = ({
           <div className="border-r border-gray-200 pr-6 last:border-r-0">
             <div className="flex items-center justify-between">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
-                <svg className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="size-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -347,7 +347,7 @@ const DebtManagementSummary = ({
                 </svg>
               </div>
               <div className="flex items-center gap-1 text-green-600">
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
                 </svg>
                 <span className="text-sm font-medium">{totalRecoveredAmount > 0 ? "+8.3%" : "0%"}</span>
@@ -369,7 +369,7 @@ const DebtManagementSummary = ({
           <div className="border-r border-gray-200 pr-6 last:border-r-0">
             <div className="flex items-center justify-between">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
-                <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="size-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -379,7 +379,7 @@ const DebtManagementSummary = ({
                 </svg>
               </div>
               <div className="flex items-center gap-1 text-green-600">
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
                 </svg>
                 <span className="text-sm font-medium">{totalRecoveries > 0 ? "+12.7%" : "0%"}</span>
@@ -401,7 +401,7 @@ const DebtManagementSummary = ({
           <div className="pr-6 last:pr-0">
             <div className="flex items-center justify-between">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100">
-                <svg className="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="size-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -411,7 +411,7 @@ const DebtManagementSummary = ({
                 </svg>
               </div>
               <div className="flex items-center gap-1 text-amber-600">
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
                 </svg>
                 <span className="text-sm font-medium">{totalRecoveries > 0 ? "-2.4%" : "0%"}</span>

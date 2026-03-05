@@ -1326,12 +1326,12 @@ const MeterBasicInfoTab = ({
                   <p className="text-sm font-semibold text-gray-900 sm:text-base">
                     {meter.tariff?.isActive ? (
                       <span className="flex items-center gap-1 text-green-600">
-                        <CheckCircle className="h-4 w-4" />
+                        <CheckCircle className="size-4" />
                         Active
                       </span>
                     ) : (
                       <span className="flex items-center gap-1 text-red-600">
-                        <PowerOff className="h-4 w-4" />
+                        <PowerOff className="size-4" />
                         Inactive
                       </span>
                     )}
@@ -2461,7 +2461,7 @@ const LoadingSkeleton = () => (
           <div className="size-8 rounded-md bg-gray-200 sm:size-9"></div>
           <div>
             <div className="mb-2 h-6 w-32 rounded bg-gray-200 sm:h-8 sm:w-40"></div>
-            <div className="h-4 w-40 rounded bg-gray-200 sm:w-48"></div>
+            <div className="size-40 rounded bg-gray-200 sm:w-48"></div>
           </div>
         </div>
         <div className="flex gap-2 sm:gap-3">

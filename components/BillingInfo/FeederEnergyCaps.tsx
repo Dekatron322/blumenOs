@@ -120,7 +120,7 @@ const MobileEnergyCapCardSkeleton = () => (
         <div className="mt-1 h-4 w-20 rounded-full bg-gray-200"></div>
         <div className="mt-2 space-y-1">
           <div className="h-3 w-40 rounded bg-gray-200"></div>
-          <div className="h-3 w-32 rounded bg-gray-200"></div>
+          <div className="size-32 rounded bg-gray-200"></div>
         </div>
       </div>
       <div className="ml-2 flex flex-col items-end gap-1">
@@ -156,7 +156,7 @@ const PaginationSkeleton = () => (
       },
     }}
   >
-    <div className="order-2 h-4 w-40 rounded bg-gray-200 sm:order-1"></div>
+    <div className="order-2 size-40 rounded bg-gray-200 sm:order-1"></div>
     <div className="order-1 flex items-center gap-2 sm:order-2">
       <div className="size-8 rounded bg-gray-200"></div>
       <div className="flex gap-1">

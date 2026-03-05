@@ -115,7 +115,7 @@ const VendorTopUpHistoryTab: React.FC<VendorTopUpHistoryTabProps> = ({ vendorId 
     return (
       <div className="flex items-center justify-center py-12">
         <div className="flex items-center gap-3 text-gray-600">
-          <RefreshCw className="h-5 w-5 animate-spin" />
+          <RefreshCw className="size-5 animate-spin" />
           <span>Loading top-up history...</span>
         </div>
       </div>
@@ -131,7 +131,7 @@ const VendorTopUpHistoryTab: React.FC<VendorTopUpHistoryTabProps> = ({ vendorId 
       >
         <div className="flex flex-col items-center gap-4 text-center">
           <div className="flex items-center gap-2 text-red-600">
-            <AlertCircle className="h-6 w-6" />
+            <AlertCircle className="size-6" />
             <span className="font-medium">Error loading top-up history</span>
           </div>
           <p className="text-gray-600">{vendorTopUpHistoryError}</p>
@@ -139,7 +139,7 @@ const VendorTopUpHistoryTab: React.FC<VendorTopUpHistoryTabProps> = ({ vendorId 
             onClick={handleRetry}
             className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className="size-4" />
             Retry
           </button>
         </div>
@@ -174,7 +174,7 @@ const VendorTopUpHistoryTab: React.FC<VendorTopUpHistoryTabProps> = ({ vendorId 
           onClick={handleRetry}
           className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50"
         >
-          <RefreshCw className="h-4 w-4" />
+          <RefreshCw className="size-4" />
           Refresh
         </button>
       </div>
@@ -343,7 +343,7 @@ const VendorTopUpHistoryTab: React.FC<VendorTopUpHistoryTabProps> = ({ vendorId 
       {/* Note */}
       <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
         <div className="flex items-start gap-3">
-          <AlertCircle className="mt-0.5 h-5 w-5 text-blue-600" />
+          <AlertCircle className="mt-0.5 size-5 text-blue-600" />
           <div>
             <h5 className="font-medium text-blue-900">Top-up History Information</h5>
             <p className="mt-1 text-sm text-blue-800">

@@ -166,7 +166,7 @@ const ExportScheduleRunARModal: React.FC<ExportScheduleRunARModalProps> = ({
                 id="isScoped"
                 checked={isScoped}
                 onChange={(e) => setIsScoped(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-[#004B23] focus:ring-[#004B23]"
+                className="size-4 rounded border-gray-300 text-[#004B23] focus:ring-[#004B23]"
               />
               <label htmlFor="isScoped" className="ml-2 block text-sm text-gray-700">
                 Scoped Export

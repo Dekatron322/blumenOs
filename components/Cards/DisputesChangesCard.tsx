@@ -49,7 +49,7 @@ const DisputesChangesCard = ({
           <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+                <div className="size-2 rounded-full bg-blue-500"></div>
                 <span className="text-sm font-semibold text-gray-700">Billing Disputes</span>
               </div>
               <div className="flex items-center gap-2">
@@ -87,7 +87,7 @@ const DisputesChangesCard = ({
           <div className="rounded-lg border border-purple-100 bg-purple-50 p-4">
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-purple-500"></div>
+                <div className="size-2 rounded-full bg-purple-500"></div>
                 <span className="text-sm font-semibold text-gray-700">Change Requests</span>
               </div>
               <div className="flex items-center gap-2">

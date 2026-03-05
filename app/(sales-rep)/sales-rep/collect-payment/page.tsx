@@ -975,7 +975,7 @@ const CollectPaymentPage: React.FC = () => {
                         <div className="flex items-center gap-2">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5 text-red-500"
+                            className="size-5 text-red-500"
                             viewBox="0 0 20 20"
                             fill="currentColor"
                           >

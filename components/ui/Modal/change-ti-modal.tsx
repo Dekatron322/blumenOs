@@ -108,7 +108,7 @@ const ChangeTIModal: React.FC<ChangeTIModalProps> = ({
         <div className="flex items-center justify-between border-b border-gray-200 p-6">
           <div className="flex items-center gap-3">
             <div className="rounded-lg bg-orange-100 p-2">
-              <RefreshCw className="h-5 w-5 text-orange-600" />
+              <RefreshCw className="size-5 text-orange-600" />
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900">Change TI</h3>
@@ -120,7 +120,7 @@ const ChangeTIModal: React.FC<ChangeTIModalProps> = ({
             disabled={loading}
             className="p-1 text-gray-400 transition-colors hover:text-gray-600 disabled:opacity-50"
           >
-            <CloseIcon className="h-5 w-5" />
+            <CloseIcon className="size-5" />
           </button>
         </div>
 
@@ -135,7 +135,7 @@ const ChangeTIModal: React.FC<ChangeTIModalProps> = ({
           {errorMessage && (
             <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-red-500" />
+                <AlertTriangle className="size-4 text-red-500" />
                 <p className="text-sm text-red-800">{errorMessage}</p>
               </div>
             </div>
@@ -153,11 +153,7 @@ const ChangeTIModal: React.FC<ChangeTIModalProps> = ({
                 required
                 label={"New TI Value"}
               />
-              {currentTI !== undefined && (
-                <p className="mt-1 text-xs text-gray-500">
-                  Current TI: {currentTI}
-                </p>
-              )}
+              {currentTI !== undefined && <p className="mt-1 text-xs text-gray-500">Current TI: {currentTI}</p>}
             </div>
 
             <div>

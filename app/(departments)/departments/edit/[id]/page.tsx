@@ -48,7 +48,7 @@ const LoadingSkeleton = () => (
           <div className="size-9 rounded-md bg-gray-200"></div>
           <div>
             <div className="mb-2 h-8 w-64 rounded bg-gray-200"></div>
-            <div className="h-4 w-40 rounded bg-gray-200"></div>
+            <div className="size-40 rounded bg-gray-200"></div>
           </div>
         </div>
         <div className="flex gap-3">

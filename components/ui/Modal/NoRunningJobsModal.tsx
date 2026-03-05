@@ -52,7 +52,7 @@ export const NoRunningJobsModal: React.FC<NoRunningJobsModalProps> = ({ isOpen, 
       >
         <div className="flex flex-col items-center gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-            <Play className="h-6 w-6 text-blue-600" />
+            <Play className="size-6 text-blue-600" />
           </div>
           <div className="text-center">
             <h3 className="mb-2 text-lg font-semibold text-gray-900">No Running Jobs</h3>

@@ -85,7 +85,7 @@ const CustomerDetailsSkeleton = () => {
                     <div className="size-9 rounded-md bg-gray-200"></div>
                     <div>
                       <div className="mb-1 h-6 w-32 rounded bg-gray-200 md:w-40"></div>
-                      <div className="h-4 w-48 rounded bg-gray-200 md:w-64"></div>
+                      <div className="size-48 rounded bg-gray-200 md:w-64"></div>
                     </div>
                   </div>
 
@@ -125,7 +125,7 @@ const CustomerDetailsSkeleton = () => {
                         </div>
                         <div className="flex items-center justify-center gap-3">
                           <div className="size-4 rounded-full bg-gray-200"></div>
-                          <div className="h-4 w-40 rounded bg-gray-200"></div>
+                          <div className="size-40 rounded bg-gray-200"></div>
                         </div>
                         <div className="flex items-center justify-center gap-3">
                           <div className="size-4 rounded-full bg-gray-200"></div>
@@ -158,7 +158,7 @@ const CustomerDetailsSkeleton = () => {
                       <div className="space-y-4">
                         <div className="text-center">
                           <div className="mx-auto mb-2 h-10 w-32 rounded bg-gray-200"></div>
-                          <div className="mx-auto h-4 w-40 rounded bg-gray-200"></div>
+                          <div className="mx-auto size-40 rounded bg-gray-200"></div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">

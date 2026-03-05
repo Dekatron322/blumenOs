@@ -152,7 +152,7 @@ const DownloadScheduleRunPDFModal: React.FC<DownloadScheduleRunPDFModalProps> = 
                       >
                         <div className="flex items-center gap-3">
                           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-100">
-                            <FileText className="h-4 w-4 text-purple-600" />
+                            <FileText className="size-4 text-purple-600" />
                           </div>
                           <div>
                             <p className="text-sm font-medium text-gray-900">{item.fileName}</p>

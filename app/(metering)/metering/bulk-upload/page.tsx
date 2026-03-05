@@ -364,7 +364,7 @@ const JobStatusIndicator = ({ job, isLoading }: { job: CsvJob | null; isLoading:
   if (isLoading) {
     return (
       <div className="flex items-center gap-2 text-xs text-gray-500">
-        <Loader2 className="h-3 w-3 animate-spin" />
+        <Loader2 className="size-3 animate-spin" />
         <span>Loading...</span>
       </div>
     )
@@ -421,7 +421,7 @@ const JobStatusIndicator = ({ job, isLoading }: { job: CsvJob | null; isLoading:
         <span className={`rounded-full border px-2 py-1 text-xs font-medium ${getStatusColor(job.status)}`}>
           {getStatusLabel(job.status)}
         </span>
-        {job.status === 1 || job.status === 2 ? <RefreshCw className="h-3 w-3 animate-spin text-blue-500" /> : null}
+        {job.status === 1 || job.status === 2 ? <RefreshCw className="size-3 animate-spin text-blue-500" /> : null}
       </div>
 
       {/* Statistics for all jobs */}
@@ -592,7 +592,7 @@ const JobTypeUploadsTable = ({ jobType }: { jobType: number | null }) => {
                 <tr>
                   <td colSpan={10} className="border-b p-8 text-center">
                     <div className="flex items-center justify-center gap-2">
-                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <Loader2 className="size-5 animate-spin" />
                       <span className="text-gray-500">Loading uploads...</span>
                     </div>
                   </td>
@@ -636,7 +636,7 @@ const JobTypeUploadsTable = ({ jobType }: { jobType: number | null }) => {
                     </td>
                     <td className="border-b p-3 text-sm">
                       <div className="flex items-center gap-2">
-                        <div className="h-2 w-24 rounded-full bg-gray-200">
+                        <div className="size-24 rounded-full bg-gray-200">
                           <div
                             className="h-2 rounded-full bg-blue-600"
                             style={{
@@ -692,7 +692,7 @@ const JobTypeUploadsTable = ({ jobType }: { jobType: number | null }) => {
                           <ButtonModule
                             variant="outline"
                             size="sm"
-                            icon={<Download className="h-4 w-4" />}
+                            icon={<Download className="size-4" />}
                             onClick={() => handleDownloadCsv(job)}
                             className="whitespace-nowrap"
                             disabled={downloadCsvLoading}
@@ -1644,7 +1644,7 @@ const FileManagementPage = () => {
                             <div className="mb-2 flex items-center justify-between">
                               <span className="text-xs font-medium text-gray-700">Latest Job Status</span>
                               {latestJob && (latestJob.status === 1 || latestJob.status === 2) && (
-                                <RefreshCw className="h-3 w-3 animate-spin text-blue-500" />
+                                <RefreshCw className="size-3 animate-spin text-blue-500" />
                               )}
                             </div>
                             <JobStatusIndicator job={latestJob} isLoading={isLoading} />
@@ -1664,7 +1664,7 @@ const FileManagementPage = () => {
                     <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
                       <div className="flex items-start gap-3">
                         <div className="rounded-full bg-blue-200 p-2">
-                          <FileSpreadsheet className="h-5 w-5 text-blue-700" />
+                          <FileSpreadsheet className="size-5 text-blue-700" />
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
@@ -1698,7 +1698,7 @@ const FileManagementPage = () => {
                       <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
                           <div className="flex items-start gap-3">
-                            <Download className="mt-0.5 h-5 w-5 text-gray-500" />
+                            <Download className="mt-0.5 size-5 text-gray-500" />
                             <div>
                               <p className="font-medium text-gray-900">Need a template?</p>
                               <p className="text-sm text-gray-600">Download a sample CSV with the correct format</p>
@@ -1707,7 +1707,7 @@ const FileManagementPage = () => {
                           <div className="flex items-center gap-3">
                             {columnsLoading && (
                               <div className="flex items-center gap-2 text-xs text-gray-500">
-                                <div className="h-3 w-3 animate-spin rounded-full border border-gray-300 border-t-blue-600" />
+                                <div className="size-3 animate-spin rounded-full border border-gray-300 border-t-blue-600" />
                                 Loading columns...
                               </div>
                             )}
@@ -1715,7 +1715,7 @@ const FileManagementPage = () => {
                               variant="primary"
                               size="sm"
                               onClick={downloadSampleFile}
-                              icon={<Download className="h-4 w-4" />}
+                              icon={<Download className="size-4" />}
                               disabled={columnsLoading}
                             >
                               Download Template
@@ -1730,7 +1730,7 @@ const FileManagementPage = () => {
                         onClick={() => setShowColumnHelp(!showColumnHelp)}
                         className="flex w-full items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 p-4 text-left transition-colors hover:bg-gray-100"
                       >
-                        <HelpCircle className="h-5 w-5 text-gray-500" />
+                        <HelpCircle className="size-5 text-gray-500" />
                         <div>
                           <p className="font-medium text-gray-900">Required Columns</p>
                           <p className="text-sm text-gray-600">Click to view all</p>
@@ -1751,14 +1751,14 @@ const FileManagementPage = () => {
                         <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
                           <div className="mb-3 flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <Info className="h-5 w-5 text-blue-600" />
+                              <Info className="size-5 text-blue-600" />
                               <h4 className="font-medium text-blue-900">Required Columns</h4>
                             </div>
                             <button
                               onClick={() => setShowColumnHelp(false)}
                               className="rounded-full p-1 text-blue-600 hover:bg-blue-200"
                             >
-                              <X className="h-4 w-4" />
+                              <X className="size-4" />
                             </button>
                           </div>
                           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
@@ -1767,7 +1767,7 @@ const FileManagementPage = () => {
                               : selectedUploadTypeDetails.requiredColumns
                             ).map((col, idx) => (
                               <div key={idx} className="flex items-center gap-2 rounded-lg bg-white p-2 shadow-sm">
-                                <div className="h-2 w-2 rounded-full bg-green-500" />
+                                <div className="size-2 rounded-full bg-green-500" />
                                 <span className="text-sm text-gray-700">{col}</span>
                               </div>
                             ))}
@@ -1826,7 +1826,7 @@ const FileManagementPage = () => {
                           disabled={isLoading}
                           aria-label="Remove file"
                         >
-                          <X className="h-4 w-4" />
+                          <X className="size-4" />
                         </button>
 
                         <FileText className="mx-auto h-16 w-16 text-green-500" />
@@ -1862,7 +1862,7 @@ const FileManagementPage = () => {
                         {/* Validation Status */}
                         {isValidatingFile && (
                           <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-600">
-                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+                            <div className="size-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
                             <span>Validating file...</span>
                           </div>
                         )}
@@ -1878,12 +1878,12 @@ const FileManagementPage = () => {
                             >
                               {isUploading ? (
                                 <>
-                                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                  <div className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                                   <span>Uploading...</span>
                                 </>
                               ) : (
                                 <>
-                                  <Upload className="h-4 w-4" />
+                                  <Upload className="size-4" />
                                   <span>Upload File</span>
                                 </>
                               )}
@@ -1918,9 +1918,9 @@ const FileManagementPage = () => {
                                 }`}
                               >
                                 {uploadProgress.percentage === 100 ? (
-                                  <CheckCircle className="h-5 w-5 text-green-600" />
+                                  <CheckCircle className="size-5 text-green-600" />
                                 ) : (
-                                  <CloudUpload className="h-5 w-5 animate-pulse text-blue-600" />
+                                  <CloudUpload className="size-5 animate-pulse text-blue-600" />
                                 )}
                               </div>
                               <div>
@@ -1973,7 +1973,7 @@ const FileManagementPage = () => {
                       >
                         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
                           <div className="flex items-start gap-3">
-                            <CheckCircle className="mt-0.5 h-5 w-5 text-green-600" />
+                            <CheckCircle className="mt-0.5 size-5 text-green-600" />
                             <div>
                               <p className="font-medium text-green-900">Upload Successful!</p>
                               <p className="text-sm text-green-700">
@@ -2010,7 +2010,7 @@ const FileManagementPage = () => {
                         className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4"
                       >
                         <div className="flex items-start gap-3">
-                          <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-600" />
+                          <AlertCircle className="mt-0.5 size-5 flex-shrink-0 text-red-600" />
                           <div>
                             <p className="font-medium text-red-900">Upload Failed</p>
                             <p className="text-sm text-red-700">
@@ -2032,7 +2032,7 @@ const FileManagementPage = () => {
                   {selectedFile && !uploadSuccess && (
                     <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                       <div className="flex items-center gap-2">
-                        <Info className="h-4 w-4 text-gray-500" />
+                        <Info className="size-4 text-gray-500" />
                         <p className="text-xs text-gray-600">
                           Maximum file size: 50MB • Supported formats: CSV, XLSX, XLS
                         </p>
@@ -2081,12 +2081,12 @@ const FileManagementPage = () => {
           >
             {isUploading ? (
               <>
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                <div className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                 <span>Uploading...</span>
               </>
             ) : (
               <>
-                <Upload className="h-4 w-4" />
+                <Upload className="size-4" />
                 <span>Upload File</span>
               </>
             )}

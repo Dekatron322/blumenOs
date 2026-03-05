@@ -325,7 +325,7 @@ const FilterModal = ({
                     {/* Loading/Error States */}
                     {vendorsLoading && (
                       <div className="flex items-center justify-center py-2">
-                        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-green-500"></div>
+                        <div className="mr-2 size-4 animate-spin rounded-full border-b-2 border-green-500"></div>
                         <p className="text-xs text-gray-500">Loading vendors...</p>
                       </div>
                     )}

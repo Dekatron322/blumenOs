@@ -444,7 +444,7 @@ const SupervisorsDirectory: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="h-4 w-32 rounded bg-gray-200"></div>
-                      <div className="h-4 w-40 rounded bg-gray-200"></div>
+                      <div className="size-40 rounded bg-gray-200"></div>
                     </div>
                   </div>
                   <div className="flex w-full items-center justify-between sm:w-auto sm:flex-col sm:items-end sm:justify-center sm:gap-1">

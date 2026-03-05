@@ -376,7 +376,7 @@ const CustomerPaymentPage: React.FC = () => {
                             <div className="h-12 w-12 rounded-lg bg-gray-300"></div>
                             <div className="flex-1">
                               <div className="h-6 w-32 rounded bg-gray-300"></div>
-                              <div className="mt-2 h-4 w-48 rounded bg-gray-300"></div>
+                              <div className="mt-2 size-48 rounded bg-gray-300"></div>
                             </div>
                           </div>
                         </div>
@@ -420,11 +420,11 @@ const CustomerPaymentPage: React.FC = () => {
                             <div className="flex items-start justify-between">
                               <div>
                                 <div className="flex items-center gap-2">
-                                  <div className="h-6 w-6 rounded bg-gray-300"></div>
+                                  <div className="size-6 rounded bg-gray-300"></div>
                                   <div className="h-6 w-32 rounded bg-gray-300"></div>
                                 </div>
-                                <div className="mt-2 h-4 w-48 rounded bg-gray-300"></div>
-                                <div className="mt-1 h-4 w-40 rounded bg-gray-300"></div>
+                                <div className="mt-2 size-48 rounded bg-gray-300"></div>
+                                <div className="mt-1 size-40 rounded bg-gray-300"></div>
                               </div>
                             </div>
                           </div>
@@ -483,7 +483,7 @@ const CustomerPaymentPage: React.FC = () => {
                               <div className="flex items-start justify-between">
                                 <div>
                                   <div className="flex items-center gap-2">
-                                    <div className="h-6 w-6 text-gray-700">{paymentType.icon}</div>
+                                    <div className="size-6 text-gray-700">{paymentType.icon}</div>
 
                                     <h3 className=" text-lg font-semibold text-gray-900">{paymentType.name}</h3>
                                   </div>
@@ -491,9 +491,9 @@ const CustomerPaymentPage: React.FC = () => {
                                 </div>
                                 {selectedPaymentType === paymentType.id && (
                                   <div className="absolute right-3 top-3">
-                                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#004B23]">
+                                    <div className="flex size-6 items-center justify-center rounded-full bg-[#004B23]">
                                       <svg
-                                        className="h-4 w-4 text-white"
+                                        className="size-4 text-white"
                                         fill="none"
                                         viewBox="0 0 24 24"
                                         stroke="currentColor"
@@ -571,7 +571,7 @@ const CustomerPaymentPage: React.FC = () => {
                       <div className="mb-6 rounded-lg border border-[#004B23]/20 bg-[#004B23]/5 p-4">
                         <div className="mb-3 flex items-center gap-3">
                           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white">
-                            <div className="h-5 w-5 text-gray-700">{selectedPaymentTypeDetails.icon}</div>
+                            <div className="size-5 text-gray-700">{selectedPaymentTypeDetails.icon}</div>
                           </div>
                           <div>
                             <h3 className="font-semibold text-gray-900">{selectedPaymentTypeDetails.name}</h3>
@@ -645,7 +645,7 @@ const CustomerPaymentPage: React.FC = () => {
                     <form onSubmit={handleSubmitPayment} className="space-y-6">
                       <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
                         <div className="flex items-start gap-3">
-                          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100">
+                          <div className="flex size-6 items-center justify-center rounded-full bg-blue-100">
                             <span className="text-sm text-blue-600">!</span>
                           </div>
                           <div>
@@ -673,7 +673,7 @@ const CustomerPaymentPage: React.FC = () => {
                           />
                           {isFetchingChannels && (
                             <p className="mt-2 text-xs text-blue-600">
-                              <span className="inline-block h-2 w-2 animate-ping rounded-full bg-blue-600"></span>
+                              <span className="inline-block size-2 animate-ping rounded-full bg-blue-600"></span>
                               Checking available payment channels...
                             </p>
                           )}
@@ -719,7 +719,7 @@ const CustomerPaymentPage: React.FC = () => {
                       <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                         <p className="mb-3 text-sm font-medium text-gray-700">Available Payment Method</p>
                         <div className="inline-flex items-center gap-2 rounded-full bg-[#004B23] px-4 py-2">
-                          <div className="h-2 w-2 rounded-full bg-white"></div>
+                          <div className="size-2 rounded-full bg-white"></div>
                           <span className="text-sm font-medium text-white">Bank Transfer</span>
                         </div>
                         <p className="mt-3 text-xs text-gray-600">
@@ -757,7 +757,7 @@ const CustomerPaymentPage: React.FC = () => {
                         >
                           {isMakingPayment ? (
                             <span className="flex items-center gap-2">
-                              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                              <span className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
                               Processing...
                             </span>
                           ) : (

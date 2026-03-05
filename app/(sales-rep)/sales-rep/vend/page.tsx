@@ -564,7 +564,7 @@ const VendPage: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div
-                          className={`h-2 w-2 rounded-full ${
+                          className={`size-2 rounded-full ${
                             customerInfo.customerOutstandingDebtBalance > 0 ? "bg-red-500" : "bg-green-500"
                           }`}
                         />

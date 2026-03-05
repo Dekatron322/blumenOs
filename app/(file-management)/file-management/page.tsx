@@ -451,7 +451,7 @@ const FileManagementPage = () => {
                     disabled={isUploading}
                     className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <X className="mr-1 h-4 w-4" />
+                    <X className="mr-1 size-4" />
                     Remove File
                   </button>
                 </div>
@@ -465,7 +465,7 @@ const FileManagementPage = () => {
               <div className="mt-2 rounded-lg border border-blue-200 bg-blue-50 p-4">
                 <div className="mb-3 flex items-center">
                   <div className="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
-                    <CloudUpload className="h-4 w-4 animate-pulse text-blue-600" />
+                    <CloudUpload className="size-4 animate-pulse text-blue-600" />
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium text-blue-900">Uploading file...</p>
@@ -490,7 +490,7 @@ const FileManagementPage = () => {
               <div className="mt-2 rounded-lg border border-red-200 bg-red-50 p-4">
                 <div className="flex items-start">
                   <div className="mr-3 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-red-100">
-                    <AlertCircle className="h-4 w-4 text-red-600" />
+                    <AlertCircle className="size-4 text-red-600" />
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium text-red-900">Upload Failed</p>
@@ -507,7 +507,7 @@ const FileManagementPage = () => {
               <div className="rounded-lg border border-green-200 bg-green-50 p-4">
                 <div className="flex items-start">
                   <div className="mr-3 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-green-100">
-                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <CheckCircle className="size-4 text-green-600" />
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium text-green-900">Upload Successful!</p>
@@ -585,7 +585,7 @@ const FileManagementPage = () => {
                 disabled={isUploading}
                 className="inline-flex items-center justify-center rounded-lg border border-transparent bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <Download className="mr-2 h-4 w-4" />
+                <Download className="mr-2 size-4" />
                 Download Sample CSV
               </button>
 
@@ -596,12 +596,12 @@ const FileManagementPage = () => {
               >
                 {isUploading ? (
                   <>
-                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    <div className="mr-2 size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                     Uploading...
                   </>
                 ) : (
                   <>
-                    <CloudUpload className="mr-2 h-4 w-4" />
+                    <CloudUpload className="mr-2 size-4" />
                     Upload File
                   </>
                 )}
@@ -612,7 +612,7 @@ const FileManagementPage = () => {
                 disabled={isUploading}
                 className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <X className="mr-2 h-4 w-4" />
+                <X className="mr-2 size-4" />
                 Reset
               </button>
             </div>
@@ -622,7 +622,7 @@ const FileManagementPage = () => {
           {/* <div className="mt-8 grid gap-6 md:grid-cols-2">
             <div className="rounded-lg border border-blue-200 bg-blue-50 p-5">
               <h3 className="mb-3 flex items-center text-sm font-semibold text-blue-900">
-                <CloudUpload className="mr-2 h-4 w-4" />
+                <CloudUpload className="mr-2 size-4" />
                 How it works
               </h3>
               <ol className="space-y-2 text-sm text-blue-800">
@@ -651,7 +651,7 @@ const FileManagementPage = () => {
 
             <div className="rounded-lg border border-green-200 bg-green-50 p-5">
               <h3 className="mb-3 flex items-center text-sm font-semibold text-green-900">
-                <FileText className="mr-2 h-4 w-4" />
+                <FileText className="mr-2 size-4" />
                 Sample File Information
               </h3>
               <div className="space-y-2 text-sm text-green-800">
