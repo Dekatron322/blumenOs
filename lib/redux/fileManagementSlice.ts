@@ -853,6 +853,17 @@ export interface DownloadTestTokenResponse {
   message?: string
 }
 
+// Job Type Template interfaces
+export interface JobTypeTemplateRequest {
+  jobType: number
+}
+
+export interface JobTypeTemplateResponse {
+  isSuccess: boolean
+  message: string
+  data: string
+}
+
 export interface BulkUploadData {
   queued: boolean
   preview: BulkUploadPreview
@@ -1175,6 +1186,12 @@ interface FileManagementState {
   downloadTestTokenSuccess: boolean
   downloadTestTokenResponse: DownloadTestTokenResponse | null
 
+  // Job Type Template state
+  jobTypeTemplateLoading: boolean
+  jobTypeTemplateError: string | null
+  jobTypeTemplateSuccess: boolean
+  jobTypeTemplateResponse: JobTypeTemplateResponse | null
+
   // Debt Recovery No Energy Bulk Upload state
   debtRecoveryNoEnergyBulkUploadLoading: boolean
   debtRecoveryNoEnergyBulkUploadError: string | null
@@ -1440,6 +1457,12 @@ const initialState: FileManagementState = {
   downloadTestTokenError: null,
   downloadTestTokenSuccess: false,
   downloadTestTokenResponse: null,
+
+  // Job Type Template state
+  jobTypeTemplateLoading: false,
+  jobTypeTemplateError: null,
+  jobTypeTemplateSuccess: false,
+  jobTypeTemplateResponse: null,
 
   // Debt Recovery No Energy Bulk Upload state
   debtRecoveryNoEnergyBulkUploadLoading: false,
@@ -2195,7 +2218,7 @@ export const downloadTestToken = createAsyncThunk(
           let fileName = `test-token-job-${request.id}.csv`
 
           if (contentDisposition) {
-            const fileNameMatch = contentDisposition.match(/filename="?([^";]+)"?/)
+            const fileNameMatch = contentDisposition.match(/filename="?([^;"]+)"?/)
             if (fileNameMatch && fileNameMatch[1]) {
               fileName = fileNameMatch[1]
             }
@@ -2221,6 +2244,56 @@ export const downloadTestToken = createAsyncThunk(
     } catch (error: any) {
       // Handle network errors or other exceptions
       return rejectWithValue(error.response?.data?.message || error.message || "Failed to download test token CSV")
+    }
+  }
+)
+
+// Job Type Template async thunk
+export const fetchJobTypeTemplate = createAsyncThunk(
+  "fileManagement/fetchJobTypeTemplate",
+  async (request: JobTypeTemplateRequest, { rejectWithValue }) => {
+    try {
+      const queryParams = new URLSearchParams()
+      queryParams.append("jobType", request.jobType.toString())
+
+      const url = `${buildApiUrl(API_ENDPOINTS.FILE_MANAGEMENT.JOB_TYPE_TEMPLATE)}?${queryParams.toString()}`
+
+      // Make the request and check the response type
+      const response = await api.get(url, {
+        headers: {
+          Accept: "text/csv,application/json",
+        },
+      })
+
+      // Check if the response is CSV data (direct string) or JSON
+      const contentType = response.headers["content-type"]
+
+      if (contentType && contentType.includes("text/csv")) {
+        // Direct CSV response
+        return {
+          isSuccess: true,
+          message: "Template downloaded successfully",
+          data: response.data,
+        }
+      } else {
+        // JSON response
+        return response.data
+      }
+    } catch (error: any) {
+      // Check if the error response contains CSV data
+      if (
+        error.response?.data &&
+        typeof error.response.data === "string" &&
+        error.response.data.includes("CustomerName,TariffCode")
+      ) {
+        // Return the CSV data as a successful response
+        return {
+          isSuccess: true,
+          message: "Template downloaded successfully",
+          data: error.response.data,
+        }
+      }
+      return rejectWithValue(error.response?.data?.message || "Failed to fetch job type template")
     }
   }
 )
@@ -2445,6 +2518,13 @@ const fileManagementSlice = createSlice({
       state.downloadTestTokenError = null
       state.downloadTestTokenSuccess = false
       state.downloadTestTokenResponse = null
+    },
+    // Reset Job Type Template state
+    resetJobTypeTemplateState: (state) => {
+      state.jobTypeTemplateLoading = false
+      state.jobTypeTemplateError = null
+      state.jobTypeTemplateSuccess = false
+      state.jobTypeTemplateResponse = null
     },
     // Reset Clear Tamper Bulk Upload state
     resetClearTamperBulkUploadState: (state) => {
@@ -3348,6 +3428,23 @@ const fileManagementSlice = createSlice({
         state.downloadTestTokenError = action.payload as string
         state.downloadTestTokenSuccess = false
       })
+
+      // Job Type Template reducers
+      .addCase(fetchJobTypeTemplate.pending, (state) => {
+        state.jobTypeTemplateLoading = true
+        state.jobTypeTemplateError = null
+        state.jobTypeTemplateSuccess = false
+      })
+      .addCase(fetchJobTypeTemplate.fulfilled, (state, action) => {
+        state.jobTypeTemplateLoading = false
+        state.jobTypeTemplateSuccess = true
+        state.jobTypeTemplateResponse = action.payload
+      })
+      .addCase(fetchJobTypeTemplate.rejected, (state, action) => {
+        state.jobTypeTemplateLoading = false
+        state.jobTypeTemplateError = action.payload as string
+        state.jobTypeTemplateSuccess = false
+      })
   },
 })
 
@@ -3383,6 +3480,7 @@ export const {
   resetDownloadCsvState,
   resetDownloadClearTamperState,
   resetDownloadTestTokenState,
+  resetJobTypeTemplateState,
   resetClearTamperBulkUploadState,
   resetTestTokenBulkUploadState,
 } = fileManagementSlice.actions

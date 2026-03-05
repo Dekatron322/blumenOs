@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
   createFileIntent,
+  CsvJob,
+  downloadCsv,
+  fetchCsvJobs,
   finalizeFile,
   processCustomerBulkUpload,
   processCustomerFeederUpdateBulkUpload,
@@ -25,20 +28,27 @@ import * as XLSX from "xlsx"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"
 import { notify } from "components/ui/Notification/Notification"
+import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import { SearchModule } from "components/ui/Search/search-module"
+import CsvUploadFailuresModal from "components/ui/Modal/CsvUploadFailuresModal"
 import {
   AlertCircle,
   ArrowLeft,
   CheckCircle,
   CloudUpload,
   Download,
+  FileIcon,
   FileSpreadsheet,
   FileText,
   HelpCircle,
   Info,
+  Loader2,
+  RefreshCw,
   Upload,
   X,
 } from "lucide-react"
-import { VscAdd } from "react-icons/vsc"
+import { VscAdd, VscCloudUpload, VscEye } from "react-icons/vsc"
+import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos } from "react-icons/md"
 
 interface UploadProgress {
   loaded: number
@@ -54,6 +64,646 @@ interface UploadTypeOption {
   sampleData: string[]
 }
 
+// Hook to get latest jobs for all upload types
+const useLatestJobs = () => {
+  const dispatch = useAppDispatch()
+  const { csvJobs, csvJobsLoading } = useAppSelector((state: { fileManagement: any }) => state.fileManagement)
+  const [latestJobs, setLatestJobs] = useState<Record<number, CsvJob | null>>({})
+  const [isLoading, setIsLoading] = useState(false)
+
+  const fetchLatestJobs = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      const jobTypes = [1, 5, 6, 7, 8, 9, 10, 16, 23, 24] // All customer job types
+      const jobsData: Record<number, CsvJob | null> = {}
+
+      // Fetch latest job for each type
+      for (const jobType of jobTypes) {
+        try {
+          const result = await dispatch(
+            fetchCsvJobs({
+              PageNumber: 1,
+              PageSize: 1,
+              JobType: jobType,
+              Status: undefined,
+            })
+          ).unwrap()
+
+          if (result.isSuccess && result.data.length > 0) {
+            jobsData[jobType] = result.data[0] ?? null
+          } else {
+            jobsData[jobType] = null
+          }
+        } catch (error) {
+          console.error(`Failed to fetch latest job for type ${jobType}:`, error)
+          jobsData[jobType] = null
+        }
+      }
+
+      setLatestJobs(jobsData)
+    } catch (error) {
+      console.error("Failed to fetch latest jobs:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [dispatch])
+
+  useEffect(() => {
+    fetchLatestJobs()
+  }, [fetchLatestJobs])
+
+  // Poll for updates every 5 seconds if there are running jobs
+  useEffect(() => {
+    const hasRunningJobs = Object.values(latestJobs).some((job) => job && (job.status === 1 || job.status === 2))
+
+    if (hasRunningJobs) {
+      // Only fetch running job types to reduce API calls
+      const runningJobTypes = Object.entries(latestJobs)
+        .filter(([_, job]) => job && (job.status === 1 || job.status === 2))
+        .map(([jobType, _]) => parseInt(jobType))
+
+      const interval = setInterval(async () => {
+        try {
+          const jobsData: Record<number, CsvJob | null> = { ...latestJobs }
+
+          // Only fetch updates for running jobs
+          for (const jobType of runningJobTypes) {
+            try {
+              const result = await dispatch(
+                fetchCsvJobs({
+                  PageNumber: 1,
+                  PageSize: 1,
+                  JobType: jobType,
+                  Status: undefined,
+                })
+              ).unwrap()
+
+              if (result.isSuccess && result.data.length > 0) {
+                jobsData[jobType] = result.data[0] ?? null
+              } else {
+                jobsData[jobType] = null
+              }
+            } catch (error) {
+              console.error(`Failed to fetch running job update for type ${jobType}:`, error)
+            }
+          }
+
+          setLatestJobs(jobsData)
+        } catch (error) {
+          console.error("Failed to fetch running job updates:", error)
+        }
+      }, 5000)
+
+      return () => clearInterval(interval)
+    }
+  }, [latestJobs, dispatch])
+
+  return { latestJobs, isLoading, refetch: fetchLatestJobs }
+}
+
+// Hook to fetch CSV jobs for a specific job type
+const useJobTypeUploads = (jobType: number | null) => {
+  const dispatch = useAppDispatch()
+  const { csvJobs, csvJobsLoading, csvJobsError, csvJobsPagination } = useAppSelector(
+    (state: { fileManagement: any }) => state.fileManagement
+  )
+  const [currentPage, setCurrentPage] = useState(1)
+  const [searchText, setSearchText] = useState("")
+  const [statusFilter, setStatusFilter] = useState<string>("")
+
+  const fetchJobs = useCallback(async () => {
+    if (!jobType) return
+
+    const params = {
+      PageNumber: currentPage,
+      PageSize: 10,
+      JobType: jobType,
+      Status: statusFilter ? Number(statusFilter) : undefined,
+      Search: searchText || undefined,
+    }
+
+    try {
+      await dispatch(fetchCsvJobs(params)).unwrap()
+    } catch (error) {
+      console.error("Failed to fetch jobs:", error)
+    }
+  }, [dispatch, jobType, currentPage, statusFilter, searchText])
+
+  useEffect(() => {
+    fetchJobs()
+  }, [fetchJobs])
+
+  // Poll for updates every 5 seconds if there are running jobs
+  useEffect(() => {
+    const hasRunningJobs = csvJobs.some((job: CsvJob) => job.status === 1 || job.status === 2)
+
+    if (hasRunningJobs && jobType) {
+      const interval = setInterval(async () => {
+        try {
+          const params = {
+            PageNumber: currentPage,
+            PageSize: 10,
+            JobType: jobType,
+            Status: statusFilter ? Number(statusFilter) : undefined,
+            Search: searchText || undefined,
+          }
+          await dispatch(fetchCsvJobs(params)).unwrap()
+        } catch (error) {
+          console.error("Failed to fetch job updates:", error)
+        }
+      }, 5000)
+
+      return () => clearInterval(interval)
+    }
+  }, [csvJobs, jobType, currentPage, statusFilter, searchText, dispatch])
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage)
+  }
+
+  const handleSearch = () => {
+    setCurrentPage(1)
+    fetchJobs()
+  }
+
+  const handleStatusFilter = (status: string) => {
+    setStatusFilter(status)
+    setCurrentPage(1)
+  }
+
+  return {
+    jobs: csvJobs,
+    loading: csvJobsLoading,
+    error: csvJobsError,
+    pagination: csvJobsPagination,
+    currentPage,
+    searchText,
+    statusFilter,
+    setSearchText,
+    handlePageChange,
+    handleSearch,
+    handleStatusFilter,
+    refetch: fetchJobs,
+  }
+}
+
+// Status options for filters
+const statusOptions = [
+  { value: "", label: "All Statuses" },
+  { value: "1", label: "Queued" },
+  { value: "2", label: "Running" },
+  { value: "3", label: "Completed" },
+  { value: "4", label: "Failed" },
+  { value: "5", label: "Partially Completed" },
+]
+
+// Helper functions for table
+const getJobTypeLabel = (jobType: number) => {
+  const uploadTypeOptions = [
+    { name: "Customer Bulk Upload", value: 1, description: "", requiredColumns: [], sampleData: [] },
+    { name: "Customer Setup", value: 5, description: "", requiredColumns: [], sampleData: [] },
+    { name: "Customer Info Update", value: 6, description: "", requiredColumns: [], sampleData: [] },
+    { name: "Customer SRDT Update", value: 7, description: "", requiredColumns: [], sampleData: [] },
+    { name: "Customer Status Change", value: 8, description: "", requiredColumns: [], sampleData: [] },
+    { name: "Customer Stored Average Update", value: 9, description: "", requiredColumns: [], sampleData: [] },
+    { name: "Customer Tariff Change", value: 10, description: "", requiredColumns: [], sampleData: [] },
+    { name: "Existing Customer Bulk Upload", value: 16, description: "", requiredColumns: [], sampleData: [] },
+    { name: "Meter Reading Stored Average Update", value: 23, description: "", requiredColumns: [], sampleData: [] },
+    { name: "Postpaid Estimated Consumption", value: 24, description: "", requiredColumns: [], sampleData: [] },
+  ]
+  const option = uploadTypeOptions.find((opt) => opt.value === jobType)
+  return option?.name || `Type ${jobType}`
+}
+
+const getStatusLabel = (status: number) => {
+  const option = statusOptions.find((opt) => opt.value === status.toString())
+  return option?.label || `Status ${status}`
+}
+
+const getStatusColor = (status: number) => {
+  switch (status) {
+    case 1:
+      return "text-yellow-600 bg-yellow-50"
+    case 2:
+      return "text-blue-600 bg-blue-50"
+    case 3:
+      return "text-green-600 bg-green-50"
+    case 4:
+      return "text-red-600 bg-red-50"
+    case 5:
+      return "text-gray-600 bg-gray-50"
+    default:
+      return "text-gray-600 bg-gray-50"
+  }
+}
+
+// Component to display job status with progress
+const JobStatusIndicator = ({ job, isLoading }: { job: CsvJob | null; isLoading: boolean }) => {
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-2 text-xs text-gray-500">
+        <Loader2 className="h-3 w-3 animate-spin" />
+        <span>Loading...</span>
+      </div>
+    )
+  }
+
+  if (!job) {
+    return (
+      <div className="text-xs text-gray-400">
+        <span>No recent jobs</span>
+      </div>
+    )
+  }
+
+  const getStatusColor = (status: number) => {
+    switch (status) {
+      case 1:
+        return "bg-yellow-100 text-yellow-800 border-yellow-200"
+      case 2:
+        return "bg-blue-100 text-blue-800 border-blue-200"
+      case 3:
+        return "bg-green-100 text-green-800 border-green-200"
+      case 4:
+        return "bg-red-100 text-red-800 border-red-200"
+      case 5:
+        return "bg-orange-100 text-orange-800 border-orange-200"
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200"
+    }
+  }
+
+  const getStatusLabel = (status: number) => {
+    switch (status) {
+      case 1:
+        return "Queued"
+      case 2:
+        return "Running"
+      case 3:
+        return "Completed"
+      case 4:
+        return "Failed"
+      case 5:
+        return "Partial"
+      default:
+        return "Unknown"
+    }
+  }
+
+  const progressPercentage = job.totalRows > 0 ? (job.processedRows / job.totalRows) * 100 : 0
+
+  return (
+    <div className="space-y-2">
+      {/* Status */}
+      <div className="flex items-center justify-between">
+        <span className={`rounded-full border px-2 py-1 text-xs font-medium ${getStatusColor(job.status)}`}>
+          {getStatusLabel(job.status)}
+        </span>
+        {job.status === 1 || job.status === 2 ? <RefreshCw className="h-3 w-3 animate-spin text-blue-500" /> : null}
+      </div>
+
+      {/* Statistics for all jobs */}
+      <div className="grid grid-cols-4 gap-1 text-xs">
+        <div className="text-center">
+          <div className="font-medium text-blue-600">{job.processedRows}</div>
+          <div className="text-gray-500">Processed</div>
+        </div>
+        <div className="text-center">
+          <div className="font-medium text-green-600">{job.succeededRows}</div>
+          <div className="text-gray-500">Succeeded</div>
+        </div>
+        <div className="text-center">
+          <div className="font-medium text-red-600">{job.failedRows}</div>
+          <div className="text-gray-500">Failed</div>
+        </div>
+        <div className="text-center">
+          <div className="font-medium text-gray-600">{job.totalRows}</div>
+          <div className="text-gray-500">Total</div>
+        </div>
+      </div>
+
+      {/* Horizontal progress bar for queued/running jobs */}
+      {(job.status === 1 || job.status === 2) && (
+        <div className="space-y-1">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+            <div
+              className="h-full bg-blue-500 transition-all duration-300 ease-in-out"
+              style={{ width: `${progressPercentage}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-xs text-gray-600">
+            <span>{job.processedRows}</span>
+            <span>{job.totalRows}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Last updated info */}
+      <div className="flex items-center justify-between text-xs text-gray-400">
+        <div>Requested Date: {new Date(job.requestedAtUtc).toLocaleDateString()}</div>
+        {job.requestedByUser && <div>Requested By: {job.requestedByUser.fullName}</div>}
+      </div>
+    </div>
+  )
+}
+
+// Job Type Uploads Table Component
+const JobTypeUploadsTable = ({ jobType }: { jobType: number | null }) => {
+  const {
+    jobs,
+    loading,
+    error,
+    pagination,
+    currentPage,
+    searchText,
+    statusFilter,
+    setSearchText,
+    handlePageChange,
+    handleSearch,
+    handleStatusFilter,
+    refetch,
+  } = useJobTypeUploads(jobType)
+
+  const [selectedJob, setSelectedJob] = useState<any>(null)
+  const [isFailuresModalOpen, setIsFailuresModalOpen] = useState(false)
+  const dispatch = useAppDispatch()
+  const { downloadCsvLoading } = useAppSelector((state: { fileManagement: any }) => state.fileManagement)
+
+  const handleViewFailures = (job: any) => {
+    setSelectedJob(job)
+    setIsFailuresModalOpen(true)
+  }
+
+  const handleCloseFailuresModal = () => {
+    setIsFailuresModalOpen(false)
+    setSelectedJob(null)
+  }
+
+  const handleDownloadCsv = async (job: any) => {
+    try {
+      const result = await dispatch(downloadCsv({ id: job.id }))
+      if (downloadCsv.fulfilled.match(result)) {
+        const blob = result.payload.data
+        const fileName = result.payload.fileName
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement("a")
+        link.href = url
+        link.download = fileName
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+      }
+    } catch (error) {
+      console.error("Download failed:", error)
+    }
+  }
+
+  if (!jobType) return null
+
+  return (
+    <div className="rounded-lg border bg-white">
+      {/* Table Header */}
+      <div className="border-b p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold">Recent Uploads - {getJobTypeLabel(jobType)}</h3>
+            {pagination && (
+              <p className="text-sm text-gray-600">
+                Showing {jobs.length} of {pagination.totalCount} uploads
+              </p>
+            )}
+          </div>
+          <ButtonModule variant="outline" onClick={refetch} disabled={loading} size="sm">
+            <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </ButtonModule>
+        </div>
+
+        {/* Filters */}
+        <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="flex-1">
+            <SearchModule
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              onSearch={handleSearch}
+              placeholder="Search uploads..."
+              className="w-full"
+              bgClassName="bg-white"
+              searchTypeOptions={undefined}
+              onSearchTypeChange={undefined}
+            />
+          </div>
+          <div className="w-full sm:w-48">
+            <FormSelectModule
+              name="status"
+              value={statusFilter}
+              onChange={(e) => handleStatusFilter(e.target.value)}
+              options={statusOptions}
+              className="w-full"
+              controlClassName="h-9 text-sm"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="max-h-[60vh] w-full overflow-x-auto overflow-y-hidden">
+        <div className="min-w-[1200px]">
+          <table className="w-full border-separate border-spacing-0">
+            <thead>
+              <tr className="border-b bg-gray-50">
+                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">File Name</th>
+                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Status</th>
+                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Requested By</th>
+                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Requested</th>
+                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Progress</th>
+                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Processed</th>
+                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Succeeded</th>
+                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Failed</th>
+                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Total</th>
+                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && jobs.length === 0 ? (
+                <tr>
+                  <td colSpan={10} className="border-b p-8 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <span className="text-gray-500">Loading uploads...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : jobs.length === 0 ? (
+                <tr>
+                  <td colSpan={10} className="border-b p-8 text-center">
+                    <div className="text-gray-500">
+                      <FileIcon className="mx-auto mb-2 size-12 text-gray-300" />
+                      <p>No uploads found for this type</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                jobs.map((job: CsvJob) => (
+                  <tr key={job.id} className="border-b hover:bg-gray-50">
+                    <td className="border-b p-3 text-sm">
+                      <div className="max-w-xs truncate whitespace-nowrap" title={job.fileName}>
+                        {job.fileName}
+                      </div>
+                    </td>
+                    <td className="border-b p-3 text-sm">
+                      <span
+                        className={`whitespace-nowrap rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(
+                          job.status
+                        )}`}
+                      >
+                        {getStatusLabel(job.status)}
+                      </span>
+                    </td>
+                    <td className="whitespace-nowrap border-b p-3 text-sm">
+                      <div
+                        className="max-w-xs truncate whitespace-nowrap"
+                        title={job.requestedByUser?.fullName || "Unknown"}
+                      >
+                        {job.requestedByUser?.fullName || "Unknown"}
+                      </div>
+                    </td>
+                    <td className="whitespace-nowrap border-b p-3 text-sm">
+                      {new Date(job.requestedAtUtc).toLocaleString()}
+                    </td>
+                    <td className="border-b p-3 text-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-24 rounded-full bg-gray-200">
+                          <div
+                            className="h-2 rounded-full bg-blue-600"
+                            style={{
+                              width: `${
+                                job.totalRows !== null && job.totalRows > 0
+                                  ? (job.processedRows / job.totalRows) * 100
+                                  : 0
+                              }%`,
+                            }}
+                          ></div>
+                        </div>
+                        <span className="text-xs text-gray-600">
+                          {job.totalRows !== null && job.totalRows > 0
+                            ? Math.round((job.processedRows / job.totalRows) * 100)
+                            : "Processing"}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="border-b p-3 text-sm">
+                      <div className="font-medium text-blue-600">
+                        {job.processedRows !== null && job.processedRows !== undefined ? job.processedRows : "N/A"}
+                      </div>
+                    </td>
+                    <td className="border-b p-3 text-sm">
+                      <div className="font-medium text-green-600">
+                        {job.succeededRows !== null && job.succeededRows !== undefined ? job.succeededRows : "N/A"}
+                      </div>
+                    </td>
+                    <td className="border-b p-3 text-sm">
+                      <div className="font-medium text-red-600">
+                        {job.failedRows !== null && job.failedRows !== undefined ? job.failedRows : "N/A"}
+                      </div>
+                    </td>
+                    <td className="border-b p-3 text-sm">
+                      <div className="font-medium text-gray-600">
+                        {job.totalRows !== null && job.totalRows !== undefined ? job.totalRows : "N/A"}
+                      </div>
+                    </td>
+                    <td className="border-b p-3 text-sm">
+                      <div className="flex gap-2">
+                        {job.failedRows > 0 && (
+                          <ButtonModule
+                            variant="outline"
+                            size="sm"
+                            icon={<VscEye />}
+                            onClick={() => handleViewFailures(job)}
+                            className="whitespace-nowrap"
+                          >
+                            View Failures
+                          </ButtonModule>
+                        )}
+                        {(job.status === 3 || job.status === 5) && (
+                          <ButtonModule
+                            variant="outline"
+                            size="sm"
+                            icon={<Download className="h-4 w-4" />}
+                            onClick={() => handleDownloadCsv(job)}
+                            className="whitespace-nowrap"
+                            disabled={downloadCsvLoading}
+                          >
+                            {downloadCsvLoading ? "Downloading..." : "Download"}
+                          </ButtonModule>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Pagination */}
+      {pagination && pagination.totalPages > 1 && (
+        <div className="border-t p-4">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-600">
+              Page {pagination.currentPage} of {pagination.totalPages}
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={!pagination.hasPrevious}
+                className="rounded-lg border p-2 disabled:opacity-50"
+              >
+                <MdOutlineArrowBackIosNew className="size-4" />
+              </button>
+              {[...Array(Math.min(5, pagination.totalPages))].map((_, index) => {
+                const pageNumber = index + 1
+                return (
+                  <button
+                    key={pageNumber}
+                    onClick={() => handlePageChange(pageNumber)}
+                    className={`rounded-lg border px-3 py-2 text-sm ${
+                      currentPage === pageNumber
+                        ? "border-blue-500 bg-blue-50 text-blue-700"
+                        : "border-gray-300 hover:bg-gray-50"
+                    }`}
+                  >
+                    {pageNumber}
+                  </button>
+                )
+              })}
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={!pagination.hasNext}
+                className="rounded-lg border p-2 disabled:opacity-50"
+              >
+                <MdOutlineArrowForwardIos className="size-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CSV Upload Failures Modal */}
+      {selectedJob && (
+        <CsvUploadFailuresModal
+          isOpen={isFailuresModalOpen}
+          onClose={handleCloseFailuresModal}
+          jobId={selectedJob.id}
+          fileName={selectedJob.fileName}
+        />
+      )}
+    </div>
+  )
+}
+
 const FileManagementPage = () => {
   const dispatch = useAppDispatch()
   const router = useRouter()
@@ -61,6 +711,9 @@ const FileManagementPage = () => {
   // Redux state
   const { fileIntentLoading, fileIntentError, finalizeFileLoading, finalizeFileError, customerBulkUploadError } =
     useAppSelector((state: { fileManagement: any }) => state.fileManagement)
+
+  // Get latest jobs for all upload types
+  const { latestJobs, isLoading: jobsLoading } = useLatestJobs()
 
   // Upload type options with enhanced metadata
   const uploadTypeOptions: UploadTypeOption[] = [
@@ -406,6 +1059,12 @@ const FileManagementPage = () => {
         setFinalizedFile(null)
         setUploadProgress(null)
         setBulkUploadResponse(null)
+        setIsDragOver(false)
+        setHasCompletedUploadTypeSelection(false)
+        setExtractedColumns([])
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ""
+        }
 
         // Validate columns if upload type is selected
         if (selectedUploadType) {
@@ -479,6 +1138,12 @@ const FileManagementPage = () => {
         setFinalizedFile(null)
         setUploadProgress(null)
         setBulkUploadResponse(null)
+        setIsDragOver(false)
+        setHasCompletedUploadTypeSelection(false)
+        setExtractedColumns([])
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ""
+        }
 
         // Validate columns if upload type is selected
         if (selectedUploadType) {
@@ -522,6 +1187,8 @@ const FileManagementPage = () => {
     setFinalizedFile(null)
     setUploadProgress(null)
     setBulkUploadResponse(null)
+    setIsDragOver(false)
+    setHasCompletedUploadTypeSelection(false)
     setExtractedColumns([])
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
@@ -860,7 +1527,7 @@ const FileManagementPage = () => {
                 </div>
 
                 {/* Desktop Actions */}
-                <div className="hidden items-center gap-3 sm:flex">
+                {/* <div className="hidden items-center gap-3 sm:flex">
                   <ButtonModule variant="outline" size="sm" onClick={() => router.push("/customers/bulk-upload")}>
                     View Upload History
                   </ButtonModule>
@@ -876,7 +1543,7 @@ const FileManagementPage = () => {
                   >
                     {isUploading ? "Uploading..." : "Upload File"}
                   </ButtonModule>
-                </div>
+                </div> */}
               </div>
             </div>
 
@@ -901,40 +1568,53 @@ const FileManagementPage = () => {
                   </div>
 
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {uploadTypeOptions.map((type) => (
-                      <motion.button
-                        key={type.value}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => {
-                          setSelectedUploadType(type.value)
-                          setHasCompletedUploadTypeSelection(true)
-                        }}
-                        className="group relative rounded-xl border-2 border-gray-200 bg-white p-6 text-left transition-all hover:border-blue-400 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                      >
-                        <div className="mb-4 flex items-center justify-between">
-                          <FileSpreadsheet className="h-8 w-8 text-gray-400 group-hover:text-blue-500" />
-                          <div className="h-5 w-5 rounded-full border-2 border-gray-300 group-hover:border-blue-400" />
-                        </div>
-                        <h3 className="mb-2 font-semibold text-gray-900 group-hover:text-blue-600">{type.name}</h3>
-                        <p className="mb-4 text-sm text-gray-600">{type.description}</p>
-                        <div className="space-y-2">
-                          <p className="text-xs font-medium text-gray-700">Required columns:</p>
-                          <div className="flex flex-wrap gap-1">
-                            {type.requiredColumns.slice(0, 4).map((col, idx) => (
-                              <span key={idx} className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
-                                {col}
-                              </span>
-                            ))}
-                            {type.requiredColumns.length > 4 && (
-                              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
-                                +{type.requiredColumns.length - 4} more
-                              </span>
-                            )}
+                    {uploadTypeOptions.map((type) => {
+                      const latestJob = latestJobs[type.value] || null
+                      const isLoading = jobsLoading
+
+                      return (
+                        <motion.button
+                          key={type.value}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => {
+                            setSelectedUploadType(type.value)
+                            setHasCompletedUploadTypeSelection(true)
+                          }}
+                          className="group relative rounded-xl border-2 border-gray-200 bg-white p-4 text-left transition-all hover:border-blue-400 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        >
+                          <h3 className="mb-2 font-semibold text-gray-900 group-hover:text-blue-600">{type.name}</h3>
+                          <p className="mb-4 text-sm text-gray-600">{type.description}</p>
+
+                          {/* Job Status Section */}
+                          <div className="mb-4 rounded-lg border border-gray-100 bg-gray-50 p-3">
+                            <div className="mb-2 flex items-center justify-between">
+                              <span className="text-xs font-medium text-gray-700">Latest Job Status</span>
+                              {latestJob && (latestJob.status === 1 || latestJob.status === 2) && (
+                                <RefreshCw className="h-3 w-3 animate-spin text-blue-500" />
+                              )}
+                            </div>
+                            <JobStatusIndicator job={latestJob} isLoading={isLoading} />
                           </div>
-                        </div>
-                      </motion.button>
-                    ))}
+
+                          {/* <div className="space-y-2">
+                            <p className="text-xs font-medium text-gray-700">Required columns:</p>
+                            <div className="flex flex-wrap gap-1">
+                              {type.requiredColumns.slice(0, 4).map((col, idx) => (
+                                <span key={idx} className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+                                  {col}
+                                </span>
+                              ))}
+                              {type.requiredColumns.length > 4 && (
+                                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+                                  +{type.requiredColumns.length - 4} more
+                                </span>
+                              )}
+                            </div>
+                          </div> */}
+                        </motion.button>
+                      )
+                    })}
                   </div>
                 </div>
               )}
@@ -1295,6 +1975,15 @@ const FileManagementPage = () => {
                       </div>
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* Recent Uploads Table for Selected Job Type */}
+              {selectedUploadType && (
+                <div className="border-t border-gray-200">
+                  <div className="p-6">
+                    <JobTypeUploadsTable jobType={selectedUploadType} />
+                  </div>
                 </div>
               )}
             </motion.div>
