@@ -108,7 +108,7 @@ export const CreateBillingScheduleRunModal: React.FC<CreateBillingScheduleRunMod
                     options={
                       billingPeriods?.map((period: any) => ({
                         value: period.id,
-                        label: `${period.month}/${period.year}`,
+                        label: period.displayName,
                       })) || []
                     }
                     loading={billingPeriodsLoading}

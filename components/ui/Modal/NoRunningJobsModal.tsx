@@ -1,12 +1,11 @@
 "use client"
 
-import React, { useEffect } from "react"
+import React from "react"
 import { motion } from "framer-motion"
 import { Play } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { ButtonModule } from "components/ui/Button/Button"
-import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { fetchBillingScheduleRun, clearBillingScheduleRunStatus } from "lib/redux/postpaidSlice"
+import { useAppSelector } from "lib/hooks/useRedux"
 import { BillingJobRunStatus } from "lib/types/billing"
 
 interface NoRunningJobsModalProps {
@@ -17,41 +16,14 @@ interface NoRunningJobsModalProps {
 }
 
 export const NoRunningJobsModal: React.FC<NoRunningJobsModalProps> = ({ isOpen, onClose, onStartRun, scheduleId }) => {
-  const dispatch = useAppDispatch()
   const router = useRouter()
   const { billingScheduleRun, billingScheduleRunLoading, billingScheduleRunError } = useAppSelector(
     (state) => state.postpaidBilling
   )
 
-  // Fetch billing schedule run data when modal opens
-  useEffect(() => {
-    if (isOpen && scheduleId) {
-      console.log("Fetching billing schedule run for scheduleId:", scheduleId)
-      dispatch(fetchBillingScheduleRun(scheduleId))
-    }
-
-    // Clear state when modal closes
-    return () => {
-      if (!isOpen) {
-        dispatch(clearBillingScheduleRunStatus())
-      }
-    }
-  }, [isOpen, scheduleId, dispatch])
-
   // Check if there's a running job using the correct enum values
   const runStatus = billingScheduleRun?.latestRunProgress?.runStatus
   const hasRunningJob = runStatus === BillingJobRunStatus.Running || runStatus === BillingJobRunStatus.Queued
-
-  // Debug logging
-  console.log("NoRunningJobsModal - Debug:", {
-    isOpen,
-    scheduleId,
-    runStatus,
-    hasRunningJob,
-    billingScheduleRunLoading,
-    billingScheduleRunError,
-    billingScheduleRun: billingScheduleRun?.latestRunProgress,
-  })
 
   const handleCancel = () => {
     onClose()

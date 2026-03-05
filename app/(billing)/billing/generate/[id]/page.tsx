@@ -27,8 +27,19 @@ import {
 import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { fetchFeeders } from "lib/redux/feedersSlice"
 import { fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
-import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
-import { fetchBillingScheduleRun, startBillingScheduleRun, fetchBillingScheduleProgress } from "lib/redux/postpaidSlice"
+import { fetchBillingPeriods, Stage } from "lib/redux/billingPeriodsSlice"
+import {
+  clearExportArScheduleRunStatus,
+  clearRunPdfGenerationStatus,
+  exportArScheduleRun,
+  ExportArScheduleRunRequest,
+  fetchBillingScheduleProgress,
+  fetchBillingScheduleRun,
+  startBillingScheduleRun,
+  publishBillingScheduleRun,
+  runPdfGeneration,
+  RunPdfGenerationRequest,
+} from "lib/redux/postpaidSlice"
 import * as XLSX from "xlsx"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"
@@ -36,7 +47,7 @@ import { notify } from "components/ui/Notification/Notification"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { SearchModule } from "components/ui/Search/search-module"
 import CsvUploadFailuresModal from "components/ui/Modal/CsvUploadFailuresModal"
-import { ColumnHelpModal, NoRunningJobsModal, CreateBillingScheduleRunModal } from "components/ui/Modal"
+import { CreateBillingScheduleRunModal, ColumnHelpModal } from "components/ui/Modal"
 import {
   AlertCircle,
   ArrowLeft,
@@ -55,8 +66,9 @@ import {
   Upload,
   X,
 } from "lucide-react"
-import { VscAdd, VscCloudUpload, VscEye } from "react-icons/vsc"
+import { VscEye } from "react-icons/vsc"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos } from "react-icons/md"
+import BillingScheduleRunsTab from "components/BillingInfo/BillingScheduleRunsTab"
 
 interface UploadProgress {
   loaded: number
@@ -75,9 +87,14 @@ interface UploadTypeOption {
 // Hook to get latest jobs for all upload types
 const useLatestJobs = () => {
   const dispatch = useAppDispatch()
-  const { csvJobs, csvJobsLoading } = useAppSelector((state: { fileManagement: any }) => state.fileManagement)
   const [latestJobs, setLatestJobs] = useState<Record<number, CsvJob | null>>({})
   const [isLoading, setIsLoading] = useState(false)
+  const latestJobsRef = useRef<Record<number, CsvJob | null>>({})
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    latestJobsRef.current = latestJobs
+  }, [latestJobs])
 
   const fetchLatestJobs = useCallback(async () => {
     setIsLoading(true)
@@ -85,10 +102,10 @@ const useLatestJobs = () => {
       const jobTypes = [2, 3, 7, 8, 9, 10, 19, 24, 32] // Specific job types for billing generate details
       const jobsData: Record<number, CsvJob | null> = {}
 
-      // Fetch latest job for each type
-      for (const jobType of jobTypes) {
-        try {
-          const result = await dispatch(
+      // Fetch all job types in parallel to reduce sequential API calls
+      const results = await Promise.allSettled(
+        jobTypes.map((jobType) =>
+          dispatch(
             fetchCsvJobs({
               PageNumber: 1,
               PageSize: 1,
@@ -96,17 +113,17 @@ const useLatestJobs = () => {
               Status: undefined,
             })
           ).unwrap()
+        )
+      )
 
-          if (result.isSuccess && result.data.length > 0) {
-            jobsData[jobType] = result.data[0] ?? null
-          } else {
-            jobsData[jobType] = null
-          }
-        } catch (error) {
-          console.error(`Failed to fetch latest job for type ${jobType}:`, error)
+      jobTypes.forEach((jobType, index) => {
+        const result = results[index]
+        if (result && result.status === "fulfilled" && result.value.isSuccess && result.value.data.length > 0) {
+          jobsData[jobType] = result.value.data[0] ?? null
+        } else {
           jobsData[jobType] = null
         }
-      }
+      })
 
       setLatestJobs(jobsData)
     } catch (error) {
@@ -124,47 +141,49 @@ const useLatestJobs = () => {
   useEffect(() => {
     const hasRunningJobs = Object.values(latestJobs).some((job) => job && (job.status === 1 || job.status === 2))
 
-    if (hasRunningJobs) {
-      // Only fetch running job types to reduce API calls
-      const runningJobTypes = Object.entries(latestJobs)
-        .filter(([_, job]) => job && (job.status === 1 || job.status === 2))
-        .map(([jobType, _]) => parseInt(jobType))
+    if (!hasRunningJobs) return
 
-      const interval = setInterval(async () => {
-        try {
-          const jobsData: Record<number, CsvJob | null> = { ...latestJobs }
+    const interval = setInterval(async () => {
+      try {
+        const currentJobs = latestJobsRef.current
+        const runningJobTypes = Object.entries(currentJobs)
+          .filter(([_, job]) => job && (job.status === 1 || job.status === 2))
+          .map(([jobType, _]) => parseInt(jobType))
 
-          // Only fetch updates for running jobs
-          for (const jobType of runningJobTypes) {
-            try {
-              const result = await dispatch(
-                fetchCsvJobs({
-                  PageNumber: 1,
-                  PageSize: 1,
-                  JobType: jobType,
-                  Status: undefined,
-                })
-              ).unwrap()
+        if (runningJobTypes.length === 0) return
 
-              if (result.isSuccess && result.data.length > 0) {
-                jobsData[jobType] = result.data[0] ?? null
-              } else {
-                jobsData[jobType] = null
-              }
-            } catch (error) {
-              console.error(`Failed to fetch running job update for type ${jobType}:`, error)
-            }
+        const jobsData: Record<number, CsvJob | null> = { ...currentJobs }
+
+        const results = await Promise.allSettled(
+          runningJobTypes.map((jobType) =>
+            dispatch(
+              fetchCsvJobs({
+                PageNumber: 1,
+                PageSize: 1,
+                JobType: jobType,
+                Status: undefined,
+              })
+            ).unwrap()
+          )
+        )
+
+        runningJobTypes.forEach((jobType, index) => {
+          const result = results[index]
+          if (result && result.status === "fulfilled" && result.value.isSuccess && result.value.data.length > 0) {
+            jobsData[jobType] = result.value.data[0] ?? null
           }
+        })
 
-          setLatestJobs(jobsData)
-        } catch (error) {
-          console.error("Failed to fetch running job updates:", error)
-        }
-      }, 5000)
+        setLatestJobs(jobsData)
+      } catch (error) {
+        console.error("Failed to fetch running job updates:", error)
+      }
+    }, 5000)
 
-      return () => clearInterval(interval)
-    }
-  }, [latestJobs, dispatch])
+    return () => clearInterval(interval)
+    // Only re-run when the *presence* of running jobs changes, not on every latestJobs update
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [Object.values(latestJobs).some((job) => job && (job.status === 1 || job.status === 2)), dispatch])
 
   return { latestJobs, isLoading, refetch: fetchLatestJobs }
 }
@@ -384,6 +403,40 @@ const getStatusText = (status: number | undefined) => {
     default:
       return "Unknown"
   }
+}
+
+// Get stage name based on stage number
+const getStageName = (stage: number | undefined) => {
+  switch (stage) {
+    case 1:
+      return "Generating Draft Bill"
+    case 2:
+      return "Publishing Draft Bill"
+    case 3:
+      return "Exporting AR"
+    case 4:
+      return "Generating PDF"
+    default:
+      return "Processing"
+  }
+}
+
+// Stage state enum: Pending = 0, Running = 1, Succeeded = 2, Failed = 3
+// Get the currently running stage from stages array (state === 1 means Running)
+const getRunningStage = (stages: Stage[] | undefined) => {
+  if (!stages || stages.length === 0) return null
+  // Find the stage with state === 1 (Running)
+  const runningStage = stages.find((s) => s.state === 1)
+  return runningStage || null
+}
+
+// Get the current stage name based on the running stage in the stages array
+const getCurrentStageName = (stages: Stage[] | undefined) => {
+  const runningStage = getRunningStage(stages)
+  if (runningStage) {
+    return getStageName(runningStage.stage)
+  }
+  return "Processing"
 }
 
 // Component to display job status with progress
@@ -843,10 +896,25 @@ const FileManagementPage = () => {
     billingScheduleProgressLoading,
     billingScheduleProgress,
     billingScheduleProgressSuccess,
+    publishBillingScheduleRunLoading,
+    publishBillingScheduleRunSuccess,
+    publishBillingScheduleRunError,
+    publishBillingScheduleRunMessage,
+    publishBillingScheduleRunData,
+    exportArScheduleRunLoading,
+    exportArScheduleRunSuccess,
+    exportArScheduleRunError,
+    exportArScheduleRunMessage,
+    exportArScheduleRunData,
+    runPdfGenerationLoading,
+    runPdfGenerationSuccess,
+    runPdfGenerationError,
+    runPdfGenerationMessage,
+    runPdfGenerationData,
   } = useAppSelector((state: any) => state.postpaidBilling)
 
   // Get latest jobs for all upload types
-  const { latestJobs, isLoading: jobsLoading } = useLatestJobs()
+  const { latestJobs, isLoading: jobsLoading, refetch: refetchLatestJobs } = useLatestJobs()
 
   // Upload type options with enhanced metadata
   const uploadTypeOptions: UploadTypeOption[] = [
@@ -997,13 +1065,15 @@ const FileManagementPage = () => {
     }
   }
 
+  // Tab state
+  const [activeTab, setActiveTab] = useState<"bulk-upload" | "schedule-runs">("bulk-upload")
+
   // Local state
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [selectedUploadType, setSelectedUploadType] = useState<number | null>(null)
   const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
-  const [showNoRunningJobsModal, setShowNoRunningJobsModal] = useState(false)
 
   // Get template columns for selected upload type
   const { templateColumns, isLoading: columnsLoading, error: columnsError } = useTemplateColumns(selectedUploadType)
@@ -1028,18 +1098,41 @@ const FileManagementPage = () => {
   })
 
   // Get schedule ID from URL
-  const scheduleId = typeof window !== "undefined" ? window.location.pathname.split("/").pop() : null
+  const scheduleId = typeof window !== "undefined" ? window.location.pathname.split("/").pop() ?? null : null
 
   // Fetch billing schedule run data
   useEffect(() => {
-    if (scheduleId) {
-      dispatch(fetchBillingScheduleRun(parseInt(scheduleId)))
+    const parsedId = scheduleId ? parseInt(scheduleId) : NaN
+    if (!isNaN(parsedId)) {
+      dispatch(fetchBillingScheduleRun(parsedId))
     }
   }, [dispatch, scheduleId])
 
-  // Show publish button when billing schedule run data is available and showPublishButton is true
+  // Show action buttons when billing schedule run data is available and respective flags are true
   const showPublishButton = billingScheduleRun?.latestRunProgress?.showPublishButton === true
+  const showExportArButton = billingScheduleRun?.latestRunProgress?.showExportArButton === true
   const showGeneratePdfButton = billingScheduleRun?.latestRunProgress?.showGeneratePdfButton === true
+
+  // Generate PDF modal state
+  const [isGeneratePdfModalOpen, setIsGeneratePdfModalOpen] = useState(false)
+  const [pdfAreaOffice, setPdfAreaOffice] = useState("")
+  const [pdfFeeder, setPdfFeeder] = useState("")
+  const [pdfDistributionSubstation, setPdfDistributionSubstation] = useState("")
+  const [pdfGroupBy, setPdfGroupBy] = useState("0")
+  const [pdfMaxBillsPerFile, setPdfMaxBillsPerFile] = useState("5000")
+  const [pdfAreaOfficeSearch, setPdfAreaOfficeSearch] = useState("")
+  const [pdfFeederSearch, setPdfFeederSearch] = useState("")
+  const [pdfDistributionSubstationSearch, setPdfDistributionSubstationSearch] = useState("")
+
+  // Export AR modal state
+  const [isExportArModalOpen, setIsExportArModalOpen] = useState(false)
+  const [exportArAreaOffice, setExportArAreaOffice] = useState("")
+  const [exportArFeeder, setExportArFeeder] = useState("")
+  const [exportArDistributionSubstation, setExportArDistributionSubstation] = useState("")
+  const [exportArStatusCode, setExportArStatusCode] = useState("")
+  const [exportArAreaOfficeSearch, setExportArAreaOfficeSearch] = useState("")
+  const [exportArFeederSearch, setExportArFeederSearch] = useState("")
+  const [exportArDistributionSubstationSearch, setExportArDistributionSubstationSearch] = useState("")
 
   const [scheduleType, setScheduleType] = useState<string>("")
 
@@ -1054,24 +1147,195 @@ const FileManagementPage = () => {
     }
   }, [dispatch])
 
-  // Check for running jobs and show modal if none
+  // Fetch dropdown options when any modal that needs them opens
   useEffect(() => {
-    if (!jobsLoading && latestJobs) {
-      const hasRunningJobs = Object.values(latestJobs).some((job) => job && (job.status === 1 || job.status === 2))
-      setShowNoRunningJobsModal(!hasRunningJobs)
-    }
-  }, [latestJobs, jobsLoading])
-
-  // Fetch dropdown options when modal opens
-  useEffect(() => {
-    if (showCreateRunModal) {
-      // Fetch all dropdown options
+    if (showCreateRunModal || isGeneratePdfModalOpen || isExportArModalOpen) {
       dispatch(fetchAreaOffices({ PageNumber: 1, PageSize: 1000 }))
       dispatch(fetchFeeders({ pageNumber: 1, pageSize: 1000 }))
       dispatch(fetchDistributionSubstations({ pageNumber: 1, pageSize: 1000 }))
+    }
+    if (showCreateRunModal) {
       dispatch(fetchBillingPeriods({ pageNumber: 1, pageSize: 1000 }))
     }
-  }, [showCreateRunModal, dispatch])
+  }, [showCreateRunModal, isGeneratePdfModalOpen, isExportArModalOpen, dispatch])
+
+  // Generate PDF search handlers
+  const handlePdfAreaOfficeSearchChange = (searchValue: string) => {
+    setPdfAreaOfficeSearch(searchValue)
+  }
+
+  const handlePdfFeederSearchChange = (searchValue: string) => {
+    setPdfFeederSearch(searchValue)
+  }
+
+  const handlePdfDistributionSubstationSearchChange = (searchValue: string) => {
+    setPdfDistributionSubstationSearch(searchValue)
+  }
+
+  const handlePdfAreaOfficeSearchClick = () => {
+    dispatch(fetchAreaOffices({ PageNumber: 1, PageSize: 1000, Search: pdfAreaOfficeSearch }))
+  }
+
+  const handlePdfFeederSearchClick = () => {
+    dispatch(fetchFeeders({ pageNumber: 1, pageSize: 1000, search: pdfFeederSearch }))
+  }
+
+  const handlePdfDistributionSubstationSearchClick = () => {
+    dispatch(fetchDistributionSubstations({ pageNumber: 1, pageSize: 1000, search: pdfDistributionSubstationSearch }))
+  }
+
+  // Handle Generate PDF submit
+  const handleGeneratePdf = useCallback(async () => {
+    try {
+      let runId = billingScheduleRun?.latestRunProgress?.runId
+
+      if (!runId) {
+        notify("error", "No Run Available", {
+          description: "No billing schedule run is available to generate PDF",
+        })
+        return
+      }
+
+      const requestData: RunPdfGenerationRequest = {
+        groupBy: parseInt(pdfGroupBy),
+        maxBillsPerFile: parseInt(pdfMaxBillsPerFile) || 5000,
+        ...(pdfAreaOffice && { areaOfficeId: parseInt(pdfAreaOffice) }),
+        ...(pdfFeeder && { feederId: parseInt(pdfFeeder) }),
+        ...(pdfDistributionSubstation && { distributionSubstationId: parseInt(pdfDistributionSubstation) }),
+      }
+
+      const result = await dispatch(runPdfGeneration({ runId, requestData })).unwrap()
+
+      notify("success", "PDF Generation Started", {
+        description: result.message || "PDF generation job has been created successfully",
+      })
+
+      setIsGeneratePdfModalOpen(false)
+
+      // Refresh the billing schedule run data and jobs so UI updates
+      const parsedId = scheduleId ? parseInt(scheduleId) : NaN
+      if (!isNaN(parsedId)) {
+        dispatch(fetchBillingScheduleRun(parsedId))
+      }
+      refetchLatestJobs()
+    } catch (error: any) {
+      notify("error", "Failed to Generate PDF", {
+        description: error.message || error || "An error occurred while creating the PDF generation job",
+      })
+    }
+  }, [
+    dispatch,
+    billingScheduleRun,
+    pdfGroupBy,
+    pdfMaxBillsPerFile,
+    pdfAreaOffice,
+    pdfFeeder,
+    pdfDistributionSubstation,
+    scheduleId,
+    refetchLatestJobs,
+  ])
+
+  const handleCloseGeneratePdfModal = () => {
+    setIsGeneratePdfModalOpen(false)
+    dispatch(clearRunPdfGenerationStatus())
+    setPdfAreaOffice("")
+    setPdfFeeder("")
+    setPdfDistributionSubstation("")
+    setPdfGroupBy("0")
+    setPdfMaxBillsPerFile("5000")
+    setPdfAreaOfficeSearch("")
+    setPdfFeederSearch("")
+    setPdfDistributionSubstationSearch("")
+  }
+
+  // Export AR search handlers
+  const handleExportArAreaOfficeSearchChange = (searchValue: string) => {
+    setExportArAreaOfficeSearch(searchValue)
+  }
+
+  const handleExportArFeederSearchChange = (searchValue: string) => {
+    setExportArFeederSearch(searchValue)
+  }
+
+  const handleExportArDistributionSubstationSearchChange = (searchValue: string) => {
+    setExportArDistributionSubstationSearch(searchValue)
+  }
+
+  const handleExportArAreaOfficeSearchClick = () => {
+    dispatch(fetchAreaOffices({ PageNumber: 1, PageSize: 1000, Search: exportArAreaOfficeSearch }))
+  }
+
+  const handleExportArFeederSearchClick = () => {
+    dispatch(fetchFeeders({ pageNumber: 1, pageSize: 1000, search: exportArFeederSearch }))
+  }
+
+  const handleExportArDistributionSubstationSearchClick = () => {
+    dispatch(
+      fetchDistributionSubstations({ pageNumber: 1, pageSize: 1000, search: exportArDistributionSubstationSearch })
+    )
+  }
+
+  // Handle Export AR submit
+  const handleExportAr = useCallback(async () => {
+    try {
+      let runId = billingScheduleRun?.latestRunProgress?.runId
+
+      if (!runId) {
+        notify("error", "No Run Available", {
+          description: "No billing schedule run is available to export AR",
+        })
+        return
+      }
+
+      const requestData: ExportArScheduleRunRequest = {
+        isScoped: false,
+        ...(exportArStatusCode && { statusCode: exportArStatusCode }),
+        ...(exportArAreaOffice && { areaOfficeId: parseInt(exportArAreaOffice) }),
+        ...(exportArFeeder && { feederId: parseInt(exportArFeeder) }),
+        ...(exportArDistributionSubstation && { distributionSubstationId: parseInt(exportArDistributionSubstation) }),
+      }
+
+      const result = await dispatch(exportArScheduleRun({ runId, requestData })).unwrap()
+
+      notify("success", "AR Export Job Created", {
+        description: result.message || "AR export job has been created successfully",
+      })
+
+      setIsExportArModalOpen(false)
+
+      // Refresh the billing schedule run data and jobs so UI updates
+      const parsedId = scheduleId ? parseInt(scheduleId) : NaN
+      if (!isNaN(parsedId)) {
+        dispatch(fetchBillingScheduleRun(parsedId))
+      }
+      refetchLatestJobs()
+    } catch (error: any) {
+      notify("error", "Failed to Export AR", {
+        description: error.message || error || "An error occurred while creating the AR export job",
+      })
+    }
+  }, [
+    dispatch,
+    billingScheduleRun,
+    exportArStatusCode,
+    exportArAreaOffice,
+    exportArFeeder,
+    exportArDistributionSubstation,
+    scheduleId,
+    refetchLatestJobs,
+  ])
+
+  const handleCloseExportArModal = () => {
+    setIsExportArModalOpen(false)
+    dispatch(clearExportArScheduleRunStatus())
+    setExportArAreaOffice("")
+    setExportArFeeder("")
+    setExportArDistributionSubstation("")
+    setExportArStatusCode("")
+    setExportArAreaOfficeSearch("")
+    setExportArFeederSearch("")
+    setExportArDistributionSubstationSearch("")
+  }
 
   // Extract column names from Excel or CSV file
   const extractColumnsFromFile = useCallback(async (file: File): Promise<string[]> => {
@@ -1635,12 +1899,19 @@ const FileManagementPage = () => {
         distributionSubstationId: 0,
         title: "",
       })
+
+      // Refresh jobs and schedule run data so cards enable and buttons update
+      refetchLatestJobs()
+      const parsedId = scheduleId ? parseInt(scheduleId) : NaN
+      if (!isNaN(parsedId)) {
+        dispatch(fetchBillingScheduleRun(parsedId))
+      }
     } catch (error: any) {
       notify("error", "Failed to Create Run", {
         description: error.message || "An error occurred while creating the billing schedule run",
       })
     }
-  }, [dispatch, runFormData])
+  }, [dispatch, runFormData, refetchLatestJobs, scheduleId])
 
   // Handle start billing schedule run
   const handleStartBillingScheduleRun = useCallback(async () => {
@@ -1669,12 +1940,58 @@ const FileManagementPage = () => {
       notify("success", "Run Started Successfully", {
         description: startBillingScheduleRunMessage || "The billing schedule run has been started",
       })
+
+      // Immediately refresh schedule run data and jobs so UI updates
+      const parsedId = scheduleId ? parseInt(scheduleId) : NaN
+      if (!isNaN(parsedId)) {
+        dispatch(fetchBillingScheduleRun(parsedId))
+      }
+      refetchLatestJobs()
     } catch (error: any) {
       notify("error", "Failed to Start Run", {
         description: error.message || "An error occurred while starting the billing schedule run",
       })
     }
-  }, [dispatch, createBillingScheduleRunResponse, startBillingScheduleRunMessage, billingScheduleRun])
+  }, [
+    dispatch,
+    createBillingScheduleRunResponse,
+    startBillingScheduleRunMessage,
+    billingScheduleRun,
+    scheduleId,
+    refetchLatestJobs,
+  ])
+
+  // Handle publish billing schedule run
+  const handlePublishBillingScheduleRun = useCallback(async () => {
+    try {
+      // Get the runId from the billing schedule run data
+      let runId = billingScheduleRun?.latestRunProgress?.runId
+
+      if (!runId) {
+        notify("error", "No Run Available", {
+          description: "No billing schedule run is available to publish",
+        })
+        return
+      }
+
+      const result = await dispatch(publishBillingScheduleRun(runId)).unwrap()
+
+      notify("success", "Bills Published Successfully", {
+        description: result.message || `Published ${result.data?.totalBills || 0} bills successfully`,
+      })
+
+      // Refresh the billing schedule run data and jobs so UI updates
+      const parsedId = scheduleId ? parseInt(scheduleId) : NaN
+      if (!isNaN(parsedId)) {
+        dispatch(fetchBillingScheduleRun(parsedId))
+      }
+      refetchLatestJobs()
+    } catch (error: any) {
+      notify("error", "Failed to Publish Bills", {
+        description: error.message || "An error occurred while publishing the billing schedule run",
+      })
+    }
+  }, [dispatch, billingScheduleRun, scheduleId, refetchLatestJobs])
 
   // Handle fetch billing schedule progress
   const handleFetchBillingScheduleProgress = useCallback(
@@ -1696,7 +2013,7 @@ const FileManagementPage = () => {
       // Start polling for progress
       const interval = setInterval(() => {
         handleFetchBillingScheduleProgress(runId)
-      }, 5000) // Poll every 5 seconds
+      }, 30000) // Poll every 30 seconds
 
       // Check if run is completed and stop polling
       if (billingScheduleProgress?.status === 2 || billingScheduleProgress?.status === 3) {
@@ -1713,32 +2030,44 @@ const FileManagementPage = () => {
     handleFetchBillingScheduleProgress,
   ])
 
-  // Poll for progress when we have a latest runId from billing schedule run
+  // Poll for progress when we have a latest runId from billing schedule run and hasRunningStage is true
   useEffect(() => {
     const latestRunId = billingScheduleRun?.latestRunProgress?.runId
+    const hasRunningStage = billingScheduleRun?.latestRunProgress?.hasRunningStage
 
-    if (
-      latestRunId &&
-      (billingScheduleRun?.latestRunProgress?.runStatus === 0 || billingScheduleRun?.latestRunProgress?.runStatus === 1)
-    ) {
-      // Start polling for progress
+    if (latestRunId && hasRunningStage === true) {
+      // Start polling for progress and schedule run data
       const interval = setInterval(() => {
         handleFetchBillingScheduleProgress(latestRunId)
-      }, 5000) // Poll every 5 seconds
+        // Also refresh schedule run data so buttons auto-update
+        const parsedId = scheduleId ? parseInt(scheduleId) : NaN
+        if (!isNaN(parsedId)) {
+          dispatch(fetchBillingScheduleRun(parsedId))
+        }
+        refetchLatestJobs()
+      }, 30000) // Poll every 30 seconds
 
       // Check if run is completed and stop polling
       if (billingScheduleProgress?.status === 2 || billingScheduleProgress?.status === 3) {
-        // Completed or Failed
+        // Completed or Failed - do a final refresh then stop
         clearInterval(interval)
+        const parsedId = scheduleId ? parseInt(scheduleId) : NaN
+        if (!isNaN(parsedId)) {
+          dispatch(fetchBillingScheduleRun(parsedId))
+        }
+        refetchLatestJobs()
       }
 
       return () => clearInterval(interval)
     }
   }, [
     billingScheduleRun?.latestRunProgress?.runId,
-    billingScheduleRun?.latestRunProgress?.runStatus,
+    billingScheduleRun?.latestRunProgress?.hasRunningStage,
     billingScheduleProgress?.status,
     handleFetchBillingScheduleProgress,
+    dispatch,
+    scheduleId,
+    refetchLatestJobs,
   ])
 
   // Download template using the new endpoint
@@ -1830,11 +2159,14 @@ const FileManagementPage = () => {
   // Get selected upload type details
   const selectedUploadTypeDetails = uploadTypeOptions.find((t) => t.value === selectedUploadType)
 
-  // Check if any run is in progress
+  // Check if any run is in progress using hasRunningStage from API
   const isRunInProgress =
     (billingScheduleProgress && (billingScheduleProgress.status === 0 || billingScheduleProgress.status === 1)) ||
-    (billingScheduleRun?.latestRunProgress &&
-      (billingScheduleRun.latestRunProgress.runStatus === 0 || billingScheduleRun.latestRunProgress.runStatus === 1))
+    billingScheduleRun?.latestRunProgress?.hasRunningStage === true
+
+  // Check if there are no running jobs
+  const hasNoRunningJobs =
+    !jobsLoading && !Object.values(latestJobs).some((job) => job && (job.status === 1 || job.status === 2))
 
   // Check if any loading state is active
   const isLoading =
@@ -1877,438 +2209,503 @@ const FileManagementPage = () => {
               </div>
             </div>
 
-            {/* Main Content */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="overflow-hidden rounded-xl bg-white shadow-lg"
-            >
-              {/* Upload Type Selection */}
-              {!hasCompletedUploadTypeSelection && (
-                <div className="p-6">
-                  <div className="mb-6 flex items-center justify-between">
-                    <div>
-                      <h2 className="text-lg font-semibold text-gray-900">Select Upload Type</h2>
-                      <p className="text-sm text-gray-600">Choose the type of billing upload you want to perform</p>
+            {/* Tab Navigation */}
+            <div className="mb-6">
+              <div className="border-b border-gray-200">
+                <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+                  <button
+                    onClick={() => setActiveTab("bulk-upload")}
+                    className={`whitespace-nowrap border-b-2 px-1 py-3 text-sm font-medium transition-colors ${
+                      activeTab === "bulk-upload"
+                        ? "border-blue-500 text-blue-600"
+                        : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Upload className="h-4 w-4" />
+                      Bulk Upload
                     </div>
-                    <div className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-800">
-                      {uploadTypeOptions.length} options
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("schedule-runs")}
+                    className={`whitespace-nowrap border-b-2 px-1 py-3 text-sm font-medium transition-colors ${
+                      activeTab === "schedule-runs"
+                        ? "border-blue-500 text-blue-600"
+                        : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Schedule Runs
+                    </div>
+                  </button>
+                </nav>
+              </div>
+            </div>
+
+            {/* Schedule Runs Tab */}
+            {activeTab === "schedule-runs" && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="overflow-hidden rounded-xl bg-white p-6 shadow-lg"
+              >
+                <BillingScheduleRunsTab scheduleId={scheduleId} />
+              </motion.div>
+            )}
+
+            {/* Bulk Upload Tab - Main Content */}
+            {activeTab === "bulk-upload" && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="overflow-hidden rounded-xl bg-white shadow-lg"
+              >
+                {/* Upload Type Selection */}
+                {!hasCompletedUploadTypeSelection && (
+                  <div className="p-6">
+                    <div className="mb-6 flex items-center justify-between">
+                      <div>
+                        <h2 className="text-lg font-semibold text-gray-900">Select Upload Type</h2>
+                        <p className="text-sm text-gray-600">Choose the type of billing upload you want to perform</p>
+                      </div>
+                      <div className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-800">
+                        {uploadTypeOptions.length} options
+                      </div>
+                    </div>
+
+                    {hasNoRunningJobs && (
+                      <div className="mb-4 flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                        <Info className="h-5 w-5 shrink-0 text-amber-600" />
+                        <p className="text-sm text-amber-800">
+                          No running jobs detected. Please start a billing schedule run before selecting an upload type.
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {uploadTypeOptions.map((type) => {
+                        const latestJob =
+                          latestJobs[typeof type.value === "number" ? type.value : parseInt(type.value)] || null
+                        const isLoading = jobsLoading
+                        const isCardDisabled = isRunInProgress || hasNoRunningJobs
+
+                        return (
+                          <motion.button
+                            key={type.value}
+                            whileHover={{ scale: isCardDisabled ? 1 : 1.02 }}
+                            whileTap={{ scale: isCardDisabled ? 1 : 0.98 }}
+                            onClick={() => {
+                              if (!isCardDisabled) {
+                                setSelectedUploadType(
+                                  typeof type.value === "number" ? type.value : parseInt(type.value)
+                                )
+                                setHasCompletedUploadTypeSelection(true)
+                              }
+                            }}
+                            disabled={isCardDisabled}
+                            className={`group relative rounded-xl border-2 border-gray-200 bg-white p-4 text-left transition-all ${
+                              isCardDisabled
+                                ? "cursor-not-allowed border-gray-300 opacity-50"
+                                : "hover:border-blue-400 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                            }`}
+                          >
+                            <h3 className="mb-2 font-semibold text-gray-900 group-hover:text-blue-600">{type.name}</h3>
+                            <p className="mb-4 text-sm text-gray-600">{type.description}</p>
+
+                            {/* Job Status Section */}
+                            <div className="mb-4 rounded-lg border border-gray-100 bg-gray-50 p-3">
+                              <div className="mb-2 flex items-center justify-between">
+                                <span className="text-xs font-medium text-gray-700">Latest Job Status</span>
+                                {latestJob && (latestJob.status === 1 || latestJob.status === 2) && (
+                                  <RefreshCw className="h-3 w-3 animate-spin text-blue-500" />
+                                )}
+                              </div>
+                              <JobStatusIndicator job={latestJob} isLoading={isLoading} />
+                            </div>
+                          </motion.button>
+                        )
+                      })}
                     </div>
                   </div>
+                )}
 
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {uploadTypeOptions.map((type) => {
-                      const latestJob =
-                        latestJobs[typeof type.value === "number" ? type.value : parseInt(type.value)] || null
-                      const isLoading = jobsLoading
-
-                      return (
-                        <motion.button
-                          key={type.value}
-                          whileHover={{ scale: isRunInProgress ? 1 : 1.02 }}
-                          whileTap={{ scale: isRunInProgress ? 1 : 0.98 }}
+                {/* File Upload Section */}
+                {hasCompletedUploadTypeSelection && selectedUploadTypeDetails && (
+                  <div id="upload-section" className="p-6">
+                    {/* Selected Type Header */}
+                    <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
+                      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+                        <div className="flex items-start gap-3">
+                          <div className="rounded-full bg-blue-200 p-2">
+                            <FileSpreadsheet className="h-5 w-5 text-blue-700" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="rounded-full bg-blue-200 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                                Selected Type
+                              </span>
+                              <h3 className="font-semibold text-blue-900">{selectedUploadTypeDetails.name}</h3>
+                            </div>
+                            <p className="mt-1 text-sm text-blue-700">{selectedUploadTypeDetails.description}</p>
+                          </div>
+                        </div>
+                        <ButtonModule
+                          variant="outline"
+                          size="sm"
                           onClick={() => {
-                            if (!isRunInProgress) {
-                              setSelectedUploadType(typeof type.value === "number" ? type.value : parseInt(type.value))
-                              setHasCompletedUploadTypeSelection(true)
-                            }
+                            setSelectedUploadType(null)
+                            setHasCompletedUploadTypeSelection(false)
+                            setSelectedFile(null)
+                            setExtractedColumns([])
                           }}
                           disabled={isRunInProgress}
-                          className={`group relative rounded-xl border-2 border-gray-200 bg-white p-4 text-left transition-all ${
-                            isRunInProgress
-                              ? "cursor-not-allowed border-gray-300 opacity-50"
-                              : "hover:border-blue-400 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                          }`}
+                          className="border-blue-300 bg-white text-blue-700 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                          <h3 className="mb-2 font-semibold text-gray-900 group-hover:text-blue-600">{type.name}</h3>
-                          <p className="mb-4 text-sm text-gray-600">{type.description}</p>
+                          Change Type
+                        </ButtonModule>
+                      </div>
+                    </div>
 
-                          {/* Job Status Section */}
-                          <div className="mb-4 rounded-lg border border-gray-100 bg-gray-50 p-3">
-                            <div className="mb-2 flex items-center justify-between">
-                              <span className="text-xs font-medium text-gray-700">Latest Job Status</span>
-                              {latestJob && (latestJob.status === 1 || latestJob.status === 2) && (
-                                <RefreshCw className="h-3 w-3 animate-spin text-blue-500" />
-                              )}
+                    {/* Template Download & Column Info */}
+                    <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+                      <div className="lg:col-span-2">
+                        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+                            <div className="flex items-start gap-3">
+                              <Download className="mt-0.5 h-5 w-5 text-gray-500" />
+                              <div>
+                                <p className="font-medium text-gray-900">Need a template?</p>
+                                <p className="text-sm text-gray-600">Download a sample CSV with the correct format</p>
+                              </div>
                             </div>
-                            <JobStatusIndicator job={latestJob} isLoading={isLoading} />
+                            <div className="flex items-center gap-3">
+                              {columnsLoading && (
+                                <div className="flex items-center gap-2 text-xs text-gray-500">
+                                  <div className="h-3 w-3 animate-spin rounded-full border border-gray-300 border-t-blue-600" />
+                                  Loading columns...
+                                </div>
+                              )}
+                              <ButtonModule
+                                variant="primary"
+                                size="sm"
+                                onClick={downloadSampleFile}
+                                icon={<Download className="h-4 w-4" />}
+                                disabled={columnsLoading || isRunInProgress}
+                              >
+                                Download Template
+                              </ButtonModule>
+                            </div>
                           </div>
-                        </motion.button>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* File Upload Section */}
-              {hasCompletedUploadTypeSelection && selectedUploadTypeDetails && (
-                <div id="upload-section" className="p-6">
-                  {/* Selected Type Header */}
-                  <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
-                    <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-                      <div className="flex items-start gap-3">
-                        <div className="rounded-full bg-blue-200 p-2">
-                          <FileSpreadsheet className="h-5 w-5 text-blue-700" />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="rounded-full bg-blue-200 px-2.5 py-0.5 text-xs font-medium text-blue-800">
-                              Selected Type
-                            </span>
-                            <h3 className="font-semibold text-blue-900">{selectedUploadTypeDetails.name}</h3>
-                          </div>
-                          <p className="mt-1 text-sm text-blue-700">{selectedUploadTypeDetails.description}</p>
                         </div>
                       </div>
-                      <ButtonModule
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedUploadType(null)
-                          setHasCompletedUploadTypeSelection(false)
-                          setSelectedFile(null)
-                          setExtractedColumns([])
-                        }}
-                        className="border-blue-300 bg-white text-blue-700 hover:bg-blue-100"
-                      >
-                        Change Type
-                      </ButtonModule>
-                    </div>
-                  </div>
 
-                  {/* Template Download & Column Info */}
-                  <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
-                    <div className="lg:col-span-2">
-                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-                          <div className="flex items-start gap-3">
-                            <Download className="mt-0.5 h-5 w-5 text-gray-500" />
-                            <div>
-                              <p className="font-medium text-gray-900">Need a template?</p>
-                              <p className="text-sm text-gray-600">Download a sample CSV with the correct format</p>
+                      <div>
+                        <button
+                          onClick={() => setShowColumnHelp(!showColumnHelp)}
+                          className="flex w-full items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 p-4 text-left transition-colors hover:bg-gray-100"
+                        >
+                          <HelpCircle className="h-5 w-5 text-gray-500" />
+                          <div>
+                            <p className="font-medium text-gray-900">Required Columns</p>
+                            <p className="text-sm text-gray-600">Click to view all</p>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Column Help Modal */}
+                    <ColumnHelpModal
+                      isOpen={showColumnHelp}
+                      onClose={() => setShowColumnHelp(false)}
+                      templateColumns={templateColumns}
+                      requiredColumns={selectedUploadTypeDetails.requiredColumns}
+                    />
+
+                    {/* File Upload Drop Zone */}
+                    <div
+                      ref={dropZoneRef}
+                      onDrop={handleFileDrop}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDragEnter={handleDragEnter}
+                      className={`relative mb-6 rounded-xl border-2 border-dashed p-8 text-center transition-all ${
+                        isDragOver
+                          ? "border-blue-400 bg-blue-50"
+                          : selectedFile
+                          ? "border-green-300 bg-green-50"
+                          : "border-gray-300 bg-gray-50 hover:border-gray-400"
+                      }`}
+                    >
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                        disabled={isLoading}
+                      />
+
+                      {!selectedFile ? (
+                        <div>
+                          <CloudUpload
+                            className={`mx-auto h-16 w-16 ${isDragOver ? "text-blue-500" : "text-gray-400"}`}
+                          />
+                          <p className="mt-4 text-base text-gray-700">
+                            <button
+                              onClick={() => fileInputRef.current?.click()}
+                              className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                              disabled={isLoading}
+                            >
+                              Click to upload
+                            </button>{" "}
+                            or drag and drop
+                          </p>
+                          <p className="mt-2 text-sm text-gray-500">CSV or Excel files (max 50MB)</p>
+                        </div>
+                      ) : (
+                        <div className="relative">
+                          <button
+                            onClick={removeSelectedFile}
+                            className="absolute -right-2 -top-2 rounded-full bg-red-100 p-1.5 text-red-600 transition-colors hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                            disabled={isLoading}
+                            aria-label="Remove file"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+
+                          <FileText className="mx-auto h-16 w-16 text-green-500" />
+                          <p className="mt-2 font-medium text-gray-900">{selectedFile.name}</p>
+                          <p className="text-sm text-gray-500">{formatFileSize(selectedFile.size)}</p>
+
+                          {/* Extracted Columns Display */}
+                          {extractedColumns.length > 0 && (
+                            <div className="mt-4">
+                              <p className="mb-2 text-xs font-medium text-gray-700">Found columns:</p>
+                              <div className="flex flex-wrap justify-center gap-1">
+                                {extractedColumns.map((col, idx) => {
+                                  const requiredColumns =
+                                    templateColumns.length > 0
+                                      ? templateColumns
+                                      : selectedUploadTypeDetails.requiredColumns
+                                  const isRequired = requiredColumns.some(
+                                    (rc) => rc.toLowerCase() === col.toLowerCase()
+                                  )
+                                  return (
+                                    <span
+                                      key={idx}
+                                      className={`rounded-full px-2 py-0.5 text-xs ${
+                                        isRequired ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
+                                      }`}
+                                    >
+                                      {col}
+                                    </span>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Validation Status */}
+                          {isValidatingFile && (
+                            <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-600">
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+                              <span>Validating file...</span>
+                            </div>
+                          )}
+
+                          {/* Upload File Button */}
+                          {!isValidatingFile && (
+                            <div className="mt-6 flex justify-center">
+                              <button
+                                type="button"
+                                onClick={handleUpload}
+                                disabled={
+                                  !selectedFile || !selectedUploadType || isLoading || uploadSuccess || isRunInProgress
+                                }
+                                className="flex items-center gap-2 rounded-lg bg-green-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                {isUploading ? (
+                                  <>
+                                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                    <span>Uploading...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Upload className="h-4 w-4" />
+                                    <span>Upload File</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Upload Progress */}
+                    <AnimatePresence>
+                      {uploadProgress && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="mb-6 overflow-hidden"
+                        >
+                          <div
+                            className={`rounded-lg border p-4 ${
+                              uploadProgress.percentage === 100
+                                ? "border-green-200 bg-green-50"
+                                : "border-blue-200 bg-blue-50"
+                            }`}
+                          >
+                            <div className="mb-3 flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                                    uploadProgress.percentage === 100 ? "bg-green-200" : "bg-blue-200"
+                                  }`}
+                                >
+                                  {uploadProgress.percentage === 100 ? (
+                                    <CheckCircle className="h-5 w-5 text-green-600" />
+                                  ) : (
+                                    <CloudUpload className="h-5 w-5 animate-pulse text-blue-600" />
+                                  )}
+                                </div>
+                                <div>
+                                  <p
+                                    className={`text-sm font-medium ${
+                                      uploadProgress.percentage === 100 ? "text-green-900" : "text-blue-900"
+                                    }`}
+                                  >
+                                    {uploadProgress.percentage === 100 ? "Upload Complete!" : "Uploading file..."}
+                                  </p>
+                                  <p
+                                    className={`text-xs ${
+                                      uploadProgress.percentage === 100 ? "text-green-700" : "text-blue-700"
+                                    }`}
+                                  >
+                                    {uploadProgress.percentage}% • {formatFileSize(uploadProgress.loaded)} of{" "}
+                                    {formatFileSize(uploadProgress.total)}
+                                  </p>
+                                </div>
+                              </div>
+                              <span
+                                className={`text-2xl font-bold ${
+                                  uploadProgress.percentage === 100 ? "text-green-800" : "text-blue-800"
+                                }`}
+                              >
+                                {uploadProgress.percentage}%
+                              </span>
+                            </div>
+                            <div className="h-2.5 w-full overflow-hidden rounded-full bg-gray-200">
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${uploadProgress.percentage}%` }}
+                                transition={{ duration: 0.3 }}
+                                className={`h-full ${
+                                  uploadProgress.percentage === 100 ? "bg-green-500" : "bg-blue-500"
+                                }`}
+                              />
                             </div>
                           </div>
-                          <div className="flex items-center gap-3">
-                            {columnsLoading && (
-                              <div className="flex items-center gap-2 text-xs text-gray-500">
-                                <div className="h-3 w-3 animate-spin rounded-full border border-gray-300 border-t-blue-600" />
-                                Loading columns...
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    {/* Success Message */}
+                    <AnimatePresence>
+                      {uploadSuccess && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4"
+                        >
+                          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+                            <div className="flex items-start gap-3">
+                              <CheckCircle className="mt-0.5 h-5 w-5 text-green-600" />
+                              <div>
+                                <p className="font-medium text-green-900">Upload Successful!</p>
+                                <p className="text-sm text-green-700">
+                                  Your file has been uploaded and queued for processing
+                                </p>
                               </div>
-                            )}
+                            </div>
                             <ButtonModule
                               variant="primary"
                               size="sm"
-                              onClick={downloadSampleFile}
-                              icon={<Download className="h-4 w-4" />}
-                              disabled={columnsLoading}
+                              onClick={() => router.push("/billing/bulk-upload")}
+                              disabled={isRunInProgress}
+                              className="bg-green-600 hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
                             >
-                              Download Template
+                              View Upload History
                             </ButtonModule>
                           </div>
-                        </div>
-                      </div>
-                    </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
 
-                    <div>
-                      <button
-                        onClick={() => setShowColumnHelp(!showColumnHelp)}
-                        className="flex w-full items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 p-4 text-left transition-colors hover:bg-gray-100"
-                      >
-                        <HelpCircle className="h-5 w-5 text-gray-500" />
-                        <div>
-                          <p className="font-medium text-gray-900">Required Columns</p>
-                          <p className="text-sm text-gray-600">Click to view all</p>
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Column Help Modal */}
-                  <ColumnHelpModal
-                    isOpen={showColumnHelp}
-                    onClose={() => setShowColumnHelp(false)}
-                    templateColumns={templateColumns}
-                    requiredColumns={selectedUploadTypeDetails.requiredColumns}
-                  />
-
-                  {/* File Upload Drop Zone */}
-                  <div
-                    ref={dropZoneRef}
-                    onDrop={handleFileDrop}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDragEnter={handleDragEnter}
-                    className={`relative mb-6 rounded-xl border-2 border-dashed p-8 text-center transition-all ${
-                      isDragOver
-                        ? "border-blue-400 bg-blue-50"
-                        : selectedFile
-                        ? "border-green-300 bg-green-50"
-                        : "border-gray-300 bg-gray-50 hover:border-gray-400"
-                    }`}
-                  >
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-                      onChange={handleFileSelect}
-                      className="hidden"
-                      disabled={isLoading}
-                    />
-
-                    {!selectedFile ? (
-                      <div>
-                        <CloudUpload
-                          className={`mx-auto h-16 w-16 ${isDragOver ? "text-blue-500" : "text-gray-400"}`}
-                        />
-                        <p className="mt-4 text-base text-gray-700">
-                          <button
-                            onClick={() => fileInputRef.current?.click()}
-                            className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                            disabled={isLoading}
-                          >
-                            Click to upload
-                          </button>{" "}
-                          or drag and drop
-                        </p>
-                        <p className="mt-2 text-sm text-gray-500">CSV or Excel files (max 50MB)</p>
-                      </div>
-                    ) : (
-                      <div className="relative">
-                        <button
-                          onClick={removeSelectedFile}
-                          className="absolute -right-2 -top-2 rounded-full bg-red-100 p-1.5 text-red-600 transition-colors hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-                          disabled={isLoading}
-                          aria-label="Remove file"
+                    {/* Error Messages */}
+                    <AnimatePresence>
+                      {(uploadError ||
+                        fileIntentError ||
+                        finalizeFileError ||
+                        billingBulkUploadError ||
+                        billRecomputeBulkUploadError ||
+                        billManualEnergyBulkUploadError ||
+                        debtRecoveryNoEnergyBulkUploadError) && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4"
                         >
-                          <X className="h-4 w-4" />
-                        </button>
-
-                        <FileText className="mx-auto h-16 w-16 text-green-500" />
-                        <p className="mt-2 font-medium text-gray-900">{selectedFile.name}</p>
-                        <p className="text-sm text-gray-500">{formatFileSize(selectedFile.size)}</p>
-
-                        {/* Extracted Columns Display */}
-                        {extractedColumns.length > 0 && (
-                          <div className="mt-4">
-                            <p className="mb-2 text-xs font-medium text-gray-700">Found columns:</p>
-                            <div className="flex flex-wrap justify-center gap-1">
-                              {extractedColumns.map((col, idx) => {
-                                const requiredColumns =
-                                  templateColumns.length > 0
-                                    ? templateColumns
-                                    : selectedUploadTypeDetails.requiredColumns
-                                const isRequired = requiredColumns.some((rc) => rc.toLowerCase() === col.toLowerCase())
-                                return (
-                                  <span
-                                    key={idx}
-                                    className={`rounded-full px-2 py-0.5 text-xs ${
-                                      isRequired ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
-                                    }`}
-                                  >
-                                    {col}
-                                  </span>
-                                )
-                              })}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Validation Status */}
-                        {isValidatingFile && (
-                          <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-600">
-                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
-                            <span>Validating file...</span>
-                          </div>
-                        )}
-
-                        {/* Upload File Button */}
-                        {!isValidatingFile && (
-                          <div className="mt-6 flex justify-center">
-                            <button
-                              type="button"
-                              onClick={handleUpload}
-                              disabled={
-                                !selectedFile || !selectedUploadType || isLoading || uploadSuccess || isRunInProgress
-                              }
-                              className="flex items-center gap-2 rounded-lg bg-green-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                              {isUploading ? (
-                                <>
-                                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                                  <span>Uploading...</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Upload className="h-4 w-4" />
-                                  <span>Upload File</span>
-                                </>
-                              )}
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Upload Progress */}
-                  <AnimatePresence>
-                    {uploadProgress && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="mb-6 overflow-hidden"
-                      >
-                        <div
-                          className={`rounded-lg border p-4 ${
-                            uploadProgress.percentage === 100
-                              ? "border-green-200 bg-green-50"
-                              : "border-blue-200 bg-blue-50"
-                          }`}
-                        >
-                          <div className="mb-3 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div
-                                className={`flex h-10 w-10 items-center justify-center rounded-full ${
-                                  uploadProgress.percentage === 100 ? "bg-green-200" : "bg-blue-200"
-                                }`}
-                              >
-                                {uploadProgress.percentage === 100 ? (
-                                  <CheckCircle className="h-5 w-5 text-green-600" />
-                                ) : (
-                                  <CloudUpload className="h-5 w-5 animate-pulse text-blue-600" />
-                                )}
-                              </div>
-                              <div>
-                                <p
-                                  className={`text-sm font-medium ${
-                                    uploadProgress.percentage === 100 ? "text-green-900" : "text-blue-900"
-                                  }`}
-                                >
-                                  {uploadProgress.percentage === 100 ? "Upload Complete!" : "Uploading file..."}
-                                </p>
-                                <p
-                                  className={`text-xs ${
-                                    uploadProgress.percentage === 100 ? "text-green-700" : "text-blue-700"
-                                  }`}
-                                >
-                                  {uploadProgress.percentage}% • {formatFileSize(uploadProgress.loaded)} of{" "}
-                                  {formatFileSize(uploadProgress.total)}
-                                </p>
-                              </div>
-                            </div>
-                            <span
-                              className={`text-2xl font-bold ${
-                                uploadProgress.percentage === 100 ? "text-green-800" : "text-blue-800"
-                              }`}
-                            >
-                              {uploadProgress.percentage}%
-                            </span>
-                          </div>
-                          <div className="h-2.5 w-full overflow-hidden rounded-full bg-gray-200">
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: `${uploadProgress.percentage}%` }}
-                              transition={{ duration: 0.3 }}
-                              className={`h-full ${uploadProgress.percentage === 100 ? "bg-green-500" : "bg-blue-500"}`}
-                            />
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
-                  {/* Success Message */}
-                  <AnimatePresence>
-                    {uploadSuccess && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4"
-                      >
-                        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
                           <div className="flex items-start gap-3">
-                            <CheckCircle className="mt-0.5 h-5 w-5 text-green-600" />
+                            <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-600" />
                             <div>
-                              <p className="font-medium text-green-900">Upload Successful!</p>
-                              <p className="text-sm text-green-700">
-                                Your file has been uploaded and queued for processing
+                              <p className="font-medium text-red-900">Upload Failed</p>
+                              <p className="text-sm text-red-700">
+                                {uploadError ||
+                                  fileIntentError ||
+                                  finalizeFileError ||
+                                  billingBulkUploadError ||
+                                  billRecomputeBulkUploadError ||
+                                  billManualEnergyBulkUploadError ||
+                                  debtRecoveryNoEnergyBulkUploadError}
                               </p>
                             </div>
                           </div>
-                          <ButtonModule
-                            variant="primary"
-                            size="sm"
-                            onClick={() => router.push("/billing/bulk-upload")}
-                            disabled={isRunInProgress}
-                            className="bg-green-600 hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            View Upload History
-                          </ButtonModule>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
 
-                  {/* Error Messages */}
-                  <AnimatePresence>
-                    {(uploadError ||
-                      fileIntentError ||
-                      finalizeFileError ||
-                      billingBulkUploadError ||
-                      billRecomputeBulkUploadError ||
-                      billManualEnergyBulkUploadError ||
-                      debtRecoveryNoEnergyBulkUploadError) && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4"
-                      >
-                        <div className="flex items-start gap-3">
-                          <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-600" />
-                          <div>
-                            <p className="font-medium text-red-900">Upload Failed</p>
-                            <p className="text-sm text-red-700">
-                              {uploadError ||
-                                fileIntentError ||
-                                finalizeFileError ||
-                                billingBulkUploadError ||
-                                billRecomputeBulkUploadError ||
-                                billManualEnergyBulkUploadError ||
-                                debtRecoveryNoEnergyBulkUploadError}
-                            </p>
-                          </div>
+                    {/* File Info Card */}
+                    {selectedFile && !uploadSuccess && (
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                        <div className="flex items-center gap-2">
+                          <Info className="h-4 w-4 text-gray-500" />
+                          <p className="text-xs text-gray-600">
+                            Maximum file size: 50MB • Supported formats: CSV, XLSX, XLS
+                          </p>
                         </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
-                  {/* File Info Card */}
-                  {selectedFile && !uploadSuccess && (
-                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                      <div className="flex items-center gap-2">
-                        <Info className="h-4 w-4 text-gray-500" />
-                        <p className="text-xs text-gray-600">
-                          Maximum file size: 50MB • Supported formats: CSV, XLSX, XLS
-                        </p>
                       </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Recent Uploads Table for Selected Job Type */}
-              {selectedUploadType && (
-                <div className="border-t border-gray-200">
-                  <div className="p-6">
-                    <JobTypeUploadsTable jobType={selectedUploadType} />
+                    )}
                   </div>
-                </div>
-              )}
-            </motion.div>
+                )}
+
+                {/* Recent Uploads Table for Selected Job Type */}
+                {selectedUploadType && (
+                  <div className="border-t border-gray-200">
+                    <div className="p-6">
+                      <JobTypeUploadsTable jobType={selectedUploadType} />
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
           </div>
         </div>
       </div>
@@ -2381,27 +2778,6 @@ const FileManagementPage = () => {
           </motion.div>
         )}
 
-        <NoRunningJobsModal
-          isOpen={showNoRunningJobsModal && !isLoading}
-          onClose={() => setShowNoRunningJobsModal(false)}
-          onStartRun={() => {
-            setShowNoRunningJobsModal(false)
-            setShowCreateRunModal(true)
-            // Determine schedule type based on schedule ID
-            const scheduleId = window.location.pathname.split("/").pop()
-            if (scheduleId === "6") {
-              setScheduleType("Feeder")
-            } else if (scheduleId === "7") {
-              setScheduleType("AreaOffice")
-            } else if (scheduleId === "8") {
-              setScheduleType("Distribution Substation")
-            } else {
-              setScheduleType("Custom MD") // Default for other IDs (Custom MD, Non-MD, MD Private, MD Public)
-            }
-          }}
-          scheduleId={parseInt(window.location.pathname.split("/").pop() || "0")}
-        />
-
         <CreateBillingScheduleRunModal
           isOpen={showCreateRunModal}
           onClose={() => setShowCreateRunModal(false)}
@@ -2430,11 +2806,21 @@ const FileManagementPage = () => {
                 <RefreshCw className="h-6 w-6 animate-spin text-blue-600" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Billing Run in Progress</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {getCurrentStageName(billingScheduleRun?.latestRunProgress?.stages)}
+                </h3>
                 <p className="mt-2 text-sm text-gray-600">
                   All operations are temporarily disabled while a billing schedule run is in progress. Please wait for
                   the run to complete.
                 </p>
+                {billingScheduleRun?.latestRunProgress?.stages && (
+                  <p className="mt-2 text-xs text-blue-600">
+                    {(() => {
+                      const stage = getRunningStage(billingScheduleRun.latestRunProgress.stages)
+                      return stage ? getStageName(stage.stage) : "Processing..."
+                    })()}
+                  </p>
+                )}
               </div>
               <div className="mt-4 w-full rounded-lg border border-blue-200 bg-blue-50 p-3">
                 <p className="text-xs text-blue-700">
@@ -2450,169 +2836,504 @@ const FileManagementPage = () => {
       <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white shadow-lg">
         <div className="px-4 py-4 pl-72 sm:px-6 sm:pl-72 lg:px-8 lg:pl-72">
           <div className="flex flex-col gap-3">
-            {/* Progress Display */}
-            {(billingScheduleProgress || billingScheduleProgressLoading) && (
-              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center">
-                      {billingScheduleProgressLoading ? (
-                        <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
-                      ) : (
-                        <RefreshCw className="h-5 w-5 text-blue-600" />
-                      )}
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-blue-900">Billing Run Progress</h4>
-                      <p className="text-xs text-blue-700">
-                        {billingScheduleProgressLoading
-                          ? "Fetching progress..."
-                          : `Status: ${getStatusText(billingScheduleProgress?.status)}`}
-                      </p>
-                    </div>
-                  </div>
-                  {billingScheduleProgress && (
-                    <div className="text-right">
-                      <div className="text-sm font-medium text-blue-900">
-                        {billingScheduleProgress.processedCustomers} / {billingScheduleProgress.totalCustomers}
-                      </div>
-                      <div className="text-xs text-blue-700">
-                        {Math.round(
-                          (billingScheduleProgress.processedCustomers / billingScheduleProgress.totalCustomers) * 100
-                        )}
-                        %
-                      </div>
-                    </div>
-                  )}
-                </div>
+            {/* Progress Display - uses running stage data from latestRunProgress */}
+            {(() => {
+              const runningStage = getRunningStage(billingScheduleRun?.latestRunProgress?.stages)
+              const hasProgress = runningStage || billingScheduleProgressLoading
 
-                {billingScheduleProgress && (
-                  <div className="mt-3 space-y-2">
-                    <div className="h-2 w-full rounded-full bg-blue-200">
-                      <div
-                        className="h-2 rounded-full bg-blue-600 transition-all duration-300"
-                        style={{
-                          width: `${
-                            (billingScheduleProgress.processedCustomers / billingScheduleProgress.totalCustomers) * 100
-                          }%`,
-                        }}
-                      />
+              if (!hasProgress) return null
+
+              const progressPercentage =
+                runningStage && runningStage.total > 0
+                  ? Math.round((runningStage.processed / runningStage.total) * 100)
+                  : 0
+
+              return (
+                <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center">
+                        {billingScheduleProgressLoading ? (
+                          <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+                        ) : (
+                          <RefreshCw className="h-5 w-5 animate-spin text-blue-600" />
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium text-blue-900">
+                          {getCurrentStageName(billingScheduleRun?.latestRunProgress?.stages)}
+                        </h4>
+                        <p className="text-xs text-blue-700">
+                          {billingScheduleProgressLoading
+                            ? "Fetching progress..."
+                            : getStageName(runningStage?.stage) || "Processing..."}
+                        </p>
+                      </div>
                     </div>
-                    <div className="grid grid-cols-3 gap-4 text-xs">
-                      <div>
-                        <span className="text-blue-700">Drafted:</span>
-                        <span className="ml-1 font-medium text-blue-900">{billingScheduleProgress.draftedCount}</span>
-                      </div>
-                      <div>
-                        <span className="text-blue-700">Finalized:</span>
-                        <span className="ml-1 font-medium text-blue-900">{billingScheduleProgress.finalizedCount}</span>
-                      </div>
-                      <div>
-                        <span className="text-blue-700">Skipped:</span>
-                        <span className="ml-1 font-medium text-blue-900">{billingScheduleProgress.skippedCount}</span>
-                      </div>
-                    </div>
-                    {billingScheduleProgress.lastError && (
-                      <div className="mt-2 rounded bg-red-50 p-2 text-xs text-red-600">
-                        <strong>Last Error:</strong> {billingScheduleProgress.lastError}
+                    {runningStage && (
+                      <div className="text-right">
+                        <div className="text-sm font-medium text-blue-900">
+                          {runningStage.processed} / {runningStage.total}
+                        </div>
+                        <div className="text-xs text-blue-700">{progressPercentage}%</div>
                       </div>
                     )}
                   </div>
-                )}
-              </div>
-            )}
+
+                  {runningStage && (
+                    <div className="mt-3 space-y-2">
+                      <div className="h-2 w-full rounded-full bg-blue-200">
+                        <div
+                          className="h-2 rounded-full bg-blue-600 transition-all duration-300"
+                          style={{
+                            width: `${progressPercentage}%`,
+                          }}
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 gap-4 text-xs">
+                        <div>
+                          <span className="text-blue-700">Total:</span>
+                          <span className="ml-1 font-medium text-blue-900">{runningStage.total}</span>
+                        </div>
+                        <div>
+                          <span className="text-green-700">Succeeded:</span>
+                          <span className="ml-1 font-medium text-green-900">{runningStage.succeeded}</span>
+                        </div>
+                        <div>
+                          <span className="text-red-700">Failed:</span>
+                          <span className="ml-1 font-medium text-red-900">{runningStage.failed}</span>
+                        </div>
+                        <div>
+                          <span className="text-orange-700">Pending:</span>
+                          <span className="ml-1 font-medium text-orange-900">{runningStage.pending}</span>
+                        </div>
+                      </div>
+                      {runningStage.lastError && (
+                        <div className="mt-2 rounded bg-red-50 p-2 text-xs text-red-600">
+                          <strong>Last Error:</strong> {runningStage.lastError}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
 
             <div className="flex w-full gap-3 ">
-              {/* Hide Generate Draft Bill button when run is active */}
-              {(!billingScheduleProgress ||
-                billingScheduleProgress.status === 2 ||
-                billingScheduleProgress.status === 3) &&
-              (!billingScheduleRun?.latestRunProgress ||
-                billingScheduleRun.latestRunProgress.runStatus === 2 ||
-                billingScheduleRun.latestRunProgress.runStatus === 3) ? (
+              {hasNoRunningJobs ? (
                 <button
-                  className="flex w-full items-center justify-center rounded-lg bg-green-600 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  onClick={handleStartBillingScheduleRun}
-                  disabled={
-                    startBillingScheduleRunLoading ||
-                    (billingScheduleProgress &&
-                      (billingScheduleProgress.status === 0 || billingScheduleProgress.status === 1)) ||
-                    (billingScheduleRun?.latestRunProgress &&
-                      (billingScheduleRun.latestRunProgress.runStatus === 0 ||
-                        billingScheduleRun.latestRunProgress.runStatus === 1))
-                  }
+                  className="flex w-full items-center justify-center rounded-lg bg-blue-600 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  onClick={() => {
+                    setShowCreateRunModal(true)
+                    const sid = window.location.pathname.split("/").pop()
+                    if (sid === "6") {
+                      setScheduleType("Feeder")
+                    } else if (sid === "7") {
+                      setScheduleType("AreaOffice")
+                    } else if (sid === "8") {
+                      setScheduleType("Distribution Substation")
+                    } else {
+                      setScheduleType("Custom MD")
+                    }
+                  }}
                 >
-                  {startBillingScheduleRunLoading ? (
-                    <>
+                  <Play className="mr-2 h-5 w-5" />
+                  Start Run
+                </button>
+              ) : (
+                <>
+                  {/* Hide Generate Draft Bill button when run is active */}
+                  {(!billingScheduleProgress ||
+                    billingScheduleProgress.status === 2 ||
+                    billingScheduleProgress.status === 3) &&
+                  billingScheduleRun?.latestRunProgress?.hasRunningStage !== true ? (
+                    <button
+                      className="flex w-full items-center justify-center rounded-lg bg-green-600 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      onClick={handleStartBillingScheduleRun}
+                      disabled={
+                        startBillingScheduleRunLoading ||
+                        (billingScheduleProgress &&
+                          (billingScheduleProgress.status === 0 || billingScheduleProgress.status === 1)) ||
+                        billingScheduleRun?.latestRunProgress?.hasRunningStage === true
+                      }
+                    >
+                      {startBillingScheduleRunLoading ? (
+                        <>
+                          <div className="mr-2 h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                          <span>Starting Run...</span>
+                        </>
+                      ) : (
+                        <>
+                          <FileText className="mr-2 h-5 w-5" />
+                          Generate Draft Bill
+                        </>
+                      )}
+                    </button>
+                  ) : null}
+
+                  {/* Show active run indicator when run is in progress */}
+                  {(billingScheduleProgress &&
+                    (billingScheduleProgress.status === 0 || billingScheduleProgress.status === 1)) ||
+                  billingScheduleRun?.latestRunProgress?.hasRunningStage === true ? (
+                    <div className="flex w-full items-center justify-center rounded-lg bg-blue-600 px-6 py-3 text-base font-medium text-white">
                       <div className="mr-2 h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                      <span>Starting Run...</span>
-                    </>
-                  ) : (
-                    <>
-                      <FileText className="mr-2 h-5 w-5" />
-                      Generate Draft Bill
-                    </>
+                      <span>{getCurrentStageName(billingScheduleRun?.latestRunProgress?.stages)}...</span>
+                    </div>
+                  ) : null}
+
+                  {/* Show completed state */}
+                  {/* {(billingScheduleProgress && billingScheduleProgress.status === 2) ||
+                  (billingScheduleRun?.latestRunProgress && billingScheduleRun.latestRunProgress.runStatus === 2) ? (
+                    <div className="flex w-full items-center justify-center rounded-lg bg-green-600 px-6 py-3 text-base font-medium text-white">
+                      <CheckCircle className="mr-2 h-5 w-5" />
+                      <span>Run Completed Successfully</span>
+                    </div>
+                  ) : null} */}
+
+                  {/* Show failed state */}
+                  {(billingScheduleProgress && billingScheduleProgress.status === 3) ||
+                  (billingScheduleRun?.latestRunProgress && billingScheduleRun.latestRunProgress.runStatus === 3) ? (
+                    <div className="flex w-full items-center justify-center rounded-lg bg-red-600 px-6 py-3 text-base font-medium text-white">
+                      <AlertCircle className="mr-2 h-5 w-5" />
+                      <span>Run Failed</span>
+                    </div>
+                  ) : null}
+                  {showPublishButton && (
+                    <button
+                      className="flex w-full items-center justify-center rounded-lg bg-green-500 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      onClick={handlePublishBillingScheduleRun}
+                      disabled={isRunInProgress || publishBillingScheduleRunLoading}
+                    >
+                      {publishBillingScheduleRunLoading ? (
+                        <>
+                          <div className="mr-2 h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                          <span>Publishing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="mr-2 h-5 w-5" />
+                          Publish Draft Bill
+                        </>
+                      )}
+                    </button>
                   )}
-                </button>
-              ) : null}
-
-              {/* Show active run indicator when run is in progress */}
-              {(billingScheduleProgress &&
-                (billingScheduleProgress.status === 0 || billingScheduleProgress.status === 1)) ||
-              (billingScheduleRun?.latestRunProgress &&
-                (billingScheduleRun.latestRunProgress.runStatus === 0 ||
-                  billingScheduleRun.latestRunProgress.runStatus === 1)) ? (
-                <div className="flex w-full items-center justify-center rounded-lg bg-blue-600 px-6 py-3 text-base font-medium text-white">
-                  <div className="mr-2 h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  <span>Run in Progress...</span>
-                </div>
-              ) : null}
-
-              {/* Show completed state */}
-              {(billingScheduleProgress && billingScheduleProgress.status === 2) ||
-              (billingScheduleRun?.latestRunProgress && billingScheduleRun.latestRunProgress.runStatus === 2) ? (
-                <div className="flex w-full items-center justify-center rounded-lg bg-green-600 px-6 py-3 text-base font-medium text-white">
-                  <CheckCircle className="mr-2 h-5 w-5" />
-                  <span>Run Completed Successfully</span>
-                </div>
-              ) : null}
-
-              {/* Show failed state */}
-              {(billingScheduleProgress && billingScheduleProgress.status === 3) ||
-              (billingScheduleRun?.latestRunProgress && billingScheduleRun.latestRunProgress.runStatus === 3) ? (
-                <div className="flex w-full items-center justify-center rounded-lg bg-red-600 px-6 py-3 text-base font-medium text-white">
-                  <AlertCircle className="mr-2 h-5 w-5" />
-                  <span>Run Failed</span>
-                </div>
-              ) : null}
-              {showPublishButton && (
-                <button
-                  className="flex w-full items-center justify-center rounded-lg bg-green-500 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-                  onClick={() => {
-                    // TODO: Implement publish draft bill functionality
-                    console.log("Publish draft bill clicked")
-                  }}
-                >
-                  <CheckCircle className="mr-2 h-5 w-5" />
-                  Publish Draft Bill
-                </button>
-              )}
-              {showGeneratePdfButton && (
-                <button
-                  className="flex w-full items-center justify-center rounded-lg bg-green-700 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-                  onClick={() => {
-                    // TODO: Implement publish PDF functionality
-                    console.log("Publish PDF clicked")
-                  }}
-                >
-                  <FileDown className="mr-2 h-5 w-5" />
-                  Generate PDF
-                </button>
+                  {showExportArButton && (
+                    <button
+                      className="flex w-full items-center justify-center rounded-lg bg-green-800 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      onClick={() => setIsExportArModalOpen(true)}
+                      disabled={isRunInProgress}
+                    >
+                      <FileDown className="mr-2 h-5 w-5" />
+                      Export AR
+                    </button>
+                  )}
+                  {showGeneratePdfButton && (
+                    <button
+                      className="flex w-full items-center justify-center rounded-lg bg-green-700 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      onClick={() => setIsGeneratePdfModalOpen(true)}
+                      disabled={isRunInProgress}
+                    >
+                      <FileDown className="mr-2 h-5 w-5" />
+                      Generate PDF
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </div>
         </div>
       </div>
+      {/* Generate PDF Modal */}
+      {isGeneratePdfModalOpen && (
+        <motion.div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={handleCloseGeneratePdfModal}
+        >
+          <motion.div
+            className="w-full max-w-lg rounded-lg bg-white shadow-xl"
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="border-b border-gray-200 p-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">Generate PDF Bills</h3>
+                <button onClick={handleCloseGeneratePdfModal} className="rounded-full p-1 hover:bg-gray-100">
+                  <X className="size-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-4">
+              <div className="space-y-4">
+                {/* Area Office - Optional */}
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Area Office</label>
+                  <FormSelectModule
+                    name="pdfAreaOffice"
+                    value={pdfAreaOffice}
+                    onChange={(e) => setPdfAreaOffice(e.target.value)}
+                    searchable={true}
+                    searchTerm={pdfAreaOfficeSearch}
+                    onSearchChange={handlePdfAreaOfficeSearchChange}
+                    onSearchClick={handlePdfAreaOfficeSearchClick}
+                    loading={areaOfficesLoading}
+                    options={
+                      areaOffices?.map((office: any) => ({
+                        value: office.id.toString(),
+                        label: office.name,
+                      })) || []
+                    }
+                  />
+                </div>
+
+                {/* Feeder - Optional */}
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Feeder</label>
+                  <FormSelectModule
+                    name="pdfFeeder"
+                    value={pdfFeeder}
+                    onChange={(e) => setPdfFeeder(e.target.value)}
+                    searchable={true}
+                    searchTerm={pdfFeederSearch}
+                    onSearchChange={handlePdfFeederSearchChange}
+                    onSearchClick={handlePdfFeederSearchClick}
+                    loading={feedersLoading}
+                    options={
+                      feeders?.map((feeder: any) => ({
+                        value: feeder.id.toString(),
+                        label: feeder.name,
+                      })) || []
+                    }
+                  />
+                </div>
+
+                {/* Distribution Substation - Optional */}
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Distribution Substation</label>
+                  <FormSelectModule
+                    name="pdfDistributionSubstation"
+                    value={pdfDistributionSubstation}
+                    onChange={(e) => setPdfDistributionSubstation(e.target.value)}
+                    searchable={true}
+                    searchTerm={pdfDistributionSubstationSearch}
+                    onSearchChange={handlePdfDistributionSubstationSearchChange}
+                    onSearchClick={handlePdfDistributionSubstationSearchClick}
+                    loading={distributionSubstationsLoading}
+                    options={
+                      distributionSubstations?.map((substation: any) => ({
+                        value: substation.id.toString(),
+                        label: substation.name?.toString() || substation.dssCode || `Substation ${substation.id}`,
+                      })) || []
+                    }
+                  />
+                </div>
+
+                {/* Group By */}
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Group By</label>
+                  <FormSelectModule
+                    name="pdfGroupBy"
+                    value={pdfGroupBy}
+                    onChange={(e) => setPdfGroupBy(e.target.value)}
+                    options={[
+                      { value: "0", label: "None" },
+                      { value: "1", label: "Area Office" },
+                      { value: "2", label: "Feeder" },
+                      { value: "3", label: "Distribution Substation" },
+                    ]}
+                  />
+                </div>
+
+                {/* Max Bills Per File */}
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Max Bills Per File</label>
+                  <input
+                    type="number"
+                    value={pdfMaxBillsPerFile}
+                    onChange={(e) => setPdfMaxBillsPerFile(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                    min="1"
+                    max="10000"
+                    placeholder="5000"
+                  />
+                </div>
+
+                {/* Error Message */}
+                {runPdfGenerationError && (
+                  <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{runPdfGenerationError}</div>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="mt-6 flex gap-3">
+                <ButtonModule
+                  variant="outline"
+                  size="md"
+                  onClick={handleCloseGeneratePdfModal}
+                  disabled={runPdfGenerationLoading}
+                  className="flex-1"
+                >
+                  Cancel
+                </ButtonModule>
+                <ButtonModule
+                  variant="primary"
+                  size="md"
+                  onClick={handleGeneratePdf}
+                  disabled={runPdfGenerationLoading}
+                  className="flex-1"
+                  icon={<FileDown />}
+                >
+                  {runPdfGenerationLoading ? "Generating..." : "Generate PDF"}
+                </ButtonModule>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Export AR Modal */}
+      {isExportArModalOpen && (
+        <motion.div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={handleCloseExportArModal}
+        >
+          <motion.div
+            className="w-full max-w-lg rounded-lg bg-white shadow-xl"
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="border-b border-gray-200 p-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">Export AR Report</h3>
+                <button onClick={handleCloseExportArModal} className="rounded-full p-1 hover:bg-gray-100">
+                  <X className="size-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-4">
+              <div className="space-y-4">
+                {/* Area Office - Optional */}
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Area Office</label>
+                  <FormSelectModule
+                    name="exportArAreaOffice"
+                    value={exportArAreaOffice}
+                    onChange={(e) => setExportArAreaOffice(e.target.value)}
+                    searchable={true}
+                    searchTerm={exportArAreaOfficeSearch}
+                    onSearchChange={handleExportArAreaOfficeSearchChange}
+                    onSearchClick={handleExportArAreaOfficeSearchClick}
+                    loading={areaOfficesLoading}
+                    options={
+                      areaOffices?.map((office: any) => ({
+                        value: office.id.toString(),
+                        label: office.name,
+                      })) || []
+                    }
+                  />
+                </div>
+
+                {/* Feeder - Optional */}
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Feeder</label>
+                  <FormSelectModule
+                    name="exportArFeeder"
+                    value={exportArFeeder}
+                    onChange={(e) => setExportArFeeder(e.target.value)}
+                    searchable={true}
+                    searchTerm={exportArFeederSearch}
+                    onSearchChange={handleExportArFeederSearchChange}
+                    onSearchClick={handleExportArFeederSearchClick}
+                    loading={feedersLoading}
+                    options={
+                      feeders?.map((feeder: any) => ({
+                        value: feeder.id.toString(),
+                        label: feeder.name,
+                      })) || []
+                    }
+                  />
+                </div>
+
+                {/* Distribution Substation - Optional */}
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Distribution Substation</label>
+                  <FormSelectModule
+                    name="exportArDistributionSubstation"
+                    value={exportArDistributionSubstation}
+                    onChange={(e) => setExportArDistributionSubstation(e.target.value)}
+                    searchable={true}
+                    searchTerm={exportArDistributionSubstationSearch}
+                    onSearchChange={handleExportArDistributionSubstationSearchChange}
+                    onSearchClick={handleExportArDistributionSubstationSearchClick}
+                    loading={distributionSubstationsLoading}
+                    options={
+                      distributionSubstations?.map((substation: any) => ({
+                        value: substation.id.toString(),
+                        label: substation.name?.toString() || substation.dssCode || `Substation ${substation.id}`,
+                      })) || []
+                    }
+                  />
+                </div>
+
+                {/* Status Code - Optional */}
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Status Code</label>
+                  <FormSelectModule
+                    name="exportArStatusCode"
+                    value={exportArStatusCode}
+                    onChange={(e) => setExportArStatusCode(e.target.value)}
+                    options={[
+                      { value: "", label: "All Statuses" },
+                      { value: "A", label: "Active" },
+                      { value: "I", label: "Inactive" },
+                      { value: "S", label: "Suspended" },
+                    ]}
+                  />
+                </div>
+
+                {/* Error Message */}
+                {exportArScheduleRunError && (
+                  <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{exportArScheduleRunError}</div>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="mt-6 flex gap-3">
+                <ButtonModule
+                  variant="outline"
+                  size="md"
+                  onClick={handleCloseExportArModal}
+                  disabled={exportArScheduleRunLoading}
+                  className="flex-1"
+                >
+                  Cancel
+                </ButtonModule>
+                <ButtonModule
+                  variant="primary"
+                  size="md"
+                  onClick={handleExportAr}
+                  disabled={exportArScheduleRunLoading}
+                  className="flex-1"
+                  icon={<FileDown />}
+                >
+                  {exportArScheduleRunLoading ? "Exporting..." : "Export AR"}
+                </ButtonModule>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </section>
   )
 }

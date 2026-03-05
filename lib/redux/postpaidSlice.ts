@@ -535,6 +535,41 @@ export interface DownloadARResponse {
   }
 }
 
+// Export Schedule Run AR Interfaces
+export interface ExportScheduleRunARRequestParams {
+  runId: number
+  isScoped: boolean
+  statusCode?: string
+  areaOfficeId?: number
+  feederId?: number
+  distributionSubstationId?: number
+}
+
+export interface ExportScheduleRunARResponse {
+  isSuccess: boolean
+  message: string
+  data: {
+    blob: Blob
+    filename: string
+  }
+}
+
+// Download Schedule Run PDF Interfaces
+export interface DownloadScheduleRunPDFItem {
+  postpaidBillPrintJobId: number
+  fileName: string
+  partNumber: number
+  sizeBytes: number
+  downloadUrl: string
+  expiresAtUtc: string
+}
+
+export interface DownloadScheduleRunPDFResponse {
+  isSuccess: boolean
+  message: string
+  data: DownloadScheduleRunPDFItem[]
+}
+
 // Printing Jobs Interfaces
 export interface PrintingJobFile {
   fileName: string
@@ -841,10 +876,213 @@ export interface StartBillingScheduleRunResponse {
   data: string
 }
 
+// Publish Billing Schedule Run Interfaces
+export interface PublishBillingScheduleRunData {
+  totalBills: number
+  finalizedBills: number
+  readyToPrintBills: number
+}
+
+export interface PublishBillingScheduleRunResponse {
+  isSuccess: boolean
+  message: string
+  data: PublishBillingScheduleRunData
+}
+
+// Export AR Schedule Run Interfaces
+export interface ExportArScheduleRunRequest {
+  isScoped: boolean
+  statusCode?: string
+  areaOfficeId?: number
+  feederId?: number
+  distributionSubstationId?: number
+}
+
+export interface ExportArScheduleRunData {
+  id: number
+  postpaidBillingScheduleRunId: number
+  billingPeriodId: number
+  period: string
+  postpaidBillingJobRunId: number
+  isScoped: boolean
+  statusCode: string
+  areaOfficeId: number
+  feederId: number
+  distributionSubstationId: number
+  status: number
+  totalRows: number
+  processedRows: number
+  pendingRows: number
+  lastError: string
+  resultFileName: string
+  resultFileSize: number
+  downloadUrl: string
+  resultExpiresAtUtc: string
+  requestedAtUtc: string
+  startedAtUtc: string
+  completedAtUtc: string
+  requestedByUserId: number
+}
+
+export interface ExportArScheduleRunResponse {
+  isSuccess: boolean
+  message: string
+  data: ExportArScheduleRunData
+}
+
+// Run PDF Generation Interfaces
+export interface RunPdfGenerationRequest {
+  feederId?: number
+  areaOfficeId?: number
+  distributionSubstationId?: number
+  provinceId?: number
+  groupBy?: number
+  maxBillsPerFile?: number
+}
+
+export interface RunPdfGenerationFile {
+  fileName: string
+  key: string
+  url: string
+  groupName: string
+  groupId: number
+  partNumber: number
+  billCount: number
+}
+
+export interface RunPdfGenerationZipFile {
+  fileName: string
+  key: string
+  url: string
+  partNumber: number
+  sourceFileCount: number
+  sizeBytes: number
+}
+
+export interface RunPdfGenerationData {
+  id: number
+  billingPeriodId: number
+  period: string
+  postpaidBillingJobRunId: number
+  groupBy: number
+  feederId: number
+  feederName: string
+  areaOfficeId: number
+  areaOfficeName: string
+  distributionSubstationId: number
+  distributionSubstationName: string
+  provinceId: number
+  provinceName: string
+  isMd: boolean
+  maxBillsPerFile: number
+  status: number
+  totalBills: number
+  processedBills: number
+  fileCount: number
+  zipUrl: string
+  zipKey: string
+  requestedAtUtc: string
+  startedAtUtc: string
+  completedAtUtc: string
+  lastError: string
+  files: RunPdfGenerationFile[]
+  zipFiles: RunPdfGenerationZipFile[]
+}
+
+export interface RunPdfGenerationResponse {
+  isSuccess: boolean
+  message: string
+  data: RunPdfGenerationData
+}
+
+// Billing Schedule Runs Interfaces
+export interface BillingScheduleRunStep {
+  stepType: number
+  status: number
+  startedAtUtc: string
+  completedAtUtc: string
+  lastError: string
+}
+
+export interface BillingScheduleRunBulkAction {
+  actionType: number
+  lastStatus: number
+  lastUsedJobId: number
+  lastUsedAtUtc: string
+  lastUsedByUserId: number
+  lastError: string
+}
+
+export interface BillingScheduleRunArRefresh {
+  viewName: string
+  lastRefreshedAtUtc: string
+  isRefreshing: boolean
+  hasPendingRequest: boolean
+  isReady: boolean
+}
+
+export interface BillingScheduleRunJobProgress {
+  postpaidBillingJobRunId: number
+  status: number
+  totalCustomers: number
+  processedCustomers: number
+  pendingCustomers: number
+  draftedCount: number
+  finalizedCount: number
+  skippedCount: number
+  requestedAtUtc: string
+  startedAtUtc: string
+  completedAtUtc: string
+  lastError: string
+  arRefresh: BillingScheduleRunArRefresh
+}
+
+export interface BillingScheduleRunCreatedByUser {
+  id: number
+  fullName: string
+  email: string
+  phoneNumber: string
+  accountId: string
+}
+
+export interface BillingScheduleRunItem {
+  id: number
+  postpaidBillingScheduleId: number
+  title: string
+  billingPeriodId: number
+  period: string
+  areaOfficeId: number
+  feederId: number
+  distributionSubstationId: number
+  status: number
+  currentStep: number
+  postpaidBillingJobRunId: number
+  lastError: string
+  createdById: number
+  startedAtUtc: string
+  completedAtUtc: string
+  createdAt: string
+  lastUpdated: string
+  createdByUser: BillingScheduleRunCreatedByUser
+  jobProgress: BillingScheduleRunJobProgress
+  showPublishButton: boolean
+  showExportArButton: boolean
+  showGeneratePdfButton: boolean
+  steps: BillingScheduleRunStep[]
+  bulkActions: BillingScheduleRunBulkAction[]
+}
+
+export interface BillingScheduleRunsResponse {
+  isSuccess: boolean
+  message: string
+  data: BillingScheduleRunItem[]
+}
+
 // Billing Schedule Run Interfaces
 export interface BillingScheduleRunStage {
   stage: number
   state: number
+  message: string
   total: number
   processed: number
   succeeded: number
@@ -853,7 +1091,7 @@ export interface BillingScheduleRunStage {
   requestedAtUtc: string
   startedAtUtc: string
   completedAtUtc: string
-  lastError: string
+  lastError: string | null
 }
 
 export interface BillingScheduleRunProgress {
@@ -864,13 +1102,14 @@ export interface BillingScheduleRunProgress {
   runStatus: number
   currentStep: number
   startedAtUtc: string
-  completedAtUtc: string
-  totalStages: number
-  processedStages: number
-  succeededStages: number
-  failedStages: number
-  runningStages: number
-  pendingStages: number
+  completedAtUtc: string | null
+  hasRunningStage: boolean
+  totalStages?: number
+  processedStages?: number
+  succeededStages?: number
+  failedStages?: number
+  runningStages?: number
+  pendingStages?: number
   showPublishButton: boolean
   showExportArButton: boolean
   showGeneratePdfButton: boolean
@@ -1086,6 +1325,23 @@ interface PostpaidBillingState {
     contentDisposition: string | null
   } | null
 
+  // Export Schedule Run AR state
+  exportScheduleRunARLoading: boolean
+  exportScheduleRunARError: string | null
+  exportScheduleRunARSuccess: boolean
+  exportScheduleRunARMessage: string | null
+  exportScheduleRunARData: {
+    blob: Blob
+    filename: string
+  } | null
+
+  // Download Schedule Run PDF state
+  downloadScheduleRunPDFLoading: boolean
+  downloadScheduleRunPDFError: string | null
+  downloadScheduleRunPDFSuccess: boolean
+  downloadScheduleRunPDFMessage: string | null
+  downloadScheduleRunPDFData: DownloadScheduleRunPDFItem[] | null
+
   // Download Print Job state
   downloadPrintJobLoading: boolean
   downloadPrintJobError: string | null
@@ -1138,11 +1394,38 @@ interface PostpaidBillingState {
   startBillingScheduleRunSuccess: boolean
   startBillingScheduleRunMessage: string | null
 
+  // Publish Billing Schedule Run state
+  publishBillingScheduleRunLoading: boolean
+  publishBillingScheduleRunError: string | null
+  publishBillingScheduleRunSuccess: boolean
+  publishBillingScheduleRunMessage: string | null
+  publishBillingScheduleRunData: PublishBillingScheduleRunData | null
+
+  // Export AR Schedule Run state
+  exportArScheduleRunLoading: boolean
+  exportArScheduleRunError: string | null
+  exportArScheduleRunSuccess: boolean
+  exportArScheduleRunMessage: string | null
+  exportArScheduleRunData: ExportArScheduleRunData | null
+
+  // Run PDF Generation state
+  runPdfGenerationLoading: boolean
+  runPdfGenerationError: string | null
+  runPdfGenerationSuccess: boolean
+  runPdfGenerationMessage: string | null
+  runPdfGenerationData: RunPdfGenerationData | null
+
   // Get Billing Schedule Progress state
   billingScheduleProgressLoading: boolean
   billingScheduleProgressError: string | null
   billingScheduleProgressSuccess: boolean
   billingScheduleProgress: BillingScheduleProgressData | null
+
+  // Billing Schedule Runs state
+  billingScheduleRuns: BillingScheduleRunItem[]
+  billingScheduleRunsLoading: boolean
+  billingScheduleRunsError: string | null
+  billingScheduleRunsSuccess: boolean
 
   // Search/filter state
   filters: {
@@ -1304,6 +1587,20 @@ const initialState: PostpaidBillingState = {
   downloadARMessage: null,
   downloadARData: null,
 
+  // Export Schedule Run AR state
+  exportScheduleRunARLoading: false,
+  exportScheduleRunARError: null,
+  exportScheduleRunARSuccess: false,
+  exportScheduleRunARMessage: null,
+  exportScheduleRunARData: null,
+
+  // Download Schedule Run PDF state
+  downloadScheduleRunPDFLoading: false,
+  downloadScheduleRunPDFError: null,
+  downloadScheduleRunPDFSuccess: false,
+  downloadScheduleRunPDFMessage: null,
+  downloadScheduleRunPDFData: null,
+
   // Download Print Job state
   downloadPrintJobLoading: false,
   downloadPrintJobError: null,
@@ -1340,10 +1637,29 @@ const initialState: PostpaidBillingState = {
   startBillingScheduleRunError: null,
   startBillingScheduleRunSuccess: false,
   startBillingScheduleRunMessage: null,
+  publishBillingScheduleRunLoading: false,
+  publishBillingScheduleRunError: null,
+  publishBillingScheduleRunSuccess: false,
+  publishBillingScheduleRunMessage: null,
+  publishBillingScheduleRunData: null,
+  exportArScheduleRunLoading: false,
+  exportArScheduleRunError: null,
+  exportArScheduleRunSuccess: false,
+  exportArScheduleRunMessage: null,
+  exportArScheduleRunData: null,
+  runPdfGenerationLoading: false,
+  runPdfGenerationError: null,
+  runPdfGenerationSuccess: false,
+  runPdfGenerationMessage: null,
+  runPdfGenerationData: null,
   billingScheduleProgressLoading: false,
   billingScheduleProgressError: null,
   billingScheduleProgressSuccess: false,
   billingScheduleProgress: null,
+  billingScheduleRuns: [],
+  billingScheduleRunsLoading: false,
+  billingScheduleRunsError: null,
+  billingScheduleRunsSuccess: false,
   filters: {},
   billingJobsFilters: {},
 }
@@ -2075,6 +2391,87 @@ export const downloadAR = createAsyncThunk(
   }
 )
 
+// Export Schedule Run AR Async Thunk
+export const exportScheduleRunAR = createAsyncThunk<
+  ExportScheduleRunARResponse,
+  ExportScheduleRunARRequestParams,
+  { rejectValue: string }
+>("postpaidBilling/exportScheduleRunAR", async (params: ExportScheduleRunARRequestParams, { rejectWithValue }) => {
+  try {
+    const { runId, isScoped, statusCode, areaOfficeId, feederId, distributionSubstationId } = params
+
+    const response = await api.get(
+      buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.EXPORT_AR.replace("{runId}", runId.toString())),
+      {
+        params: {
+          IsScoped: isScoped,
+          ...(statusCode && { StatusCode: statusCode }),
+          ...(areaOfficeId && { AreaOfficeId: areaOfficeId }),
+          ...(feederId && { FeederId: feederId }),
+          ...(distributionSubstationId && { DistributionSubstationId: distributionSubstationId }),
+        },
+        responseType: "blob",
+        headers: {
+          Accept: "text/csv, application/json, */*",
+        },
+      }
+    )
+
+    // Generate filename
+    const filename = `Schedule_Run_${runId}_AR.csv`
+
+    // Create a blob from the response data
+    const blob = new Blob([response.data], { type: "text/csv" })
+
+    // Trigger download
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+
+    return {
+      isSuccess: true,
+      message: `AR report downloaded successfully as: ${filename}`,
+      data: {
+        blob: response.data,
+        filename: filename,
+      },
+    }
+  } catch (error: any) {
+    if (error.response?.data) {
+      return rejectWithValue(error.response.data.message || "Failed to export AR for schedule run")
+    }
+    return rejectWithValue(error.message || "Network error during schedule run AR export")
+  }
+})
+
+// Download Schedule Run PDF Async Thunk
+export const downloadScheduleRunPDF = createAsyncThunk<DownloadScheduleRunPDFResponse, number, { rejectValue: string }>(
+  "postpaidBilling/downloadScheduleRunPDF",
+  async (runId: number, { rejectWithValue }) => {
+    try {
+      const response = await api.get<DownloadScheduleRunPDFResponse>(
+        buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.DOWNLOAD_PDF.replace("{runId}", runId.toString()))
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to download PDF for schedule run")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to download PDF for schedule run")
+      }
+      return rejectWithValue(error.message || "Network error during schedule run PDF download")
+    }
+  }
+)
+
 // Download Print Job Async Thunk
 export const downloadPrintJob = createAsyncThunk(
   "postpaidBilling/downloadPrintJob",
@@ -2251,6 +2648,78 @@ export const startBillingScheduleRun = createAsyncThunk(
   }
 )
 
+// Publish Billing Schedule Run Async Thunk
+export const publishBillingScheduleRun = createAsyncThunk(
+  "postpaidBilling/publishBillingScheduleRun",
+  async (runId: number, { rejectWithValue }) => {
+    try {
+      const endpoint = buildEndpointWithParams(API_ENDPOINTS.POSTPAID_BILLING.PUBLISH_BILLING_SCHEDULE_RUN, {
+        runId,
+      })
+      const response = await api.post<PublishBillingScheduleRunResponse>(buildApiUrl(endpoint))
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to publish billing schedule run")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to publish billing schedule run")
+      }
+      return rejectWithValue(error.message || "Network error during billing schedule run publish")
+    }
+  }
+)
+
+// Export AR Schedule Run Async Thunk
+export const exportArScheduleRun = createAsyncThunk(
+  "postpaidBilling/exportArScheduleRun",
+  async ({ runId, requestData }: { runId: number; requestData: ExportArScheduleRunRequest }, { rejectWithValue }) => {
+    try {
+      const endpoint = buildEndpointWithParams(API_ENDPOINTS.POSTPAID_BILLING.EXPORT_AR_SCHEDULE_RUN, {
+        runId,
+      })
+      const response = await api.post<ExportArScheduleRunResponse>(buildApiUrl(endpoint), requestData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to export AR for schedule run")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to export AR for schedule run")
+      }
+      return rejectWithValue(error.message || "Network error during AR export for schedule run")
+    }
+  }
+)
+
+// Run PDF Generation Async Thunk
+export const runPdfGeneration = createAsyncThunk(
+  "postpaidBilling/runPdfGeneration",
+  async ({ runId, requestData }: { runId: number; requestData: RunPdfGenerationRequest }, { rejectWithValue }) => {
+    try {
+      const endpoint = buildEndpointWithParams(API_ENDPOINTS.POSTPAID_BILLING.RUN_PDF_GENERATION, {
+        runId,
+      })
+      const response = await api.post<RunPdfGenerationResponse>(buildApiUrl(endpoint), requestData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to run PDF generation")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to run PDF generation")
+      }
+      return rejectWithValue(error.message || "Network error during PDF generation")
+    }
+  }
+)
+
 // Get Billing Schedule Run Async Thunk
 export const fetchBillingScheduleRun = createAsyncThunk<BillingScheduleRunData, number, { rejectValue: string }>(
   "postpaidBilling/fetchBillingScheduleRun",
@@ -2275,6 +2744,30 @@ export const fetchBillingScheduleRun = createAsyncThunk<BillingScheduleRunData, 
         return rejectWithValue(error.response.data.message || "Failed to fetch billing schedule run")
       }
       return rejectWithValue(error.message || "Network error during billing schedule run fetch")
+    }
+  }
+)
+
+// Get Billing Schedule Runs Async Thunk
+export const fetchBillingScheduleRuns = createAsyncThunk<BillingScheduleRunItem[], number, { rejectValue: string }>(
+  "postpaidBilling/fetchBillingScheduleRuns",
+  async (scheduleId: number, { rejectWithValue }) => {
+    try {
+      const endpoint = buildEndpointWithParams(API_ENDPOINTS.POSTPAID_BILLING.GET_BILLING_SCHEDULES_RUNS, {
+        id: scheduleId,
+      })
+      const response = await api.get<BillingScheduleRunsResponse>(buildApiUrl(endpoint))
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch billing schedule runs")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch billing schedule runs")
+      }
+      return rejectWithValue(error.message || "Network error during billing schedule runs fetch")
     }
   }
 )
@@ -2518,6 +3011,24 @@ const postpaidSlice = createSlice({
       state.downloadARData = null
     },
 
+    // Clear export schedule run AR status
+    clearExportScheduleRunARStatus: (state) => {
+      state.exportScheduleRunARLoading = false
+      state.exportScheduleRunARError = null
+      state.exportScheduleRunARSuccess = false
+      state.exportScheduleRunARMessage = null
+      state.exportScheduleRunARData = null
+    },
+
+    // Clear download schedule run PDF status
+    clearDownloadScheduleRunPDFStatus: (state) => {
+      state.downloadScheduleRunPDFLoading = false
+      state.downloadScheduleRunPDFError = null
+      state.downloadScheduleRunPDFSuccess = false
+      state.downloadScheduleRunPDFMessage = null
+      state.downloadScheduleRunPDFData = null
+    },
+
     // Clear printing jobs status
     clearPrintingJobsStatus: (state) => {
       state.printingJobsLoading = false
@@ -2576,12 +3087,47 @@ const postpaidSlice = createSlice({
       state.startBillingScheduleRunMessage = null
     },
 
+    // Clear publish billing schedule run status
+    clearPublishBillingScheduleRunStatus: (state) => {
+      state.publishBillingScheduleRunLoading = false
+      state.publishBillingScheduleRunError = null
+      state.publishBillingScheduleRunSuccess = false
+      state.publishBillingScheduleRunMessage = null
+      state.publishBillingScheduleRunData = null
+    },
+
+    // Clear export AR schedule run status
+    clearExportArScheduleRunStatus: (state) => {
+      state.exportArScheduleRunLoading = false
+      state.exportArScheduleRunError = null
+      state.exportArScheduleRunSuccess = false
+      state.exportArScheduleRunMessage = null
+      state.exportArScheduleRunData = null
+    },
+
+    // Clear run PDF generation status
+    clearRunPdfGenerationStatus: (state) => {
+      state.runPdfGenerationLoading = false
+      state.runPdfGenerationError = null
+      state.runPdfGenerationSuccess = false
+      state.runPdfGenerationMessage = null
+      state.runPdfGenerationData = null
+    },
+
     // Clear get billing schedule progress status
     clearBillingScheduleProgressStatus: (state) => {
       state.billingScheduleProgressLoading = false
       state.billingScheduleProgressError = null
       state.billingScheduleProgressSuccess = false
       state.billingScheduleProgress = null
+    },
+
+    // Clear billing schedule runs status
+    clearBillingScheduleRunsStatus: (state) => {
+      state.billingScheduleRuns = []
+      state.billingScheduleRunsLoading = false
+      state.billingScheduleRunsError = null
+      state.billingScheduleRunsSuccess = false
     },
 
     // Reset billing state
@@ -2736,10 +3282,29 @@ const postpaidSlice = createSlice({
       state.startBillingScheduleRunError = null
       state.startBillingScheduleRunSuccess = false
       state.startBillingScheduleRunMessage = null
+      state.publishBillingScheduleRunLoading = false
+      state.publishBillingScheduleRunError = null
+      state.publishBillingScheduleRunSuccess = false
+      state.publishBillingScheduleRunMessage = null
+      state.publishBillingScheduleRunData = null
+      state.exportArScheduleRunLoading = false
+      state.exportArScheduleRunError = null
+      state.exportArScheduleRunSuccess = false
+      state.exportArScheduleRunMessage = null
+      state.exportArScheduleRunData = null
+      state.runPdfGenerationLoading = false
+      state.runPdfGenerationError = null
+      state.runPdfGenerationSuccess = false
+      state.runPdfGenerationMessage = null
+      state.runPdfGenerationData = null
       state.billingScheduleProgressLoading = false
       state.billingScheduleProgressError = null
       state.billingScheduleProgressSuccess = false
       state.billingScheduleProgress = null
+      state.billingScheduleRuns = []
+      state.billingScheduleRunsLoading = false
+      state.billingScheduleRunsError = null
+      state.billingScheduleRunsSuccess = false
       state.filters = {}
       state.billingJobsFilters = {}
     },
@@ -3412,6 +3977,49 @@ const postpaidSlice = createSlice({
         state.downloadARMessage = null
         state.downloadARData = null
       })
+      // Export Schedule Run AR cases
+      .addCase(exportScheduleRunAR.pending, (state) => {
+        state.exportScheduleRunARLoading = true
+        state.exportScheduleRunARError = null
+        state.exportScheduleRunARSuccess = false
+        state.exportScheduleRunARMessage = null
+        state.exportScheduleRunARData = null
+      })
+      .addCase(exportScheduleRunAR.fulfilled, (state, action: PayloadAction<ExportScheduleRunARResponse>) => {
+        state.exportScheduleRunARLoading = false
+        state.exportScheduleRunARSuccess = true
+        state.exportScheduleRunARMessage = action.payload.message || "AR report downloaded successfully"
+        state.exportScheduleRunARError = null
+      })
+      .addCase(exportScheduleRunAR.rejected, (state, action) => {
+        state.exportScheduleRunARLoading = false
+        state.exportScheduleRunARError = (action.payload as string) || "Failed to export AR for schedule run"
+        state.exportScheduleRunARSuccess = false
+        state.exportScheduleRunARMessage = null
+        state.exportScheduleRunARData = null
+      })
+      // Download Schedule Run PDF cases
+      .addCase(downloadScheduleRunPDF.pending, (state) => {
+        state.downloadScheduleRunPDFLoading = true
+        state.downloadScheduleRunPDFError = null
+        state.downloadScheduleRunPDFSuccess = false
+        state.downloadScheduleRunPDFMessage = null
+        state.downloadScheduleRunPDFData = null
+      })
+      .addCase(downloadScheduleRunPDF.fulfilled, (state, action: PayloadAction<DownloadScheduleRunPDFResponse>) => {
+        state.downloadScheduleRunPDFLoading = false
+        state.downloadScheduleRunPDFSuccess = true
+        state.downloadScheduleRunPDFMessage = action.payload.message || "PDF downloads fetched successfully"
+        state.downloadScheduleRunPDFData = action.payload.data
+        state.downloadScheduleRunPDFError = null
+      })
+      .addCase(downloadScheduleRunPDF.rejected, (state, action) => {
+        state.downloadScheduleRunPDFLoading = false
+        state.downloadScheduleRunPDFError = (action.payload as string) || "Failed to download PDF for schedule run"
+        state.downloadScheduleRunPDFSuccess = false
+        state.downloadScheduleRunPDFMessage = null
+        state.downloadScheduleRunPDFData = null
+      })
       // Download Print Job cases
       .addCase(downloadPrintJob.pending, (state) => {
         state.downloadPrintJobLoading = true
@@ -3545,6 +4153,32 @@ const postpaidSlice = createSlice({
         state.startBillingScheduleRunSuccess = false
         state.startBillingScheduleRunMessage = null
       })
+      // Publish billing schedule run cases
+      .addCase(publishBillingScheduleRun.pending, (state) => {
+        state.publishBillingScheduleRunLoading = true
+        state.publishBillingScheduleRunError = null
+        state.publishBillingScheduleRunSuccess = false
+        state.publishBillingScheduleRunMessage = null
+        state.publishBillingScheduleRunData = null
+      })
+      .addCase(
+        publishBillingScheduleRun.fulfilled,
+        (state, action: PayloadAction<PublishBillingScheduleRunResponse>) => {
+          state.publishBillingScheduleRunLoading = false
+          state.publishBillingScheduleRunSuccess = true
+          state.publishBillingScheduleRunMessage =
+            action.payload.message || "Billing schedule run published successfully"
+          state.publishBillingScheduleRunData = action.payload.data
+          state.publishBillingScheduleRunError = null
+        }
+      )
+      .addCase(publishBillingScheduleRun.rejected, (state, action) => {
+        state.publishBillingScheduleRunLoading = false
+        state.publishBillingScheduleRunError = (action.payload as string) || "Failed to publish billing schedule run"
+        state.publishBillingScheduleRunSuccess = false
+        state.publishBillingScheduleRunMessage = null
+        state.publishBillingScheduleRunData = null
+      })
       // Get billing schedule progress cases
       .addCase(fetchBillingScheduleProgress.pending, (state) => {
         state.billingScheduleProgressLoading = true
@@ -3562,6 +4196,68 @@ const postpaidSlice = createSlice({
         state.billingScheduleProgressError = (action.payload as string) || "Failed to fetch billing schedule progress"
         state.billingScheduleProgressSuccess = false
         state.billingScheduleProgress = null
+      })
+      // Export AR schedule run cases
+      .addCase(exportArScheduleRun.pending, (state) => {
+        state.exportArScheduleRunLoading = true
+        state.exportArScheduleRunError = null
+        state.exportArScheduleRunSuccess = false
+        state.exportArScheduleRunMessage = null
+        state.exportArScheduleRunData = null
+      })
+      .addCase(exportArScheduleRun.fulfilled, (state, action: PayloadAction<ExportArScheduleRunResponse>) => {
+        state.exportArScheduleRunLoading = false
+        state.exportArScheduleRunSuccess = true
+        state.exportArScheduleRunMessage = action.payload.message || "AR export job created successfully"
+        state.exportArScheduleRunData = action.payload.data
+        state.exportArScheduleRunError = null
+      })
+      .addCase(exportArScheduleRun.rejected, (state, action) => {
+        state.exportArScheduleRunLoading = false
+        state.exportArScheduleRunError = (action.payload as string) || "Failed to export AR for schedule run"
+        state.exportArScheduleRunSuccess = false
+        state.exportArScheduleRunMessage = null
+        state.exportArScheduleRunData = null
+      })
+      // Run PDF generation cases
+      .addCase(runPdfGeneration.pending, (state) => {
+        state.runPdfGenerationLoading = true
+        state.runPdfGenerationError = null
+        state.runPdfGenerationSuccess = false
+        state.runPdfGenerationMessage = null
+        state.runPdfGenerationData = null
+      })
+      .addCase(runPdfGeneration.fulfilled, (state, action: PayloadAction<RunPdfGenerationResponse>) => {
+        state.runPdfGenerationLoading = false
+        state.runPdfGenerationSuccess = true
+        state.runPdfGenerationMessage = action.payload.message || "PDF generation job created successfully"
+        state.runPdfGenerationData = action.payload.data
+        state.runPdfGenerationError = null
+      })
+      .addCase(runPdfGeneration.rejected, (state, action) => {
+        state.runPdfGenerationLoading = false
+        state.runPdfGenerationError = (action.payload as string) || "Failed to run PDF generation"
+        state.runPdfGenerationSuccess = false
+        state.runPdfGenerationMessage = null
+        state.runPdfGenerationData = null
+      })
+      // Fetch billing schedule runs cases
+      .addCase(fetchBillingScheduleRuns.pending, (state) => {
+        state.billingScheduleRunsLoading = true
+        state.billingScheduleRunsError = null
+        state.billingScheduleRunsSuccess = false
+      })
+      .addCase(fetchBillingScheduleRuns.fulfilled, (state, action: PayloadAction<BillingScheduleRunItem[]>) => {
+        state.billingScheduleRunsLoading = false
+        state.billingScheduleRunsSuccess = true
+        state.billingScheduleRuns = action.payload
+        state.billingScheduleRunsError = null
+      })
+      .addCase(fetchBillingScheduleRuns.rejected, (state, action) => {
+        state.billingScheduleRunsLoading = false
+        state.billingScheduleRunsError = (action.payload as string) || "Failed to fetch billing schedule runs"
+        state.billingScheduleRunsSuccess = false
+        state.billingScheduleRuns = []
       })
   },
 })
@@ -3590,12 +4286,18 @@ export const {
   clearBillAdjustmentDetailsStatus,
   clearVendorSummaryReportStatus,
   clearDownloadARStatus,
+  clearExportScheduleRunARStatus,
+  clearDownloadScheduleRunPDFStatus,
   clearPrintingJobsStatus,
   clearMarkAsReadyToPrintStatus,
   clearSingleBillingPrintStatus,
   clearBillingScheduleRunStatus,
   clearStartBillingScheduleRunStatus,
+  clearPublishBillingScheduleRunStatus,
+  clearExportArScheduleRunStatus,
+  clearRunPdfGenerationStatus,
   clearBillingScheduleProgressStatus,
+  clearBillingScheduleRunsStatus,
   resetBillingState,
   setPagination,
   setBillingJobsPagination,
