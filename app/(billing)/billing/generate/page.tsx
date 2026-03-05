@@ -394,10 +394,15 @@ const GenerateBillPage = () => {
                           </div>
 
                           {/* Card Footer */}
-                          <div className="border-t border-gray-100 bg-white p-6">
+                          <div className="flex flex-col gap-4 border-t border-gray-100 bg-white p-4">
+                            <div className="text-xs text-gray-500">Updated {formatDate(schedule.lastUpdated)}</div>
                             <div className="flex items-center justify-between">
-                              <div className="text-xs text-gray-500">Updated {formatDate(schedule.lastUpdated)}</div>
-                              <ButtonModule variant="outline" size="sm" onClick={() => setSelectedSchedule(schedule)}>
+                              <ButtonModule
+                                className="w-full"
+                                variant="outline"
+                                size="md"
+                                onClick={() => router.push(`/billing/generate/${schedule.id}`)}
+                              >
                                 View Details
                               </ButtonModule>
                             </div>

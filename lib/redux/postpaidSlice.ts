@@ -803,6 +803,108 @@ export interface SingleBillingPrintResponse {
   data: SingleBillingPrintResponseData
 }
 
+// Get Billing Schedule Progress Interfaces
+export interface BillingScheduleProgressArRefresh {
+  viewName: string
+  lastRefreshedAtUtc: string
+  isRefreshing: boolean
+  hasPendingRequest: boolean
+  isReady: boolean
+}
+
+export interface BillingScheduleProgressData {
+  postpaidBillingJobRunId: number
+  status: number
+  totalCustomers: number
+  processedCustomers: number
+  pendingCustomers: number
+  draftedCount: number
+  finalizedCount: number
+  skippedCount: number
+  requestedAtUtc: string
+  startedAtUtc: string
+  completedAtUtc: string
+  lastError: string
+  arRefresh: BillingScheduleProgressArRefresh
+}
+
+export interface BillingScheduleProgressResponse {
+  isSuccess: boolean
+  message: string
+  data: BillingScheduleProgressData
+}
+
+// Start Billing Schedule Run Interfaces
+export interface StartBillingScheduleRunResponse {
+  isSuccess: boolean
+  message: string
+  data: string
+}
+
+// Billing Schedule Run Interfaces
+export interface BillingScheduleRunStage {
+  stage: number
+  state: number
+  total: number
+  processed: number
+  succeeded: number
+  failed: number
+  pending: number
+  requestedAtUtc: string
+  startedAtUtc: string
+  completedAtUtc: string
+  lastError: string
+}
+
+export interface BillingScheduleRunProgress {
+  runId: number
+  runTitle: string
+  billingPeriodId: number
+  period: string
+  runStatus: number
+  currentStep: number
+  startedAtUtc: string
+  completedAtUtc: string
+  totalStages: number
+  processedStages: number
+  succeededStages: number
+  failedStages: number
+  runningStages: number
+  pendingStages: number
+  showPublishButton: boolean
+  showExportArButton: boolean
+  showGeneratePdfButton: boolean
+  stages: BillingScheduleRunStage[]
+}
+
+export interface BillingScheduleRunUser {
+  id: number
+  fullName: string
+  email: string
+  phoneNumber: string
+  accountId: string
+}
+
+export interface BillingScheduleRunData {
+  id: number
+  name: string
+  scheduleType: number
+  isActive: boolean
+  description: string
+  createdById: number
+  createdAt: string
+  lastUpdated: string
+  createdByUser: BillingScheduleRunUser
+  latestRunId: number
+  latestRunProgress: BillingScheduleRunProgress
+}
+
+export interface BillingScheduleRunResponse {
+  isSuccess: boolean
+  message: string
+  data: BillingScheduleRunData
+}
+
 // Postpaid Billing State
 interface PostpaidBillingState {
   // Postpaid bills list state
@@ -1024,6 +1126,24 @@ interface PostpaidBillingState {
   singleBillingPrintMessage: string | null
   singleBillingPrintData: SingleBillingPrintResponseData | null
 
+  // Billing Schedule Run state
+  billingScheduleRun: BillingScheduleRunData | null
+  billingScheduleRunLoading: boolean
+  billingScheduleRunError: string | null
+  billingScheduleRunSuccess: boolean
+
+  // Start Billing Schedule Run state
+  startBillingScheduleRunLoading: boolean
+  startBillingScheduleRunError: string | null
+  startBillingScheduleRunSuccess: boolean
+  startBillingScheduleRunMessage: string | null
+
+  // Get Billing Schedule Progress state
+  billingScheduleProgressLoading: boolean
+  billingScheduleProgressError: string | null
+  billingScheduleProgressSuccess: boolean
+  billingScheduleProgress: BillingScheduleProgressData | null
+
   // Search/filter state
   filters: {
     period?: string
@@ -1212,6 +1332,18 @@ const initialState: PostpaidBillingState = {
   singleBillingPrintSuccess: false,
   singleBillingPrintMessage: null,
   singleBillingPrintData: null,
+  billingScheduleRun: null,
+  billingScheduleRunLoading: false,
+  billingScheduleRunError: null,
+  billingScheduleRunSuccess: false,
+  startBillingScheduleRunLoading: false,
+  startBillingScheduleRunError: null,
+  startBillingScheduleRunSuccess: false,
+  startBillingScheduleRunMessage: null,
+  billingScheduleProgressLoading: false,
+  billingScheduleProgressError: null,
+  billingScheduleProgressSuccess: false,
+  billingScheduleProgress: null,
   filters: {},
   billingJobsFilters: {},
 }
@@ -2067,6 +2199,86 @@ export const singleBillingPrint = createAsyncThunk(
   }
 )
 
+// Get Billing Schedule Progress Async Thunk
+export const fetchBillingScheduleProgress = createAsyncThunk(
+  "postpaidBilling/fetchBillingScheduleProgress",
+  async (runId: number, { rejectWithValue }) => {
+    try {
+      const endpoint = buildEndpointWithParams(API_ENDPOINTS.POSTPAID_BILLING.GET_BILLING_SCHEDULE_PROGRESS, {
+        runId,
+      })
+      const response = await api.get<BillingScheduleProgressResponse>(buildApiUrl(endpoint))
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch billing schedule progress")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Billing schedule progress data not found")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch billing schedule progress")
+      }
+      return rejectWithValue(error.message || "Network error during billing schedule progress fetch")
+    }
+  }
+)
+
+// Start Billing Schedule Run Async Thunk
+export const startBillingScheduleRun = createAsyncThunk(
+  "postpaidBilling/startBillingScheduleRun",
+  async (runId: number, { rejectWithValue }) => {
+    try {
+      const endpoint = buildEndpointWithParams(API_ENDPOINTS.POSTPAID_BILLING.START_BILLING_SCHEDULE_RUN, {
+        runId,
+      })
+      const response = await api.post<StartBillingScheduleRunResponse>(buildApiUrl(endpoint))
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to start billing schedule run")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to start billing schedule run")
+      }
+      return rejectWithValue(error.message || "Network error during billing schedule run start")
+    }
+  }
+)
+
+// Get Billing Schedule Run Async Thunk
+export const fetchBillingScheduleRun = createAsyncThunk<BillingScheduleRunData, number, { rejectValue: string }>(
+  "postpaidBilling/fetchBillingScheduleRun",
+  async (scheduleId: number, { rejectWithValue }) => {
+    try {
+      const endpoint = buildEndpointWithParams(API_ENDPOINTS.POSTPAID_BILLING.GET_BILLING_SCHEDULE_RUN, {
+        id: scheduleId,
+      })
+      const response = await api.get<BillingScheduleRunResponse>(buildApiUrl(endpoint))
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch billing schedule run")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Billing schedule run not found")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch billing schedule run")
+      }
+      return rejectWithValue(error.message || "Network error during billing schedule run fetch")
+    }
+  }
+)
+
 // Postpaid billing slice
 const postpaidSlice = createSlice({
   name: "postpaidBilling",
@@ -2340,6 +2552,38 @@ const postpaidSlice = createSlice({
       state.singleBillingPrintData = null
     },
 
+    // Clear billing schedule run status
+    clearBillingScheduleRunStatus: (state) => {
+      state.billingScheduleRun = null
+      state.billingScheduleRunLoading = false
+      state.billingScheduleRunError = null
+      state.billingScheduleRunSuccess = false
+      state.startBillingScheduleRunLoading = false
+      state.startBillingScheduleRunError = null
+      state.startBillingScheduleRunSuccess = false
+      state.startBillingScheduleRunMessage = null
+      state.billingScheduleProgressLoading = false
+      state.billingScheduleProgressError = null
+      state.billingScheduleProgressSuccess = false
+      state.billingScheduleProgress = null
+    },
+
+    // Clear start billing schedule run status
+    clearStartBillingScheduleRunStatus: (state) => {
+      state.startBillingScheduleRunLoading = false
+      state.startBillingScheduleRunError = null
+      state.startBillingScheduleRunSuccess = false
+      state.startBillingScheduleRunMessage = null
+    },
+
+    // Clear get billing schedule progress status
+    clearBillingScheduleProgressStatus: (state) => {
+      state.billingScheduleProgressLoading = false
+      state.billingScheduleProgressError = null
+      state.billingScheduleProgressSuccess = false
+      state.billingScheduleProgress = null
+    },
+
     // Reset billing state
     resetBillingState: (state) => {
       state.bills = []
@@ -2484,6 +2728,20 @@ const postpaidSlice = createSlice({
       state.singleBillingPrintSuccess = false
       state.singleBillingPrintMessage = null
       state.singleBillingPrintData = null
+      state.billingScheduleRun = null
+      state.billingScheduleRunLoading = false
+      state.billingScheduleRunError = null
+      state.billingScheduleRunSuccess = false
+      state.startBillingScheduleRunLoading = false
+      state.startBillingScheduleRunError = null
+      state.startBillingScheduleRunSuccess = false
+      state.startBillingScheduleRunMessage = null
+      state.billingScheduleProgressLoading = false
+      state.billingScheduleProgressError = null
+      state.billingScheduleProgressSuccess = false
+      state.billingScheduleProgress = null
+      state.filters = {}
+      state.billingJobsFilters = {}
     },
 
     // Set pagination
@@ -3250,6 +3508,61 @@ const postpaidSlice = createSlice({
         state.singleBillingPrintMessage = null
         state.singleBillingPrintData = null
       })
+      // Fetch billing schedule run cases
+      .addCase(fetchBillingScheduleRun.pending, (state) => {
+        state.billingScheduleRunLoading = true
+        state.billingScheduleRunError = null
+        state.billingScheduleRunSuccess = false
+      })
+      .addCase(fetchBillingScheduleRun.fulfilled, (state, action: PayloadAction<BillingScheduleRunData>) => {
+        state.billingScheduleRunLoading = false
+        state.billingScheduleRunSuccess = true
+        state.billingScheduleRun = action.payload
+        state.billingScheduleRunError = null
+      })
+      .addCase(fetchBillingScheduleRun.rejected, (state, action) => {
+        state.billingScheduleRunLoading = false
+        state.billingScheduleRunError = (action.payload as string) || "Failed to fetch billing schedule run"
+        state.billingScheduleRunSuccess = false
+        state.billingScheduleRun = null
+      })
+      // Start billing schedule run cases
+      .addCase(startBillingScheduleRun.pending, (state) => {
+        state.startBillingScheduleRunLoading = true
+        state.startBillingScheduleRunError = null
+        state.startBillingScheduleRunSuccess = false
+        state.startBillingScheduleRunMessage = null
+      })
+      .addCase(startBillingScheduleRun.fulfilled, (state, action: PayloadAction<StartBillingScheduleRunResponse>) => {
+        state.startBillingScheduleRunLoading = false
+        state.startBillingScheduleRunSuccess = true
+        state.startBillingScheduleRunMessage = action.payload.message || "Billing schedule run started successfully"
+        state.startBillingScheduleRunError = null
+      })
+      .addCase(startBillingScheduleRun.rejected, (state, action) => {
+        state.startBillingScheduleRunLoading = false
+        state.startBillingScheduleRunError = (action.payload as string) || "Failed to start billing schedule run"
+        state.startBillingScheduleRunSuccess = false
+        state.startBillingScheduleRunMessage = null
+      })
+      // Get billing schedule progress cases
+      .addCase(fetchBillingScheduleProgress.pending, (state) => {
+        state.billingScheduleProgressLoading = true
+        state.billingScheduleProgressError = null
+        state.billingScheduleProgressSuccess = false
+      })
+      .addCase(fetchBillingScheduleProgress.fulfilled, (state, action: PayloadAction<BillingScheduleProgressData>) => {
+        state.billingScheduleProgressLoading = false
+        state.billingScheduleProgressSuccess = true
+        state.billingScheduleProgress = action.payload
+        state.billingScheduleProgressError = null
+      })
+      .addCase(fetchBillingScheduleProgress.rejected, (state, action) => {
+        state.billingScheduleProgressLoading = false
+        state.billingScheduleProgressError = (action.payload as string) || "Failed to fetch billing schedule progress"
+        state.billingScheduleProgressSuccess = false
+        state.billingScheduleProgress = null
+      })
   },
 })
 
@@ -3280,6 +3593,9 @@ export const {
   clearPrintingJobsStatus,
   clearMarkAsReadyToPrintStatus,
   clearSingleBillingPrintStatus,
+  clearBillingScheduleRunStatus,
+  clearStartBillingScheduleRunStatus,
+  clearBillingScheduleProgressStatus,
   resetBillingState,
   setPagination,
   setBillingJobsPagination,
