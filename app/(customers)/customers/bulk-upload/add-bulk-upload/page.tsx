@@ -1,11 +1,14 @@
 "use client"
 
-import React, { useCallback, useRef, useState } from "react"
-import { motion } from "framer-motion"
+import React, { useCallback, useEffect, useRef, useState } from "react"
+import { AnimatePresence, motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
   createFileIntent,
+  CsvJob,
+  downloadCsv,
+  fetchCsvJobs,
   finalizeFile,
   processCustomerBulkUpload,
   processCustomerFeederUpdateBulkUpload,
@@ -19,14 +22,33 @@ import {
   processMeterReadingStoredAverageUpdateBulkUpload,
   processPostpaidEstimatedConsumptionBulkUpload,
   processStatusCodesBulkUpload,
+  resetFileManagementState,
 } from "lib/redux/fileManagementSlice"
 import * as XLSX from "xlsx"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"
 import { notify } from "components/ui/Notification/Notification"
-import { CloudUpload } from "lucide-react"
-import { VscAdd } from "react-icons/vsc"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import { SearchModule } from "components/ui/Search/search-module"
+import CsvUploadFailuresModal from "components/ui/Modal/CsvUploadFailuresModal"
+import {
+  AlertCircle,
+  ArrowLeft,
+  CheckCircle,
+  CloudUpload,
+  Download,
+  FileIcon,
+  FileSpreadsheet,
+  FileText,
+  HelpCircle,
+  Info,
+  Loader2,
+  RefreshCw,
+  Upload,
+  X,
+} from "lucide-react"
+import { VscAdd, VscCloudUpload, VscEye } from "react-icons/vsc"
+import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos } from "react-icons/md"
 
 interface UploadProgress {
   loaded: number
@@ -34,23 +56,784 @@ interface UploadProgress {
   percentage: number
 }
 
+interface UploadTypeOption {
+  name: string
+  value: number
+  description: string
+  requiredColumns: string[]
+  sampleData: string[]
+}
+
+// Hook to get latest jobs for all upload types
+const useLatestJobs = () => {
+  const dispatch = useAppDispatch()
+  const { csvJobs, csvJobsLoading } = useAppSelector((state: { fileManagement: any }) => state.fileManagement)
+  const [latestJobs, setLatestJobs] = useState<Record<number, CsvJob | null>>({})
+  const [isLoading, setIsLoading] = useState(false)
+
+  const fetchLatestJobs = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      const jobTypes = [1, 5, 6, 7, 8, 9, 10, 16, 23, 24] // All customer job types
+      const jobsData: Record<number, CsvJob | null> = {}
+
+      // Fetch latest job for each type
+      for (const jobType of jobTypes) {
+        try {
+          const result = await dispatch(
+            fetchCsvJobs({
+              PageNumber: 1,
+              PageSize: 1,
+              JobType: jobType,
+              Status: undefined,
+            })
+          ).unwrap()
+
+          if (result.isSuccess && result.data.length > 0) {
+            jobsData[jobType] = result.data[0] ?? null
+          } else {
+            jobsData[jobType] = null
+          }
+        } catch (error) {
+          console.error(`Failed to fetch latest job for type ${jobType}:`, error)
+          jobsData[jobType] = null
+        }
+      }
+
+      setLatestJobs(jobsData)
+    } catch (error) {
+      console.error("Failed to fetch latest jobs:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [dispatch])
+
+  useEffect(() => {
+    fetchLatestJobs()
+  }, [fetchLatestJobs])
+
+  // Poll for updates every 5 seconds if there are running jobs
+  useEffect(() => {
+    const hasRunningJobs = Object.values(latestJobs).some((job) => job && (job.status === 1 || job.status === 2))
+
+    if (hasRunningJobs) {
+      // Only fetch running job types to reduce API calls
+      const runningJobTypes = Object.entries(latestJobs)
+        .filter(([_, job]) => job && (job.status === 1 || job.status === 2))
+        .map(([jobType, _]) => parseInt(jobType))
+
+      const interval = setInterval(async () => {
+        try {
+          const jobsData: Record<number, CsvJob | null> = { ...latestJobs }
+
+          // Only fetch updates for running jobs
+          for (const jobType of runningJobTypes) {
+            try {
+              const result = await dispatch(
+                fetchCsvJobs({
+                  PageNumber: 1,
+                  PageSize: 1,
+                  JobType: jobType,
+                  Status: undefined,
+                })
+              ).unwrap()
+
+              if (result.isSuccess && result.data.length > 0) {
+                jobsData[jobType] = result.data[0] ?? null
+              } else {
+                jobsData[jobType] = null
+              }
+            } catch (error) {
+              console.error(`Failed to fetch running job update for type ${jobType}:`, error)
+            }
+          }
+
+          setLatestJobs(jobsData)
+        } catch (error) {
+          console.error("Failed to fetch running job updates:", error)
+        }
+      }, 5000)
+
+      return () => clearInterval(interval)
+    }
+  }, [latestJobs, dispatch])
+
+  return { latestJobs, isLoading, refetch: fetchLatestJobs }
+}
+
+// Hook to fetch CSV jobs for a specific job type
+const useJobTypeUploads = (jobType: number | null) => {
+  const dispatch = useAppDispatch()
+  const { csvJobs, csvJobsLoading, csvJobsError, csvJobsPagination } = useAppSelector(
+    (state: { fileManagement: any }) => state.fileManagement
+  )
+  const [currentPage, setCurrentPage] = useState(1)
+  const [searchText, setSearchText] = useState("")
+  const [statusFilter, setStatusFilter] = useState<string>("")
+
+  const fetchJobs = useCallback(async () => {
+    if (!jobType) return
+
+    const params = {
+      PageNumber: currentPage,
+      PageSize: 10,
+      JobType: jobType,
+      Status: statusFilter ? Number(statusFilter) : undefined,
+      Search: searchText || undefined,
+    }
+
+    try {
+      await dispatch(fetchCsvJobs(params)).unwrap()
+    } catch (error) {
+      console.error("Failed to fetch jobs:", error)
+    }
+  }, [dispatch, jobType, currentPage, statusFilter, searchText])
+
+  useEffect(() => {
+    fetchJobs()
+  }, [fetchJobs])
+
+  // Poll for updates every 5 seconds if there are running jobs
+  useEffect(() => {
+    const hasRunningJobs = csvJobs.some((job: CsvJob) => job.status === 1 || job.status === 2)
+
+    if (hasRunningJobs && jobType) {
+      const interval = setInterval(async () => {
+        try {
+          const params = {
+            PageNumber: currentPage,
+            PageSize: 10,
+            JobType: jobType,
+            Status: statusFilter ? Number(statusFilter) : undefined,
+            Search: searchText || undefined,
+          }
+          await dispatch(fetchCsvJobs(params)).unwrap()
+        } catch (error) {
+          console.error("Failed to fetch job updates:", error)
+        }
+      }, 5000)
+
+      return () => clearInterval(interval)
+    }
+  }, [csvJobs, jobType, currentPage, statusFilter, searchText, dispatch])
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage)
+  }
+
+  const handleSearch = () => {
+    setCurrentPage(1)
+    fetchJobs()
+  }
+
+  const handleStatusFilter = (status: string) => {
+    setStatusFilter(status)
+    setCurrentPage(1)
+  }
+
+  return {
+    jobs: csvJobs,
+    loading: csvJobsLoading,
+    error: csvJobsError,
+    pagination: csvJobsPagination,
+    currentPage,
+    searchText,
+    statusFilter,
+    setSearchText,
+    handlePageChange,
+    handleSearch,
+    handleStatusFilter,
+    refetch: fetchJobs,
+  }
+}
+
+// Status options for filters
+const statusOptions = [
+  { value: "", label: "All Statuses" },
+  { value: "1", label: "Queued" },
+  { value: "2", label: "Running" },
+  { value: "3", label: "Completed" },
+  { value: "4", label: "Failed" },
+  { value: "5", label: "Partially Completed" },
+]
+
+// Helper functions for table
+const getJobTypeLabel = (jobType: number) => {
+  const uploadTypeOptions = [
+    { name: "Customer Bulk Upload", value: 1, description: "", requiredColumns: [], sampleData: [] },
+    { name: "Customer Setup", value: 5, description: "", requiredColumns: [], sampleData: [] },
+    { name: "Customer Info Update", value: 6, description: "", requiredColumns: [], sampleData: [] },
+    { name: "Customer SRDT Update", value: 7, description: "", requiredColumns: [], sampleData: [] },
+    { name: "Customer Status Change", value: 8, description: "", requiredColumns: [], sampleData: [] },
+    { name: "Customer Stored Average Update", value: 9, description: "", requiredColumns: [], sampleData: [] },
+    { name: "Customer Tariff Change", value: 10, description: "", requiredColumns: [], sampleData: [] },
+    { name: "Existing Customer Bulk Upload", value: 16, description: "", requiredColumns: [], sampleData: [] },
+    { name: "Meter Reading Stored Average Update", value: 23, description: "", requiredColumns: [], sampleData: [] },
+    { name: "Postpaid Estimated Consumption", value: 24, description: "", requiredColumns: [], sampleData: [] },
+  ]
+  const option = uploadTypeOptions.find((opt) => opt.value === jobType)
+  return option?.name || `Type ${jobType}`
+}
+
+const getStatusLabel = (status: number) => {
+  const option = statusOptions.find((opt) => opt.value === status.toString())
+  return option?.label || `Status ${status}`
+}
+
+const getStatusColor = (status: number) => {
+  switch (status) {
+    case 1:
+      return "text-yellow-600 bg-yellow-50"
+    case 2:
+      return "text-blue-600 bg-blue-50"
+    case 3:
+      return "text-green-600 bg-green-50"
+    case 4:
+      return "text-red-600 bg-red-50"
+    case 5:
+      return "text-gray-600 bg-gray-50"
+    default:
+      return "text-gray-600 bg-gray-50"
+  }
+}
+
+// Component to display job status with progress
+const JobStatusIndicator = ({ job, isLoading }: { job: CsvJob | null; isLoading: boolean }) => {
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-2 text-xs text-gray-500">
+        <Loader2 className="h-3 w-3 animate-spin" />
+        <span>Loading...</span>
+      </div>
+    )
+  }
+
+  if (!job) {
+    return (
+      <div className="text-xs text-gray-400">
+        <span>No recent jobs</span>
+      </div>
+    )
+  }
+
+  const getStatusColor = (status: number) => {
+    switch (status) {
+      case 1:
+        return "bg-yellow-100 text-yellow-800 border-yellow-200"
+      case 2:
+        return "bg-blue-100 text-blue-800 border-blue-200"
+      case 3:
+        return "bg-green-100 text-green-800 border-green-200"
+      case 4:
+        return "bg-red-100 text-red-800 border-red-200"
+      case 5:
+        return "bg-orange-100 text-orange-800 border-orange-200"
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200"
+    }
+  }
+
+  const getStatusLabel = (status: number) => {
+    switch (status) {
+      case 1:
+        return "Queued"
+      case 2:
+        return "Running"
+      case 3:
+        return "Completed"
+      case 4:
+        return "Failed"
+      case 5:
+        return "Partial"
+      default:
+        return "Unknown"
+    }
+  }
+
+  const progressPercentage = job.totalRows > 0 ? (job.processedRows / job.totalRows) * 100 : 0
+
+  return (
+    <div className="space-y-2">
+      {/* Status */}
+      <div className="flex items-center justify-between">
+        <span className={`rounded-full border px-2 py-1 text-xs font-medium ${getStatusColor(job.status)}`}>
+          {getStatusLabel(job.status)}
+        </span>
+        {job.status === 1 || job.status === 2 ? <RefreshCw className="h-3 w-3 animate-spin text-blue-500" /> : null}
+      </div>
+
+      {/* Statistics for all jobs */}
+      <div className="grid grid-cols-4 gap-1 text-xs">
+        <div className="text-center">
+          <div className="font-medium text-blue-600">{job.processedRows}</div>
+          <div className="text-gray-500">Processed</div>
+        </div>
+        <div className="text-center">
+          <div className="font-medium text-green-600">{job.succeededRows}</div>
+          <div className="text-gray-500">Succeeded</div>
+        </div>
+        <div className="text-center">
+          <div className="font-medium text-red-600">{job.failedRows}</div>
+          <div className="text-gray-500">Failed</div>
+        </div>
+        <div className="text-center">
+          <div className="font-medium text-gray-600">{job.totalRows}</div>
+          <div className="text-gray-500">Total</div>
+        </div>
+      </div>
+
+      {/* Horizontal progress bar for queued/running jobs */}
+      {(job.status === 1 || job.status === 2) && (
+        <div className="space-y-1">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+            <div
+              className="h-full bg-blue-500 transition-all duration-300 ease-in-out"
+              style={{ width: `${progressPercentage}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-xs text-gray-600">
+            <span>{job.processedRows}</span>
+            <span>{job.totalRows}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Last updated info */}
+      <div className="flex items-center justify-between text-xs text-gray-400">
+        <div>Requested Date: {new Date(job.requestedAtUtc).toLocaleDateString()}</div>
+        {job.requestedByUser && <div>Requested By: {job.requestedByUser.fullName}</div>}
+      </div>
+    </div>
+  )
+}
+
+// Job Type Uploads Table Component
+const JobTypeUploadsTable = ({ jobType }: { jobType: number | null }) => {
+  const {
+    jobs,
+    loading,
+    error,
+    pagination,
+    currentPage,
+    searchText,
+    statusFilter,
+    setSearchText,
+    handlePageChange,
+    handleSearch,
+    handleStatusFilter,
+    refetch,
+  } = useJobTypeUploads(jobType)
+
+  const [selectedJob, setSelectedJob] = useState<any>(null)
+  const [isFailuresModalOpen, setIsFailuresModalOpen] = useState(false)
+  const dispatch = useAppDispatch()
+  const { downloadCsvLoading } = useAppSelector((state: { fileManagement: any }) => state.fileManagement)
+
+  const handleViewFailures = (job: any) => {
+    setSelectedJob(job)
+    setIsFailuresModalOpen(true)
+  }
+
+  const handleCloseFailuresModal = () => {
+    setIsFailuresModalOpen(false)
+    setSelectedJob(null)
+  }
+
+  const handleDownloadCsv = async (job: any) => {
+    try {
+      const result = await dispatch(downloadCsv({ id: job.id }))
+      if (downloadCsv.fulfilled.match(result)) {
+        const blob = result.payload.data
+        const fileName = result.payload.fileName
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement("a")
+        link.href = url
+        link.download = fileName
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+      }
+    } catch (error) {
+      console.error("Download failed:", error)
+    }
+  }
+
+  if (!jobType) return null
+
+  return (
+    <div className="rounded-lg border bg-white">
+      {/* Table Header */}
+      <div className="border-b p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold">Recent Uploads - {getJobTypeLabel(jobType)}</h3>
+            {pagination && (
+              <p className="text-sm text-gray-600">
+                Showing {jobs.length} of {pagination.totalCount} uploads
+              </p>
+            )}
+          </div>
+          <ButtonModule variant="outline" onClick={refetch} disabled={loading} size="sm">
+            <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </ButtonModule>
+        </div>
+
+        {/* Filters */}
+        <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="flex-1">
+            <SearchModule
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              onSearch={handleSearch}
+              placeholder="Search uploads..."
+              className="w-full"
+              bgClassName="bg-white"
+              searchTypeOptions={undefined}
+              onSearchTypeChange={undefined}
+            />
+          </div>
+          <div className="w-full sm:w-48">
+            <FormSelectModule
+              name="status"
+              value={statusFilter}
+              onChange={(e) => handleStatusFilter(e.target.value)}
+              options={statusOptions}
+              className="w-full"
+              controlClassName="h-9 text-sm"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="max-h-[60vh] w-full overflow-x-auto overflow-y-hidden">
+        <div className="min-w-[1200px]">
+          <table className="w-full border-separate border-spacing-0">
+            <thead>
+              <tr className="border-b bg-gray-50">
+                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">File Name</th>
+                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Status</th>
+                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Requested By</th>
+                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Requested</th>
+                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Progress</th>
+                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Processed</th>
+                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Succeeded</th>
+                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Failed</th>
+                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Total</th>
+                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && jobs.length === 0 ? (
+                <tr>
+                  <td colSpan={10} className="border-b p-8 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <span className="text-gray-500">Loading uploads...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : jobs.length === 0 ? (
+                <tr>
+                  <td colSpan={10} className="border-b p-8 text-center">
+                    <div className="text-gray-500">
+                      <FileIcon className="mx-auto mb-2 size-12 text-gray-300" />
+                      <p>No uploads found for this type</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                jobs.map((job: CsvJob) => (
+                  <tr key={job.id} className="border-b hover:bg-gray-50">
+                    <td className="border-b p-3 text-sm">
+                      <div className="max-w-xs truncate whitespace-nowrap" title={job.fileName}>
+                        {job.fileName}
+                      </div>
+                    </td>
+                    <td className="border-b p-3 text-sm">
+                      <span
+                        className={`whitespace-nowrap rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(
+                          job.status
+                        )}`}
+                      >
+                        {getStatusLabel(job.status)}
+                      </span>
+                    </td>
+                    <td className="whitespace-nowrap border-b p-3 text-sm">
+                      <div
+                        className="max-w-xs truncate whitespace-nowrap"
+                        title={job.requestedByUser?.fullName || "Unknown"}
+                      >
+                        {job.requestedByUser?.fullName || "Unknown"}
+                      </div>
+                    </td>
+                    <td className="whitespace-nowrap border-b p-3 text-sm">
+                      {new Date(job.requestedAtUtc).toLocaleString()}
+                    </td>
+                    <td className="border-b p-3 text-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-24 rounded-full bg-gray-200">
+                          <div
+                            className="h-2 rounded-full bg-blue-600"
+                            style={{
+                              width: `${
+                                job.totalRows !== null && job.totalRows > 0
+                                  ? (job.processedRows / job.totalRows) * 100
+                                  : 0
+                              }%`,
+                            }}
+                          ></div>
+                        </div>
+                        <span className="text-xs text-gray-600">
+                          {job.totalRows !== null && job.totalRows > 0
+                            ? Math.round((job.processedRows / job.totalRows) * 100)
+                            : "Processing"}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="border-b p-3 text-sm">
+                      <div className="font-medium text-blue-600">
+                        {job.processedRows !== null && job.processedRows !== undefined ? job.processedRows : "N/A"}
+                      </div>
+                    </td>
+                    <td className="border-b p-3 text-sm">
+                      <div className="font-medium text-green-600">
+                        {job.succeededRows !== null && job.succeededRows !== undefined ? job.succeededRows : "N/A"}
+                      </div>
+                    </td>
+                    <td className="border-b p-3 text-sm">
+                      <div className="font-medium text-red-600">
+                        {job.failedRows !== null && job.failedRows !== undefined ? job.failedRows : "N/A"}
+                      </div>
+                    </td>
+                    <td className="border-b p-3 text-sm">
+                      <div className="font-medium text-gray-600">
+                        {job.totalRows !== null && job.totalRows !== undefined ? job.totalRows : "N/A"}
+                      </div>
+                    </td>
+                    <td className="border-b p-3 text-sm">
+                      <div className="flex gap-2">
+                        {job.failedRows > 0 && (
+                          <ButtonModule
+                            variant="outline"
+                            size="sm"
+                            icon={<VscEye />}
+                            onClick={() => handleViewFailures(job)}
+                            className="whitespace-nowrap"
+                          >
+                            View Failures
+                          </ButtonModule>
+                        )}
+                        {(job.status === 3 || job.status === 5) && (
+                          <ButtonModule
+                            variant="outline"
+                            size="sm"
+                            icon={<Download className="h-4 w-4" />}
+                            onClick={() => handleDownloadCsv(job)}
+                            className="whitespace-nowrap"
+                            disabled={downloadCsvLoading}
+                          >
+                            {downloadCsvLoading ? "Downloading..." : "Download"}
+                          </ButtonModule>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Pagination */}
+      {pagination && pagination.totalPages > 1 && (
+        <div className="border-t p-4">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-600">
+              Page {pagination.currentPage} of {pagination.totalPages}
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={!pagination.hasPrevious}
+                className="rounded-lg border p-2 disabled:opacity-50"
+              >
+                <MdOutlineArrowBackIosNew className="size-4" />
+              </button>
+              {[...Array(Math.min(5, pagination.totalPages))].map((_, index) => {
+                const pageNumber = index + 1
+                return (
+                  <button
+                    key={pageNumber}
+                    onClick={() => handlePageChange(pageNumber)}
+                    className={`rounded-lg border px-3 py-2 text-sm ${
+                      currentPage === pageNumber
+                        ? "border-blue-500 bg-blue-50 text-blue-700"
+                        : "border-gray-300 hover:bg-gray-50"
+                    }`}
+                  >
+                    {pageNumber}
+                  </button>
+                )
+              })}
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={!pagination.hasNext}
+                className="rounded-lg border p-2 disabled:opacity-50"
+              >
+                <MdOutlineArrowForwardIos className="size-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CSV Upload Failures Modal */}
+      {selectedJob && (
+        <CsvUploadFailuresModal
+          isOpen={isFailuresModalOpen}
+          onClose={handleCloseFailuresModal}
+          jobId={selectedJob.id}
+          fileName={selectedJob.fileName}
+        />
+      )}
+    </div>
+  )
+}
+
 const FileManagementPage = () => {
   const dispatch = useAppDispatch()
   const router = useRouter()
+
+  // Redux state
   const { fileIntentLoading, fileIntentError, finalizeFileLoading, finalizeFileError, customerBulkUploadError } =
     useAppSelector((state: { fileManagement: any }) => state.fileManagement)
 
-  // Upload type options
-  const uploadTypeOptions = [
-    { name: "New Customers", value: 1 },
-    { name: "Import Existing Customers", value: 23 },
-    { name: "Customer Info Update", value: 5 },
-    // { name: "Customer Feeder Update", value: 6 },
-    { name: "Customer Tariff Change", value: 7 },
-    { name: "Customer Status Change", value: 8 },
-    { name: "Customer Stored Average Update", value: 9 },
-    { name: "Customer-DT Reallignment", value: 10 },
-    { name: "Customer Estimated Consumption", value: 24 },
+  // Get latest jobs for all upload types
+  const { latestJobs, isLoading: jobsLoading } = useLatestJobs()
+
+  // Upload type options with enhanced metadata
+  const uploadTypeOptions: UploadTypeOption[] = [
+    {
+      name: "New Customers",
+      value: 1,
+      description: "Create new customer accounts with complete profile information",
+      requiredColumns: [
+        "CustomerName",
+        "CustomerAccountNo",
+        "CustomerAddress1",
+        "CustomerCity",
+        "CustomerState",
+        "TelephoneNumber",
+        "Tariff",
+        "FeederName",
+        "AreaOffice",
+        "ServiceCenter",
+        "StoredAverage",
+        "OpeningBalance",
+        "IsPPM",
+        "Longitute",
+        "Latitude",
+        "EmailAdddress",
+        "StatusCode",
+      ],
+      sampleData: [
+        "CustomerName,CustomerAccountNo,CustomerAddress1,CustomerCity,CustomerState,TelephoneNumber,Tariff,FeederName,AreaOffice,ServiceCenter,StoredAverage,OpeningBalance,IsPPM,Longitute,Latitude,EmailAdddress,StatusCode",
+        "John Doe,CUST001,123 Main St,Lagos,Lagos,08012345678,R1,Feeder A,Area1,Center1,500,0,false,3.3792,6.5244,john@email.com,ACTIVE",
+        "Jane Smith,CUST002,456 Park Ave,Abuja,FCT,08087654321,R2,Feeder B,Area2,Center2,750,100,true,7.4921,9.0579,jane@email.com,ACTIVE",
+      ],
+    },
+    {
+      name: "Import Existing Customers",
+      value: 23,
+      description: "Import existing customer records from external systems with full details",
+      requiredColumns: [
+        "CustomerName",
+        "CustomerAccountNo",
+        "CustomerAddress1",
+        "CustomerAddress2",
+        "CustomerCity",
+        "CustomerState",
+        "TelephoneNumber",
+        "Tariff",
+        "FeederName",
+        "Transformers",
+        "DTNumber",
+        "TechnicalEngineer",
+        "EmployeeNo",
+        "AreaOffice",
+        "ServiceCenter",
+        "StoredAverage",
+        "OpeningBalance",
+        "IsPPM",
+        "Longitute",
+        "Latitude",
+        "MotherAccountNumber",
+        "IsSeperation",
+        "EmailAdddress",
+        "StatusCode",
+        "Error",
+      ],
+      sampleData: [
+        "CustomerName,CustomerAccountNo,CustomerAddress1,CustomerAddress2,CustomerCity,CustomerState,TelephoneNumber,Tariff,FeederName,Transformers,DTNumber,TechnicalEngineer,EmployeeNo,AreaOffice,ServiceCenter,StoredAverage,OpeningBalance,IsPPM,Longitute,Latitude,MotherAccountNumber,IsSeperation,EmailAdddress,StatusCode,Error",
+        "John Doe,CUST001,123 Main St,,Lagos,Lagos,08012345678,R1,Feeder A,T1,DT001,Eng John,EMP001,Area1,Center1,500,0,false,3.3792,6.5244,,false,john@email.com,ACTIVE,",
+      ],
+    },
+    {
+      name: "Customer Info Update",
+      value: 5,
+      description: "Update customer contact information and address details",
+      requiredColumns: ["CustomerAccountNo", "TariffCode"],
+      sampleData: ["CustomerAccountNo,TariffCode", "CUST001,R1", "CUST002,R2", "CUST003,R3"],
+    },
+    {
+      name: "Customer Tariff Change",
+      value: 7,
+      description: "Change tariff assignments for multiple customers",
+      requiredColumns: ["CustomerAccountNo", "TariffCode"],
+      sampleData: ["CustomerAccountNo,TariffCode", "CUST001,R2", "CUST002,R3", "CUST003,R1"],
+    },
+    {
+      name: "Customer Status Change",
+      value: 8,
+      description: "Update customer status codes (Active, Inactive, Disconnected, etc.)",
+      requiredColumns: ["CustomerAccountNo", "StatusCodeChange"],
+      sampleData: ["CustomerAccountNo,StatusCodeChange", "CUST001,INACTIVE", "CUST002,ACTIVE", "CUST003,DISCONNECTED"],
+    },
+    {
+      name: "Customer Stored Average Update",
+      value: 9,
+      description: "Update stored average consumption values for customers",
+      requiredColumns: ["CustomerAccountNo", "TariffCode"],
+      sampleData: ["CustomerAccountNo,TariffCode", "CUST001,R1", "CUST002,R2", "CUST003,R3"],
+    },
+    {
+      name: "Customer-DT Reallignment",
+      value: 10,
+      description: "Reassign customers to different distribution transformers",
+      requiredColumns: ["DssCode", "EmployeeNo", "CustomerAccountNo"],
+      sampleData: [
+        "DssCode,EmployeeNo,CustomerAccountNo",
+        "DT001,EMP001,CUST001",
+        "DT002,EMP002,CUST002",
+        "DT003,EMP003,CUST003",
+      ],
+    },
+    {
+      name: "Customer Estimated Consumption",
+      value: 24,
+      description: "Upload estimated consumption values for postpaid customers",
+      requiredColumns: ["CustomerAccountNo", "EstimatedConsumptionKwh", "MonthYear"],
+      sampleData: [
+        "CustomerAccountNo,EstimatedConsumptionKwh,MonthYear",
+        "CUST001,500,2026-01",
+        "CUST002,750,2026-01",
+        "CUST003,600,2026-02",
+      ],
+    },
   ]
 
   // Helper function to get bulkInsertType based on upload type
@@ -77,7 +860,7 @@ const FileManagementPage = () => {
       case 24:
         return "postpaid-estimated-consumption"
       default:
-        return "customers" // fallback
+        return "customers"
     }
   }
 
@@ -109,6 +892,7 @@ const FileManagementPage = () => {
     }
   }
 
+  // Local state
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [selectedUploadType, setSelectedUploadType] = useState<number | null>(null)
   const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null)
@@ -117,10 +901,22 @@ const FileManagementPage = () => {
   const [uploadSuccess, setUploadSuccess] = useState(false)
   const [finalizedFile, setFinalizedFile] = useState<any>(null)
   const [bulkUploadProcessed, setBulkUploadProcessed] = useState(false)
+  const [bulkUploadResponse, setBulkUploadResponse] = useState<any>(null)
   const [isDragOver, setIsDragOver] = useState(false)
-  const [isDragging, setIsDragging] = useState(false)
   const [hasCompletedUploadTypeSelection, setHasCompletedUploadTypeSelection] = useState(false)
+  const [extractedColumns, setExtractedColumns] = useState<string[]>([])
+  const [isValidatingFile, setIsValidatingFile] = useState(false)
+  const [showColumnHelp, setShowColumnHelp] = useState(false)
+
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const dropZoneRef = useRef<HTMLDivElement>(null)
+
+  // Reset states on unmount
+  useEffect(() => {
+    return () => {
+      dispatch(resetFileManagementState())
+    }
+  }, [dispatch])
 
   // Extract column names from Excel or CSV file
   const extractColumnsFromFile = useCallback(async (file: File): Promise<string[]> => {
@@ -133,18 +929,14 @@ const FileManagementPage = () => {
           if (file.type === "text/csv" || file.name.endsWith(".csv")) {
             // Handle CSV files
             const text = e.target?.result as string
-            console.log("CSV text content (first 200 chars):", text.substring(0, 200))
-
             const lines = text.split("\n")
-            console.log("CSV lines count:", lines.length)
-            console.log("First line:", lines[0])
 
             if (lines.length > 0) {
-              const headers = lines[0]!.split(",").map((h) => h.trim().replace(/"/g, ""))
-              console.log("Parsed headers:", headers)
-              const filteredHeaders = headers.filter((header) => header && header !== "")
-              console.log("Filtered headers:", filteredHeaders)
-              resolve(filteredHeaders)
+              const headers = lines[0]!
+                .split(",")
+                .map((h) => h.trim().replace(/^["']|["']$/g, ""))
+                .filter((header) => header && header !== "")
+              resolve(headers)
             } else {
               resolve([])
             }
@@ -169,95 +961,222 @@ const FileManagementPage = () => {
             const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
 
             if (jsonData.length > 0) {
-              const headers = jsonData[0] as string[]
-              resolve(headers.filter((header) => header && header.toString().trim() !== ""))
+              const headers = (jsonData[0] as string[])
+                .filter((header) => header && header.toString().trim() !== "")
+                .map((h) => h.toString().trim())
+              resolve(headers)
             } else {
               resolve([])
             }
           }
         } catch (error) {
           console.error("Error reading file:", error)
-          resolve([])
+          reject(error)
         }
       }
 
       reader.onerror = (error) => {
         console.error("FileReader error:", error)
-        resolve([])
+        reject(error)
       }
 
       if (file.type === "text/csv" || file.name.endsWith(".csv")) {
-        console.log("Reading file as text")
         reader.readAsText(file)
       } else {
-        console.log("Reading file as array buffer")
         reader.readAsArrayBuffer(file)
       }
     })
   }, [])
 
+  // Validate file columns against required columns
+  const validateFileColumns = useCallback(
+    async (file: File): Promise<{ isValid: boolean; missingColumns: string[]; extractedColumns: string[] }> => {
+      if (!selectedUploadType) {
+        return { isValid: false, missingColumns: [], extractedColumns: [] }
+      }
+
+      setIsValidatingFile(true)
+      try {
+        const columns = await extractColumnsFromFile(file)
+        const uploadType = uploadTypeOptions.find((t) => t.value === selectedUploadType)
+
+        if (!uploadType) {
+          return { isValid: false, missingColumns: [], extractedColumns: columns }
+        }
+
+        // Case-insensitive column matching
+        const missingColumns = uploadType.requiredColumns.filter(
+          (required) => !columns.some((col) => col.toLowerCase() === required.toLowerCase())
+        )
+
+        setExtractedColumns(columns)
+        return {
+          isValid: missingColumns.length === 0,
+          missingColumns,
+          extractedColumns: columns,
+        }
+      } catch (error) {
+        return { isValid: false, missingColumns: [], extractedColumns: [] }
+      } finally {
+        setIsValidatingFile(false)
+      }
+    },
+    [selectedUploadType, uploadTypeOptions, extractColumnsFromFile]
+  )
+
   // Handle file selection
-  const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      setSelectedFile(file)
-      setUploadError(null)
-      setUploadSuccess(false)
-      setFinalizedFile(null)
-      setUploadProgress(null)
-      // Don't reset upload type when new file is selected - only reset on manual change
-    }
-  }, [])
-
-  // Handle file drop
-  const handleFileDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragOver(false)
-    setIsDragging(false)
-
-    const files = e.dataTransfer.files
-    if (files && files.length > 0) {
-      const file = files[0]
+  const handleFileSelect = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0]
       if (file) {
+        // Validate file size (max 50MB)
+        if (file.size > 50 * 1024 * 1024) {
+          notify("error", "File Too Large", {
+            description: "Maximum file size is 50MB",
+            duration: 5000,
+          })
+          return
+        }
+
+        // Validate file type
+        const isValidType =
+          file.type === "text/csv" ||
+          file.name.endsWith(".csv") ||
+          file.name.endsWith(".xlsx") ||
+          file.name.endsWith(".xls")
+
+        if (!isValidType) {
+          notify("error", "Invalid File Type", {
+            description: "Please upload CSV or Excel files only",
+            duration: 5000,
+          })
+          return
+        }
+
         setSelectedFile(file)
         setUploadError(null)
         setUploadSuccess(false)
         setFinalizedFile(null)
         setUploadProgress(null)
-        // Don't reset upload type when new file is dropped - only reset on manual change
-      }
-    }
-  }, [])
+        setBulkUploadResponse(null)
+        setIsDragOver(false)
+        setHasCompletedUploadTypeSelection(false)
+        setExtractedColumns([])
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ""
+        }
 
-  // Handle drag over
+        // Validate columns if upload type is selected
+        if (selectedUploadType) {
+          const validation = await validateFileColumns(file)
+          if (!validation.isValid && validation.missingColumns.length > 0) {
+            notify("warning", "Missing Required Columns", {
+              description: `Missing: ${validation.missingColumns.join(", ")}`,
+              duration: 7000,
+            })
+          } else if (validation.isValid) {
+            notify("success", "File Validation Passed", {
+              description: "All required columns found",
+              duration: 3000,
+            })
+          }
+        }
+      } else {
+        // Handle case where user cancels file selection
+        if (fileInputRef.current && selectedFile) {
+          const dataTransfer = new DataTransfer()
+          dataTransfer.items.add(selectedFile)
+          fileInputRef.current.files = dataTransfer.files
+        }
+      }
+    },
+    [selectedFile, selectedUploadType, validateFileColumns]
+  )
+
+  // Handle file drop
+  const handleFileDrop = useCallback(
+    async (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault()
+      e.stopPropagation()
+      setIsDragOver(false)
+
+      const files = e.dataTransfer.files
+      if (files && files.length > 0) {
+        const file = files[0]
+
+        if (!file) {
+          return
+        }
+
+        // Validate file type
+        const isValidType =
+          file.type === "text/csv" ||
+          file.name.endsWith(".csv") ||
+          file.name.endsWith(".xlsx") ||
+          file.name.endsWith(".xls")
+
+        if (!isValidType) {
+          notify("error", "Invalid File Type", {
+            description: "Please upload CSV or Excel files only",
+            duration: 5000,
+          })
+          return
+        }
+
+        // Validate file size
+        if (file.size > 50 * 1024 * 1024) {
+          notify("error", "File Too Large", {
+            description: "Maximum file size is 50MB",
+            duration: 5000,
+          })
+          return
+        }
+
+        setSelectedFile(file)
+        setUploadError(null)
+        setUploadSuccess(false)
+        setFinalizedFile(null)
+        setUploadProgress(null)
+        setBulkUploadResponse(null)
+        setIsDragOver(false)
+        setHasCompletedUploadTypeSelection(false)
+        setExtractedColumns([])
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ""
+        }
+
+        // Validate columns if upload type is selected
+        if (selectedUploadType) {
+          const validation = await validateFileColumns(file)
+          if (!validation.isValid && validation.missingColumns.length > 0) {
+            notify("warning", "Missing Required Columns", {
+              description: `Missing: ${validation.missingColumns.join(", ")}`,
+              duration: 7000,
+            })
+          }
+        }
+      }
+    },
+    [selectedUploadType, validateFileColumns]
+  )
+
+  // Drag and drop handlers
   const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     e.stopPropagation()
     setIsDragOver(true)
   }, [])
 
-  // Handle drag leave
   const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     e.stopPropagation()
     setIsDragOver(false)
   }, [])
 
-  // Handle drag enter
   const handleDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     e.stopPropagation()
-    setIsDragging(true)
     setIsDragOver(true)
-  }, [])
-
-  // Handle drag exit
-  const handleDragExit = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(false)
-    setIsDragOver(false)
   }, [])
 
   // Remove selected file
@@ -267,15 +1186,17 @@ const FileManagementPage = () => {
     setUploadSuccess(false)
     setFinalizedFile(null)
     setUploadProgress(null)
-    setSelectedUploadType(null)
+    setBulkUploadResponse(null)
+    setIsDragOver(false)
+    setHasCompletedUploadTypeSelection(false)
+    setExtractedColumns([])
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
     }
   }, [])
 
-  // Calculate file checksum (simple implementation)
+  // Calculate file checksum
   const calculateChecksum = async (file: File): Promise<string> => {
-    // For now, return a simple hash - in production, use SHA-256
     const buffer = await file.arrayBuffer()
     const hashBuffer = await crypto.subtle.digest("SHA-256", buffer)
     const hashArray = Array.from(new Uint8Array(hashBuffer))
@@ -284,7 +1205,14 @@ const FileManagementPage = () => {
 
   // Start upload process
   const handleUpload = useCallback(async () => {
-    if (!selectedFile) return
+    if (!selectedFile) {
+      notify("error", "No File Selected", {
+        description: "Please select a file to upload",
+        duration: 5000,
+      })
+      return
+    }
+
     if (!selectedUploadType) {
       notify("error", "Upload Type Required", {
         description: "Please select an upload type before proceeding",
@@ -300,7 +1228,7 @@ const FileManagementPage = () => {
     setIsUploading(true)
     setUploadError(null)
     setUploadSuccess(false)
-    setUploadProgress(null)
+    setUploadProgress({ loaded: 0, total: selectedFile.size, percentage: 0 })
 
     try {
       console.log("=== Extracting Columns ===")
@@ -311,7 +1239,6 @@ const FileManagementPage = () => {
       console.log("Extracted columns length:", extractedColumns.length)
 
       if (extractedColumns.length === 0) {
-        // Show error notification
         notify("error", "File Processing Failed", {
           description: "No columns found in the file. Please ensure your file has headers.",
           duration: 5000,
@@ -331,7 +1258,7 @@ const FileManagementPage = () => {
 
       const intentRequest = {
         fileName: selectedFile.name,
-        contentType: selectedFile.type,
+        contentType: selectedFile.type || "application/octet-stream",
         sizeBytes: selectedFile.size,
         purpose: getPurpose(selectedUploadType),
         checksum,
@@ -340,7 +1267,6 @@ const FileManagementPage = () => {
         columns: paymentColumns,
       }
 
-      // Debug: Log what we're sending
       console.log("=== Final Intent Request ===")
       console.log("Sending intent request:", intentRequest)
 
@@ -349,12 +1275,6 @@ const FileManagementPage = () => {
         intentResult = await dispatch(createFileIntent(intentRequest)).unwrap()
       } catch (error: any) {
         console.log("API Call Failed:", error)
-        console.log("Error details:", error.message)
-        if (error.response) {
-          console.log("Response data:", error.response.data)
-          console.log("Response status:", error.response.status)
-        }
-        // Show error notification
         notify("error", "Upload Failed", {
           description: error.message || "Failed to create file intent",
           duration: 5000,
@@ -364,7 +1284,6 @@ const FileManagementPage = () => {
 
       if (!intentResult.isSuccess) {
         console.log("API Response Error:", intentResult)
-        // Show error notification
         notify("error", "Upload Failed", {
           description: intentResult.message || "File intent creation failed",
           duration: 5000,
@@ -378,7 +1297,7 @@ const FileManagementPage = () => {
       // Create XMLHttpRequest for progress tracking
       const xhr = new XMLHttpRequest()
 
-      return new Promise<void>((resolve, reject) => {
+      await new Promise<void>((resolve, reject) => {
         xhr.upload.addEventListener("progress", (event) => {
           if (event.lengthComputable) {
             const progress: UploadProgress = {
@@ -403,7 +1322,6 @@ const FileManagementPage = () => {
               setFinalizedFile(finalizeResult.data)
               setUploadSuccess(true)
 
-              // Show success notification
               notify("success", "Upload Successfully Queued!", {
                 description: `File ${selectedFile.name} has been queued for processing`,
                 duration: 5000,
@@ -452,28 +1370,33 @@ const FileManagementPage = () => {
                 }
 
                 setBulkUploadProcessed(true)
+                setBulkUploadResponse(bulkResult)
                 console.log("=== Bulk Upload Complete ===")
                 console.log("Bulk upload data:", bulkResult.data)
 
                 // Show bulk upload success notification
+                const succeededRows =
+                  (bulkResult.data as any)?.succeededRows ||
+                  (bulkResult.data as any)?.job?.succeededRows ||
+                  (bulkResult.data as any)?.preview?.validRows ||
+                  0
+
                 notify("success", "Processing Started!", {
-                  description: `${bulkResult.data?.succeededRows || 0} customer records queued for processing`,
+                  description: `${succeededRows} customer records queued for processing`,
                   duration: 6000,
                 })
-              } catch (bulkError) {
+              } catch (bulkError: any) {
                 console.error("Bulk upload failed:", bulkError)
-                // Show error notification
-                notify("error", "Bulk Upload Failed", {
-                  description: bulkError instanceof Error ? bulkError.message : "Failed to process bulk upload",
+                notify("warning", "Upload Queued", {
+                  description: "File uploaded but processing failed. Please check bulk upload page.",
                   duration: 5000,
                 })
                 setUploadError(bulkError instanceof Error ? bulkError.message : "Failed to process bulk upload")
               }
 
               resolve()
-            } catch (finalizeError) {
+            } catch (finalizeError: any) {
               console.error("Finalize error:", finalizeError)
-              // Show error notification
               notify("error", "Finalization Failed", {
                 description: finalizeError instanceof Error ? finalizeError.message : "Failed to finalize upload",
                 duration: 5000,
@@ -483,7 +1406,6 @@ const FileManagementPage = () => {
             }
           } else {
             const error = new Error(`Upload failed with status ${xhr.status}`)
-            // Show error notification
             notify("error", "Upload Failed", {
               description: `Upload failed with status ${xhr.status}`,
               duration: 5000,
@@ -494,7 +1416,6 @@ const FileManagementPage = () => {
 
         xhr.addEventListener("error", () => {
           const error = new Error("Network error during upload")
-          // Show error notification
           notify("error", "Network Error", {
             description: "Network error during upload",
             duration: 5000,
@@ -504,12 +1425,11 @@ const FileManagementPage = () => {
 
         // Open and send the request
         xhr.open("PUT", uploadUrl)
-        xhr.setRequestHeader("Content-Type", selectedFile.type)
+        xhr.setRequestHeader("Content-Type", selectedFile.type || "application/octet-stream")
         xhr.send(selectedFile)
       })
-    } catch (error) {
+    } catch (error: any) {
       console.error("Upload process error:", error)
-      // Show error notification
       notify("error", "Upload Failed", {
         description: error instanceof Error ? error.message : "Upload failed",
         duration: 5000,
@@ -518,99 +1438,52 @@ const FileManagementPage = () => {
     } finally {
       setIsUploading(false)
     }
-  }, [selectedFile, dispatch, selectedUploadType, extractColumnsFromFile])
+  }, [selectedFile, selectedUploadType, dispatch, extractColumnsFromFile])
 
   // Reset form
   const handleReset = useCallback(() => {
     setSelectedFile(null)
+    setSelectedUploadType(null)
     setUploadProgress(null)
     setIsUploading(false)
     setUploadError(null)
     setUploadSuccess(false)
     setFinalizedFile(null)
     setBulkUploadProcessed(false)
+    setBulkUploadResponse(null)
     setIsDragOver(false)
-    setIsDragging(false)
-    setSelectedUploadType(null)
     setHasCompletedUploadTypeSelection(false)
+    setExtractedColumns([])
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
     }
-    dispatch({ type: "fileManagement/resetFileManagementState" })
+    dispatch(resetFileManagementState())
   }, [dispatch])
 
   // Generate and download sample CSV file
   const downloadSampleFile = useCallback(() => {
-    let headers: string
-    let sampleRows: string[]
+    if (!selectedUploadType) return
 
-    // Generate different templates based on upload type
-    if (selectedUploadType === 23) {
-      // Import Existing Customers template
-      headers =
-        "CustomerName,CustomerAccountNo,CustomerAddress1,CustomerAddress2,CustomerCity,CustomerState,TelephoneNumber,Tariff,FeederName,Transformers,DTNumber,TechnicalEngineer,EmployeeNo,AreaOffice,ServiceCenter,StoredAverage,OpeningBalance,IsPPM,Longitute,Latitude,MotherAccountNumber,IsSeperation,EmailAdddress,StatusCode,Error"
-      sampleRows = []
-    } else if (selectedUploadType === 5) {
-      // Customer Tariff Change template
-      headers = "CustomerAccountNo,TariffCode"
-      sampleRows = []
-    } else if (selectedUploadType === 8) {
-      // Customer Status Code Change template
-      headers = "CustomerAccountNo,StatusCodeChange"
-      sampleRows = []
-    } else if (selectedUploadType === 9) {
-      // Customer Stored Average Update template
-      headers = "CustomerAccountNo,TariffCode"
-      sampleRows = []
-    } else if (selectedUploadType === 10) {
-      // Customer SR DT Update template
-      headers = "DssCode,EmployeeNo,CustomerAccountNo"
-      sampleRows = []
-    } else if (selectedUploadType === 16) {
-      // Customer Bill Energy template
-      headers = "CustomerAccountNo,CustomerStoredAverage,MonthYear"
-      sampleRows = []
-    } else if (selectedUploadType === 24) {
-      // Postpaid Estimated Consumption template
-      headers = "CustomerAccountNo,EstimatedConsumptionKwh,MonthYear"
-      sampleRows = []
-    } else {
-      // Default template for other upload types
-      headers = "CustomerAccountNo,CustomerName,Address,Phone,Email,TariffCode,FeederCode,Status"
-      sampleRows = []
-    }
+    const uploadType = uploadTypeOptions.find((t) => t.value === selectedUploadType)
+    if (!uploadType) return
 
-    const sampleData = [headers, ...sampleRows].join("\n")
-
+    const sampleData = uploadType.sampleData.join("\n")
     const blob = new Blob([sampleData], { type: "text/csv;charset=utf-8;" })
-    const link = document.createElement("a")
     const url = URL.createObjectURL(blob)
 
-    link.setAttribute("href", url)
-    link.setAttribute(
-      "download",
-      selectedUploadType === 23
-        ? "sample-import-existing-customers.csv"
-        : selectedUploadType === 7
-        ? "sample-customer-tariff-change.csv"
-        : selectedUploadType === 8
-        ? "sample-customer-status-code-change.csv"
-        : selectedUploadType === 9
-        ? "sample-customer-stored-average-update.csv"
-        : selectedUploadType === 10
-        ? "sample-customer-sr-dt-update.csv"
-        : selectedUploadType === 16
-        ? "sample-customer-bill-energy.csv"
-        : selectedUploadType === 24
-        ? "sample-postpaid-estimated-consumption.csv"
-        : "sample_customers_bulk.csv"
-    )
-    link.style.visibility = "hidden"
-
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `sample-${uploadType.name.toLowerCase().replace(/\s+/g, "-")}.csv`
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
-  }, [selectedUploadType])
+    URL.revokeObjectURL(url)
+
+    notify("success", "Template Downloaded", {
+      description: "Sample CSV file has been downloaded",
+      duration: 3000,
+    })
+  }, [selectedUploadType, uploadTypeOptions])
 
   // Format file size
   const formatFileSize = (bytes: number): string => {
@@ -621,410 +1494,569 @@ const FileManagementPage = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
   }
 
+  // Get selected upload type details
+  const selectedUploadTypeDetails = uploadTypeOptions.find((t) => t.value === selectedUploadType)
+
+  // Check if any loading state is active
+  const isLoading = fileIntentLoading || finalizeFileLoading || isUploading || isValidatingFile
+
   return (
-    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+    <section className="min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100 pb-24 sm:pb-20">
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
 
-          <div className="mx-auto flex w-full flex-col px-3 py-4 2xl:container sm:px-4 md:px-6 md:py-4 2xl:px-16">
-            {/* Page Header - Mobile Optimized */}
-            <div className="mb-6">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
+          <div className="w-full px-4 py-6 sm:px-6 lg:px-8">
+            {/* Page Header */}
+            <div className="mb-8">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-4">
                   <button
-                    type="button"
                     onClick={() => router.back()}
-                    className="flex size-8 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 sm:hidden"
+                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     aria-label="Go back"
                   >
-                    <svg
-                      width="1em"
-                      height="1em"
-                      viewBox="0 0 17 17"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="new-arrow-right rotate-180 transform"
-                    >
-                      <path
-                        d="M9.1497 0.80204C9.26529 3.95101 13.2299 6.51557 16.1451 8.0308L16.1447 9.43036C13.2285 10.7142 9.37889 13.1647 9.37789 16.1971L7.27855 16.1978C7.16304 12.8156 10.6627 10.4818 13.1122 9.66462L0.049716 9.43565L0.0504065 7.33631L13.1129 7.56528C10.5473 6.86634 6.93261 4.18504 7.05036 0.80273L9.1497 0.80204Z"
-                        fill="currentColor"
-                      />
-                    </svg>
+                    <ArrowLeft className="h-5 w-5" />
                   </button>
                   <div>
-                    <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">Bulk Upload Customers</h1>
-                    <p className="text-sm text-gray-600">Upload customer records in bulk using CSV or Excel files</p>
+                    <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Bulk Upload Customers</h1>
+                    <p className="mt-1 text-sm text-gray-600">
+                      Upload customer records in bulk using CSV or Excel files
+                    </p>
                   </div>
                 </div>
 
-                <div className="hidden items-center gap-3 sm:flex">
+                {/* Desktop Actions */}
+                {/* <div className="hidden items-center gap-3 sm:flex">
                   <ButtonModule variant="outline" size="sm" onClick={() => router.push("/customers/bulk-upload")}>
-                    Go to Bulk Upload Page
+                    View Upload History
                   </ButtonModule>
-                  <ButtonModule
-                    variant="outline"
-                    size="sm"
-                    onClick={handleReset}
-                    disabled={isUploading || uploadSuccess}
-                  >
-                    Reset Form
+                  <ButtonModule variant="outline" size="sm" onClick={handleReset} disabled={isLoading}>
+                    Reset
                   </ButtonModule>
                   <ButtonModule
                     variant="primary"
                     size="sm"
-                    onClick={() => {
-                      void handleUpload()
-                    }}
-                    disabled={
-                      !selectedFile ||
-                      !selectedUploadType ||
-                      isUploading ||
-                      uploadSuccess ||
-                      fileIntentLoading ||
-                      finalizeFileLoading
-                    }
-                    icon={<VscAdd />}
-                    iconPosition="start"
+                    onClick={handleUpload}
+                    disabled={!selectedFile || !selectedUploadType || isLoading || uploadSuccess}
+                    icon={<Upload className="h-4 w-4" />}
                   >
                     {isUploading ? "Uploading..." : "Upload File"}
                   </ButtonModule>
-                </div>
+                </div> */}
               </div>
             </div>
 
-            {/* Main Content Area */}
-            <div className="w-full">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="rounded-lg bg-white p-4 shadow-sm sm:p-6"
-              >
-                {/* Upload Type Selection - Only show if user hasn't completed initial selection */}
-                {!hasCompletedUploadTypeSelection && (
-                  <div className="mb-6 rounded-lg border-2 border-dashed border-gray-300 bg-[#f9f9f9] p-6">
-                    <h3 className="mb-4 text-lg font-semibold text-gray-900">Select Upload Type</h3>
-                    <p className="mb-6 text-sm text-gray-600">
-                      Choose the type of customer bulk upload you want to perform. This determines how the system will
-                      process your file.
-                    </p>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                      {uploadTypeOptions.map((type) => (
-                        <button
+            {/* Main Content */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="overflow-hidden rounded-xl bg-white shadow-lg"
+            >
+              {/* Upload Type Selection */}
+              {!hasCompletedUploadTypeSelection && (
+                <div className="p-6">
+                  <div className="mb-6 flex items-center justify-between">
+                    <div>
+                      <h2 className="text-lg font-semibold text-gray-900">Select Upload Type</h2>
+                      <p className="text-sm text-gray-600">Choose the type of customer upload you want to perform</p>
+                    </div>
+                    <div className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-800">
+                      {uploadTypeOptions.length} options
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {uploadTypeOptions.map((type) => {
+                      const latestJob = latestJobs[type.value] || null
+                      const isLoading = jobsLoading
+
+                      return (
+                        <motion.button
                           key={type.value}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
                           onClick={() => {
                             setSelectedUploadType(type.value)
                             setHasCompletedUploadTypeSelection(true)
                           }}
-                          className="rounded-lg border border-gray-200 bg-white p-4 text-left transition-all hover:border-blue-300 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          className="group relative rounded-xl border-2 border-gray-200 bg-white p-4 text-left transition-all hover:border-blue-400 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                         >
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h4 className="font-medium text-gray-900">{type.name}</h4>
-                              {/* <p className="mt-1 text-xs text-gray-500">Type {type.value}</p> */}
+                          <h3 className="mb-2 font-semibold text-gray-900 group-hover:text-blue-600">{type.name}</h3>
+                          <p className="mb-4 text-sm text-gray-600">{type.description}</p>
+
+                          {/* Job Status Section */}
+                          <div className="mb-4 rounded-lg border border-gray-100 bg-gray-50 p-3">
+                            <div className="mb-2 flex items-center justify-between">
+                              <span className="text-xs font-medium text-gray-700">Latest Job Status</span>
+                              {latestJob && (latestJob.status === 1 || latestJob.status === 2) && (
+                                <RefreshCw className="h-3 w-3 animate-spin text-blue-500" />
+                              )}
                             </div>
-                            <div className="flex size-8 items-center justify-center rounded-full border-2 border-gray-300">
-                              {selectedUploadType === type.value && <div className="size-4 rounded-full bg-blue-600" />}
-                            </div>
+                            <JobStatusIndicator job={latestJob} isLoading={isLoading} />
                           </div>
-                        </button>
-                      ))}
+
+                          {/* <div className="space-y-2">
+                            <p className="text-xs font-medium text-gray-700">Required columns:</p>
+                            <div className="flex flex-wrap gap-1">
+                              {type.requiredColumns.slice(0, 4).map((col, idx) => (
+                                <span key={idx} className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+                                  {col}
+                                </span>
+                              ))}
+                              {type.requiredColumns.length > 4 && (
+                                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+                                  +{type.requiredColumns.length - 4} more
+                                </span>
+                              )}
+                            </div>
+                          </div> */}
+                        </motion.button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* File Upload Section */}
+              {hasCompletedUploadTypeSelection && selectedUploadTypeDetails && (
+                <div className="p-6">
+                  {/* Selected Type Header */}
+                  <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
+                    <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+                      <div className="flex items-start gap-3">
+                        <div className="rounded-full bg-blue-200 p-2">
+                          <FileSpreadsheet className="h-5 w-5 text-blue-700" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="rounded-full bg-blue-200 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                              Selected Type
+                            </span>
+                            <h3 className="font-semibold text-blue-900">{selectedUploadTypeDetails.name}</h3>
+                          </div>
+                          <p className="mt-1 text-sm text-blue-700">{selectedUploadTypeDetails.description}</p>
+                        </div>
+                      </div>
+                      <ButtonModule
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedUploadType(null)
+                          setHasCompletedUploadTypeSelection(false)
+                          setSelectedFile(null)
+                          setExtractedColumns([])
+                        }}
+                        className="border-blue-300 bg-white text-blue-700 hover:bg-blue-100"
+                      >
+                        Change Type
+                      </ButtonModule>
                     </div>
                   </div>
-                )}
 
-                {/* File Upload Area - Only show after upload type selection is completed */}
-                {hasCompletedUploadTypeSelection && selectedUploadType && (
-                  <>
-                    {/* Selected Upload Type Display */}
-                    <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="text-sm font-medium text-blue-800">Selected Upload Type</h3>
-                          <p className="text-sm text-blue-600">
-                            {uploadTypeOptions.find((t) => t.value === selectedUploadType)?.name} (Type{" "}
-                            {selectedUploadType})
-                          </p>
+                  {/* Template Download & Column Info */}
+                  <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+                    <div className="lg:col-span-2">
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+                          <div className="flex items-start gap-3">
+                            <Download className="mt-0.5 h-5 w-5 text-gray-500" />
+                            <div>
+                              <p className="font-medium text-gray-900">Need a template?</p>
+                              <p className="text-sm text-gray-600">Download a sample CSV with the correct format</p>
+                            </div>
+                          </div>
+                          <ButtonModule
+                            variant="primary"
+                            size="sm"
+                            onClick={downloadSampleFile}
+                            icon={<Download className="h-4 w-4" />}
+                          >
+                            Download Template
+                          </ButtonModule>
                         </div>
-                        <ButtonModule
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedUploadType(null)
-                            setHasCompletedUploadTypeSelection(false)
-                          }}
-                        >
-                          Change Type
-                        </ButtonModule>
                       </div>
                     </div>
 
-                    {/* Template Download */}
-                    <div className="mb-6 rounded-lg bg-blue-50 p-4">
-                      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-                        <div>
-                          <h3 className="text-sm font-medium text-blue-800">Need a template?</h3>
-                          <p className="text-sm text-blue-600">
-                            Download our customer CSV template with the required columns for the selected upload type.
-                          </p>
-                        </div>
-                        <ButtonModule variant="primary" size="sm" onClick={downloadSampleFile}>
-                          Download Template
-                        </ButtonModule>
-                      </div>
-                    </div>
-
-                    {/* File Upload Area */}
-                    <div className="mb-6 rounded-lg border-2 border-dashed border-gray-300 bg-[#f9f9f9] p-6 text-center sm:p-8">
-                      <input
-                        ref={fileInputRef}
-                        id="file-upload"
-                        type="file"
-                        onChange={handleFileSelect}
-                        disabled={isUploading}
-                        className="hidden"
-                      />
-
-                      {!selectedFile ? (
-                        <div>
-                          <svg
-                            className="mx-auto size-12 text-gray-400"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                            />
-                          </svg>
-                          <div className="mt-4 flex w-full flex-col items-center justify-center">
-                            <ButtonModule variant="primary" onClick={() => fileInputRef.current?.click()}>
-                              Choose File
-                            </ButtonModule>
-                            <p className="mt-2 text-sm text-gray-600">or drag and drop your file here</p>
-                          </div>
-                          <p className="mt-1 text-xs text-gray-500">
-                            Supports CSV, Excel (.xlsx, .xls) files (max 50MB)
-                          </p>
-                        </div>
-                      ) : (
-                        <div>
-                          <svg
-                            className="mx-auto size-12 text-green-500"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
-                          <p className="mt-2 text-sm font-medium text-gray-900">{selectedFile.name}</p>
-                          <p className="text-sm text-gray-500">
-                            {formatFileSize(selectedFile.size)} • {selectedFile.type || "Unknown type"}
-                          </p>
-                          <div className="mt-4 flex flex-col justify-center gap-3 sm:flex-row">
-                            <ButtonModule
-                              variant="secondary"
-                              onClick={() => fileInputRef.current?.click()}
-                              disabled={
-                                isUploading ||
-                                (!!uploadProgress &&
-                                  uploadProgress.percentage !== 100 &&
-                                  !uploadError &&
-                                  !fileIntentError &&
-                                  !finalizeFileError &&
-                                  !customerBulkUploadError)
-                              }
-                            >
-                              Choose Different File
-                            </ButtonModule>
-                            <ButtonModule
-                              variant="primary"
-                              onClick={() => {
-                                void handleUpload()
-                              }}
-                              disabled={
-                                isUploading ||
-                                uploadSuccess ||
-                                !!uploadProgress ||
-                                !selectedUploadType ||
-                                fileIntentLoading ||
-                                finalizeFileLoading
-                              }
-                            >
-                              {isUploading ? "Uploading..." : "Upload File"}
-                            </ButtonModule>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Upload Progress */}
-                    {uploadProgress && (
-                      <div
-                        className={`mb-6 rounded-lg border p-4 ${
-                          uploadProgress.percentage === 100
-                            ? "border-green-200 bg-green-50"
-                            : "border-blue-200 bg-blue-50"
-                        }`}
+                    <div>
+                      <button
+                        onClick={() => setShowColumnHelp(!showColumnHelp)}
+                        className="flex w-full items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 p-4 text-left transition-colors hover:bg-gray-100"
                       >
-                        <div className="mb-3 flex items-center">
-                          <div
-                            className={`mr-3 flex h-8 w-8 items-center justify-center rounded-full ${
-                              uploadProgress.percentage === 100 ? "bg-green-100" : "bg-blue-100"
-                            }`}
-                          >
-                            <CloudUpload
-                              className={`h-4 w-4 ${
-                                uploadProgress.percentage === 100 ? "text-green-600" : "animate-pulse text-blue-600"
-                              }`}
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <p
-                              className={`text-sm font-medium ${
-                                uploadProgress.percentage === 100 ? "text-green-900" : "text-blue-900"
-                              }`}
-                            >
-                              {uploadProgress.percentage === 100 ? "Upload complete!" : "Uploading file..."}
-                            </p>
-                            <p
-                              className={`text-xs ${
-                                uploadProgress.percentage === 100 ? "text-green-700" : "text-blue-700"
-                              }`}
-                            >
-                              {uploadProgress.percentage}% complete
-                            </p>
-                          </div>
-                          <span
-                            className={`text-sm font-semibold ${
-                              uploadProgress.percentage === 100 ? "text-green-800" : "text-blue-800"
-                            }`}
-                          >
-                            {uploadProgress.percentage}%
-                          </span>
+                        <HelpCircle className="h-5 w-5 text-gray-500" />
+                        <div>
+                          <p className="font-medium text-gray-900">Required Columns</p>
+                          <p className="text-sm text-gray-600">Click to view all</p>
                         </div>
-                        <div
-                          className={`h-2 w-full rounded-full ${
-                            uploadProgress.percentage === 100 ? "bg-green-200" : "bg-blue-200"
-                          }`}
-                        >
-                          <div
-                            className={`h-2 rounded-full transition-all duration-300 ease-out ${
-                              uploadProgress.percentage === 100 ? "bg-green-600" : "bg-blue-600"
-                            }`}
-                            style={{ width: `${uploadProgress.percentage}%` }}
-                          />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Column Help Modal */}
+                  <AnimatePresence>
+                    {showColumnHelp && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="mb-6 overflow-hidden"
+                      >
+                        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+                          <div className="mb-3 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Info className="h-5 w-5 text-blue-600" />
+                              <h4 className="font-medium text-blue-900">Required Columns</h4>
+                            </div>
+                            <button
+                              onClick={() => setShowColumnHelp(false)}
+                              className="rounded-full p-1 text-blue-600 hover:bg-blue-200"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+                            {selectedUploadTypeDetails.requiredColumns.map((col, idx) => (
+                              <div key={idx} className="flex items-center gap-2 rounded-lg bg-white p-2 shadow-sm">
+                                <div className="h-2 w-2 rounded-full bg-green-500" />
+                                <span className="text-sm text-gray-700">{col}</span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                        <p
-                          className={`mt-2 text-xs ${
-                            uploadProgress.percentage === 100 ? "text-green-700" : "text-blue-700"
-                          }`}
-                        >
-                          {formatFileSize(uploadProgress.loaded)} of {formatFileSize(uploadProgress.total)} uploaded
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* File Upload Drop Zone */}
+                  <div
+                    ref={dropZoneRef}
+                    onDrop={handleFileDrop}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDragEnter={handleDragEnter}
+                    className={`relative mb-6 rounded-xl border-2 border-dashed p-8 text-center transition-all ${
+                      isDragOver
+                        ? "border-blue-400 bg-blue-50"
+                        : selectedFile
+                        ? "border-green-300 bg-green-50"
+                        : "border-gray-300 bg-gray-50 hover:border-gray-400"
+                    }`}
+                  >
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                      disabled={isLoading}
+                    />
+
+                    {!selectedFile ? (
+                      <div>
+                        <CloudUpload
+                          className={`mx-auto h-16 w-16 ${isDragOver ? "text-blue-500" : "text-gray-400"}`}
+                        />
+                        <p className="mt-4 text-base text-gray-700">
+                          <button
+                            onClick={() => fileInputRef.current?.click()}
+                            className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                            disabled={isLoading}
+                          >
+                            Click to upload
+                          </button>{" "}
+                          or drag and drop
                         </p>
+                        <p className="mt-2 text-sm text-gray-500">CSV or Excel files (max 50MB)</p>
+                      </div>
+                    ) : (
+                      <div className="relative">
+                        <button
+                          onClick={removeSelectedFile}
+                          className="absolute -right-2 -top-2 rounded-full bg-red-100 p-1.5 text-red-600 transition-colors hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                          disabled={isLoading}
+                          aria-label="Remove file"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+
+                        <FileText className="mx-auto h-16 w-16 text-green-500" />
+                        <p className="mt-2 font-medium text-gray-900">{selectedFile.name}</p>
+                        <p className="text-sm text-gray-500">{formatFileSize(selectedFile.size)}</p>
+
+                        {/* Extracted Columns Display */}
+                        {extractedColumns.length > 0 && (
+                          <div className="mt-4">
+                            <p className="mb-2 text-xs font-medium text-gray-700">Found columns:</p>
+                            <div className="flex flex-wrap justify-center gap-1">
+                              {extractedColumns.map((col, idx) => {
+                                const isRequired = selectedUploadTypeDetails.requiredColumns.some(
+                                  (rc) => rc.toLowerCase() === col.toLowerCase()
+                                )
+                                return (
+                                  <span
+                                    key={idx}
+                                    className={`rounded-full px-2 py-0.5 text-xs ${
+                                      isRequired ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
+                                    }`}
+                                  >
+                                    {col}
+                                  </span>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Validation Status */}
+                        {isValidatingFile && (
+                          <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-600">
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+                            <span>Validating file...</span>
+                          </div>
+                        )}
+
+                        {/* Upload File Button */}
+                        {!isValidatingFile && (
+                          <div className="mt-6 flex justify-center">
+                            <button
+                              onClick={handleUpload}
+                              disabled={!selectedFile || !selectedUploadType || isLoading || uploadSuccess}
+                              className="flex items-center gap-2 rounded-lg bg-green-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {isUploading ? (
+                                <>
+                                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                  <span>Uploading...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Upload className="h-4 w-4" />
+                                  <span>Upload File</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )}
+                  </div>
 
-                    {/* Go to Bulk Upload Page - shown after upload progress */}
-                    {uploadProgress && uploadProgress.percentage === 100 && (
-                      <div className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium text-green-900">Upload completed successfully!</p>
-                            <p className="text-xs text-green-700">View your upload history and manage bulk uploads</p>
+                  {/* Upload Progress */}
+                  <AnimatePresence>
+                    {uploadProgress && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="mb-6 overflow-hidden"
+                      >
+                        <div
+                          className={`rounded-lg border p-4 ${
+                            uploadProgress.percentage === 100
+                              ? "border-green-200 bg-green-50"
+                              : "border-blue-200 bg-blue-50"
+                          }`}
+                        >
+                          <div className="mb-3 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div
+                                className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                                  uploadProgress.percentage === 100 ? "bg-green-200" : "bg-blue-200"
+                                }`}
+                              >
+                                {uploadProgress.percentage === 100 ? (
+                                  <CheckCircle className="h-5 w-5 text-green-600" />
+                                ) : (
+                                  <CloudUpload className="h-5 w-5 animate-pulse text-blue-600" />
+                                )}
+                              </div>
+                              <div>
+                                <p
+                                  className={`text-sm font-medium ${
+                                    uploadProgress.percentage === 100 ? "text-green-900" : "text-blue-900"
+                                  }`}
+                                >
+                                  {uploadProgress.percentage === 100 ? "Upload Complete!" : "Uploading file..."}
+                                </p>
+                                <p
+                                  className={`text-xs ${
+                                    uploadProgress.percentage === 100 ? "text-green-700" : "text-blue-700"
+                                  }`}
+                                >
+                                  {uploadProgress.percentage}% • {formatFileSize(uploadProgress.loaded)} of{" "}
+                                  {formatFileSize(uploadProgress.total)}
+                                </p>
+                              </div>
+                            </div>
+                            <span
+                              className={`text-2xl font-bold ${
+                                uploadProgress.percentage === 100 ? "text-green-800" : "text-blue-800"
+                              }`}
+                            >
+                              {uploadProgress.percentage}%
+                            </span>
+                          </div>
+                          <div className="h-2.5 w-full overflow-hidden rounded-full bg-gray-200">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${uploadProgress.percentage}%` }}
+                              transition={{ duration: 0.3 }}
+                              className={`h-full ${uploadProgress.percentage === 100 ? "bg-green-500" : "bg-blue-500"}`}
+                            />
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Success Message */}
+                  <AnimatePresence>
+                    {uploadSuccess && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4"
+                      >
+                        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+                          <div className="flex items-start gap-3">
+                            <CheckCircle className="mt-0.5 h-5 w-5 text-green-600" />
+                            <div>
+                              <p className="font-medium text-green-900">Upload Successful!</p>
+                              <p className="text-sm text-green-700">
+                                Your file has been uploaded and queued for processing
+                              </p>
+                            </div>
                           </div>
                           <ButtonModule
                             variant="primary"
                             size="sm"
                             onClick={() => router.push("/customers/bulk-upload")}
+                            className="bg-green-600 hover:bg-green-700"
                           >
-                            Go to Bulk Upload Page
+                            View Upload History
                           </ButtonModule>
                         </div>
-                      </div>
+                      </motion.div>
                     )}
+                  </AnimatePresence>
 
-                    {/* Error Messages */}
-                    {(fileIntentError || uploadError || finalizeFileError || customerBulkUploadError) && (
-                      <div className="mb-6 rounded-md border border-red-200 bg-red-50 p-4">
-                        <div className="flex">
-                          <div className="shrink-0">
-                            <svg className="size-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                              <path
-                                fillRule="evenodd"
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          </div>
-                          <div className="ml-3 flex-1">
-                            <h3 className="text-sm font-medium text-red-800">Upload Failed</h3>
-                            <div className="mt-2 text-sm text-red-700">
-                              {fileIntentError || uploadError || finalizeFileError || customerBulkUploadError}
-                            </div>
+                  {/* Error Messages */}
+                  <AnimatePresence>
+                    {(uploadError || fileIntentError || finalizeFileError || customerBulkUploadError) && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4"
+                      >
+                        <div className="flex items-start gap-3">
+                          <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-600" />
+                          <div>
+                            <p className="font-medium text-red-900">Upload Failed</p>
+                            <p className="text-sm text-red-700">
+                              {uploadError || fileIntentError || finalizeFileError || customerBulkUploadError}
+                            </p>
                           </div>
                         </div>
-                      </div>
+                      </motion.div>
                     )}
-                  </>
-                )}
-              </motion.div>
-            </div>
+                  </AnimatePresence>
+
+                  {/* File Info Card */}
+                  {selectedFile && !uploadSuccess && (
+                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                      <div className="flex items-center gap-2">
+                        <Info className="h-4 w-4 text-gray-500" />
+                        <p className="text-xs text-gray-600">
+                          Maximum file size: 50MB • Supported formats: CSV, XLSX, XLS
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Recent Uploads Table for Selected Job Type */}
+              {selectedUploadType && (
+                <div className="border-t border-gray-200">
+                  <div className="p-6">
+                    <JobTypeUploadsTable jobType={selectedUploadType} />
+                  </div>
+                </div>
+              )}
+            </motion.div>
           </div>
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation Bar */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-white p-3 shadow-lg sm:hidden">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex gap-2">
+      {/* Mobile Bottom Navigation */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-white p-4 shadow-lg sm:hidden">
+        <div className="flex flex-col gap-3">
+          <div className="flex gap-3">
             <button
-              type="button"
               onClick={() => router.push("/customers/bulk-upload")}
-              className="rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-50"
+              className="flex-1 rounded-lg border border-blue-300 bg-white px-4 py-2.5 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-50"
             >
-              Go to Bulk Upload Page
+              Upload History
             </button>
             <button
-              type="button"
               onClick={handleReset}
-              disabled={isUploading || uploadSuccess}
-              className="rounded-lg border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={isLoading}
+              className="flex-1 rounded-lg border border-red-300 bg-white px-4 py-2.5 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Reset
             </button>
           </div>
-
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                void handleUpload()
-              }}
-              disabled={
-                !selectedFile ||
-                !selectedUploadType ||
-                isUploading ||
-                uploadSuccess ||
-                fileIntentLoading ||
-                finalizeFileLoading
-              }
-              className="flex items-center gap-1 rounded-lg bg-[#004B23] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#003618] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {isUploading ? "Uploading..." : "Upload File"}
-            </button>
-          </div>
+          <button
+            onClick={handleUpload}
+            disabled={!selectedFile || !selectedUploadType || isLoading || uploadSuccess}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#004B23] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[#003618] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isUploading ? (
+              <>
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                <span>Uploading...</span>
+              </>
+            ) : (
+              <>
+                <Upload className="h-4 w-4" />
+                <span>Upload File</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
+
+      {/* Loading Overlay */}
+      <AnimatePresence>
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="rounded-xl bg-white p-6 shadow-xl"
+            >
+              <div className="flex flex-col items-center gap-4">
+                <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+                <div className="text-center">
+                  <p className="font-medium text-gray-900">
+                    {isValidatingFile ? "Validating file..." : "Processing..."}
+                  </p>
+                  <p className="text-sm text-gray-600">Please wait</p>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   )
 }

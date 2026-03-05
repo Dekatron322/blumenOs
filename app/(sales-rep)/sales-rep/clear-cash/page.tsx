@@ -4,12 +4,9 @@ import React, { useEffect, useState } from "react"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { agentClearCash, AgentClearCashRequest, fetchAgentInfo } from "lib/redux/agentSlice"
 import { ButtonModule } from "components/ui/Button/Button"
-import { FormInputModule } from "components/ui/Input/Input"
-import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { FormTextAreaModule } from "components/ui/Input/FormTextAreaModule"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { notify } from "components/ui/Notification/Notification"
-import { ArrowLeft } from "lucide-react"
 
 const ClearCashPage = () => {
   const dispatch = useAppDispatch()

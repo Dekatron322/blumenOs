@@ -21,6 +21,7 @@ import {
   fetchTokenGenerated,
   fetchTrend,
 } from "lib/redux/reportingSlice"
+import { clearPaymentHealth, fetchPaymentHealth } from "lib/redux/paymentSlice"
 
 import {
   BillingIcon,
@@ -119,6 +120,250 @@ const DropdownPopover = ({
 // Time filter types
 type TimeFilter = "lastYear" | "lastMonth" | "lastWeek" | "yesterday" | "day" | "week" | "month" | "year" | "all"
 
+// Payment Health Card Component
+const PaymentHealthCard = ({
+  paymentHealth,
+  loading,
+  error,
+  windowMinutes,
+  onWindowMinutesChange,
+  windowMinutesOptions,
+}: {
+  paymentHealth: any | null
+  loading: boolean
+  error: string | null
+  windowMinutes: number
+  onWindowMinutesChange: (value: number) => void
+  windowMinutesOptions: { value: number; label: string }[]
+}) => {
+  const getHealthColor = (severity: string) => {
+    switch (severity?.toLowerCase()) {
+      case "green":
+        return "text-green-600"
+      case "yellow":
+        return "text-yellow-600"
+      case "orange":
+        return "text-orange-600"
+      case "red":
+        return "text-red-600"
+      default:
+        return "text-gray-600"
+    }
+  }
+
+  const getHealthBg = (severity: string) => {
+    switch (severity?.toLowerCase()) {
+      case "green":
+        return "bg-green-50 border-green-200"
+      case "yellow":
+        return "bg-yellow-50 border-yellow-200"
+      case "orange":
+        return "bg-orange-50 border-orange-200"
+      case "red":
+        return "bg-red-50 border-red-200"
+      default:
+        return "bg-gray-50 border-gray-200"
+    }
+  }
+
+  const formatDateTime = (dateTimeStr: string | undefined) => {
+    if (!dateTimeStr) return "N/A"
+    try {
+      return new Date(dateTimeStr).toLocaleString()
+    } catch {
+      return "Invalid date"
+    }
+  }
+
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-gray-900">Payment Health</h3>
+        <DropdownPopover options={windowMinutesOptions} selectedValue={windowMinutes} onSelect={onWindowMinutesChange}>
+          <span className="text-sm text-gray-600">
+            {windowMinutesOptions.find((opt) => opt.value === windowMinutes)?.label || "Select range"}
+          </span>
+        </DropdownPopover>
+      </div>
+
+      {loading && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="animate-pulse">
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <div className="mb-3 h-4 w-3/4 rounded bg-gray-200"></div>
+              <div className="space-y-2">
+                <div className="h-3 w-1/2 rounded bg-gray-200"></div>
+                <div className="h-3 w-1/3 rounded bg-gray-200"></div>
+                <div className="h-3 w-2/3 rounded bg-gray-200"></div>
+              </div>
+            </div>
+          </div>
+          <div className="animate-pulse">
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <div className="mb-3 h-4 w-3/4 rounded bg-gray-200"></div>
+              <div className="space-y-2">
+                <div className="h-3 w-1/2 rounded bg-gray-200"></div>
+                <div className="h-3 w-1/3 rounded bg-gray-200"></div>
+                <div className="h-3 w-2/3 rounded bg-gray-200"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <div className="py-8 text-center">
+          <p className="text-sm text-red-500">Unable to load payment health data</p>
+          <p className="mt-1 text-xs text-gray-400">{error}</p>
+        </div>
+      )}
+
+      {!loading && !error && !paymentHealth && (
+        <div className="py-8 text-center">
+          <p className="text-sm text-gray-500">No payment health data available</p>
+        </div>
+      )}
+
+      {!loading && !error && paymentHealth && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {/* Prepaid Card */}
+            <div className={`rounded-lg border p-4 ${getHealthBg(paymentHealth.prepaid?.severity)}`}>
+              <div className="mb-3 flex items-center justify-between">
+                <h4 className="text-base font-semibold text-gray-900">
+                  {paymentHealth.prepaid?.category || "Prepaid Payments"}
+                </h4>
+                {paymentHealth.prepaid?.colorCode && (
+                  <div className="h-6 w-6 rounded-full" style={{ backgroundColor: paymentHealth.prepaid.colorCode }} />
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <div>
+                  <p className="mb-1 text-xs text-gray-500">Total Requests</p>
+                  <p className="text-lg font-bold text-gray-900">
+                    {paymentHealth.prepaid?.totalRequests?.toLocaleString() || "0"}
+                  </p>
+                </div>
+                <div>
+                  <p className="mb-1 text-xs text-gray-500">Failed Requests</p>
+                  <p className={`text-lg font-bold ${getHealthColor(paymentHealth.prepaid?.severity)}`}>
+                    {paymentHealth.prepaid?.failedRequests?.toLocaleString() || "0"}
+                  </p>
+                </div>
+                <div>
+                  <p className="mb-1 text-xs text-gray-500">Stalled Pending</p>
+                  <p className={`text-lg font-bold ${getHealthColor(paymentHealth.prepaid?.severity)}`}>
+                    {paymentHealth.prepaid?.stalledPendingRequests?.toLocaleString() || "0"}
+                  </p>
+                </div>
+                <div>
+                  <p className="mb-1 text-xs text-gray-500">Failure Rate</p>
+                  <p className={`text-lg font-bold ${getHealthColor(paymentHealth.prepaid?.severity)}`}>
+                    {paymentHealth.prepaid?.failureRatePercent?.toFixed(1) || "0"}%
+                  </p>
+                </div>
+              </div>
+              {paymentHealth.prepaid?.failedRequests > 0 && (
+                <div className="mt-3 border-t border-gray-200 pt-3">
+                  <p className="text-xs text-gray-500">
+                    Failed: {paymentHealth.prepaid.failedRequests.toLocaleString()} of{" "}
+                    {paymentHealth.prepaid.totalRequests.toLocaleString()} requests
+                  </p>
+                  {paymentHealth.prepaid.lastFailureAtUtc && (
+                    <p className="mt-1 text-xs text-gray-400">
+                      Last failure: {formatDateTime(paymentHealth.prepaid.lastFailureAtUtc)}
+                    </p>
+                  )}
+                </div>
+              )}
+              {paymentHealth.prepaid?.colorCode && (
+                <div className="mt-2 flex items-center gap-1">
+                  <div className="h-3 w-3 rounded-full" style={{ backgroundColor: paymentHealth.prepaid.colorCode }} />
+                  <span className="text-xs text-gray-500">Status indicator</span>
+                </div>
+              )}
+            </div>
+
+            {/* Postpaid Card */}
+            <div className={`rounded-lg border p-4 ${getHealthBg(paymentHealth.nonPrepaid?.severity)}`}>
+              <div className="mb-3 flex items-center justify-between">
+                <h4 className="text-base font-semibold text-gray-900">
+                  {paymentHealth.nonPrepaid?.category || "Postpaid Payments"}
+                </h4>
+                {paymentHealth.nonPrepaid?.colorCode && (
+                  <div
+                    className="h-6 w-6 rounded-full"
+                    style={{ backgroundColor: paymentHealth.nonPrepaid.colorCode }}
+                  />
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <div>
+                  <p className="mb-1 text-xs text-gray-500">Total Requests</p>
+                  <p className="text-lg font-bold text-gray-900">
+                    {paymentHealth.nonPrepaid?.totalRequests?.toLocaleString() || "0"}
+                  </p>
+                </div>
+                <div>
+                  <p className="mb-1 text-xs text-gray-500">Failed Requests</p>
+                  <p className={`text-lg font-bold ${getHealthColor(paymentHealth.nonPrepaid?.severity)}`}>
+                    {paymentHealth.nonPrepaid?.failedRequests?.toLocaleString() || "0"}
+                  </p>
+                </div>
+                <div>
+                  <p className="mb-1 text-xs text-gray-500">Stalled Pending</p>
+                  <p className={`text-lg font-bold ${getHealthColor(paymentHealth.nonPrepaid?.severity)}`}>
+                    {paymentHealth.nonPrepaid?.stalledPendingRequests?.toLocaleString() || "0"}
+                  </p>
+                </div>
+                <div>
+                  <p className="mb-1 text-xs text-gray-500">Failure Rate</p>
+                  <p className={`text-lg font-bold ${getHealthColor(paymentHealth.nonPrepaid?.severity)}`}>
+                    {paymentHealth.nonPrepaid?.failureRatePercent?.toFixed(1) || "0"}%
+                  </p>
+                </div>
+              </div>
+              {paymentHealth.nonPrepaid?.failedRequests > 0 && (
+                <div className="mt-3 border-t border-gray-200 pt-3">
+                  <p className="text-xs text-gray-500">
+                    Failed: {paymentHealth.nonPrepaid.failedRequests.toLocaleString()} of{" "}
+                    {paymentHealth.nonPrepaid.totalRequests.toLocaleString()} requests
+                  </p>
+                  {paymentHealth.nonPrepaid.lastFailureAtUtc && (
+                    <p className="mt-1 text-xs text-gray-400">
+                      Last failure: {formatDateTime(paymentHealth.nonPrepaid.lastFailureAtUtc)}
+                    </p>
+                  )}
+                </div>
+              )}
+              {paymentHealth.nonPrepaid?.colorCode && (
+                <div className="mt-2 flex items-center gap-1">
+                  <div
+                    className="h-3 w-3 rounded-full"
+                    style={{ backgroundColor: paymentHealth.nonPrepaid.colorCode }}
+                  />
+                  <span className="text-xs text-gray-500">Status indicator</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Period Information */}
+          <div className="border-t border-gray-200 pt-3">
+            <div className="flex flex-col gap-1 text-xs text-gray-400 sm:flex-row sm:items-center sm:justify-between">
+              <span>Window: Last {paymentHealth.windowMinutes || windowMinutes} minutes</span>
+              <div className="flex flex-col sm:flex-row sm:gap-4">
+                {paymentHealth.fromUtc && <span>From: {formatDateTime(paymentHealth.fromUtc)}</span>}
+                {paymentHealth.toUtc && <span>To: {formatDateTime(paymentHealth.toUtc)}</span>}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Dashboard() {
   const [selectedCurrencyId, setSelectedCurrencyId] = useState<number>(1)
   const [selectedCurrencySymbol, setSelectedCurrencySymbol] = useState<string>("₦")
@@ -131,6 +376,7 @@ export default function Dashboard() {
   const [customStartDate, setCustomStartDate] = useState<string>("")
   const [customEndDate, setCustomEndDate] = useState<string>("")
   const [isDateRangeOpen, setIsDateRangeOpen] = useState(false)
+  const [windowMinutes, setWindowMinutes] = useState<number>(60) // Default 60 minutes
   const router = useRouter()
   const dispatch = useAppDispatch()
 
@@ -182,6 +428,8 @@ export default function Dashboard() {
     disputesError,
   } = useAppSelector((state) => state.reporting)
 
+  const { paymentHealth, paymentHealthLoading, paymentHealthError } = useAppSelector((state) => state.payments)
+
   const activeCustomersData = customerSegmentsData?.segments?.map((segment) => ({
     name: segment.label,
     value: segment.count,
@@ -191,6 +439,22 @@ export default function Dashboard() {
   ]
 
   const COLORS = ["#004B23", "#ea5806", "#007200", "#38b000", "#4f46e5"]
+
+  // Window minutes options (30-minute intervals)
+  const windowMinutesOptions = [
+    { value: 30, label: "30 mins" },
+    { value: 60, label: "1 hour" },
+    { value: 90, label: "1.5 hours" },
+    { value: 120, label: "2 hours" },
+    { value: 150, label: "2.5 hours" },
+    { value: 180, label: "3 hours" },
+    { value: 240, label: "4 hours" },
+    { value: 300, label: "5 hours" },
+    { value: 360, label: "6 hours" },
+    { value: 480, label: "8 hours" },
+    { value: 720, label: "12 hours" },
+    { value: 1440, label: "24 hours" },
+  ]
 
   // Mock currencies data
   const currenciesData = {
@@ -312,11 +576,24 @@ export default function Dashboard() {
 
     dispatch(fetchOutstandingArrears())
     dispatch(fetchDisputes())
-  }, [dispatch, timeFilter, customStartDate, customEndDate])
+    dispatch(fetchPaymentHealth({ windowMinutes }))
+  }, [dispatch, timeFilter, customStartDate, customEndDate, windowMinutes])
 
   useEffect(() => {
     refreshDashboardData()
   }, [dispatch, timeFilter, refreshDashboardData])
+
+  // Fetch payment health when window minutes changes
+  useEffect(() => {
+    dispatch(fetchPaymentHealth({ windowMinutes }))
+  }, [dispatch, windowMinutes])
+
+  // Cleanup payment health on unmount
+  useEffect(() => {
+    return () => {
+      dispatch(clearPaymentHealth())
+    }
+  }, [dispatch])
 
   // Short polling effect
   useEffect(() => {
@@ -561,7 +838,7 @@ export default function Dashboard() {
 
             <div className="mx-auto w-full px-3 py-8 2xl:container sm:px-4 md:px-6 2xl:px-16">
               <div className="mb-6 flex w-full flex-col gap-4">
-                <div className="flex w-full items-start justify-between gap-4 xl:flex-col">
+                <div className="flex w-full flex-col items-start justify-between gap-4">
                   <div className="flex w-full items-center justify-between gap-4">
                     <div>
                       <h1 className="text-lg font-bold text-gray-900 sm:text-xl md:text-2xl lg:text-3xl">
@@ -619,6 +896,17 @@ export default function Dashboard() {
                       )}
                     </div>
                   </div>
+                  <div className="mb-6 w-full">
+                    <PaymentHealthCard
+                      paymentHealth={paymentHealth}
+                      loading={paymentHealthLoading}
+                      error={paymentHealthError}
+                      windowMinutes={windowMinutes}
+                      onWindowMinutesChange={setWindowMinutes}
+                      windowMinutesOptions={windowMinutesOptions}
+                    />
+                  </div>
+
                   <div className="hidden rounded-lg p-3 sm:bg-white sm:p-2 sm:shadow-sm xl:flex">
                     <div className="flex flex-row items-center gap-4 max-sm:justify-between sm:gap-4">
                       <div className="flex flex-row items-center gap-2 max-sm:justify-between sm:gap-3">
@@ -1414,6 +1702,8 @@ export default function Dashboard() {
                       )}
                     </Card>
                   </div>
+
+                  {/* Payment Health Section */}
 
                   {/* Outstanding Arrears Section */}
                   <div className="mb-6">

@@ -116,11 +116,17 @@ export const allLinks: LinkItem[] = [
         requiredActions: ["R"],
       },
       {
-        name: "Generate Postpaid Bills",
-        href: "/billing/jobs",
+        name: "Generate Bills",
+        href: "/billing/generate",
         privilegeKey: "billing-postpaid",
         requiredActions: ["W"],
       },
+      // {
+      //   name: "Generate Postpaid Bills",
+      //   href: "/billing/jobs",
+      //   privilegeKey: "billing-postpaid",
+      //   requiredActions: ["W"],
+      // },
       { name: "Bulk Uploads", href: "/billing/bulk-upload", privilegeKey: "billing-postpaid", requiredActions: ["R"] },
       { name: "Print Jobs", href: "/billing/print-jobs", privilegeKey: "billing-postpaid", requiredActions: ["R"] },
       { name: "Adjustments", href: "/billing/adjustments", privilegeKey: "billing-postpaid", requiredActions: ["R"] },
@@ -245,6 +251,12 @@ export const allLinks: LinkItem[] = [
       {
         name: "Payment Anomalies",
         href: "/payment/payment-anomalies",
+        privilegeKey: "payments",
+        requiredActions: ["R"],
+      },
+      {
+        name: "Edit Payment",
+        href: "/payment/edit-payment",
         privilegeKey: "payments",
         requiredActions: ["R"],
       },

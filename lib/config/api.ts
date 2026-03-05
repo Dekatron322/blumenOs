@@ -263,6 +263,7 @@ export const API_ENDPOINTS = {
     METER_CHANGE_STATUS: "/meters/bulk/status-change",
     METER_CHANGE_OUT: "/meters/bulk/changeout",
     ACCOUNT_TO_BE_BILLED: "/billing/postpaid/bills/bulk/manual-energy",
+    JOB_TYPE_TEMPLATE: "/system/csv-jobs/template/csv",
   },
 
   METER_CAPTURE: {
@@ -317,6 +318,7 @@ export const API_ENDPOINTS = {
     GET: "/billing/periods",
     CREATE_CURRENT_BILLING_PERIOD: "/billing/periods",
     CREATE_PAST_BILLING_PERIOD: "/billing/periods/past",
+    BILLING_SCHEDULE: "/billing/schedules",
   },
 
   METER_READINGS: {
@@ -387,6 +389,9 @@ export const API_ENDPOINTS = {
     RESOLVE_ANOMALY: "/payments/anomalies/{id}/resolve",
     EXPORT: "/payments/export",
     CANCEL_BY_REFERENCE: "/payments/reference/{reference}/cancel",
+    EDIT_HISTORY: "/payments/{id}/edit-amount",
+    LOOKUP_BY_REFERENCE: "/payments/reference/{reference}",
+    PAYMENT_HEALTH: "/payments/health",
   },
 
   REFUND: {

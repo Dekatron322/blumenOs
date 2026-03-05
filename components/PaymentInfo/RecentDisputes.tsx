@@ -522,14 +522,14 @@ const PerformingAgents = () => {
                 >
                   Agents
                 </button>
-                <button
+                {/* <button
                   onClick={() => setAgentType("vendors")}
                   className={`rounded px-3 py-1.5 text-xs font-medium md:text-sm ${
                     agentType === "vendors" ? "bg-blue-600 text-white" : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
                   Vendors
-                </button>
+                </button> */}
               </div>
 
               <div className="flex-1 md:max-w-md">

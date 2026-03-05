@@ -3,6 +3,56 @@ import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit"
 import { api } from "./authSlice"
 import { API_ENDPOINTS, buildApiUrl } from "lib/config/api"
 
+// Interfaces for Billing Schedule
+export interface Stage {
+  stage: number
+  state: number
+  total: number
+  processed: number
+  succeeded: number
+  failed: number
+  pending: number
+  requestedAtUtc: string
+  startedAtUtc: string
+  completedAtUtc: string
+  lastError: string
+}
+
+export interface LatestRunProgress {
+  runId: number
+  runTitle: string
+  billingPeriodId: number
+  period: string
+  runStatus: number
+  currentStep: number
+  startedAtUtc: string
+  completedAtUtc: string
+  totalStages: number
+  processedStages: number
+  succeededStages: number
+  failedStages: number
+  runningStages: number
+  pendingStages: number
+  stages: Stage[]
+}
+
+export interface BillingSchedule {
+  id: number
+  name: string
+  scheduleType: number
+  isActive: boolean
+  description: string
+  createdAt: string
+  lastUpdated: string
+  latestRunProgress?: LatestRunProgress
+}
+
+export interface BillingSchedulesResponse {
+  isSuccess: boolean
+  message: string
+  data: BillingSchedule[]
+}
+
 // Interfaces for Billing Period
 export interface LatestGeneratedBillHistory {
   id: number
@@ -94,6 +144,12 @@ interface BillingPeriodState {
   createPastBillingPeriodLoading: boolean
   createPastBillingPeriodError: string | null
   createPastBillingPeriodSuccess: boolean
+
+  // Billing schedules state
+  billingSchedules: BillingSchedule[]
+  billingSchedulesLoading: boolean
+  billingSchedulesError: string | null
+  billingSchedulesSuccess: boolean
 }
 
 // Initial state
@@ -119,6 +175,10 @@ const initialState: BillingPeriodState = {
   createPastBillingPeriodLoading: false,
   createPastBillingPeriodError: null,
   createPastBillingPeriodSuccess: false,
+  billingSchedules: [],
+  billingSchedulesLoading: false,
+  billingSchedulesError: null,
+  billingSchedulesSuccess: false,
 }
 
 // Async thunk for fetching billing periods
@@ -214,6 +274,34 @@ export const createPastBillingPeriod = createAsyncThunk(
   }
 )
 
+// Async thunk for fetching billing schedules
+export const fetchBillingSchedules = createAsyncThunk(
+  "billingPeriods/fetchBillingSchedules",
+  async (_, { rejectWithValue }) => {
+    try {
+      console.log("Fetching billing schedules")
+
+      const response = await api.get<BillingSchedulesResponse>(
+        buildApiUrl(API_ENDPOINTS.BILLING_PERIODS.BILLING_SCHEDULE)
+      )
+
+      console.log("Billing schedules API response:", response.data)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch billing schedules")
+      }
+
+      return response.data
+    } catch (error: any) {
+      console.error("Billing schedules API error:", error)
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch billing schedules")
+      }
+      return rejectWithValue(error.message || "Network error during billing schedules fetch")
+    }
+  }
+)
+
 // Billing periods slice
 const billingPeriodsSlice = createSlice({
   name: "billingPeriods",
@@ -264,6 +352,14 @@ const billingPeriodsSlice = createSlice({
       state.createPastBillingPeriodSuccess = false
     },
 
+    // Clear billing schedules state
+    clearBillingSchedulesState: (state) => {
+      state.billingSchedulesLoading = false
+      state.billingSchedulesError = null
+      state.billingSchedulesSuccess = false
+      state.billingSchedules = []
+    },
+
     // Reset billing periods state
     resetBillingPeriodsState: (state) => {
       state.loading = false
@@ -287,6 +383,10 @@ const billingPeriodsSlice = createSlice({
       state.createPastBillingPeriodLoading = false
       state.createPastBillingPeriodError = null
       state.createPastBillingPeriodSuccess = false
+      state.billingSchedules = []
+      state.billingSchedulesLoading = false
+      state.billingSchedulesError = null
+      state.billingSchedulesSuccess = false
     },
   },
   extraReducers: (builder) => {
@@ -360,6 +460,24 @@ const billingPeriodsSlice = createSlice({
         state.createPastBillingPeriodError = (action.payload as string) || "Failed to create past billing period"
         state.createPastBillingPeriodSuccess = false
       })
+      // Fetch billing schedules cases
+      .addCase(fetchBillingSchedules.pending, (state) => {
+        state.billingSchedulesLoading = true
+        state.billingSchedulesError = null
+        state.billingSchedulesSuccess = false
+      })
+      .addCase(fetchBillingSchedules.fulfilled, (state, action: PayloadAction<BillingSchedulesResponse>) => {
+        state.billingSchedulesLoading = false
+        state.billingSchedulesSuccess = true
+        state.billingSchedulesError = null
+        state.billingSchedules = action.payload.data
+      })
+      .addCase(fetchBillingSchedules.rejected, (state, action) => {
+        state.billingSchedulesLoading = false
+        state.billingSchedulesError = (action.payload as string) || "Failed to fetch billing schedules"
+        state.billingSchedulesSuccess = false
+        state.billingSchedules = []
+      })
   },
 })
 
@@ -369,6 +487,7 @@ export const {
   clearError,
   clearCreateCurrentBillingPeriodState,
   clearCreatePastBillingPeriodState,
+  clearBillingSchedulesState,
   resetBillingPeriodsState,
 } = billingPeriodsSlice.actions
 

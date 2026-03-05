@@ -685,6 +685,17 @@ export interface DebtRecoveryNoEnergyBulkUploadResponse {
   data: BulkUploadJob
 }
 
+// Vending Payment Migration Bulk Upload interfaces
+export interface VendingPaymentMigrationBulkUploadRequest {
+  fileId: number
+}
+
+export interface VendingPaymentMigrationBulkUploadResponse {
+  isSuccess: boolean
+  message: string
+  data: BulkUploadJob
+}
+
 export interface BulkUploadPreview {
   fileId: number
   fileName: string
@@ -743,6 +754,13 @@ export interface CsvJob {
   lastError: string
   errorBlobKey: string
   payloadJson: string
+  requestedByUser?: {
+    id: number
+    fullName: string
+    email: string
+    phoneNumber: string
+    accountId: string
+  }
 }
 
 export interface CsvJobsParams {
@@ -833,6 +851,17 @@ export interface DownloadTestTokenResponse {
   fileName?: string
   isSuccess: boolean
   message?: string
+}
+
+// Job Type Template interfaces
+export interface JobTypeTemplateRequest {
+  jobType: number
+}
+
+export interface JobTypeTemplateResponse {
+  isSuccess: boolean
+  message: string
+  data: string
 }
 
 export interface BulkUploadData {
@@ -1157,11 +1186,23 @@ interface FileManagementState {
   downloadTestTokenSuccess: boolean
   downloadTestTokenResponse: DownloadTestTokenResponse | null
 
+  // Job Type Template state
+  jobTypeTemplateLoading: boolean
+  jobTypeTemplateError: string | null
+  jobTypeTemplateSuccess: boolean
+  jobTypeTemplateResponse: JobTypeTemplateResponse | null
+
   // Debt Recovery No Energy Bulk Upload state
   debtRecoveryNoEnergyBulkUploadLoading: boolean
   debtRecoveryNoEnergyBulkUploadError: string | null
   debtRecoveryNoEnergyBulkUploadSuccess: boolean
   debtRecoveryNoEnergyBulkUploadResponse: DebtRecoveryNoEnergyBulkUploadResponse | null
+
+  // Vending Payment Migration Bulk Upload state
+  vendingPaymentMigrationBulkUploadLoading: boolean
+  vendingPaymentMigrationBulkUploadError: string | null
+  vendingPaymentMigrationBulkUploadSuccess: boolean
+  vendingPaymentMigrationBulkUploadResponse: VendingPaymentMigrationBulkUploadResponse | null
 }
 
 // Initial state
@@ -1417,11 +1458,23 @@ const initialState: FileManagementState = {
   downloadTestTokenSuccess: false,
   downloadTestTokenResponse: null,
 
+  // Job Type Template state
+  jobTypeTemplateLoading: false,
+  jobTypeTemplateError: null,
+  jobTypeTemplateSuccess: false,
+  jobTypeTemplateResponse: null,
+
   // Debt Recovery No Energy Bulk Upload state
   debtRecoveryNoEnergyBulkUploadLoading: false,
   debtRecoveryNoEnergyBulkUploadError: null,
   debtRecoveryNoEnergyBulkUploadSuccess: false,
   debtRecoveryNoEnergyBulkUploadResponse: null,
+
+  // Vending Payment Migration Bulk Upload state
+  vendingPaymentMigrationBulkUploadLoading: false,
+  vendingPaymentMigrationBulkUploadError: null,
+  vendingPaymentMigrationBulkUploadSuccess: false,
+  vendingPaymentMigrationBulkUploadResponse: null,
 }
 
 // Async thunks
@@ -1980,6 +2033,21 @@ export const processDebtRecoveryNoEnergyBulkUpload = createAsyncThunk(
   }
 )
 
+export const processVendingPaymentMigrationImport = createAsyncThunk(
+  "fileManagement/processVendingPaymentMigrationImport",
+  async (request: VendingPaymentMigrationBulkUploadRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<VendingPaymentMigrationBulkUploadResponse>(
+        "/payments/bulk/vending-migration",
+        request
+      )
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to process vending payment migration import")
+    }
+  }
+)
+
 // CSV Jobs async thunk
 export const fetchCsvJobs = createAsyncThunk(
   "fileManagement/fetchCsvJobs",
@@ -2150,7 +2218,7 @@ export const downloadTestToken = createAsyncThunk(
           let fileName = `test-token-job-${request.id}.csv`
 
           if (contentDisposition) {
-            const fileNameMatch = contentDisposition.match(/filename="?([^";]+)"?/)
+            const fileNameMatch = contentDisposition.match(/filename="?([^;"]+)"?/)
             if (fileNameMatch && fileNameMatch[1]) {
               fileName = fileNameMatch[1]
             }
@@ -2176,6 +2244,56 @@ export const downloadTestToken = createAsyncThunk(
     } catch (error: any) {
       // Handle network errors or other exceptions
       return rejectWithValue(error.response?.data?.message || error.message || "Failed to download test token CSV")
+    }
+  }
+)
+
+// Job Type Template async thunk
+export const fetchJobTypeTemplate = createAsyncThunk(
+  "fileManagement/fetchJobTypeTemplate",
+  async (request: JobTypeTemplateRequest, { rejectWithValue }) => {
+    try {
+      const queryParams = new URLSearchParams()
+      queryParams.append("jobType", request.jobType.toString())
+
+      const url = `${buildApiUrl(API_ENDPOINTS.FILE_MANAGEMENT.JOB_TYPE_TEMPLATE)}?${queryParams.toString()}`
+
+      // Make the request and check the response type
+      const response = await api.get(url, {
+        headers: {
+          Accept: "text/csv,application/json",
+        },
+      })
+
+      // Check if the response is CSV data (direct string) or JSON
+      const contentType = response.headers["content-type"]
+
+      if (contentType && contentType.includes("text/csv")) {
+        // Direct CSV response
+        return {
+          isSuccess: true,
+          message: "Template downloaded successfully",
+          data: response.data,
+        }
+      } else {
+        // JSON response
+        return response.data
+      }
+    } catch (error: any) {
+      // Check if the error response contains CSV data
+      if (
+        error.response?.data &&
+        typeof error.response.data === "string" &&
+        error.response.data.includes("CustomerName,TariffCode")
+      ) {
+        // Return the CSV data as a successful response
+        return {
+          isSuccess: true,
+          message: "Template downloaded successfully",
+          data: error.response.data,
+        }
+      }
+      return rejectWithValue(error.response?.data?.message || "Failed to fetch job type template")
     }
   }
 )
@@ -2401,6 +2519,13 @@ const fileManagementSlice = createSlice({
       state.downloadTestTokenSuccess = false
       state.downloadTestTokenResponse = null
     },
+    // Reset Job Type Template state
+    resetJobTypeTemplateState: (state) => {
+      state.jobTypeTemplateLoading = false
+      state.jobTypeTemplateError = null
+      state.jobTypeTemplateSuccess = false
+      state.jobTypeTemplateResponse = null
+    },
     // Reset Clear Tamper Bulk Upload state
     resetClearTamperBulkUploadState: (state) => {
       state.clearTamperBulkUploadLoading = false
@@ -2421,6 +2546,13 @@ const fileManagementSlice = createSlice({
       state.debtRecoveryNoEnergyBulkUploadError = null
       state.debtRecoveryNoEnergyBulkUploadSuccess = false
       state.debtRecoveryNoEnergyBulkUploadResponse = null
+    },
+    // Reset Vending Payment Migration Bulk Upload state
+    resetVendingPaymentMigrationBulkUploadState: (state) => {
+      state.vendingPaymentMigrationBulkUploadLoading = false
+      state.vendingPaymentMigrationBulkUploadError = null
+      state.vendingPaymentMigrationBulkUploadSuccess = false
+      state.vendingPaymentMigrationBulkUploadResponse = null
     },
     // Reset all file management state
     resetFileManagementState: (state) => {
@@ -3177,6 +3309,23 @@ const fileManagementSlice = createSlice({
         state.debtRecoveryNoEnergyBulkUploadSuccess = false
       })
 
+      // Vending Payment Migration Bulk Upload reducers
+      .addCase(processVendingPaymentMigrationImport.pending, (state) => {
+        state.vendingPaymentMigrationBulkUploadLoading = true
+        state.vendingPaymentMigrationBulkUploadError = null
+        state.vendingPaymentMigrationBulkUploadSuccess = false
+      })
+      .addCase(processVendingPaymentMigrationImport.fulfilled, (state, action) => {
+        state.vendingPaymentMigrationBulkUploadLoading = false
+        state.vendingPaymentMigrationBulkUploadSuccess = true
+        state.vendingPaymentMigrationBulkUploadResponse = action.payload
+      })
+      .addCase(processVendingPaymentMigrationImport.rejected, (state, action) => {
+        state.vendingPaymentMigrationBulkUploadLoading = false
+        state.vendingPaymentMigrationBulkUploadError = action.payload as string
+        state.vendingPaymentMigrationBulkUploadSuccess = false
+      })
+
       // CSV Jobs reducers
       .addCase(fetchCsvJobs.pending, (state) => {
         state.csvJobsLoading = true
@@ -3279,6 +3428,23 @@ const fileManagementSlice = createSlice({
         state.downloadTestTokenError = action.payload as string
         state.downloadTestTokenSuccess = false
       })
+
+      // Job Type Template reducers
+      .addCase(fetchJobTypeTemplate.pending, (state) => {
+        state.jobTypeTemplateLoading = true
+        state.jobTypeTemplateError = null
+        state.jobTypeTemplateSuccess = false
+      })
+      .addCase(fetchJobTypeTemplate.fulfilled, (state, action) => {
+        state.jobTypeTemplateLoading = false
+        state.jobTypeTemplateSuccess = true
+        state.jobTypeTemplateResponse = action.payload
+      })
+      .addCase(fetchJobTypeTemplate.rejected, (state, action) => {
+        state.jobTypeTemplateLoading = false
+        state.jobTypeTemplateError = action.payload as string
+        state.jobTypeTemplateSuccess = false
+      })
   },
 })
 
@@ -3314,6 +3480,7 @@ export const {
   resetDownloadCsvState,
   resetDownloadClearTamperState,
   resetDownloadTestTokenState,
+  resetJobTypeTemplateState,
   resetClearTamperBulkUploadState,
   resetTestTokenBulkUploadState,
 } = fileManagementSlice.actions
