@@ -55,101 +55,94 @@ interface UploadTypeOption {
   sampleData: string[]
 }
 
-// Hook to get latest jobs for all upload types
-const useLatestJobs = () => {
+const JOBS_POLL_INTERVAL_MS = 30000
+
+// Hook to get latest job for a single upload type
+const useLatestJob = (jobType: number | null, enabled = true) => {
   const dispatch = useAppDispatch()
-  const { csvJobs, csvJobsLoading } = useAppSelector((state: { fileManagement: any }) => state.fileManagement)
-  const [latestJobs, setLatestJobs] = useState<Record<number, CsvJob | null>>({})
+  const [latestJob, setLatestJob] = useState<CsvJob | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const requestInFlightRef = useRef(false)
+  const isMountedRef = useRef(true)
 
-  const fetchLatestJobs = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      const jobTypes = [13, 26, 27] // All assets management job types
-      const jobsData: Record<number, CsvJob | null> = {}
+  const clearPollingInterval = useCallback(() => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current)
+      pollingIntervalRef.current = null
+    }
+  }, [])
 
-      // Fetch latest job for each type
-      for (const jobType of jobTypes) {
-        try {
-          const result = await dispatch(
-            fetchCsvJobs({
-              PageNumber: 1,
-              PageSize: 1,
-              JobType: jobType,
-              Status: undefined,
-            })
-          ).unwrap()
-
-          if (result.isSuccess && result.data.length > 0) {
-            jobsData[jobType] = result.data[0] ?? null
-          } else {
-            jobsData[jobType] = null
-          }
-        } catch (error) {
-          console.error(`Failed to fetch latest job for type ${jobType}:`, error)
-          jobsData[jobType] = null
-        }
+  const fetchLatestJob = useCallback(
+    async (silent = false) => {
+      if (!enabled || jobType === null || requestInFlightRef.current) {
+        return
       }
 
-      setLatestJobs(jobsData)
-    } catch (error) {
-      console.error("Failed to fetch latest jobs:", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [dispatch])
+      requestInFlightRef.current = true
+      if (isMountedRef.current && !silent) {
+        setIsLoading(true)
+      }
 
-  useEffect(() => {
-    fetchLatestJobs()
-  }, [fetchLatestJobs])
+      try {
+        const result = await dispatch(
+          fetchCsvJobs({
+            PageNumber: 1,
+            PageSize: 1,
+            JobType: jobType,
+            Status: undefined,
+          })
+        ).unwrap()
 
-  // Poll for updates every 5 seconds if there are running jobs
-  useEffect(() => {
-    const hasRunningJobs = Object.values(latestJobs).some((job) => job && (job.status === 1 || job.status === 2))
-
-    if (hasRunningJobs) {
-      // Only fetch running job types to reduce API calls
-      const runningJobTypes = Object.entries(latestJobs)
-        .filter(([_, job]) => job && (job.status === 1 || job.status === 2))
-        .map(([jobType, _]) => parseInt(jobType))
-
-      const interval = setInterval(async () => {
-        try {
-          const jobsData: Record<number, CsvJob | null> = { ...latestJobs }
-
-          // Only fetch updates for running jobs
-          for (const jobType of runningJobTypes) {
-            try {
-              const result = await dispatch(
-                fetchCsvJobs({
-                  PageNumber: 1,
-                  PageSize: 1,
-                  JobType: jobType,
-                  Status: undefined,
-                })
-              ).unwrap()
-
-              if (result.isSuccess && result.data.length > 0) {
-                jobsData[jobType] = result.data[0] ?? null
-              } else {
-                jobsData[jobType] = null
-              }
-            } catch (error) {
-              console.error(`Failed to fetch running job update for type ${jobType}:`, error)
-            }
+        if (isMountedRef.current) {
+          if (result.isSuccess && Array.isArray(result.data) && result.data.length > 0) {
+            setLatestJob(result.data[0] ?? null)
+          } else {
+            setLatestJob(null)
           }
-
-          setLatestJobs(jobsData)
-        } catch (error) {
-          console.error("Failed to fetch running job updates:", error)
         }
-      }, 5000)
+      } catch (error) {
+        console.error(`Failed to fetch latest job for type ${jobType}:`, error)
+      } finally {
+        requestInFlightRef.current = false
+        if (isMountedRef.current) {
+          setIsLoading(false)
+        }
+      }
+    },
+    [dispatch, enabled, jobType]
+  )
 
-      return () => clearInterval(interval)
+  useEffect(() => {
+    if (!enabled || jobType === null) {
+      clearPollingInterval()
+      if (isMountedRef.current) {
+        setIsLoading(false)
+      }
+      return
     }
-  }, [latestJobs, dispatch])
 
-  return { latestJobs, isLoading, refetch: fetchLatestJobs }
+    void fetchLatestJob(false)
+    clearPollingInterval()
+    pollingIntervalRef.current = setInterval(() => {
+      void fetchLatestJob(true)
+    }, JOBS_POLL_INTERVAL_MS)
+
+    return () => {
+      clearPollingInterval()
+    }
+  }, [enabled, jobType, fetchLatestJob, clearPollingInterval])
+
+  useEffect(() => {
+    isMountedRef.current = true
+
+    return () => {
+      isMountedRef.current = false
+      clearPollingInterval()
+    }
+  }, [clearPollingInterval])
+
+  return { latestJob, isLoading, refetch: fetchLatestJob }
 }
 
 // Hook to fetch CSV jobs for a specific job type
@@ -205,7 +198,7 @@ const useJobTypeUploads = (jobType: number | null) => {
     clearPollingTimeout()
     pollingTimeoutRef.current = setTimeout(() => {
       fetchJobs()
-    }, 30000)
+    }, JOBS_POLL_INTERVAL_MS)
 
     return () => {
       clearPollingTimeout()
@@ -410,6 +403,36 @@ const JobStatusIndicator = ({ job, isLoading }: { job: CsvJob | null; isLoading:
         {job.requestedByUser?.fullName ? <div className="max-w-[60%] truncate">By {job.requestedByUser.fullName}</div> : null}
       </div>
     </div>
+  )
+}
+
+const UploadTypeCard = ({
+  type,
+  enabled,
+  onSelect,
+}: {
+  type: UploadTypeOption
+  enabled: boolean
+  onSelect: (uploadType: number) => void
+}) => {
+  const { latestJob, isLoading } = useLatestJob(type.value, enabled)
+
+  return (
+    <motion.button
+      whileHover={{ scale: 1.01 }}
+      whileTap={{ scale: 0.99 }}
+      onClick={() => {
+        onSelect(type.value)
+      }}
+      className="group relative rounded-lg border border-gray-200 bg-white p-3 text-left transition-all hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+    >
+      <h3 className="mb-1.5 text-base font-semibold text-gray-900 group-hover:text-blue-600">{type.name}</h3>
+      <p className="mb-3 line-clamp-2 text-xs leading-5 text-gray-600">{type.description}</p>
+
+      <div className="rounded-md border border-gray-100 bg-gray-50 p-2.5">
+        <JobStatusIndicator job={latestJob} isLoading={isLoading} />
+      </div>
+    </motion.button>
   )
 }
 
@@ -720,9 +743,6 @@ const FileManagementPage = () => {
     feederBandChangeBulkUploadLoading,
     feederBandChangeBulkUploadError,
   } = useAppSelector((state: { fileManagement: any }) => state.fileManagement)
-
-  // Get latest jobs for all upload types
-  const { latestJobs, isLoading: jobsLoading } = useLatestJobs()
 
   // Upload type options with enhanced metadata
   const uploadTypeOptions: UploadTypeOption[] = [
@@ -1445,33 +1465,19 @@ const FileManagementPage = () => {
                   </div>
 
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-                    {uploadTypeOptions.map((type) => {
-                      const latestJob = latestJobs[type.value] || null
-                      const isLoading = jobsLoading
-
-                      return (
-                        <motion.button
-                          key={type.value}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => {
-                            console.log("Upload type selected:", type.value)
-                            setSelectedUploadType(type.value)
-                            setHasCompletedUploadTypeSelection(true)
-                            console.log("selectedUploadType set to:", type.value)
-                          }}
-                          className="group relative rounded-lg border border-gray-200 bg-white p-3 text-left transition-all hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                        >
-                          <h3 className="mb-1.5 text-base font-semibold text-gray-900 group-hover:text-blue-600">{type.name}</h3>
-                          <p className="mb-3 line-clamp-2 text-xs leading-5 text-gray-600">{type.description}</p>
-
-                          {/* Job Status Section */}
-                          <div className="rounded-md border border-gray-100 bg-gray-50 p-2.5">
-                            <JobStatusIndicator job={latestJob} isLoading={isLoading} />
-                          </div>
-                        </motion.button>
-                      )
-                    })}
+                    {uploadTypeOptions.map((type) => (
+                      <UploadTypeCard
+                        key={type.value}
+                        type={type}
+                        enabled={!hasCompletedUploadTypeSelection}
+                        onSelect={(uploadType) => {
+                          console.log("Upload type selected:", uploadType)
+                          setSelectedUploadType(uploadType)
+                          setHasCompletedUploadTypeSelection(true)
+                          console.log("selectedUploadType set to:", uploadType)
+                        }}
+                      />
+                    ))}
                   </div>
                 </div>
               )}
