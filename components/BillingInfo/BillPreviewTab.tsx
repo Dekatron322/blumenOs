@@ -352,7 +352,7 @@ const BillPreviewTab: React.FC<BillPreviewTabProps> = ({ scheduleId }) => {
                   })),
                 ]}
                 disabled={billingPeriodsLoading}
-                className="z-[1000] w-full"
+                className=" w-full"
                 loading={billingPeriodsLoading}
               />
             </div>
@@ -461,18 +461,30 @@ const BillPreviewTab: React.FC<BillPreviewTabProps> = ({ scheduleId }) => {
           </div>
         </div>
       )}
-
-      {/* Bill Preview Template */}
+      {/* Bill Preview Modal */}
       {billPreviewSuccess && billPreview && !billPreviewLoading && showPreview && mockBill && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-          {/* Navigation Header */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
-            <div className="flex items-center justify-between">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[999] flex items-center justify-center bg-black/30 backdrop-blur-sm"
+          onClick={() => setShowPreview(false)}
+        >
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 20, opacity: 0 }}
+            transition={{ type: "spring", damping: 25 }}
+            className="relative flex w-[80vw] max-w-4xl flex-col overflow-hidden rounded-lg bg-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex w-full items-center justify-between border-b bg-white p-6">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">Bill Preview</h3>
-                <p className="text-sm text-gray-500">
+                {/* <p className="text-sm text-gray-500">
                   Run ID: {billPreview.runId} | Bill ID: {billPreview.billId}
-                </p>
+                </p> */}
               </div>
 
               <div className="flex items-center gap-2">
@@ -500,308 +512,305 @@ const BillPreviewTab: React.FC<BillPreviewTabProps> = ({ scheduleId }) => {
                   Next
                 </ButtonModule>
 
-                {/* <ButtonModule
-                  variant="outline"
-                  size="sm"
-                  onClick={handlePrint}
-                  className="inline-flex items-center gap-1"
+                <button
+                  onClick={() => setShowPreview(false)}
+                  className="flex size-8 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600"
                 >
-                  <Printer className="size-4" />
-                  Print
-                </ButtonModule>
-
-                <ButtonModule
-                  variant="outline"
-                  size="sm"
-                  onClick={handleDownload}
-                  className="inline-flex items-center gap-1"
-                >
-                  <Download className="size-4" />
-                  Download PDF
-                </ButtonModule> */}
+                  <X className="size-4" />
+                </button>
               </div>
             </div>
-          </div>
 
-          {/* Bill Template - Exact copy from PostpaidBillDetailsModal */}
-          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-            <style>{`
-              @media print {
-                body * {
-                  visibility: hidden;
-                }
-                .print-area, .print-area * {
-                  visibility: visible;
-                }
-                .print-area {
-                  position: absolute;
-                  left: 0;
-                  top: 0;
-                  width: 100%;
-                }
-                .print-no-border {
-                  border: none !important;
-                }
-                .print-no-border-r {
-                  border-right: none !important;
-                }
-                .print-no-border-t {
-                  border-top: none !important;
-                }
-                .print-no-border-b {
-                  border-bottom: none !important;
-                }
-                .print-no-border-l {
-                  border-left: none !important;
-                }
-                .print-hide-label {
-                  display: none !important;
-                }
-                .print-show-value {
-                  display: block !important;
-                }
-              }
-            `}</style>
+            {/* Modal Content */}
+            <div className="relative flex-1 overflow-y-auto">
+              <div className="">
+                {/* Bill Template - Exact copy from PostpaidBillDetailsModal */}
+                <div className="overflow-hidden rounded-lg">
+                  <style>{`
+                    @media print {
+                      body * {
+                        visibility: hidden;
+                      }
+                      .print-area, .print-area * {
+                        visibility: visible;
+                      }
+                      .print-area {
+                        position: absolute;
+                        left: 0;
+                        top: 0;
+                        width: 100%;
+                      }
+                      .print-no-border {
+                        border: none !important;
+                      }
+                      .print-no-border-r {
+                        border-right: none !important;
+                      }
+                      .print-no-border-t {
+                        border-top: none !important;
+                      }
+                      .print-no-border-b {
+                        border-bottom: none !important;
+                      }
+                      .print-no-border-l {
+                        border-left: none !important;
+                      }
+                      .print-hide-label {
+                        display: none !important;
+                      }
+                      .print-show-value {
+                        display: block !important;
+                      }
+                    }
+                  `}</style>
 
-            <div className="print-area w-full bg-white">
-              <div className="relative p-8" ref={invoiceRef}>
-                {/* Header - A5 Optimized */}
-                <div className="a5-header mb-6 flex items-center justify-between">
-                  <div className="w-24 text-center">
-                    <img src="/kad.svg" alt="KAD-ELEC Logo" className="h-10" />
-                  </div>
+                  <div className="print-area w-full bg-white">
+                    <div className="relative p-8" ref={invoiceRef}>
+                      {/* Header - A5 Optimized */}
+                      <div className="a5-header mb-6 flex items-center justify-between">
+                        <div className="w-24 text-center">
+                          <img src="/kad.svg" alt="KAD-ELEC Logo" className="h-10" />
+                        </div>
 
-                  <div className="flex flex-1 justify-center">
-                    <canvas ref={barcodeRef} className="h-12 w-40" />
-                  </div>
+                        <div className="flex flex-1 justify-center">
+                          <canvas ref={barcodeRef} className="h-12 w-40" />
+                        </div>
 
-                  <div className="w-24 text-center">
-                    <h1 className="mb-1 text-[9pt] font-bold text-gray-900">KAD-ELEC.</h1>
-                    <div className="bg-[#6EAD2A] p-1 text-xs font-semibold text-white">
-                      #{mockBill.customerAccountNumber}
+                        <div className="w-24 text-center">
+                          <h1 className="mb-1 text-[9pt] font-bold text-gray-900">KAD-ELEC.</h1>
+                          <div className="bg-[#6EAD2A] p-1 text-xs font-semibold text-white">
+                            #{mockBill.customerAccountNumber}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Billing Information */}
+                      <div className="a5-section">
+                        <div className="flex w-full items-center justify-center bg-[#004B23] p-1.5 text-xs font-semibold text-white">
+                          <p>BILLING INFORMATION</p>
+                        </div>
+
+                        <div className="flex w-full border border-gray-300 bg-white text-[8pt]">
+                          <div className="min-w-0 flex-1 space-y-0.5 border-r border-gray-300">
+                            <div className="flex w-full items-center justify-between bg-[#6CAD2B] px-2 py-1 font-semibold">
+                              <p>AREA OFFICE</p>
+                              <div className="flex items-center justify-center bg-white px-4 text-center">
+                                <p className="text-black">{mockBill.areaOfficeName}</p>
+                              </div>
+                            </div>
+
+                            <div className="space-y-2 px-2">
+                              <div className="flex justify-between">
+                                <span className="font-semibold">Bill #:</span>
+                                <span className="px-2 font-semibold">{mockBill.billingId}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="font-semibold">Bill Month:</span>
+                                <span className="px-2 font-semibold">{mockBill.name}</span>
+                              </div>
+                              <div className="mt-1 flex justify-between">
+                                <span className="font-semibold">Customer Account:</span>
+                                <span className="px-2 font-semibold">{mockBill.customerAccountNumber}</span>
+                              </div>
+                              <div className="mt-1 flex justify-between">
+                                <span className="font-semibold">Account Name:</span>
+                                <span className="px-2 font-semibold">{mockBill.customerName}</span>
+                              </div>
+                              <div className="mt-1 flex justify-between">
+                                <span className="font-semibold">Address:</span>
+                                <span className="px-2 font-semibold">{mockBill.customer?.address || "-"}</span>
+                              </div>
+                              <div className="mt-1 flex justify-between">
+                                <span className="font-semibold">Phone Number:</span>
+                                <span className="px-2 font-semibold">{mockBill.customer?.phoneNumber || "-"}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="font-semibold">City:</span>
+                                <span className="px-2 font-semibold">{mockBill.customer?.city || "-"}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="min-w-0 flex-1 space-y-0.5">
+                            <div
+                              className="flex w-full items-center justify-between bg-[#008001] px-2 py-1 font-semibold text-white"
+                              style={{ backgroundColor: "#008001" }}
+                            >
+                              <p>SERVICE CENTER:</p>
+                              <div className="flex items-center justify-center bg-white px-4">
+                                <p className="text-[7pt] text-black">{mockBill.serviceCenterName}</p>
+                              </div>
+                            </div>
+
+                            <div className="space-y-2 px-2">
+                              <div className="flex justify-between">
+                                <span className="font-semibold">State:</span>
+                                <span className="px-2 font-semibold">{mockBill.customer?.state || "-"}</span>
+                              </div>
+                              <div className="mt-1 flex justify-between">
+                                <span className="font-semibold">11KV Feeder:</span>
+                                <span className="px-2 font-semibold">{mockBill.feederName}</span>
+                              </div>
+                              <div className="mt-1 flex justify-between">
+                                <span className="font-semibold">33KV Feeder:</span>
+                                <span className="px-2 font-semibold">{mockBill.distributionSubstationCode}</span>
+                              </div>
+                              <div className="mt-1 flex justify-between">
+                                <span className="font-semibold">DT Name:</span>
+                                <span className="px-2 font-semibold">{mockBill.distributionSubstationName}</span>
+                              </div>
+                              <div className="mt-1 flex justify-between">
+                                <span className="font-semibold">Sales Rep:</span>
+                                <span className="px-2 font-semibold">
+                                  {mockBill.customer?.salesRepUser?.fullName || "-"}
+                                </span>
+                              </div>
+                              <div className="mt-1 flex justify-between">
+                                <span className="font-semibold">Meter:</span>
+                                <span className="px-2 font-semibold">{mockBill.customerMeterNumber}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="font-semibold">Multiplier:</span>
+                                <span className="px-2 font-semibold">1.0</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Billing Charges */}
+                      <div className="a5-section">
+                        <div className="flex w-full items-center justify-center bg-[#004B23] p-1.5 text-xs font-semibold text-white">
+                          <p>BILLING CHARGES</p>
+                        </div>
+
+                        <div className="flex w-full border border-gray-300 bg-white text-[8pt]">
+                          <div className="min-w-0 flex-1 space-y-0.5 border-r border-gray-300">
+                            <div className="flex w-full items-center justify-between bg-[#6CAD2B] px-2 py-1 font-semibold">
+                              <p>CHARGES</p>
+                              <p>TOTAL</p>
+                            </div>
+
+                            <div className="space-y-2 px-2">
+                              <div className="mt-2 flex justify-between">
+                                <span className="font-semibold">Last Payment Date:</span>
+                                <span className="px-2 font-semibold">{formatShortDate(mockBill.lastUpdated)}</span>
+                              </div>
+                              <div className="mt-1 flex justify-between">
+                                <span className="font-semibold">Last Payment Amount:</span>
+                                <span className="px-2 font-semibold">{formatCurrency(mockBill.paymentsPrevMonth)}</span>
+                              </div>
+                              <div className="mt-1 flex justify-between">
+                                <span className="font-semibold">ADC:</span>
+                                <span className="px-2 font-semibold">{mockBill.customer?.storedAverage || "-"}</span>
+                              </div>
+                              <div className="mt-1 flex justify-between">
+                                <span className="font-semibold">Present Reading:</span>
+                                <span className="px-2 font-semibold">{mockBill.presentReadingKwh}</span>
+                              </div>
+                              <div className="mt-1 flex justify-between">
+                                <span className="font-semibold">Previous Reading:</span>
+                                <span className="px-2 font-semibold">{mockBill.previousReadingKwh}</span>
+                              </div>
+                              <div className="mt-1 flex justify-between">
+                                <span className="font-semibold">Consumption:</span>
+                                <span className="px-2 font-semibold">{mockBill.consumptionKwh}kwh</span>
+                              </div>
+                              <div className="mt-1 flex justify-between">
+                                <span className="font-semibold">Tariff Rate:</span>
+                                <span className="px-2 font-semibold">{mockBill.tariffPerKwh}</span>
+                              </div>
+                              <div className="mt-1 flex justify-between">
+                                <span className="font-semibold">Tariff Class:</span>
+                                <span className="px-2 font-semibold">{mockBill.customerTariffCode}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="min-w-0 flex-1 space-y-0.5">
+                            <div
+                              className="flex w-full items-center justify-between bg-[#008001] px-2 py-1 font-semibold text-white"
+                              style={{ backgroundColor: "#008001" }}
+                            >
+                              <p>CHARGES</p>
+                              <p>TOTAL</p>
+                            </div>
+
+                            <div className="space-y-2 px-2">
+                              <div className="mt-2 flex justify-between">
+                                <span className="font-semibold">Status Code:</span>
+                                <span className="px-2 font-semibold">
+                                  {getCustomerStatusLabel(mockBill.customer?.statusCode)}
+                                </span>
+                              </div>
+                              <div className="mt-1 flex justify-between">
+                                <span className="font-semibold">Opening Balance:</span>
+                                <span className="px-2 font-semibold">{formatCurrency(mockBill.openingBalance)}</span>
+                              </div>
+                              <div className="mt-1 flex justify-between">
+                                <span className="font-semibold">Adjustment:</span>
+                                <span className="px-2 font-semibold">
+                                  {formatCurrency(mockBill.adjustedOpeningBalance)}
+                                </span>
+                              </div>
+                              <div className="mt-1 flex justify-between">
+                                <span className="font-semibold">Total Payment Amt:</span>
+                                <span className="px-2 font-semibold">{formatCurrency(mockBill.currentBillAmount)}</span>
+                              </div>
+                              <div className="mt-1 flex justify-between">
+                                <span className="font-semibold">Net Arrears:</span>
+                                <span className="px-2 font-semibold">{formatCurrency(mockBill.netArrears)}</span>
+                              </div>
+                              <div className="mt-1 flex justify-between">
+                                <span className="font-semibold">Energy Charged:</span>
+                                <span className="px-2 font-semibold">{formatCurrency(mockBill.chargeBeforeVat)}</span>
+                              </div>
+                              <div className="mt-1 flex justify-between">
+                                <span className="font-semibold">Fixed Charge:</span>
+                                <span className="px-2 font-semibold">{formatCurrency(mockBill.actualBillAmount)}</span>
+                              </div>
+                              <div className="mt-1 flex justify-between">
+                                <span className="font-semibold">VAT:</span>
+                                <span className="px-2 font-semibold">{formatCurrency(mockBill.vatAmount)}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Total Due */}
+                      <div className="flex w-full border border-gray-300">
+                        <div className="flex-1 bg-[#6CAD2B]">
+                          <div className="px-2 py-1.5">&nbsp;</div>
+                        </div>
+
+                        <div className="min-w-0 flex-1 bg-[#E1E1E1]">
+                          <div
+                            className="flex w-full items-center justify-between bg-[#008001] px-2 py-1.5 font-semibold text-white"
+                            style={{ backgroundColor: "#008001" }}
+                          >
+                            <p className="text-[8pt]">TOTAL DUE:</p>
+                            <div className="flex items-center justify-center bg-white px-4 py-0.5">
+                              <p className="text-[8pt] font-bold text-black">{formatCurrency(mockBill.totalDue)}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Payment Notice */}
+
+                      {/* Summary Section */}
                     </div>
                   </div>
                 </div>
-
-                {/* Billing Information */}
-                <div className="a5-section">
-                  <div className="flex w-full items-center justify-center bg-[#004B23] p-1.5 text-xs font-semibold text-white">
-                    <p>BILLING INFORMATION</p>
-                  </div>
-
-                  <div className="flex w-full border border-gray-300 bg-white text-[8pt]">
-                    <div className="min-w-0 flex-1 space-y-0.5 border-r border-gray-300">
-                      <div className="flex w-full items-center justify-between bg-[#6CAD2B] px-2 py-1 font-semibold">
-                        <p>AREA OFFICE</p>
-                        <div className="flex items-center justify-center bg-white px-4 text-center">
-                          <p className="text-black">{mockBill.areaOfficeName}</p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2 px-2">
-                        <div className="flex justify-between">
-                          <span className="font-semibold">Bill #:</span>
-                          <span className="px-2 font-semibold">{mockBill.billingId}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="font-semibold">Bill Month:</span>
-                          <span className="px-2 font-semibold">{mockBill.name}</span>
-                        </div>
-                        <div className="mt-1 flex justify-between">
-                          <span className="font-semibold">Customer Account:</span>
-                          <span className="px-2 font-semibold">{mockBill.customerAccountNumber}</span>
-                        </div>
-                        <div className="mt-1 flex justify-between">
-                          <span className="font-semibold">Account Name:</span>
-                          <span className="px-2 font-semibold">{mockBill.customerName}</span>
-                        </div>
-                        <div className="mt-1 flex justify-between">
-                          <span className="font-semibold">Address:</span>
-                          <span className="px-2 font-semibold">{mockBill.customer?.address || "-"}</span>
-                        </div>
-                        <div className="mt-1 flex justify-between">
-                          <span className="font-semibold">Phone Number:</span>
-                          <span className="px-2 font-semibold">{mockBill.customer?.phoneNumber || "-"}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="font-semibold">City:</span>
-                          <span className="px-2 font-semibold">{mockBill.customer?.city || "-"}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="min-w-0 flex-1 space-y-0.5">
-                      <div
-                        className="flex w-full items-center justify-between bg-[#008001] px-2 py-1 font-semibold text-white"
-                        style={{ backgroundColor: "#008001" }}
-                      >
-                        <p>SERVICE CENTER:</p>
-                        <div className="flex items-center justify-center bg-white px-4">
-                          <p className="text-[7pt] text-black">{mockBill.serviceCenterName}</p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2 px-2">
-                        <div className="flex justify-between">
-                          <span className="font-semibold">State:</span>
-                          <span className="px-2 font-semibold">{mockBill.customer?.state || "-"}</span>
-                        </div>
-                        <div className="mt-1 flex justify-between">
-                          <span className="font-semibold">11KV Feeder:</span>
-                          <span className="px-2 font-semibold">{mockBill.feederName}</span>
-                        </div>
-                        <div className="mt-1 flex justify-between">
-                          <span className="font-semibold">33KV Feeder:</span>
-                          <span className="px-2 font-semibold">{mockBill.distributionSubstationCode}</span>
-                        </div>
-                        <div className="mt-1 flex justify-between">
-                          <span className="font-semibold">DT Name:</span>
-                          <span className="px-2 font-semibold">{mockBill.distributionSubstationName}</span>
-                        </div>
-                        <div className="mt-1 flex justify-between">
-                          <span className="font-semibold">Sales Rep:</span>
-                          <span className="px-2 font-semibold">{mockBill.customer?.salesRepUser?.fullName || "-"}</span>
-                        </div>
-                        <div className="mt-1 flex justify-between">
-                          <span className="font-semibold">Meter:</span>
-                          <span className="px-2 font-semibold">{mockBill.customerMeterNumber}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="font-semibold">Multiplier:</span>
-                          <span className="px-2 font-semibold">1.0</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Billing Charges */}
-                <div className="a5-section">
-                  <div className="flex w-full items-center justify-center bg-[#004B23] p-1.5 text-xs font-semibold text-white">
-                    <p>BILLING CHARGES</p>
-                  </div>
-
-                  <div className="flex w-full border border-gray-300 bg-white text-[8pt]">
-                    <div className="min-w-0 flex-1 space-y-0.5 border-r border-gray-300">
-                      <div className="flex w-full items-center justify-between bg-[#6CAD2B] px-2 py-1 font-semibold">
-                        <p>CHARGES</p>
-                        <p>TOTAL</p>
-                      </div>
-
-                      <div className="space-y-2 px-2">
-                        <div className="mt-2 flex justify-between">
-                          <span className="font-semibold">Last Payment Date:</span>
-                          <span className="px-2 font-semibold">{formatShortDate(mockBill.lastUpdated)}</span>
-                        </div>
-                        <div className="mt-1 flex justify-between">
-                          <span className="font-semibold">Last Payment Amount:</span>
-                          <span className="px-2 font-semibold">{formatCurrency(mockBill.paymentsPrevMonth)}</span>
-                        </div>
-                        <div className="mt-1 flex justify-between">
-                          <span className="font-semibold">ADC:</span>
-                          <span className="px-2 font-semibold">{mockBill.customer?.storedAverage || "-"}</span>
-                        </div>
-                        <div className="mt-1 flex justify-between">
-                          <span className="font-semibold">Present Reading:</span>
-                          <span className="px-2 font-semibold">{mockBill.presentReadingKwh}</span>
-                        </div>
-                        <div className="mt-1 flex justify-between">
-                          <span className="font-semibold">Previous Reading:</span>
-                          <span className="px-2 font-semibold">{mockBill.previousReadingKwh}</span>
-                        </div>
-                        <div className="mt-1 flex justify-between">
-                          <span className="font-semibold">Consumption:</span>
-                          <span className="px-2 font-semibold">{mockBill.consumptionKwh}kwh</span>
-                        </div>
-                        <div className="mt-1 flex justify-between">
-                          <span className="font-semibold">Tariff Rate:</span>
-                          <span className="px-2 font-semibold">{mockBill.tariffPerKwh}</span>
-                        </div>
-                        <div className="mt-1 flex justify-between">
-                          <span className="font-semibold">Tariff Class:</span>
-                          <span className="px-2 font-semibold">{mockBill.customerTariffCode}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="min-w-0 flex-1 space-y-0.5">
-                      <div
-                        className="flex w-full items-center justify-between bg-[#008001] px-2 py-1 font-semibold text-white"
-                        style={{ backgroundColor: "#008001" }}
-                      >
-                        <p>CHARGES</p>
-                        <p>TOTAL</p>
-                      </div>
-
-                      <div className="space-y-2 px-2">
-                        <div className="mt-2 flex justify-between">
-                          <span className="font-semibold">Status Code:</span>
-                          <span className="px-2 font-semibold">
-                            {getCustomerStatusLabel(mockBill.customer?.statusCode)}
-                          </span>
-                        </div>
-                        <div className="mt-1 flex justify-between">
-                          <span className="font-semibold">Opening Balance:</span>
-                          <span className="px-2 font-semibold">{formatCurrency(mockBill.openingBalance)}</span>
-                        </div>
-                        <div className="mt-1 flex justify-between">
-                          <span className="font-semibold">Adjustment:</span>
-                          <span className="px-2 font-semibold">{formatCurrency(mockBill.adjustedOpeningBalance)}</span>
-                        </div>
-                        <div className="mt-1 flex justify-between">
-                          <span className="font-semibold">Total Payment Amt:</span>
-                          <span className="px-2 font-semibold">{formatCurrency(mockBill.currentBillAmount)}</span>
-                        </div>
-                        <div className="mt-1 flex justify-between">
-                          <span className="font-semibold">Net Arrears:</span>
-                          <span className="px-2 font-semibold">{formatCurrency(mockBill.netArrears)}</span>
-                        </div>
-                        <div className="mt-1 flex justify-between">
-                          <span className="font-semibold">Energy Charged:</span>
-                          <span className="px-2 font-semibold">{formatCurrency(mockBill.chargeBeforeVat)}</span>
-                        </div>
-                        <div className="mt-1 flex justify-between">
-                          <span className="font-semibold">Fixed Charge:</span>
-                          <span className="px-2 font-semibold">{formatCurrency(mockBill.actualBillAmount)}</span>
-                        </div>
-                        <div className="mt-1 flex justify-between">
-                          <span className="font-semibold">VAT:</span>
-                          <span className="px-2 font-semibold">{formatCurrency(mockBill.vatAmount)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Total Due */}
-                <div className="flex w-full border border-gray-300">
-                  <div className="flex-1 bg-[#6CAD2B]">
-                    <div className="px-2 py-1.5">&nbsp;</div>
-                  </div>
-
-                  <div className="min-w-0 flex-1 bg-[#E1E1E1]">
-                    <div
-                      className="flex w-full items-center justify-between bg-[#008001] px-2 py-1.5 font-semibold text-white"
-                      style={{ backgroundColor: "#008001" }}
-                    >
-                      <p className="text-[8pt]">TOTAL DUE:</p>
-                      <div className="flex items-center justify-center bg-white px-4 py-0.5">
-                        <p className="text-[8pt] font-bold text-black">{formatCurrency(mockBill.totalDue)}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Payment Notice */}
-
-                {/* Summary Section */}
               </div>
             </div>
-          </div>
+
+            {/* Modal Footer */}
+          </motion.div>
         </motion.div>
       )}
     </div>
   )
 }
-
 export default BillPreviewTab
