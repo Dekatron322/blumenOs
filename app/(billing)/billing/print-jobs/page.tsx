@@ -1318,7 +1318,24 @@ const PrintJobs = () => {
                           </td>
                         </tr>
                       ) : (
-                        printingJobs.map((job) => (
+                        printingJobs.map((job) => {
+                          const totalBills = typeof job.totalBills === "number" ? job.totalBills : 0
+                          const processedBills = typeof job.processedBills === "number" ? job.processedBills : 0
+                          const progressPercentage =
+                            totalBills > 0
+                              ? Math.round((processedBills / totalBills) * 100)
+                              : job.status === BillingJobRunStatus.Completed
+                              ? 100
+                              : 0
+                          const safeProgress = Math.max(0, Math.min(100, progressPercentage))
+                          const progressBarColorClass =
+                            job.status === BillingJobRunStatus.Completed
+                              ? "bg-green-500"
+                              : job.status === BillingJobRunStatus.Failed
+                              ? "bg-red-500"
+                              : "bg-blue-500"
+
+                          return (
                           <tr key={job.id} className="border-b hover:bg-gray-50">
                             <td className="border-b p-3 text-sm">
                               <div className="font-medium">{job.period}</div>
@@ -1344,18 +1361,17 @@ const PrintJobs = () => {
                               </div>
                             </td>
                             <td className="border-b p-3 text-sm">
-                              <div className="flex items-center gap-2">
-                                <div className="size-24 rounded-full bg-gray-200">
-                                  <div
-                                    className="h-2 rounded-full bg-blue-600"
-                                    style={{
-                                      width: `${job.totalBills > 0 ? (job.processedBills / job.totalBills) * 100 : 0}%`,
-                                    }}
-                                  ></div>
+                              <div className="min-w-40">
+                                <div className="mb-1 flex items-center justify-between">
+                                  <span className="text-xs text-gray-500">Processed</span>
+                                  <span className="text-xs font-medium text-gray-700">{safeProgress}%</span>
                                 </div>
-                                <span className="text-xs text-gray-600">
-                                  {job.totalBills > 0 ? Math.round((job.processedBills / job.totalBills) * 100) : 0}%
-                                </span>
+                                <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                                  <div
+                                    className={`h-full rounded-full transition-all duration-300 ${progressBarColorClass}`}
+                                    style={{ width: `${safeProgress}%` }}
+                                  />
+                                </div>
                               </div>
                             </td>
                             <td className="whitespace-nowrap border-b p-3 text-sm">
@@ -1378,7 +1394,8 @@ const PrintJobs = () => {
                               </div>
                             </td>
                           </tr>
-                        ))
+                          )
+                        })
                       )}
                     </tbody>
                   </table>
