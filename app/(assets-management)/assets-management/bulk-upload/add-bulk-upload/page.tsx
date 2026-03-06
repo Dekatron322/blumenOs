@@ -20,11 +20,11 @@ import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"
 import { notify } from "components/ui/Notification/Notification"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
-import { SearchModule } from "components/ui/Search/search-module"
 import CsvUploadFailuresModal from "components/ui/Modal/CsvUploadFailuresModal"
 import {
   AlertCircle,
   ArrowLeft,
+  Calendar,
   CheckCircle,
   CloudUpload,
   Download,
@@ -159,62 +159,67 @@ const useJobTypeUploads = (jobType: number | null) => {
     (state: { fileManagement: any }) => state.fileManagement
   )
   const [currentPage, setCurrentPage] = useState(1)
-  const [searchText, setSearchText] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("")
+  const pollingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const requestInFlightRef = useRef(false)
+
+  const clearPollingTimeout = useCallback(() => {
+    if (pollingTimeoutRef.current) {
+      clearTimeout(pollingTimeoutRef.current)
+      pollingTimeoutRef.current = null
+    }
+  }, [])
 
   const fetchJobs = useCallback(async () => {
-    if (!jobType) return
+    if (!jobType || requestInFlightRef.current) return
 
+    requestInFlightRef.current = true
     const params = {
       PageNumber: currentPage,
       PageSize: 10,
       JobType: jobType,
       Status: statusFilter ? Number(statusFilter) : undefined,
-      Search: searchText || undefined,
     }
 
     try {
       await dispatch(fetchCsvJobs(params)).unwrap()
     } catch (error) {
       console.error("Failed to fetch jobs:", error)
+    } finally {
+      requestInFlightRef.current = false
     }
-  }, [dispatch, jobType, currentPage, statusFilter, searchText])
+  }, [dispatch, jobType, currentPage, statusFilter])
 
   useEffect(() => {
     fetchJobs()
   }, [fetchJobs])
 
-  // Poll for updates every 5 seconds if there are running jobs
   useEffect(() => {
     const hasRunningJobs = csvJobs.some((job: CsvJob) => job.status === 1 || job.status === 2)
 
-    if (hasRunningJobs && jobType) {
-      const interval = setInterval(async () => {
-        try {
-          const params = {
-            PageNumber: currentPage,
-            PageSize: 10,
-            JobType: jobType,
-            Status: statusFilter ? Number(statusFilter) : undefined,
-            Search: searchText || undefined,
-          }
-          await dispatch(fetchCsvJobs(params)).unwrap()
-        } catch (error) {
-          console.error("Failed to fetch job updates:", error)
-        }
-      }, 5000)
-
-      return () => clearInterval(interval)
+    if (!hasRunningJobs || !jobType) {
+      clearPollingTimeout()
+      return
     }
-  }, [csvJobs, jobType, currentPage, statusFilter, searchText, dispatch])
+
+    clearPollingTimeout()
+    pollingTimeoutRef.current = setTimeout(() => {
+      fetchJobs()
+    }, 30000)
+
+    return () => {
+      clearPollingTimeout()
+    }
+  }, [csvJobs, jobType, fetchJobs, clearPollingTimeout])
+
+  useEffect(() => {
+    return () => {
+      clearPollingTimeout()
+    }
+  }, [clearPollingTimeout])
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage)
-  }
-
-  const handleSearch = () => {
-    setCurrentPage(1)
-    fetchJobs()
   }
 
   const handleStatusFilter = (status: string) => {
@@ -228,11 +233,8 @@ const useJobTypeUploads = (jobType: number | null) => {
     error: csvJobsError,
     pagination: csvJobsPagination,
     currentPage,
-    searchText,
     statusFilter,
-    setSearchText,
     handlePageChange,
-    handleSearch,
     handleStatusFilter,
     refetch: fetchJobs,
   }
@@ -289,37 +291,49 @@ const getStatusColor = (status: number) => {
 
 // Component to display job status with progress
 const JobStatusIndicator = ({ job, isLoading }: { job: CsvJob | null; isLoading: boolean }) => {
-  if (isLoading) {
-    return (
-      <div className="flex items-center gap-2 text-xs text-gray-500">
-        <Loader2 className="size-3 animate-spin" />
-        <span>Loading...</span>
-      </div>
-    )
-  }
-
   if (!job) {
     return (
-      <div className="text-xs text-gray-400">
-        <span>No recent jobs</span>
+      <div className="rounded border border-dashed border-gray-200 bg-white p-2 text-[11px] text-gray-500">
+        <div className="flex items-center gap-1.5">
+          {isLoading ? <Loader2 className="size-3 animate-spin" /> : null}
+          <span className={isLoading ? "" : "text-gray-400"}>Start</span>
+        </div>
       </div>
     )
   }
 
-  const getStatusColor = (status: number) => {
+  const getStatusTone = (status: number) => {
     switch (status) {
       case 1:
-        return "bg-yellow-100 text-yellow-800 border-yellow-200"
+        return {
+          chipClass: "bg-yellow-100 text-yellow-800 border-yellow-200",
+          barClass: "bg-yellow-500",
+        }
       case 2:
-        return "bg-blue-100 text-blue-800 border-blue-200"
+        return {
+          chipClass: "bg-blue-100 text-blue-800 border-blue-200",
+          barClass: "bg-blue-500",
+        }
       case 3:
-        return "bg-green-100 text-green-800 border-green-200"
+        return {
+          chipClass: "bg-green-100 text-green-800 border-green-200",
+          barClass: "bg-green-500",
+        }
       case 4:
-        return "bg-red-100 text-red-800 border-red-200"
+        return {
+          chipClass: "bg-red-100 text-red-800 border-red-200",
+          barClass: "bg-red-500",
+        }
       case 5:
-        return "bg-orange-100 text-orange-800 border-orange-200"
+        return {
+          chipClass: "bg-orange-100 text-orange-800 border-orange-200",
+          barClass: "bg-orange-500",
+        }
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200"
+        return {
+          chipClass: "bg-gray-100 text-gray-800 border-gray-200",
+          barClass: "bg-gray-500",
+        }
     }
   }
 
@@ -340,58 +354,60 @@ const JobStatusIndicator = ({ job, isLoading }: { job: CsvJob | null; isLoading:
     }
   }
 
-  const progressPercentage = job.totalRows > 0 ? (job.processedRows / job.totalRows) * 100 : 0
+  const progressPercentage = job.totalRows > 0 ? Math.round((job.processedRows / job.totalRows) * 100) : 0
+  const safeProgress = Math.max(0, Math.min(100, progressPercentage))
+  const statusTone = getStatusTone(job.status)
+  const requestDate = job.requestedAtUtc ? new Date(job.requestedAtUtc) : null
+  const hasValidRequestDate = requestDate && !Number.isNaN(requestDate.getTime())
+  const formattedRequestDate = hasValidRequestDate
+    ? requestDate.toLocaleDateString("en-US", {
+        month: "short",
+        day: "2-digit",
+        year: "numeric",
+      })
+    : "No date"
 
   return (
     <div className="space-y-2">
-      {/* Status */}
       <div className="flex items-center justify-between">
-        <span className={`rounded-full border px-2 py-1 text-xs font-medium ${getStatusColor(job.status)}`}>
-          {getStatusLabel(job.status)}
-        </span>
-        {job.status === 1 || job.status === 2 ? <RefreshCw className="size-3 animate-spin text-blue-500" /> : null}
+        <div className="flex items-center gap-1.5">
+          <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${statusTone.chipClass}`}>
+            {getStatusLabel(job.status)}
+          </span>
+          {isLoading || job.status === 1 || job.status === 2 ? <RefreshCw className="size-3 animate-spin text-blue-500" /> : null}
+        </div>
+        <span className="text-[11px] font-medium text-gray-600">{safeProgress}%</span>
       </div>
 
-      {/* Statistics for all jobs */}
-      <div className="grid grid-cols-4 gap-1 text-xs">
-        <div className="text-center">
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+        <div className={`h-full transition-all duration-300 ease-in-out ${statusTone.barClass}`} style={{ width: `${safeProgress}%` }} />
+      </div>
+
+      <div className="grid grid-cols-4 gap-1.5 text-[11px]">
+        <div className="rounded bg-white px-1.5 py-1 text-center">
           <div className="font-medium text-blue-600">{job.processedRows}</div>
-          <div className="text-gray-500">Processed</div>
+          <div className="text-[10px] text-gray-500">Processed</div>
         </div>
-        <div className="text-center">
+        <div className="rounded bg-white px-1.5 py-1 text-center">
           <div className="font-medium text-green-600">{job.succeededRows}</div>
-          <div className="text-gray-500">Succeeded</div>
+          <div className="text-[10px] text-gray-500">Succeeded</div>
         </div>
-        <div className="text-center">
+        <div className="rounded bg-white px-1.5 py-1 text-center">
           <div className="font-medium text-red-600">{job.failedRows}</div>
-          <div className="text-gray-500">Failed</div>
+          <div className="text-[10px] text-gray-500">Failed</div>
         </div>
-        <div className="text-center">
+        <div className="rounded bg-white px-1.5 py-1 text-center">
           <div className="font-medium text-gray-600">{job.totalRows}</div>
-          <div className="text-gray-500">Total</div>
+          <div className="text-[10px] text-gray-500">Total</div>
         </div>
       </div>
 
-      {/* Horizontal progress bar for queued/running jobs */}
-      {(job.status === 1 || job.status === 2) && (
-        <div className="space-y-1">
-          <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
-            <div
-              className="h-full bg-blue-500 transition-all duration-300 ease-in-out"
-              style={{ width: `${progressPercentage}%` }}
-            />
-          </div>
-          <div className="flex justify-between text-xs text-gray-600">
-            <span>{job.processedRows}</span>
-            <span>{job.totalRows}</span>
-          </div>
+      <div className="flex items-center justify-between gap-2 text-[10px] text-gray-500">
+        <div className="flex items-center gap-1">
+          <Calendar className="size-3 text-gray-400" />
+          <span>{formattedRequestDate}</span>
         </div>
-      )}
-
-      {/* Last updated info */}
-      <div className="flex items-center justify-between text-xs text-gray-400">
-        <div>Requested Date: {new Date(job.requestedAtUtc).toLocaleDateString()}</div>
-        {job.requestedByUser && <div>Requested By: {job.requestedByUser.fullName}</div>}
+        {job.requestedByUser?.fullName ? <div className="max-w-[60%] truncate">By {job.requestedByUser.fullName}</div> : null}
       </div>
     </div>
   )
@@ -399,24 +415,17 @@ const JobStatusIndicator = ({ job, isLoading }: { job: CsvJob | null; isLoading:
 
 // Job Type Uploads Table Component
 const JobTypeUploadsTable = ({ jobType }: { jobType: number | null }) => {
-  console.log("JobTypeUploadsTable rendered with jobType:", jobType)
-
   const {
     jobs,
     loading,
     error,
     pagination,
     currentPage,
-    searchText,
     statusFilter,
-    setSearchText,
     handlePageChange,
-    handleSearch,
     handleStatusFilter,
     refetch,
   } = useJobTypeUploads(jobType)
-
-  console.log("useJobTypeUploads returned:", { jobs, loading, error, pagination })
 
   const [selectedJob, setSelectedJob] = useState<any>(null)
   const [isFailuresModalOpen, setIsFailuresModalOpen] = useState(false)
@@ -456,38 +465,32 @@ const JobTypeUploadsTable = ({ jobType }: { jobType: number | null }) => {
   if (!jobType) return null
 
   return (
-    <div className="rounded-lg border bg-white">
+    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
       {/* Table Header */}
-      <div className="border-b p-4">
-        <div className="flex items-center justify-between">
+      <div className="border-b border-gray-200 bg-white p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="text-lg font-semibold">Recent Uploads - {getJobTypeLabel(jobType)}</h3>
+            <h3 className="text-base font-semibold text-gray-900">Recent Uploads - {getJobTypeLabel(jobType)}</h3>
             {pagination && (
               <p className="text-sm text-gray-600">
                 Showing {jobs.length} of {pagination.totalCount} uploads
               </p>
             )}
           </div>
-          <ButtonModule variant="outline" onClick={refetch} disabled={loading} size="sm">
+          <ButtonModule
+            variant="outline"
+            onClick={refetch}
+            disabled={loading}
+            size="sm"
+            className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+          >
             <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </ButtonModule>
         </div>
 
         {/* Filters */}
-        <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
-          <div className="flex-1">
-            <SearchModule
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              onSearch={handleSearch}
-              placeholder="Search uploads..."
-              className="w-full"
-              bgClassName="bg-white"
-              searchTypeOptions={undefined}
-              onSearchTypeChange={undefined}
-            />
-          </div>
+        <div className="mt-3 flex justify-end">
           <div className="w-full sm:w-48">
             <FormSelectModule
               name="status"
@@ -499,143 +502,145 @@ const JobTypeUploadsTable = ({ jobType }: { jobType: number | null }) => {
             />
           </div>
         </div>
+
+        {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
       </div>
 
       {/* Table */}
       <div className="max-h-[60vh] w-full overflow-x-auto overflow-y-hidden">
-        <div className="min-w-[1200px]">
+        <div className="min-w-[980px]">
           <table className="w-full border-separate border-spacing-0">
             <thead>
-              <tr className="border-b bg-gray-50">
-                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">File Name</th>
-                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Status</th>
-                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Requested By</th>
-                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Requested</th>
-                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Progress</th>
-                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Processed</th>
-                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Succeeded</th>
-                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Failed</th>
-                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Total</th>
-                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Actions</th>
+              <tr className="bg-gray-50">
+                <th className="border-b border-gray-200 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                  File
+                </th>
+                <th className="border-b border-gray-200 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                  Status
+                </th>
+                <th className="border-b border-gray-200 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                  Requested
+                </th>
+                <th className="border-b border-gray-200 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                  Progress
+                </th>
+                <th className="border-b border-gray-200 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                  Results
+                </th>
+                <th className="border-b border-gray-200 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {loading && jobs.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="border-b p-8 text-center">
+                  <td colSpan={6} className="border-b border-gray-200 p-8 text-center">
                     <div className="flex items-center justify-center gap-2">
-                      <Loader2 className="size-5 animate-spin" />
-                      <span className="text-gray-500">Loading uploads...</span>
+                      <Loader2 className="size-4 animate-spin text-gray-500" />
+                      <span className="text-sm text-gray-500">Loading uploads...</span>
                     </div>
                   </td>
                 </tr>
               ) : jobs.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="border-b p-8 text-center">
+                  <td colSpan={6} className="border-b border-gray-200 p-8 text-center">
                     <div className="text-gray-500">
-                      <FileIcon className="mx-auto mb-2 size-12 text-gray-300" />
-                      <p>No uploads found for this type</p>
+                      <FileIcon className="mx-auto mb-2 size-10 text-gray-300" />
+                      <p className="text-sm">No uploads found for this type</p>
                     </div>
                   </td>
                 </tr>
               ) : (
-                jobs.map((job: CsvJob) => (
-                  <tr key={job.id} className="border-b hover:bg-gray-50">
-                    <td className="border-b p-3 text-sm">
-                      <div className="max-w-xs truncate whitespace-nowrap" title={job.fileName}>
-                        {job.fileName}
-                      </div>
-                    </td>
-                    <td className="border-b p-3 text-sm">
-                      <span
-                        className={`whitespace-nowrap rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(
-                          job.status
-                        )}`}
-                      >
-                        {getStatusLabel(job.status)}
-                      </span>
-                    </td>
-                    <td className="whitespace-nowrap border-b p-3 text-sm">
-                      <div
-                        className="max-w-xs truncate whitespace-nowrap"
-                        title={job.requestedByUser?.fullName || "Unknown"}
-                      >
-                        {job.requestedByUser?.fullName || "Unknown"}
-                      </div>
-                    </td>
-                    <td className="whitespace-nowrap border-b p-3 text-sm">
-                      {new Date(job.requestedAtUtc).toLocaleString()}
-                    </td>
-                    <td className="border-b p-3 text-sm">
-                      <div className="flex items-center gap-2">
-                        <div className="size-24 rounded-full bg-gray-200">
-                          <div
-                            className="h-2 rounded-full bg-blue-600"
-                            style={{
-                              width: `${
-                                job.totalRows !== null && job.totalRows > 0
-                                  ? (job.processedRows / job.totalRows) * 100
-                                  : 0
-                              }%`,
-                            }}
-                          ></div>
+                jobs.map((job: CsvJob) => {
+                  const totalRows = typeof job.totalRows === "number" ? job.totalRows : 0
+                  const succeededRows = typeof job.succeededRows === "number" ? job.succeededRows : 0
+                  const processedRows = typeof job.processedRows === "number" ? job.processedRows : 0
+                  const failedRows = typeof job.failedRows === "number" ? job.failedRows : 0
+                  const progressPercentage = totalRows > 0 ? Math.round((processedRows / totalRows) * 100) : 0
+                  const safeProgress = Math.max(0, Math.min(100, progressPercentage))
+
+                  return (
+                    <tr key={job.id} className="border-b border-gray-100 align-top hover:bg-gray-50/80">
+                      <td className="border-b border-gray-100 p-3 text-sm">
+                        <div className="max-w-80">
+                          <p className="truncate font-medium text-gray-900" title={job.fileName}>
+                            {job.fileName}
+                          </p>
+                          <p className="mt-0.5 text-xs text-gray-500" title={job.requestedByUser?.fullName || "Unknown"}>
+                            By {job.requestedByUser?.fullName || "Unknown"}
+                          </p>
                         </div>
-                        <span className="text-xs text-gray-600">
-                          {job.totalRows !== null && job.totalRows > 0
-                            ? Math.round((job.processedRows / job.totalRows) * 100)
-                            : "Processing"}
+                      </td>
+                      <td className="border-b border-gray-100 p-3 text-sm">
+                        <span
+                          className={`inline-flex whitespace-nowrap rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(
+                            job.status
+                          )}`}
+                        >
+                          {getStatusLabel(job.status)}
                         </span>
-                      </div>
-                    </td>
-                    <td className="border-b p-3 text-sm">
-                      <div className="font-medium text-blue-600">
-                        {job.processedRows !== null && job.processedRows !== undefined ? job.processedRows : "N/A"}
-                      </div>
-                    </td>
-                    <td className="border-b p-3 text-sm">
-                      <div className="font-medium text-green-600">
-                        {job.succeededRows !== null && job.succeededRows !== undefined ? job.succeededRows : "N/A"}
-                      </div>
-                    </td>
-                    <td className="border-b p-3 text-sm">
-                      <div className="font-medium text-red-600">
-                        {job.failedRows !== null && job.failedRows !== undefined ? job.failedRows : "N/A"}
-                      </div>
-                    </td>
-                    <td className="border-b p-3 text-sm">
-                      <div className="font-medium text-gray-600">
-                        {job.totalRows !== null && job.totalRows !== undefined ? job.totalRows : "N/A"}
-                      </div>
-                    </td>
-                    <td className="border-b p-3 text-sm">
-                      <div className="flex gap-2">
-                        {job.failedRows > 0 && (
-                          <ButtonModule
-                            variant="outline"
-                            size="sm"
-                            icon={<VscEye />}
-                            onClick={() => handleViewFailures(job)}
-                            className="whitespace-nowrap"
-                          >
-                            View Failures
-                          </ButtonModule>
-                        )}
-                        {(job.status === 3 || job.status === 5) && (
-                          <ButtonModule
-                            variant="outline"
-                            size="sm"
-                            icon={<Download className="size-4" />}
-                            onClick={() => handleDownloadCsv(job)}
-                            className="whitespace-nowrap"
-                            disabled={downloadCsvLoading}
-                          >
-                            {downloadCsvLoading ? "Downloading..." : "Download"}
-                          </ButtonModule>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td className="whitespace-nowrap border-b border-gray-100 p-3 text-sm text-gray-700">
+                        {new Date(job.requestedAtUtc).toLocaleString()}
+                      </td>
+                      <td className="border-b border-gray-100 p-3 text-sm">
+                        <div className="min-w-40">
+                          <div className="mb-1 flex items-center justify-between">
+                            <span className="text-xs text-gray-500">Processed</span>
+                            <span className="text-xs font-medium text-gray-700">{safeProgress}%</span>
+                          </div>
+                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                            <div className="h-full rounded-full bg-blue-500" style={{ width: `${safeProgress}%` }} />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="border-b border-gray-100 p-3 text-sm">
+                        <div className="flex flex-wrap gap-1.5 text-xs">
+                          <span className="rounded bg-blue-50 px-2 py-0.5 font-medium text-blue-700">
+                            Processed: {processedRows.toLocaleString()}
+                          </span>
+                          <span className="rounded bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700">
+                            Succeeded: {succeededRows.toLocaleString()}
+                          </span>
+                          <span className="rounded bg-red-50 px-2 py-0.5 font-medium text-red-700">
+                            Failed: {failedRows.toLocaleString()}
+                          </span>
+                          <span className="rounded bg-gray-100 px-2 py-0.5 font-medium text-gray-700">
+                            Total: {totalRows.toLocaleString()}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="border-b border-gray-100 p-3 text-sm">
+                        <div className="flex flex-wrap gap-2">
+                          {job.failedRows > 0 && (
+                            <ButtonModule
+                              variant="outline"
+                              size="sm"
+                              icon={<VscEye />}
+                              onClick={() => handleViewFailures(job)}
+                              className="whitespace-nowrap border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                            >
+                              View Failures
+                            </ButtonModule>
+                          )}
+                          {(job.status === 3 || job.status === 5) && (
+                            <ButtonModule
+                              variant="outline"
+                              size="sm"
+                              icon={<Download className="size-4" />}
+                              onClick={() => handleDownloadCsv(job)}
+                              className="whitespace-nowrap border-[#004B23] bg-white text-[#004B23] hover:bg-[#e9f5ef]"
+                              disabled={downloadCsvLoading}
+                            >
+                              {downloadCsvLoading ? "Downloading..." : "Download"}
+                            </ButtonModule>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
               )}
             </tbody>
           </table>
@@ -644,8 +649,8 @@ const JobTypeUploadsTable = ({ jobType }: { jobType: number | null }) => {
 
       {/* Pagination */}
       {pagination && pagination.totalPages > 1 && (
-        <div className="border-t p-4">
-          <div className="flex items-center justify-between">
+        <div className="border-t border-gray-200 bg-white p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="text-sm text-gray-600">
               Page {pagination.currentPage} of {pagination.totalPages}
             </div>
@@ -653,7 +658,7 @@ const JobTypeUploadsTable = ({ jobType }: { jobType: number | null }) => {
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={!pagination.hasPrevious}
-                className="rounded-lg border p-2 disabled:opacity-50"
+                className="rounded-lg border border-gray-300 p-2 text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <MdOutlineArrowBackIosNew className="size-4" />
               </button>
@@ -665,8 +670,8 @@ const JobTypeUploadsTable = ({ jobType }: { jobType: number | null }) => {
                     onClick={() => handlePageChange(pageNumber)}
                     className={`rounded-lg border px-3 py-2 text-sm ${
                       currentPage === pageNumber
-                        ? "border-blue-500 bg-blue-50 text-blue-700"
-                        : "border-gray-300 hover:bg-gray-50"
+                        ? "border-[#004B23] bg-[#e9f5ef] text-[#004B23]"
+                        : "border-gray-300 text-gray-700 hover:bg-gray-50"
                     }`}
                   >
                     {pageNumber}
@@ -676,7 +681,7 @@ const JobTypeUploadsTable = ({ jobType }: { jobType: number | null }) => {
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={!pagination.hasNext}
-                className="rounded-lg border p-2 disabled:opacity-50"
+                className="rounded-lg border border-gray-300 p-2 text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <MdOutlineArrowForwardIos className="size-4" />
               </button>
@@ -1424,12 +1429,12 @@ const FileManagementPage = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="overflow-hidden rounded-xl bg-white shadow-lg"
+              className="overflow-hidden rounded-xl border border-gray-200/60 bg-transparent"
             >
               {/* Upload Type Selection */}
               {!hasCompletedUploadTypeSelection && (
-                <div className="p-6">
-                  <div className="mb-6 flex items-center justify-between">
+                <div className="p-4 sm:p-5">
+                  <div className="mb-4 flex items-center justify-between">
                     <div>
                       <h2 className="text-lg font-semibold text-gray-900">Select Upload Type</h2>
                       <p className="text-sm text-gray-600">Choose the type of asset upload you want to perform</p>
@@ -1439,7 +1444,7 @@ const FileManagementPage = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
                     {uploadTypeOptions.map((type) => {
                       const latestJob = latestJobs[type.value] || null
                       const isLoading = jobsLoading
@@ -1455,19 +1460,13 @@ const FileManagementPage = () => {
                             setHasCompletedUploadTypeSelection(true)
                             console.log("selectedUploadType set to:", type.value)
                           }}
-                          className="group relative rounded-xl border-2 border-gray-200 bg-white p-4 text-left transition-all hover:border-blue-400 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          className="group relative rounded-lg border border-gray-200 bg-white p-3 text-left transition-all hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                         >
-                          <h3 className="mb-2 font-semibold text-gray-900 group-hover:text-blue-600">{type.name}</h3>
-                          <p className="mb-4 text-sm text-gray-600">{type.description}</p>
+                          <h3 className="mb-1.5 text-base font-semibold text-gray-900 group-hover:text-blue-600">{type.name}</h3>
+                          <p className="mb-3 line-clamp-2 text-xs leading-5 text-gray-600">{type.description}</p>
 
                           {/* Job Status Section */}
-                          <div className="mb-4 rounded-lg border border-gray-100 bg-gray-50 p-3">
-                            <div className="mb-2 flex items-center justify-between">
-                              <span className="text-xs font-medium text-gray-700">Latest Job Status</span>
-                              {latestJob && (latestJob.status === 1 || latestJob.status === 2) && (
-                                <RefreshCw className="size-3 animate-spin text-blue-500" />
-                              )}
-                            </div>
+                          <div className="rounded-md border border-gray-100 bg-gray-50 p-2.5">
                             <JobStatusIndicator job={latestJob} isLoading={isLoading} />
                           </div>
                         </motion.button>
@@ -1480,25 +1479,37 @@ const FileManagementPage = () => {
               {/* File Upload Section */}
               {hasCompletedUploadTypeSelection && selectedUploadTypeDetails && (
                 <div className="p-6">
-                  {/* Selected Type Header */}
-                  <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
-                    <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+                                    {/* Selected Type Header */}
+                  <div className="mb-6 rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-white p-4 sm:p-5">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                       <div className="flex items-start gap-3">
-                        <div className="rounded-full bg-blue-200 p-2">
+                        <div className="rounded-full bg-blue-100 p-2.5">
                           <FileSpreadsheet className="size-5 text-blue-700" />
                         </div>
                         <div>
-                          <div className="flex items-center gap-2">
-                            <span className="rounded-full bg-blue-200 px-2.5 py-0.5 text-xs font-medium text-blue-800">
-                              Selected Type
-                            </span>
-                            <h3 className="font-semibold text-blue-900">{selectedUploadTypeDetails.name}</h3>
-                          </div>
-                          <p className="mt-1 text-sm text-blue-700">{selectedUploadTypeDetails.description}</p>
+                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-blue-700">Schedule Flow</p>
+                          <h3 className="mt-1 text-lg font-semibold text-gray-900">{selectedUploadTypeDetails.name} Upload</h3>
+                          <p className="mt-1 text-sm text-gray-600">{selectedUploadTypeDetails.description}</p>
                         </div>
                       </div>
+
+                      <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-3">
+                        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-emerald-800">
+                          <p className="font-semibold">Step 1</p>
+                          <p>Upload type selected</p>
+                        </div>
+                        <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-blue-800">
+                          <p className="font-semibold">Step 2</p>
+                          <p>Upload and validate file</p>
+                        </div>
+                        <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-gray-700">
+                          <p className="font-semibold">Step 3</p>
+                          <p>Track processing result</p>
+                        </div>
+                      </div>
+
                       <ButtonModule
-                        variant="outline"
+                        variant="primary"
                         size="sm"
                         onClick={() => {
                           setSelectedUploadType(null)
@@ -1506,48 +1517,41 @@ const FileManagementPage = () => {
                           setSelectedFile(null)
                           setExtractedColumns([])
                         }}
-                        className="border-blue-300 bg-white text-blue-700 hover:bg-blue-100"
+                        className="w-full bg-[#004B23] text-white hover:bg-[#003618] sm:w-auto"
                       >
                         Change Type
                       </ButtonModule>
                     </div>
                   </div>
 
-                  {/* Template Download & Column Info */}
-                  <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
-                    <div className="lg:col-span-2">
-                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-                          <div className="flex items-start gap-3">
-                            <Download className="mt-0.5 size-5 text-gray-500" />
-                            <div>
-                              <p className="font-medium text-gray-900">Need a template?</p>
-                              <p className="text-sm text-gray-600">Download a sample CSV with the correct format</p>
-                            </div>
+                                    {/* Upload Setup */}
+                  <div className="mb-6">
+                    <div className="rounded-xl border border-gray-200 bg-white p-4">
+                      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+                        <div className="flex items-start gap-3">
+                          <div className="rounded-full bg-gray-100 p-2">
+                            <Download className="size-4 text-gray-600" />
                           </div>
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">Template</p>
+                            <p className="text-sm text-gray-600">Download a sample file for this upload type.</p>
+                            <p className="mt-1 text-xs text-gray-500">
+                              Required headers are validated automatically when you upload.
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
                           <ButtonModule
-                            variant="primary"
+                            variant="outline"
                             size="sm"
                             onClick={downloadSampleFile}
                             icon={<Download className="size-4" />}
+                            className="border-[#004B23] bg-white text-[#004B23] hover:bg-[#e9f5ef]"
                           >
                             Download Template
                           </ButtonModule>
                         </div>
                       </div>
-                    </div>
-
-                    <div>
-                      <button
-                        onClick={() => setShowColumnHelp(!showColumnHelp)}
-                        className="flex w-full items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 p-4 text-left transition-colors hover:bg-gray-100"
-                      >
-                        <HelpCircle className="size-5 text-gray-500" />
-                        <div>
-                          <p className="font-medium text-gray-900">Required Columns</p>
-                          <p className="text-sm text-gray-600">Click to view all</p>
-                        </div>
-                      </button>
                     </div>
                   </div>
 
@@ -1597,7 +1601,7 @@ const FileManagementPage = () => {
                       isDragOver
                         ? "border-blue-400 bg-blue-50"
                         : selectedFile
-                        ? "border-green-300 bg-green-50"
+                        ? "border-emerald-300 bg-emerald-50"
                         : "border-gray-300 bg-gray-50 hover:border-gray-400"
                     }`}
                   >
@@ -1618,14 +1622,14 @@ const FileManagementPage = () => {
                         <p className="mt-4 text-base text-gray-700">
                           <button
                             onClick={() => fileInputRef.current?.click()}
-                            className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                            className="rounded-lg bg-[#004B23] px-4 py-2 font-semibold text-white transition-colors hover:bg-[#003618] focus:outline-none focus:ring-2 focus:ring-[#004B23] focus:ring-offset-2"
                             disabled={isLoading}
                           >
-                            Click to upload
+                            Select File
                           </button>{" "}
                           or drag and drop
                         </p>
-                        <p className="mt-2 text-sm text-gray-500">CSV or Excel files (max 50MB)</p>
+                        <p className="mt-2 text-sm text-gray-500">Supported: CSV, XLSX, XLS</p>
                       </div>
                     ) : (
                       <div className="relative">
@@ -1638,7 +1642,7 @@ const FileManagementPage = () => {
                           <X className="size-4" />
                         </button>
 
-                        <FileText className="mx-auto h-16 w-16 text-green-500" />
+                        <FileText className="mx-auto h-16 w-16 text-emerald-500" />
                         <p className="mt-2 font-medium text-gray-900">{selectedFile.name}</p>
                         <p className="text-sm text-gray-500">{formatFileSize(selectedFile.size)}</p>
 
@@ -1655,7 +1659,7 @@ const FileManagementPage = () => {
                                   <span
                                     key={idx}
                                     className={`rounded-full px-2 py-0.5 text-xs ${
-                                      isRequired ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
+                                      isRequired ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600"
                                     }`}
                                   >
                                     {col}
@@ -1680,7 +1684,7 @@ const FileManagementPage = () => {
                             <button
                               onClick={handleUpload}
                               disabled={!selectedFile || !selectedUploadType || isLoading || uploadSuccess}
-                              className="flex items-center gap-2 rounded-lg bg-green-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                              className="flex items-center gap-2 rounded-lg bg-[#004B23] px-6 py-3 font-semibold text-white transition-colors hover:bg-[#003618] focus:outline-none focus:ring-2 focus:ring-[#004B23] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                               {isUploading ? (
                                 <>
