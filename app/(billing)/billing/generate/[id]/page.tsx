@@ -137,6 +137,7 @@ interface TrackScheduleCustomersResponse {
 const TRACKING_TERMINAL_STATUSES = new Set([3, 4, 5])
 const SCHEDULE_CUSTOMER_TRACKING_BULK_INSERT_TYPE = "schedule-customer-tracking"
 const SCHEDULE_CUSTOMER_TRACKING_JOB_TYPE = getJobTypeValue("Schedule Customer Tracking Import")
+const CSV_JOBS_POLL_INTERVAL_MS = 30000
 const MANUAL_TRACKING_JOB_STORAGE_PREFIX = "billing:manual-track-job"
 const MANUAL_TRACK_POLL_INITIAL_DELAY_MS = 3000
 const MANUAL_TRACK_POLL_INTERVAL_MS = 8000
@@ -224,7 +225,7 @@ const useLatestJobs = () => {
       } catch (error) {
         console.error("Failed to refresh latest jobs:", error)
       }
-    }, 5000)
+    }, CSV_JOBS_POLL_INTERVAL_MS)
 
     return () => clearInterval(interval)
   }, [fetchLatestJobs])
@@ -331,7 +332,7 @@ const useJobTypeUploads = (jobType: number | null) => {
     fetchJobs()
   }, [fetchJobs])
 
-  // Poll for updates every 5 seconds if there are running jobs
+  // Poll for updates every 30 seconds if there are running jobs
   useEffect(() => {
     const hasRunningJobs = csvJobs.some((job: CsvJob) => job.status === 1 || job.status === 2)
 
@@ -348,7 +349,7 @@ const useJobTypeUploads = (jobType: number | null) => {
         } catch (error) {
           console.error("Failed to fetch job updates:", error)
         }
-      }, 5000)
+      }, CSV_JOBS_POLL_INTERVAL_MS)
 
       return () => clearInterval(interval)
     }
@@ -3347,6 +3348,16 @@ const FileManagementPage = () => {
   const showNoRunWarning = !isRunStateRefreshing && !isRunHistoryRefreshing && !hasLatestRun && !hasCompletedRunHistory
   const showCustomScopeWarning =
     isCustomSchedule && hasLatestRun && !isRunStateRefreshing && !hasActiveRunTask && isRunDraft && !runCanCarryOutBillActions
+
+  useEffect(() => {
+    if (!isRunDetailsDrawerOpen) {
+      return
+    }
+
+    if (runStatus === 2 || (!hasLatestRun && hasCompletedRunHistory)) {
+      setIsRunDetailsDrawerOpen(false)
+    }
+  }, [isRunDetailsDrawerOpen, runStatus, hasLatestRun, hasCompletedRunHistory])
 
   // Check if any loading state is active
   const isLoading =
