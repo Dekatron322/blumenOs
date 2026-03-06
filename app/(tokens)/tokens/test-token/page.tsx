@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
+import { getJobTypeLabel, getJobTypeValue } from "lib/constants/jobTypes"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { CsvJobsParams, downloadTestToken, fetchCsvJobs } from "lib/redux/fileManagementSlice"
 import { VscEye } from "react-icons/vsc"
@@ -58,8 +59,7 @@ interface UploadProgress {
   percentage: number
 }
 
-// Job Type options for filters - Test Token related job types
-const jobTypeOptions = [{ value: "27", label: "Test Token Import" }]
+const TEST_TOKEN_JOB_TYPE = getJobTypeValue("Test Token")
 
 // Status options for filters
 const statusOptions = [
@@ -114,7 +114,7 @@ const TestToken = () => {
   const [localFilters, setLocalFilters] = useState<Partial<CsvJobsParams>>({
     PageNumber: 1,
     PageSize: 10,
-    JobType: 27, // Default to Test Token Import only
+    JobType: TEST_TOKEN_JOB_TYPE, // Default to Test Token only
     Status: undefined,
     RequestedByUserId: undefined,
     RequestedFromUtc: undefined,
@@ -513,7 +513,7 @@ const TestToken = () => {
     setLocalFilters({
       PageNumber: 1,
       PageSize: 10,
-      JobType: 27, // Default to Test Token Import only
+      JobType: TEST_TOKEN_JOB_TYPE, // Default to Test Token only
       Status: undefined,
       RequestedByUserId: undefined,
       RequestedFromUtc: undefined,
@@ -531,21 +531,6 @@ const TestToken = () => {
       if (key === "PageNumber" || key === "PageSize") return false
       return value !== undefined && value !== ""
     }).length
-  }
-
-  const getJobTypeLabel = (jobType: number) => {
-    // First try to find in the options array
-    const option = jobTypeOptions.find((opt) => opt.value === jobType.toString())
-    if (option) {
-      return option.label
-    }
-
-    // Fallback for known job types
-    if (jobType === 27) {
-      return "Test Token Import"
-    }
-
-    return `Type ${jobType}`
   }
 
   const getStatusLabel = (status: number) => {

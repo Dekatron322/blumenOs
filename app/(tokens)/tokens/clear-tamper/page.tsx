@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
+import { getJobTypeLabel, getJobTypeValue } from "lib/constants/jobTypes"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { CsvJobsParams, downloadClearTamper, fetchCsvJobs } from "lib/redux/fileManagementSlice"
 import { VscEye } from "react-icons/vsc"
@@ -57,8 +58,7 @@ interface UploadProgress {
   percentage: number
 }
 
-// Job Type options for filters - Clear Tamper related job types
-const jobTypeOptions = [{ value: "26", label: "Clear Tamper Import" }]
+const CLEAR_TAMPER_JOB_TYPE = getJobTypeValue("Clear Tamper")
 
 // Status options for filters
 const statusOptions = [
@@ -111,7 +111,7 @@ const ClearTamper = () => {
   const [localFilters, setLocalFilters] = useState<Partial<CsvJobsParams>>({
     PageNumber: 1,
     PageSize: 10,
-    JobType: 26, // Default to Clear Tamper Import only
+    JobType: CLEAR_TAMPER_JOB_TYPE, // Default to Clear Tamper only
     Status: undefined,
     RequestedByUserId: undefined,
     RequestedFromUtc: undefined,
@@ -243,7 +243,7 @@ const ClearTamper = () => {
     setLocalFilters({
       PageNumber: 1,
       PageSize: 10,
-      JobType: 26, // Keep Clear Tamper Import filter
+      JobType: CLEAR_TAMPER_JOB_TYPE, // Keep Clear Tamper filter
       Status: undefined,
       RequestedByUserId: undefined,
       RequestedFromUtc: undefined,
@@ -261,11 +261,6 @@ const ClearTamper = () => {
       if (key === "PageNumber" || key === "PageSize") return false
       return value !== undefined && value !== ""
     }).length
-  }
-
-  const getJobTypeLabel = (jobType: number) => {
-    const option = jobTypeOptions.find((opt) => opt.value === jobType.toString())
-    return option?.label || `Type ${jobType}`
   }
 
   const getStatusLabel = (status: number) => {

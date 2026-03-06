@@ -876,6 +876,13 @@ export interface StartBillingScheduleRunResponse {
   data: string
 }
 
+// Cancel Billing Schedule Run Interfaces
+export interface CancelBillingScheduleRunResponse {
+  isSuccess: boolean
+  message: string
+  data: string | null
+}
+
 // Publish Billing Schedule Run Interfaces
 export interface PublishBillingScheduleRunData {
   totalBills: number
@@ -1076,6 +1083,18 @@ export interface BillingScheduleRunsResponse {
   isSuccess: boolean
   message: string
   data: BillingScheduleRunItem[]
+  totalCount?: number
+  totalPages?: number
+  currentPage?: number
+  pageSize?: number
+  hasNext?: boolean
+  hasPrevious?: boolean
+}
+
+export interface BillingScheduleRunsRequestParams {
+  scheduleId: number
+  pageNumber?: number
+  pageSize?: number
 }
 
 // Billing Schedule Run Interfaces
@@ -1134,8 +1153,8 @@ export interface BillingScheduleRunData {
   createdAt: string
   lastUpdated: string
   createdByUser: BillingScheduleRunUser
-  latestRunId: number
-  latestRunProgress: BillingScheduleRunProgress
+  latestRunId: number | null
+  latestRunProgress: BillingScheduleRunProgress | null
 }
 
 export interface BillingScheduleRunResponse {
@@ -1433,6 +1452,12 @@ interface PostpaidBillingState {
   startBillingScheduleRunSuccess: boolean
   startBillingScheduleRunMessage: string | null
 
+  // Cancel Billing Schedule Run state
+  cancelBillingScheduleRunLoading: boolean
+  cancelBillingScheduleRunError: string | null
+  cancelBillingScheduleRunSuccess: boolean
+  cancelBillingScheduleRunMessage: string | null
+
   // Publish Billing Schedule Run state
   publishBillingScheduleRunLoading: boolean
   publishBillingScheduleRunError: string | null
@@ -1682,6 +1707,10 @@ const initialState: PostpaidBillingState = {
   startBillingScheduleRunError: null,
   startBillingScheduleRunSuccess: false,
   startBillingScheduleRunMessage: null,
+  cancelBillingScheduleRunLoading: false,
+  cancelBillingScheduleRunError: null,
+  cancelBillingScheduleRunSuccess: false,
+  cancelBillingScheduleRunMessage: null,
   publishBillingScheduleRunLoading: false,
   publishBillingScheduleRunError: null,
   publishBillingScheduleRunSuccess: false,
@@ -2697,6 +2726,30 @@ export const startBillingScheduleRun = createAsyncThunk(
   }
 )
 
+// Cancel Billing Schedule Run Async Thunk
+export const cancelBillingScheduleRun = createAsyncThunk(
+  "postpaidBilling/cancelBillingScheduleRun",
+  async (runId: number, { rejectWithValue }) => {
+    try {
+      const endpoint = buildEndpointWithParams(API_ENDPOINTS.POSTPAID_BILLING.CANCEL_BILLING_SCHEDULE_RUN, {
+        runId,
+      })
+      const response = await api.post<CancelBillingScheduleRunResponse>(buildApiUrl(endpoint))
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to cancel billing schedule run")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to cancel billing schedule run")
+      }
+      return rejectWithValue(error.message || "Network error during billing schedule run cancellation")
+    }
+  }
+)
+
 // Publish Billing Schedule Run Async Thunk
 export const publishBillingScheduleRun = createAsyncThunk(
   "postpaidBilling/publishBillingScheduleRun",
@@ -2798,20 +2851,38 @@ export const fetchBillingScheduleRun = createAsyncThunk<BillingScheduleRunData, 
 )
 
 // Get Billing Schedule Runs Async Thunk
-export const fetchBillingScheduleRuns = createAsyncThunk<BillingScheduleRunItem[], number, { rejectValue: string }>(
+export const fetchBillingScheduleRuns = createAsyncThunk<
+  BillingScheduleRunItem[],
+  number | BillingScheduleRunsRequestParams,
+  { rejectValue: string }
+>(
   "postpaidBilling/fetchBillingScheduleRuns",
-  async (scheduleId: number, { rejectWithValue }) => {
+  async (arg: number | BillingScheduleRunsRequestParams, { rejectWithValue }) => {
     try {
+      const request =
+        typeof arg === "number"
+          ? ({
+              scheduleId: arg,
+              pageNumber: 1,
+              pageSize: 20,
+            } as BillingScheduleRunsRequestParams)
+          : arg
+
       const endpoint = buildEndpointWithParams(API_ENDPOINTS.POSTPAID_BILLING.GET_BILLING_SCHEDULES_RUNS, {
-        id: scheduleId,
+        id: request.scheduleId,
       })
-      const response = await api.get<BillingScheduleRunsResponse>(buildApiUrl(endpoint))
+      const response = await api.get<BillingScheduleRunsResponse>(buildApiUrl(endpoint), {
+        params: {
+          PageNumber: request.pageNumber ?? 1,
+          PageSize: request.pageSize ?? 20,
+        },
+      })
 
       if (!response.data.isSuccess) {
         return rejectWithValue(response.data.message || "Failed to fetch billing schedule runs")
       }
 
-      return response.data.data
+      return Array.isArray(response.data.data) ? response.data.data : []
     } catch (error: any) {
       if (error.response?.data) {
         return rejectWithValue(error.response.data.message || "Failed to fetch billing schedule runs")
@@ -3160,6 +3231,10 @@ const postpaidSlice = createSlice({
       state.startBillingScheduleRunError = null
       state.startBillingScheduleRunSuccess = false
       state.startBillingScheduleRunMessage = null
+      state.cancelBillingScheduleRunLoading = false
+      state.cancelBillingScheduleRunError = null
+      state.cancelBillingScheduleRunSuccess = false
+      state.cancelBillingScheduleRunMessage = null
       state.billingScheduleProgressLoading = false
       state.billingScheduleProgressError = null
       state.billingScheduleProgressSuccess = false
@@ -3172,6 +3247,14 @@ const postpaidSlice = createSlice({
       state.startBillingScheduleRunError = null
       state.startBillingScheduleRunSuccess = false
       state.startBillingScheduleRunMessage = null
+    },
+
+    // Clear cancel billing schedule run status
+    clearCancelBillingScheduleRunStatus: (state) => {
+      state.cancelBillingScheduleRunLoading = false
+      state.cancelBillingScheduleRunError = null
+      state.cancelBillingScheduleRunSuccess = false
+      state.cancelBillingScheduleRunMessage = null
     },
 
     // Clear publish billing schedule run status
@@ -3377,6 +3460,10 @@ const postpaidSlice = createSlice({
       state.startBillingScheduleRunError = null
       state.startBillingScheduleRunSuccess = false
       state.startBillingScheduleRunMessage = null
+      state.cancelBillingScheduleRunLoading = false
+      state.cancelBillingScheduleRunError = null
+      state.cancelBillingScheduleRunSuccess = false
+      state.cancelBillingScheduleRunMessage = null
       state.publishBillingScheduleRunLoading = false
       state.publishBillingScheduleRunError = null
       state.publishBillingScheduleRunSuccess = false
@@ -4248,6 +4335,25 @@ const postpaidSlice = createSlice({
         state.startBillingScheduleRunSuccess = false
         state.startBillingScheduleRunMessage = null
       })
+      // Cancel billing schedule run cases
+      .addCase(cancelBillingScheduleRun.pending, (state) => {
+        state.cancelBillingScheduleRunLoading = true
+        state.cancelBillingScheduleRunError = null
+        state.cancelBillingScheduleRunSuccess = false
+        state.cancelBillingScheduleRunMessage = null
+      })
+      .addCase(cancelBillingScheduleRun.fulfilled, (state, action: PayloadAction<CancelBillingScheduleRunResponse>) => {
+        state.cancelBillingScheduleRunLoading = false
+        state.cancelBillingScheduleRunSuccess = true
+        state.cancelBillingScheduleRunMessage = action.payload.message || "Billing schedule run canceled successfully"
+        state.cancelBillingScheduleRunError = null
+      })
+      .addCase(cancelBillingScheduleRun.rejected, (state, action) => {
+        state.cancelBillingScheduleRunLoading = false
+        state.cancelBillingScheduleRunError = (action.payload as string) || "Failed to cancel billing schedule run"
+        state.cancelBillingScheduleRunSuccess = false
+        state.cancelBillingScheduleRunMessage = null
+      })
       // Publish billing schedule run cases
       .addCase(publishBillingScheduleRun.pending, (state) => {
         state.publishBillingScheduleRunLoading = true
@@ -4407,6 +4513,7 @@ export const {
   clearSingleBillingPrintStatus,
   clearBillingScheduleRunStatus,
   clearStartBillingScheduleRunStatus,
+  clearCancelBillingScheduleRunStatus,
   clearPublishBillingScheduleRunStatus,
   clearExportArScheduleRunStatus,
   clearRunPdfGenerationStatus,
