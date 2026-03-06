@@ -140,7 +140,7 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
       {isOpen && (
         <div
           id={`${name}-options`}
-          className="absolute z-10 mt-1 w-full rounded-md border border-[#E0E0E0] bg-white shadow-lg"
+          className="absolute z-[1000] mt-1 w-full rounded-md border border-[#E0E0E0] bg-white shadow-lg"
           onClick={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
           onMouseUp={(e) => e.stopPropagation()}

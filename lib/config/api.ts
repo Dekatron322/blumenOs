@@ -322,6 +322,7 @@ export const API_ENDPOINTS = {
     GET_BILLING_SCHEDULES_RUNS: "/billing/schedules/{id}/runs",
     EXPORT_AR: "/billing/schedules/runs/{runId}/ar/csv",
     DOWNLOAD_PDF: "/billing/schedules/runs/{runId}/print/downloads",
+    GET_BILL_PREVIEW: "/billing/schedules/runs/{runId}/bill-preview",
   },
 
   BILLING_PERIODS: {

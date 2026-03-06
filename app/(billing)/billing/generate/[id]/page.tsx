@@ -55,6 +55,7 @@ import {
   CheckCircle,
   CloudUpload,
   Download,
+  Eye,
   FileDown,
   FileIcon,
   FileSpreadsheet,
@@ -70,6 +71,7 @@ import {
 import { VscEye } from "react-icons/vsc"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos } from "react-icons/md"
 import BillingScheduleRunsTab from "components/BillingInfo/BillingScheduleRunsTab"
+import BillPreviewTab from "components/BillingInfo/BillPreviewTab"
 
 interface UploadProgress {
   loaded: number
@@ -1053,7 +1055,7 @@ const FileManagementPage = () => {
   }
 
   // Tab state
-  const [activeTab, setActiveTab] = useState<"bulk-upload" | "schedule-runs">("bulk-upload")
+  const [activeTab, setActiveTab] = useState<"bulk-upload" | "schedule-runs" | "bill-preview">("bulk-upload")
 
   // Local state
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -2226,6 +2228,19 @@ const FileManagementPage = () => {
                       Schedule Runs
                     </div>
                   </button>
+                  <button
+                    onClick={() => setActiveTab("bill-preview")}
+                    className={`whitespace-nowrap border-b-2 px-1 py-3 text-sm font-medium transition-colors ${
+                      activeTab === "bill-preview"
+                        ? "border-blue-500 text-blue-600"
+                        : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Eye className="size-4" />
+                      Bill Preview
+                    </div>
+                  </button>
                 </nav>
               </div>
             </div>
@@ -2239,6 +2254,18 @@ const FileManagementPage = () => {
                 className="overflow-hidden rounded-xl bg-white p-6 shadow-lg"
               >
                 <BillingScheduleRunsTab scheduleId={scheduleId} />
+              </motion.div>
+            )}
+
+            {/* Bill Preview Tab */}
+            {activeTab === "bill-preview" && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="overflow-hidden rounded-xl bg-white p-6 shadow-lg"
+              >
+                <BillPreviewTab scheduleId={scheduleId} />
               </motion.div>
             )}
 
@@ -2903,153 +2930,158 @@ const FileManagementPage = () => {
                     </div>
                   )}
 
-                  {/* Detailed Stages Progress */}
-                  {billingScheduleRun?.latestRunProgress?.stages && (
+                  {/* Current Running Stage Progress */}
+                  {billingScheduleRun?.latestRunProgress?.stages?.filter(
+                    (stage: BillingScheduleRunStage) => stage.state === 1
+                  ).length > 0 && (
                     <div className="mt-4 border-t border-blue-200 pt-4">
-                      <h5 className="mb-3 text-sm font-medium text-blue-900">All Stages Progress</h5>
+                      <h5 className="mb-3 text-sm font-medium text-blue-900">Current Progress</h5>
                       <div className="space-y-3">
-                        {billingScheduleRun.latestRunProgress.stages.map((stage: BillingScheduleRunStage) => {
-                          const stageProgress = stage.total > 0 ? Math.round((stage.processed / stage.total) * 100) : 0
-                          const getStatusColor = (state: number, failed: number, succeeded: number) => {
-                            // Handle failed stages that might have state 2 but failed > 0
-                            if (failed > 0 && succeeded === 0) {
-                              return "text-red-600 bg-red-50 border-red-200" // Failed
-                            }
-                            switch (state) {
-                              case 0:
-                                return "text-gray-500 bg-gray-50 border-gray-200" // Pending
-                              case 1:
-                                return "text-blue-600 bg-blue-50 border-blue-200" // Running
-                              case 2:
-                                return "text-green-600 bg-green-50 border-green-200" // Succeeded
-                              case 3:
+                        {billingScheduleRun.latestRunProgress.stages
+                          .filter((stage: BillingScheduleRunStage) => stage.state === 1)
+                          .map((stage: BillingScheduleRunStage) => {
+                            const stageProgress =
+                              stage.total > 0 ? Math.round((stage.processed / stage.total) * 100) : 0
+                            const getStatusColor = (state: number, failed: number, succeeded: number) => {
+                              // Handle failed stages that might have state 2 but failed > 0
+                              if (failed > 0 && succeeded === 0) {
                                 return "text-red-600 bg-red-50 border-red-200" // Failed
-                              default:
-                                return "text-gray-500 bg-gray-50 border-gray-200"
+                              }
+                              switch (state) {
+                                case 0:
+                                  return "text-gray-500 bg-gray-50 border-gray-200" // Pending
+                                case 1:
+                                  return "text-blue-600 bg-blue-50 border-blue-200" // Running
+                                case 2:
+                                  return "text-green-600 bg-green-50 border-green-200" // Succeeded
+                                case 3:
+                                  return "text-red-600 bg-red-50 border-red-200" // Failed
+                                default:
+                                  return "text-gray-500 bg-gray-50 border-gray-200"
+                              }
                             }
-                          }
-                          const getStatusIcon = (state: number, failed: number, succeeded: number) => {
-                            // Handle failed stages that might have state 2 but failed > 0
-                            if (failed > 0 && succeeded === 0) {
-                              return <X className="size-3 text-red-600" />
-                            }
-                            switch (state) {
-                              case 0:
-                                return <div className="size-3 rounded-full bg-gray-400" />
-                              case 1:
-                                return (
-                                  <div className="size-3 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
-                                )
-                              case 2:
-                                return <CheckCircle className="size-3 text-green-600" />
-                              case 3:
+                            const getStatusIcon = (state: number, failed: number, succeeded: number) => {
+                              // Handle failed stages that might have state 2 but failed > 0
+                              if (failed > 0 && succeeded === 0) {
                                 return <X className="size-3 text-red-600" />
-                              default:
-                                return <div className="size-3 rounded-full bg-gray-400" />
+                              }
+                              switch (state) {
+                                case 0:
+                                  return <div className="size-3 rounded-full bg-gray-400" />
+                                case 1:
+                                  return (
+                                    <div className="size-3 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+                                  )
+                                case 2:
+                                  return <CheckCircle className="size-3 text-green-600" />
+                                case 3:
+                                  return <X className="size-3 text-red-600" />
+                                default:
+                                  return <div className="size-3 rounded-full bg-gray-400" />
+                              }
                             }
-                          }
-                          const getStatusText = (state: number, failed: number, succeeded: number) => {
-                            // Handle failed stages that might have state 2 but failed > 0
-                            if (failed > 0 && succeeded === 0) {
-                              return "Failed"
-                            }
-                            switch (state) {
-                              case 0:
-                                return "Pending"
-                              case 1:
-                                return "Running"
-                              case 2:
-                                return "Completed"
-                              case 3:
+                            const getStatusText = (state: number, failed: number, succeeded: number) => {
+                              // Handle failed stages that might have state 2 but failed > 0
+                              if (failed > 0 && succeeded === 0) {
                                 return "Failed"
-                              default:
-                                return "Unknown"
+                              }
+                              switch (state) {
+                                case 0:
+                                  return "Pending"
+                                case 1:
+                                  return "Running"
+                                case 2:
+                                  return "Completed"
+                                case 3:
+                                  return "Failed"
+                                default:
+                                  return "Unknown"
+                              }
                             }
-                          }
 
-                          return (
-                            <div
-                              key={stage.stage}
-                              className={`rounded-lg border p-3 ${getStatusColor(
-                                stage.state,
-                                stage.failed,
-                                stage.succeeded
-                              )}`}
-                            >
-                              <div className="mb-2 flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  {getStatusIcon(stage.state, stage.failed, stage.succeeded)}
-                                  <span className="text-sm font-medium">{getStageName(stage.stage)}</span>
-                                  <span className="rounded-full bg-white/60 px-2 py-1 text-xs font-medium">
-                                    {getStatusText(stage.state, stage.failed, stage.succeeded)}
-                                  </span>
+                            return (
+                              <div
+                                key={stage.stage}
+                                className={`rounded-lg border p-3 ${getStatusColor(
+                                  stage.state,
+                                  stage.failed,
+                                  stage.succeeded
+                                )}`}
+                              >
+                                <div className="mb-2 flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    {getStatusIcon(stage.state, stage.failed, stage.succeeded)}
+                                    <span className="text-sm font-medium">{getStageName(stage.stage)}</span>
+                                    <span className="rounded-full bg-white/60 px-2 py-1 text-xs font-medium">
+                                      {getStatusText(stage.state, stage.failed, stage.succeeded)}
+                                    </span>
+                                  </div>
+                                  {stage.total > 0 && (
+                                    <div className="text-xs font-medium">
+                                      {stage.processed} / {stage.total} ({stageProgress}%)
+                                    </div>
+                                  )}
                                 </div>
-                                {stage.total > 0 && (
-                                  <div className="text-xs font-medium">
-                                    {stage.processed} / {stage.total} ({stageProgress}%)
+
+                                <p className="mb-2 text-xs opacity-80">{stage.message}</p>
+
+                                {stage.total > 0 && stage.state !== 0 && (
+                                  <div className="space-y-1">
+                                    <div className="h-1.5 w-full rounded-full bg-white/60">
+                                      <div
+                                        className={`h-1.5 rounded-full transition-all duration-300 ${
+                                          stage.state === 1
+                                            ? "bg-blue-600"
+                                            : stage.state === 2
+                                            ? "bg-green-600"
+                                            : stage.state === 3
+                                            ? "bg-red-600"
+                                            : "bg-gray-400"
+                                        }`}
+                                        style={{ width: `${stageProgress}%` }}
+                                      />
+                                    </div>
+                                    <div className="grid grid-cols-4 gap-2 text-xs">
+                                      <div>
+                                        <span className="opacity-70">Total:</span>
+                                        <span className="ml-1 font-medium">{stage.total}</span>
+                                      </div>
+                                      <div>
+                                        <span className="text-green-700 opacity-70">Success:</span>
+                                        <span className="ml-1 font-medium text-green-800">{stage.succeeded}</span>
+                                      </div>
+                                      <div>
+                                        <span className="text-red-700 opacity-70">Failed:</span>
+                                        <span className="ml-1 font-medium text-red-800">{stage.failed}</span>
+                                      </div>
+                                      <div>
+                                        <span className="text-orange-700 opacity-70">Pending:</span>
+                                        <span className="ml-1 font-medium text-orange-800">{stage.pending}</span>
+                                      </div>
+                                    </div>
                                   </div>
                                 )}
+
+                                {stage.lastError && (
+                                  <div className="mt-2 rounded bg-red-100 p-2 text-xs text-red-700">
+                                    <strong>Error:</strong> {stage.lastError}
+                                  </div>
+                                )}
+
+                                <div className="mt-2 text-xs opacity-60">
+                                  {stage.requestedAtUtc && (
+                                    <div>Requested: {new Date(stage.requestedAtUtc).toLocaleString()}</div>
+                                  )}
+                                  {stage.startedAtUtc && (
+                                    <div>Started: {new Date(stage.startedAtUtc).toLocaleString()}</div>
+                                  )}
+                                  {stage.completedAtUtc && (
+                                    <div>Completed: {new Date(stage.completedAtUtc).toLocaleString()}</div>
+                                  )}
+                                </div>
                               </div>
-
-                              <p className="mb-2 text-xs opacity-80">{stage.message}</p>
-
-                              {stage.total > 0 && stage.state !== 0 && (
-                                <div className="space-y-1">
-                                  <div className="h-1.5 w-full rounded-full bg-white/60">
-                                    <div
-                                      className={`h-1.5 rounded-full transition-all duration-300 ${
-                                        stage.state === 1
-                                          ? "bg-blue-600"
-                                          : stage.state === 2
-                                          ? "bg-green-600"
-                                          : stage.state === 3
-                                          ? "bg-red-600"
-                                          : "bg-gray-400"
-                                      }`}
-                                      style={{ width: `${stageProgress}%` }}
-                                    />
-                                  </div>
-                                  <div className="grid grid-cols-4 gap-2 text-xs">
-                                    <div>
-                                      <span className="opacity-70">Total:</span>
-                                      <span className="ml-1 font-medium">{stage.total}</span>
-                                    </div>
-                                    <div>
-                                      <span className="text-green-700 opacity-70">Success:</span>
-                                      <span className="ml-1 font-medium text-green-800">{stage.succeeded}</span>
-                                    </div>
-                                    <div>
-                                      <span className="text-red-700 opacity-70">Failed:</span>
-                                      <span className="ml-1 font-medium text-red-800">{stage.failed}</span>
-                                    </div>
-                                    <div>
-                                      <span className="text-orange-700 opacity-70">Pending:</span>
-                                      <span className="ml-1 font-medium text-orange-800">{stage.pending}</span>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-
-                              {stage.lastError && (
-                                <div className="mt-2 rounded bg-red-100 p-2 text-xs text-red-700">
-                                  <strong>Error:</strong> {stage.lastError}
-                                </div>
-                              )}
-
-                              <div className="mt-2 text-xs opacity-60">
-                                {stage.requestedAtUtc && (
-                                  <div>Requested: {new Date(stage.requestedAtUtc).toLocaleString()}</div>
-                                )}
-                                {stage.startedAtUtc && (
-                                  <div>Started: {new Date(stage.startedAtUtc).toLocaleString()}</div>
-                                )}
-                                {stage.completedAtUtc && (
-                                  <div>Completed: {new Date(stage.completedAtUtc).toLocaleString()}</div>
-                                )}
-                              </div>
-                            </div>
-                          )
-                        })}
+                            )
+                          })}
                       </div>
                     </div>
                   )}

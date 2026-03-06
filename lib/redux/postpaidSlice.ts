@@ -1144,6 +1144,45 @@ export interface BillingScheduleRunResponse {
   data: BillingScheduleRunData
 }
 
+// Bill Preview Interfaces
+export interface BillPreviewNavigation {
+  previousBillId: number
+  nextBillId: number
+  hasPrevious: boolean
+  hasNext: boolean
+}
+
+export interface BillPreviewTemplateValues {
+  [key: string]: string
+}
+
+export interface BillPreviewData {
+  runId: number
+  billId: number
+  billingId: string
+  publicReference: string
+  customerAccountNo: string
+  customerName: string
+  totalInScope: number
+  filteredCount: number
+  navigation: BillPreviewNavigation
+  templateValues: BillPreviewTemplateValues
+}
+
+export interface BillPreviewRequestParams {
+  runId: number
+  billId?: number
+  billingPeriodId?: number
+  accountNumber?: string
+  billNumber?: string
+}
+
+export interface BillPreviewResponse {
+  isSuccess: boolean
+  message: string
+  data: BillPreviewData
+}
+
 // Postpaid Billing State
 interface PostpaidBillingState {
   // Postpaid bills list state
@@ -1427,6 +1466,12 @@ interface PostpaidBillingState {
   billingScheduleRunsError: string | null
   billingScheduleRunsSuccess: boolean
 
+  // Bill Preview state
+  billPreview: BillPreviewData | null
+  billPreviewLoading: boolean
+  billPreviewError: string | null
+  billPreviewSuccess: boolean
+
   // Search/filter state
   filters: {
     period?: string
@@ -1660,6 +1705,10 @@ const initialState: PostpaidBillingState = {
   billingScheduleRunsLoading: false,
   billingScheduleRunsError: null,
   billingScheduleRunsSuccess: false,
+  billPreview: null,
+  billPreviewLoading: false,
+  billPreviewError: null,
+  billPreviewSuccess: false,
   filters: {},
   billingJobsFilters: {},
 }
@@ -2772,6 +2821,44 @@ export const fetchBillingScheduleRuns = createAsyncThunk<BillingScheduleRunItem[
   }
 )
 
+// Get Bill Preview Async Thunk
+export const fetchBillPreview = createAsyncThunk<BillPreviewData, BillPreviewRequestParams, { rejectValue: string }>(
+  "postpaidBilling/fetchBillPreview",
+  async (params: BillPreviewRequestParams, { rejectWithValue }) => {
+    try {
+      const { runId, billId, billingPeriodId, accountNumber, billNumber } = params
+
+      const endpoint = buildEndpointWithParams(API_ENDPOINTS.POSTPAID_BILLING.GET_BILL_PREVIEW, {
+        runId,
+      })
+
+      const response = await api.get<BillPreviewResponse>(buildApiUrl(endpoint), {
+        params: {
+          ...(billId && { BillId: billId }),
+          ...(billingPeriodId && { BillingPeriodId: billingPeriodId }),
+          ...(accountNumber && { AccountNumber: accountNumber }),
+          ...(billNumber && { BillNumber: billNumber }),
+        },
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch bill preview")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Bill preview not found")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch bill preview")
+      }
+      return rejectWithValue(error.message || "Network error during bill preview fetch")
+    }
+  }
+)
+
 // Postpaid billing slice
 const postpaidSlice = createSlice({
   name: "postpaidBilling",
@@ -3128,6 +3215,14 @@ const postpaidSlice = createSlice({
       state.billingScheduleRunsLoading = false
       state.billingScheduleRunsError = null
       state.billingScheduleRunsSuccess = false
+    },
+
+    // Clear bill preview status
+    clearBillPreviewStatus: (state) => {
+      state.billPreview = null
+      state.billPreviewLoading = false
+      state.billPreviewError = null
+      state.billPreviewSuccess = false
     },
 
     // Reset billing state
@@ -4259,6 +4354,25 @@ const postpaidSlice = createSlice({
         state.billingScheduleRunsSuccess = false
         state.billingScheduleRuns = []
       })
+      // Fetch bill preview cases
+      .addCase(fetchBillPreview.pending, (state) => {
+        state.billPreviewLoading = true
+        state.billPreviewError = null
+        state.billPreviewSuccess = false
+        state.billPreview = null
+      })
+      .addCase(fetchBillPreview.fulfilled, (state, action: PayloadAction<BillPreviewData>) => {
+        state.billPreviewLoading = false
+        state.billPreviewSuccess = true
+        state.billPreview = action.payload
+        state.billPreviewError = null
+      })
+      .addCase(fetchBillPreview.rejected, (state, action) => {
+        state.billPreviewLoading = false
+        state.billPreviewError = (action.payload as string) || "Failed to fetch bill preview"
+        state.billPreviewSuccess = false
+        state.billPreview = null
+      })
   },
 })
 
@@ -4298,6 +4412,7 @@ export const {
   clearRunPdfGenerationStatus,
   clearBillingScheduleProgressStatus,
   clearBillingScheduleRunsStatus,
+  clearBillPreviewStatus,
   resetBillingState,
   setPagination,
   setBillingJobsPagination,

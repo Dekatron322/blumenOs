@@ -388,11 +388,7 @@ const BillingScheduleRunsTab: React.FC<BillingScheduleRunsTabProps> = ({ schedul
                         >
                           <div className="space-y-4 p-5">
                             {/* Run Details Grid */}
-                            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                              <div className="rounded-lg bg-white p-3 shadow-sm">
-                                <p className="text-xs font-medium text-gray-500">Run ID</p>
-                                <p className="mt-1 text-sm font-semibold text-gray-900">{run.id}</p>
-                              </div>
+                            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                               <div className="rounded-lg bg-white p-3 shadow-sm">
                                 <p className="text-xs font-medium text-gray-500">Current Step</p>
                                 <p className="mt-1 text-sm font-semibold text-gray-900">{run.currentStep}</p>
