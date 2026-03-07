@@ -340,7 +340,7 @@ const UpdateVendor = () => {
             <div className="mx-auto flex w-full flex-col px-3 py-4  sm:px-4 md:px-6 2xl:px-16">
               <div className="flex items-center justify-center py-20">
                 <div className="text-center">
-                  <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-solid border-[#004B23] border-t-transparent"></div>
+                  <div className="mx-auto size-12 animate-spin rounded-full border-4 border-solid border-[#004B23] border-t-transparent"></div>
                   <p className="mt-4 text-gray-600">Loading vendor information...</p>
                 </div>
               </div>

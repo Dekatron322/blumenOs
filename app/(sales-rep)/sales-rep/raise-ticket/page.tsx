@@ -327,7 +327,7 @@ const CollectPaymentBillingDisputePage: React.FC = () => {
                                 id="disputeFiles"
                                 type="file"
                                 multiple
-                                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                                className="absolute inset-0 size-full cursor-pointer opacity-0"
                                 onChange={(e) => {
                                   const selectedFiles = Array.from(e.target.files || [])
                                   setFiles(selectedFiles)

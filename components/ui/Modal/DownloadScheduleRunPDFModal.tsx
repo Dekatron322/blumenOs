@@ -103,7 +103,7 @@ const DownloadScheduleRunPDFModal: React.FC<DownloadScheduleRunPDFModalProps> = 
           {/* Loading State */}
           {downloadScheduleRunPDFLoading && (
             <div className="flex flex-col items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+              <Loader2 className="size-8 animate-spin text-purple-600" />
               <p className="mt-3 text-sm text-gray-500">Fetching PDF downloads...</p>
             </div>
           )}
@@ -133,7 +133,7 @@ const DownloadScheduleRunPDFModal: React.FC<DownloadScheduleRunPDFModalProps> = 
             <div className="space-y-4">
               {downloadScheduleRunPDFData.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <FileText className="h-10 w-10 text-gray-300" />
+                  <FileText className="size-10 text-gray-300" />
                   <p className="mt-3 text-sm font-medium text-gray-900">No PDF files available</p>
                   <p className="mt-1 text-xs text-gray-500">No PDF downloads are available for this run yet.</p>
                 </div>

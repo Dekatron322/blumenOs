@@ -1183,7 +1183,7 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
               {currentCustomer.salesRepUser ? (
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
+                    <div className="flex size-10 items-center justify-center rounded-full bg-blue-100">
                       <User className="size-5 text-blue-700" />
                     </div>
                     <div>
@@ -1235,7 +1235,7 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
               {currentCustomer.technicalEngineerUser ? (
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
+                    <div className="flex size-10 items-center justify-center rounded-full bg-purple-100">
                       <User className="size-5 text-purple-700" />
                     </div>
                     <div>

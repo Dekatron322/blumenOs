@@ -307,7 +307,7 @@ const UpdateEmployeePage = () => {
         <DashboardNav />
         <div className="flex min-h-[calc(100vh-80px)] items-center justify-center">
           <div className="text-center">
-            <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-[#004B23]"></div>
+            <div className="mx-auto size-12 animate-spin rounded-full border-b-2 border-[#004B23]"></div>
             <p className="mt-4 text-gray-600">Loading employee data...</p>
           </div>
         </div>
@@ -634,7 +634,7 @@ const UpdateEmployeePageWrapper = () => (
         <DashboardNav />
         <div className="flex min-h-[calc(100vh-80px)] items-center justify-center">
           <div className="text-center">
-            <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-[#004B23]"></div>
+            <div className="mx-auto size-12 animate-spin rounded-full border-b-2 border-[#004B23]"></div>
             <p className="mt-4 text-gray-600">Loading employee data...</p>
           </div>
         </div>

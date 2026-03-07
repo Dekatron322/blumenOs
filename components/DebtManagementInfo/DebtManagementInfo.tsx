@@ -1,15 +1,15 @@
-import React, { useState, useRef, useEffect } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import {
+  AlertCircle,
   ArrowLeft,
   ChevronDown,
   ChevronUp,
   Filter,
+  Info,
+  Search,
   SortAsc,
   SortDesc,
   X,
-  AlertCircle,
-  Info,
-  Search,
 } from "lucide-react"
 import { AnimatePresence, motion } from "framer-motion"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
@@ -25,7 +25,7 @@ import { UserIcon } from "components/Icons/Icons"
 import { SearchModule } from "components/ui/Search/search-module"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { fetchCustomers, type Customer } from "lib/redux/customerSlice"
+import { type Customer, fetchCustomers } from "lib/redux/customerSlice"
 
 // ==================== Status Badge Component ====================
 const StatusBadge = ({ status }: { status: number }) => {
@@ -852,7 +852,7 @@ const DebtManagementCustomers = ({
                   <table className="w-full min-w-[1000px]">
                     <thead>
                       <tr className="border-b border-gray-200 bg-gray-50/80">
-                        <th className="px-2 py-2 text-left">
+                        <th className="p-2 text-left">
                           <button
                             onClick={() => toggleSort("customerName")}
                             className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
@@ -861,7 +861,7 @@ const DebtManagementCustomers = ({
                             <RxCaretSort className="size-3.5" />
                           </button>
                         </th>
-                        <th className="px-2 py-2 text-left">
+                        <th className="p-2 text-left">
                           <button
                             onClick={() => toggleSort("accountNumber")}
                             className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
@@ -870,7 +870,7 @@ const DebtManagementCustomers = ({
                             <RxCaretSort className="size-3.5" />
                           </button>
                         </th>
-                        <th className="px-2 py-2 text-left">
+                        <th className="p-2 text-left">
                           <button
                             onClick={() => toggleSort("outstandingBalance")}
                             className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
@@ -879,7 +879,7 @@ const DebtManagementCustomers = ({
                             <RxCaretSort className="size-3.5" />
                           </button>
                         </th>
-                        <th className="px-2 py-2 text-left">
+                        <th className="p-2 text-left">
                           <button
                             onClick={() => toggleSort("totalDebits")}
                             className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
@@ -888,7 +888,7 @@ const DebtManagementCustomers = ({
                             <RxCaretSort className="size-3.5" />
                           </button>
                         </th>
-                        <th className="px-2 py-2 text-left">
+                        <th className="p-2 text-left">
                           <button
                             onClick={() => toggleSort("totalCredits")}
                             className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
@@ -897,7 +897,7 @@ const DebtManagementCustomers = ({
                             <RxCaretSort className="size-3.5" />
                           </button>
                         </th>
-                        <th className="px-2 py-2 text-left">
+                        <th className="p-2 text-left">
                           <button
                             onClick={() => toggleSort("lastLedgerAtUtc")}
                             className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
@@ -919,7 +919,7 @@ const DebtManagementCustomers = ({
                             transition={{ duration: 0.2, delay: index * 0.01 }}
                             className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50"
                           >
-                            <td className="whitespace-nowrap px-2 py-2 text-xs">
+                            <td className="whitespace-nowrap p-2 text-xs">
                               <div className="flex items-center gap-2">
                                 <div className="flex size-6 items-center justify-center rounded-full bg-gray-100">
                                   <UserIcon />
@@ -927,19 +927,17 @@ const DebtManagementCustomers = ({
                                 <div className="font-medium text-gray-900">{customer.customerName}</div>
                               </div>
                             </td>
-                            <td className="whitespace-nowrap px-2 py-2 text-xs text-gray-700">
-                              {customer.accountNumber}
-                            </td>
-                            <td className="whitespace-nowrap px-2 py-2 text-xs font-semibold text-red-600">
+                            <td className="whitespace-nowrap p-2 text-xs text-gray-700">{customer.accountNumber}</td>
+                            <td className="whitespace-nowrap p-2 text-xs font-semibold text-red-600">
                               {formatCurrency(customer.outstandingBalance)}
                             </td>
-                            <td className="whitespace-nowrap px-2 py-2 text-xs text-gray-700">
+                            <td className="whitespace-nowrap p-2 text-xs text-gray-700">
                               {formatCurrency(customer.totalDebits)}
                             </td>
-                            <td className="whitespace-nowrap px-2 py-2 text-xs text-gray-700">
+                            <td className="whitespace-nowrap p-2 text-xs text-gray-700">
                               {formatCurrency(customer.totalCredits)}
                             </td>
-                            <td className="whitespace-nowrap px-2 py-2 text-xs text-gray-700">
+                            <td className="whitespace-nowrap p-2 text-xs text-gray-700">
                               {formatDateTime(customer.lastLedgerAtUtc)}
                             </td>
                           </motion.tr>
@@ -1189,7 +1187,7 @@ const DebtManagementCustomers = ({
               onClick={() => setShowMobileFilters(false)}
             />
             <motion.div
-              className="fixed inset-y-0 right-0 z-[1000] flex h-full w-full max-w-sm flex-col bg-white shadow-xl"
+              className="fixed inset-y-0 right-0 z-[1000] flex size-full max-w-sm flex-col bg-white shadow-xl"
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}

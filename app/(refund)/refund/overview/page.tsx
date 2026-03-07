@@ -158,7 +158,7 @@ const AnalyticsCard = ({
         }}
       >
         <div className="flex items-start justify-between">
-          <div className="h-10 w-10 rounded-lg bg-gray-200"></div>
+          <div className="size-10 rounded-lg bg-gray-200"></div>
           <div className="h-6 w-16 rounded-full bg-gray-200"></div>
         </div>
         <div className="mt-3 space-y-2">
@@ -1501,7 +1501,7 @@ export default function RefundOverviewPage() {
               className="rounded-xl bg-white p-6 shadow-xl"
             >
               <div className="flex flex-col items-center gap-4">
-                <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#004B23] border-t-transparent" />
+                <div className="size-12 animate-spin rounded-full border-4 border-[#004B23] border-t-transparent" />
                 <div className="text-center">
                   <p className="font-medium text-gray-900">Loading Refund Data</p>
                   <p className="text-sm text-gray-600">Please wait</p>

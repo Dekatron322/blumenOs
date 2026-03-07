@@ -155,7 +155,7 @@ const VendorTopUpHistoryTab: React.FC<VendorTopUpHistoryTabProps> = ({ vendorId 
         className="flex flex-col items-center justify-center py-12"
       >
         <div className="flex flex-col items-center gap-4 text-center">
-          <Wallet className="h-12 w-12 text-gray-400" />
+          <Wallet className="size-12 text-gray-400" />
           <span className="text-gray-600">No top-up history available</span>
         </div>
       </motion.div>

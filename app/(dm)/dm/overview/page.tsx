@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 import {
   clearAllDebtEntriesState,
   clearCustomersState,
@@ -209,7 +209,7 @@ const AnalyticsCardSkeleton = () => (
     }}
   >
     <div className="flex items-start justify-between">
-      <div className="h-10 w-10 rounded-lg bg-gray-200"></div>
+      <div className="size-10 rounded-lg bg-gray-200"></div>
       <div className="h-6 w-16 rounded-full bg-gray-200"></div>
     </div>
     <div className="mt-3 space-y-2">
@@ -346,7 +346,7 @@ const RecoverySummarySection = ({
         className="rounded-xl border border-gray-200 bg-white p-5"
       >
         <div className="mb-4 flex items-center gap-2">
-          <div className="h-10 w-10 rounded-lg bg-gray-200"></div>
+          <div className="size-10 rounded-lg bg-gray-200"></div>
           <div>
             <div className="h-5 w-40 rounded bg-gray-200"></div>
             <div className="mt-1 h-4 w-32 rounded bg-gray-200"></div>
@@ -523,7 +523,7 @@ const DebtManagementInfoSkeleton = () => {
             className="mb-4 flex items-center justify-between border-b border-gray-100 pb-4 last:border-0 last:pb-0"
           >
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-gray-200"></div>
+              <div className="size-10 rounded-full bg-gray-200"></div>
               <div>
                 <div className="h-4 w-32 rounded bg-gray-200"></div>
                 <div className="mt-1 h-3 w-24 rounded bg-gray-200"></div>
@@ -1025,7 +1025,7 @@ export default function DebtManagementDashboard() {
               className="rounded-xl bg-white p-6 shadow-xl"
             >
               <div className="flex flex-col items-center gap-4">
-                <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#004B23] border-t-transparent" />
+                <div className="size-12 animate-spin rounded-full border-4 border-[#004B23] border-t-transparent" />
                 <div className="text-center">
                   <p className="font-medium text-gray-900">Loading Debt Data</p>
                   <p className="text-sm text-gray-600">Please wait</p>

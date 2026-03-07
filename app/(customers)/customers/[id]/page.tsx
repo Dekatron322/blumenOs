@@ -613,7 +613,7 @@ const CustomerDetailsPage = () => {
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-6">
         <div className="max-w-md text-center">
           <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-red-100">
-            <AlertCircle className="h-10 w-10 text-red-600" />
+            <AlertCircle className="size-10 text-red-600" />
           </div>
           <h1 className="mb-2 text-2xl font-bold text-gray-900">
             {currentCustomerError ? "Error Loading Customer" : "Customer Not Found"}

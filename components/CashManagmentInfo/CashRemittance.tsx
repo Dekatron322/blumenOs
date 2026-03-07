@@ -3,30 +3,31 @@
 import React, { useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { AnimatePresence, motion } from "framer-motion"
-import { ArrowLeft, Calendar, Download, Filter, Info, Loader2, Search, X, Upload, FileText } from "lucide-react"
+import { AlertCircle, FileText, Info, Search, Upload, X } from "lucide-react"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
 import { RxCaretSort } from "react-icons/rx"
 import { AppDispatch, RootState } from "lib/redux/store"
 import {
+  fetchCashRemittanceRecords,
   CashRemittanceRecord,
   CashRemittanceStatus,
-  fetchCashRemittanceRecords,
   setPagination,
 } from "lib/redux/cashRemittanceSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import CashRemittanceModal from "components/ui/Modal/cash-remittance-modal"
 import ReceiptUploadModal from "components/ui/Modal/receipt-upload-modal"
+import { HiChevronDown } from "react-icons/hi"
 
 // ==================== Status Badge Component ====================
 const StatusBadge = ({ status }: { status: CashRemittanceStatus }) => {
   const getStatusStyles = () => {
     switch (status) {
-      case "Approved":
+      case CashRemittanceStatus.Verified:
         return "bg-emerald-50 text-emerald-700 border-emerald-200"
-      case "Pending":
+      case CashRemittanceStatus.Pending:
         return "bg-amber-50 text-amber-700 border-amber-200"
-      case "Rejected":
-        return "bg-red-50 text-red-700 border-red-200"
+      case CashRemittanceStatus.Deposited:
+        return "bg-blue-50 text-blue-700 border-blue-200"
       default:
         return "bg-gray-50 text-gray-700 border-gray-200"
     }
@@ -34,12 +35,12 @@ const StatusBadge = ({ status }: { status: CashRemittanceStatus }) => {
 
   const getDotColor = () => {
     switch (status) {
-      case "Approved":
+      case CashRemittanceStatus.Verified:
         return "bg-emerald-500"
-      case "Pending":
+      case CashRemittanceStatus.Pending:
         return "bg-amber-500"
-      case "Rejected":
-        return "bg-red-500"
+      case CashRemittanceStatus.Deposited:
+        return "bg-blue-500"
       default:
         return "bg-gray-500"
     }
@@ -851,34 +852,34 @@ const CashRemittance = () => {
               <table className="w-full min-w-[1000px]">
                 <thead>
                   <tr className="border-b border-gray-200 bg-gray-50/80">
-                    <th className="px-2 py-2 text-left">
+                    <th className="p-2 text-left">
                       <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">Amount</span>
                     </th>
-                    <th className="px-2 py-2 text-left">
+                    <th className="p-2 text-left">
                       <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">
                         Collection Officer
                       </span>
                     </th>
-                    <th className="px-2 py-2 text-left">
+                    <th className="p-2 text-left">
                       <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">Bank</span>
                     </th>
-                    <th className="px-2 py-2 text-left">
+                    <th className="p-2 text-left">
                       <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">
                         Teller Number
                       </span>
                     </th>
-                    <th className="px-2 py-2 text-left">
+                    <th className="p-2 text-left">
                       <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">Period</span>
                     </th>
-                    <th className="px-2 py-2 text-left">
+                    <th className="p-2 text-left">
                       <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">
                         Deposited Date
                       </span>
                     </th>
-                    <th className="px-2 py-2 text-left">
+                    <th className="p-2 text-left">
                       <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">Status</span>
                     </th>
-                    <th className="px-2 py-2 text-left">
+                    <th className="p-2 text-left">
                       <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">Actions</span>
                     </th>
                   </tr>
@@ -894,26 +895,26 @@ const CashRemittance = () => {
                         transition={{ duration: 0.2, delay: index * 0.01 }}
                         className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50"
                       >
-                        <td className="whitespace-nowrap px-2 py-2 text-xs font-semibold text-gray-900">
+                        <td className="whitespace-nowrap p-2 text-xs font-semibold text-gray-900">
                           {formatCurrency(record.amount)}
                         </td>
-                        <td className="whitespace-nowrap px-2 py-2 text-xs">
+                        <td className="whitespace-nowrap p-2 text-xs">
                           <div className="font-medium text-gray-900">{record.collectionOfficer.fullName}</div>
                         </td>
-                        <td className="whitespace-nowrap px-2 py-2">
+                        <td className="whitespace-nowrap p-2">
                           <BankBadge bankName={record.bankName} />
                         </td>
-                        <td className="whitespace-nowrap px-2 py-2 text-xs text-gray-700">#{record.tellerNumber}</td>
-                        <td className="whitespace-nowrap px-2 py-2 text-xs text-gray-700">
+                        <td className="whitespace-nowrap p-2 text-xs text-gray-700">#{record.tellerNumber}</td>
+                        <td className="whitespace-nowrap p-2 text-xs text-gray-700">
                           {formatDateRange(record.startDateUtc, record.endDateUtc)}
                         </td>
-                        <td className="whitespace-nowrap px-2 py-2 text-xs text-gray-700">
+                        <td className="whitespace-nowrap p-2 text-xs text-gray-700">
                           {formatDate(record.depositedAtUtc)}
                         </td>
-                        <td className="whitespace-nowrap px-2 py-2">
-                          <StatusBadge status={getStatusText(record.status)} />
+                        <td className="whitespace-nowrap p-2">
+                          <StatusBadge status={record.status} />
                         </td>
-                        <td className="whitespace-nowrap px-2 py-2">
+                        <td className="whitespace-nowrap p-2">
                           <div className="flex items-center gap-1">
                             {record.tellerUrl ? (
                               <a

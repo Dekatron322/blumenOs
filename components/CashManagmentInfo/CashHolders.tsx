@@ -4,16 +4,15 @@ import React, { useEffect, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import {
   AlertCircle,
+  ArrowUpRight,
+  ChevronDown,
+  ChevronUp,
+  DollarSign,
   TrendingDown,
   TrendingUp,
   Users,
-  DollarSign,
   RefreshCw,
-  ChevronDown,
-  ChevronUp,
   Wallet,
-  ArrowUpRight,
-  ArrowDownRight,
 } from "lucide-react"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { CashHolder, fetchCashHolders } from "lib/redux/paymentSlice"
@@ -238,7 +237,7 @@ const CashHolders: React.FC<CashHoldersProps> = ({ onViewDetails, onExportReport
                   }}
                 >
                   <div className="flex items-start justify-between">
-                    <div className="h-10 w-10 rounded-lg bg-gray-200"></div>
+                    <div className="size-10 rounded-lg bg-gray-200"></div>
                     <div className="h-6 w-16 rounded-full bg-gray-200"></div>
                   </div>
                   <div className="mt-3 space-y-2">
@@ -337,21 +336,21 @@ const CashHolders: React.FC<CashHoldersProps> = ({ onViewDetails, onExportReport
                   <div className="lg:col-span-2">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                       <div className="rounded-lg bg-gray-50 p-4 text-center">
-                        <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
+                        <div className="mx-auto mb-2 flex size-10 items-center justify-center rounded-full bg-blue-100">
                           <DollarSign className="size-5 text-blue-600" />
                         </div>
                         <div className="text-2xl font-bold text-gray-900">{stats.totalAmount}</div>
                         <div className="mt-1 text-xs text-gray-500">Total Value</div>
                       </div>
                       <div className="rounded-lg bg-gray-50 p-4 text-center">
-                        <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
+                        <div className="mx-auto mb-2 flex size-10 items-center justify-center rounded-full bg-purple-100">
                           <Users className="size-5 text-purple-600" />
                         </div>
                         <div className="text-2xl font-bold text-gray-900">{stats.totalHolders}</div>
                         <div className="mt-1 text-xs text-gray-500">Active Holders</div>
                       </div>
                       <div className="rounded-lg bg-gray-50 p-4 text-center">
-                        <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100">
+                        <div className="mx-auto mb-2 flex size-10 items-center justify-center rounded-full bg-emerald-100">
                           <ArrowUpRight className="size-5 text-emerald-600" />
                         </div>
                         <div className="text-2xl font-bold text-gray-900">{stats.totalTransactions}</div>
@@ -418,7 +417,7 @@ const CashHolders: React.FC<CashHoldersProps> = ({ onViewDetails, onExportReport
           >
             <div className="text-center">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
-                <Wallet className="h-8 w-8 text-gray-400" />
+                <Wallet className="size-8 text-gray-400" />
               </div>
               <h3 className="text-lg font-medium text-gray-900">No Cash Holder Data</h3>
               <p className="mt-2 text-sm text-gray-500">No cash holder data available. Try refreshing the data.</p>

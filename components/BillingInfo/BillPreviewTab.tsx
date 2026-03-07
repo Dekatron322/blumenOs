@@ -437,7 +437,7 @@ const BillPreviewTab: React.FC<BillPreviewTabProps> = ({ scheduleId }) => {
       {billPreviewLoading && (
         <div className="flex items-center justify-center py-16">
           <div className="flex flex-col items-center gap-3">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            <Loader2 className="size-8 animate-spin text-blue-600" />
             <p className="text-sm text-gray-500">Loading bill preview...</p>
           </div>
         </div>
@@ -447,7 +447,7 @@ const BillPreviewTab: React.FC<BillPreviewTabProps> = ({ scheduleId }) => {
       {billPreviewError && !billPreviewLoading && (
         <div className="flex items-center justify-center py-16">
           <div className="flex flex-col items-center gap-4 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+            <div className="flex size-12 items-center justify-center rounded-full bg-red-100">
               <AlertCircle className="size-6 text-red-600" />
             </div>
             <div>

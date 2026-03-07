@@ -34,7 +34,7 @@ import {
 } from "lib/redux/paymentSlice"
 import { fetchCustomers } from "lib/redux/customerSlice"
 import { fetchVendors } from "lib/redux/vendorSlice"
-import { fetchAgents, fetchAgentById } from "lib/redux/agentSlice"
+import { fetchAgentById, fetchAgents } from "lib/redux/agentSlice"
 import { fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
 import { api } from "lib/redux/authSlice"
 import { API_ENDPOINTS, buildApiUrl } from "lib/config/api"
@@ -377,7 +377,7 @@ const MobileFilterSidebar = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col bg-white"
+            className="flex size-full max-w-sm flex-col bg-white"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Fixed Header */}
@@ -1640,7 +1640,7 @@ const AllAnomaliesTable: React.FC<AllAnomaliesTableProps> = ({
                   <table className="w-full min-w-[1200px]">
                     <thead>
                       <tr className="border-b border-gray-200 bg-gray-50/80">
-                        <th className="px-2 py-2 text-left">
+                        <th className="p-2 text-left">
                           <button
                             onClick={() => toggleSort("id")}
                             className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
@@ -1649,7 +1649,7 @@ const AllAnomaliesTable: React.FC<AllAnomaliesTableProps> = ({
                             <RxCaretSort className="size-3.5" />
                           </button>
                         </th>
-                        <th className="px-2 py-2 text-left">
+                        <th className="p-2 text-left">
                           <button
                             onClick={() => toggleSort("amount")}
                             className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
@@ -1658,7 +1658,7 @@ const AllAnomaliesTable: React.FC<AllAnomaliesTableProps> = ({
                             <RxCaretSort className="size-3.5" />
                           </button>
                         </th>
-                        <th className="px-2 py-2 text-left">
+                        <th className="p-2 text-left">
                           <button
                             onClick={() => toggleSort("customerName")}
                             className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
@@ -1667,7 +1667,7 @@ const AllAnomaliesTable: React.FC<AllAnomaliesTableProps> = ({
                             <RxCaretSort className="size-3.5" />
                           </button>
                         </th>
-                        <th className="px-2 py-2 text-left">
+                        <th className="p-2 text-left">
                           <button
                             onClick={() => toggleSort("vendorName")}
                             className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
@@ -1676,7 +1676,7 @@ const AllAnomaliesTable: React.FC<AllAnomaliesTableProps> = ({
                             <RxCaretSort className="size-3.5" />
                           </button>
                         </th>
-                        <th className="px-2 py-2 text-left">
+                        <th className="p-2 text-left">
                           <button
                             onClick={() => toggleSort("agentName")}
                             className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
@@ -1685,7 +1685,7 @@ const AllAnomaliesTable: React.FC<AllAnomaliesTableProps> = ({
                             <RxCaretSort className="size-3.5" />
                           </button>
                         </th>
-                        <th className="px-2 py-2 text-left">
+                        <th className="p-2 text-left">
                           <button
                             onClick={() => toggleSort("paymentTypeName")}
                             className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
@@ -1694,7 +1694,7 @@ const AllAnomaliesTable: React.FC<AllAnomaliesTableProps> = ({
                             <RxCaretSort className="size-3.5" />
                           </button>
                         </th>
-                        <th className="px-2 py-2 text-left">
+                        <th className="p-2 text-left">
                           <button
                             onClick={() => toggleSort("channel")}
                             className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
@@ -1703,7 +1703,7 @@ const AllAnomaliesTable: React.FC<AllAnomaliesTableProps> = ({
                             <RxCaretSort className="size-3.5" />
                           </button>
                         </th>
-                        <th className="px-2 py-2 text-left">
+                        <th className="p-2 text-left">
                           <button
                             onClick={() => toggleSort("status")}
                             className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
@@ -1712,7 +1712,7 @@ const AllAnomaliesTable: React.FC<AllAnomaliesTableProps> = ({
                             <RxCaretSort className="size-3.5" />
                           </button>
                         </th>
-                        <th className="px-2 py-2 text-left">
+                        <th className="p-2 text-left">
                           <button
                             onClick={() => toggleSort("detectedAtUtc")}
                             className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
@@ -1721,7 +1721,7 @@ const AllAnomaliesTable: React.FC<AllAnomaliesTableProps> = ({
                             <RxCaretSort className="size-3.5" />
                           </button>
                         </th>
-                        <th className="px-2 py-2 text-left">
+                        <th className="p-2 text-left">
                           <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">
                             Actions
                           </span>
@@ -1739,38 +1739,36 @@ const AllAnomaliesTable: React.FC<AllAnomaliesTableProps> = ({
                             transition={{ duration: 0.2, delay: index * 0.01 }}
                             className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50"
                           >
-                            <td className="whitespace-nowrap px-2 py-2 text-xs font-medium text-gray-900">
-                              {anomaly.id}
-                            </td>
-                            <td className="whitespace-nowrap px-2 py-2 text-xs font-semibold text-gray-900">
+                            <td className="whitespace-nowrap p-2 text-xs font-medium text-gray-900">{anomaly.id}</td>
+                            <td className="whitespace-nowrap p-2 text-xs font-semibold text-gray-900">
                               {formatCurrency(anomaly.amount)}
                             </td>
-                            <td className="whitespace-nowrap px-2 py-2 text-xs">
+                            <td className="whitespace-nowrap p-2 text-xs">
                               <div>
                                 <div className="font-medium text-gray-900">{anomaly.customerName || "-"}</div>
                               </div>
                             </td>
-                            <td className="whitespace-nowrap px-2 py-2 text-xs text-gray-700">
+                            <td className="whitespace-nowrap p-2 text-xs text-gray-700">
                               {anomaly.vendorId ? getVendorName(anomaly.vendorId) : "-"}
                             </td>
-                            <td className="whitespace-nowrap px-2 py-2 text-xs text-gray-700">
+                            <td className="whitespace-nowrap p-2 text-xs text-gray-700">
                               {anomaly.agentId
                                 ? displayAgentNames.get(anomaly.agentId) || `ID: ${anomaly.agentId}`
                                 : "-"}
                             </td>
-                            <td className="whitespace-nowrap px-2 py-2 text-xs text-gray-700">
+                            <td className="whitespace-nowrap p-2 text-xs text-gray-700">
                               {anomaly.paymentTypeName || "-"}
                             </td>
-                            <td className="whitespace-nowrap px-2 py-2">
+                            <td className="whitespace-nowrap p-2">
                               <ChannelBadge channel={anomaly.channel} />
                             </td>
-                            <td className="whitespace-nowrap px-2 py-2">
+                            <td className="whitespace-nowrap p-2">
                               <StatusBadge status={anomaly.status} />
                             </td>
-                            <td className="whitespace-nowrap px-2 py-2 text-xs text-gray-700">
+                            <td className="whitespace-nowrap p-2 text-xs text-gray-700">
                               {formatDate(anomaly.detectedAtUtc)}
                             </td>
-                            <td className="whitespace-nowrap px-2 py-2">
+                            <td className="whitespace-nowrap p-2">
                               <div className="flex items-center gap-1">
                                 <button
                                   onClick={() => handleResolve(anomaly)}

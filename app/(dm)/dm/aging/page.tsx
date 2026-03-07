@@ -348,7 +348,7 @@ const AgingData = ({
           {[...Array(5)].map((_, index) => (
             <div key={index} className="flex items-center justify-between rounded-lg border p-3">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 animate-pulse rounded-full bg-gray-200"></div>
+                <div className="size-10 animate-pulse rounded-full bg-gray-200"></div>
                 <div className="space-y-2">
                   <div className="h-4 w-32 animate-pulse rounded bg-gray-200"></div>
                   <div className="h-3 w-24 animate-pulse rounded bg-gray-200"></div>

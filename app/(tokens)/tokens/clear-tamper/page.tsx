@@ -889,7 +889,7 @@ const ClearTamper = () => {
                         onDragLeave={handleDragLeave}
                         onDrop={handleDrop}
                       >
-                        <CloudUpload className="mx-auto h-12 w-12 text-gray-400" />
+                        <CloudUpload className="mx-auto size-12 text-gray-400" />
                         <div className="mt-4">
                           <p className="text-lg font-medium text-gray-900">
                             {selectedFile ? selectedFile.name : "Drop your file here, or click to browse"}

@@ -184,7 +184,7 @@ const AnalyticsCardSkeleton = () => (
     }}
   >
     <div className="flex items-start justify-between">
-      <div className="h-10 w-10 rounded-lg bg-gray-200"></div>
+      <div className="size-10 rounded-lg bg-gray-200"></div>
       <div className="h-6 w-16 rounded-full bg-gray-200"></div>
     </div>
     <div className="mt-3 space-y-2">
@@ -220,7 +220,7 @@ const CategoriesSectionSkeleton = () => {
           <div key={index} className="rounded-lg border border-gray-100 bg-gray-50 p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-full bg-gray-200"></div>
+                <div className="size-8 rounded-full bg-gray-200"></div>
                 <div className="h-4 w-20 rounded bg-gray-200"></div>
               </div>
               <div className="h-4 w-16 rounded bg-gray-200"></div>
@@ -752,7 +752,7 @@ export default function AllTransactions() {
               >
                 <div className="text-center">
                   <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
-                    <Users className="h-8 w-8 text-gray-400" />
+                    <Users className="size-8 text-gray-400" />
                   </div>
                   <h3 className="text-lg font-medium text-gray-900">No Customer Data</h3>
                   <p className="mt-2 text-sm text-gray-500">
@@ -822,7 +822,7 @@ export default function AllTransactions() {
               className="rounded-xl bg-white p-6 shadow-xl"
             >
               <div className="flex flex-col items-center gap-4">
-                <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#004B23] border-t-transparent" />
+                <div className="size-12 animate-spin rounded-full border-4 border-[#004B23] border-t-transparent" />
                 <div className="text-center">
                   <p className="font-medium text-gray-900">Loading Customer Data</p>
                   <p className="text-sm text-gray-600">Please wait</p>

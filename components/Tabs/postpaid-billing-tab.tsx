@@ -155,7 +155,7 @@ const TableHeaderSkeleton = () => (
       <div className="h-8 w-48 rounded bg-gray-200"></div>
       <div className="flex gap-2">
         <div className="h-10 w-32 rounded bg-gray-200"></div>
-        <div className="h-10 w-10 rounded bg-gray-200"></div>
+        <div className="size-10 rounded bg-gray-200"></div>
       </div>
     </div>
     <div className="flex gap-2">

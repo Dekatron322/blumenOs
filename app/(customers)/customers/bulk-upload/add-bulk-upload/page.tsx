@@ -1501,7 +1501,7 @@ const FileManagementPage = () => {
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => router.back()}
-                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    className="flex size-10 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     aria-label="Go back"
                   >
                     <ArrowLeft className="size-5" />
@@ -1854,7 +1854,7 @@ const FileManagementPage = () => {
                           <div className="mb-3 flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               <div
-                                className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                                className={`flex size-10 items-center justify-center rounded-full ${
                                   uploadProgress.percentage === 100 ? "bg-green-200" : "bg-blue-200"
                                 }`}
                               >
@@ -2038,7 +2038,7 @@ const FileManagementPage = () => {
               className="rounded-xl bg-white p-6 shadow-xl"
             >
               <div className="flex flex-col items-center gap-4">
-                <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+                <div className="size-12 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
                 <div className="text-center">
                   <p className="font-medium text-gray-900">
                     {isValidatingFile ? "Validating file..." : "Processing..."}

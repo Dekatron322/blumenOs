@@ -347,7 +347,7 @@ const MarkAsReadyToPrintModal: React.FC<{
                     </div>
                   ) : displayCustomers.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-8">
-                      <Filter className="mb-2 h-8 w-8 text-gray-300" />
+                      <Filter className="mb-2 size-8 text-gray-300" />
                       <div className="text-sm text-gray-500">
                         {customerSearchText ? "No customers found matching your search" : "No customers available"}
                       </div>

@@ -640,7 +640,7 @@ const FileManagementPage = () => {
                   >
                     <div className="mb-3 flex items-center">
                       <div
-                        className={`mr-3 flex h-8 w-8 items-center justify-center rounded-full ${
+                        className={`mr-3 flex size-8 items-center justify-center rounded-full ${
                           uploadProgress.percentage === 100 ? "bg-green-100" : "bg-blue-100"
                         }`}
                       >

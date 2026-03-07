@@ -289,7 +289,7 @@ const GenerateBillPage = () => {
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => router.back()}
-                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    className="flex size-10 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     aria-label="Go back"
                   >
                     <ArrowLeft className="size-5" />
@@ -334,7 +334,7 @@ const GenerateBillPage = () => {
                 <div className="p-6">
                   {billingSchedulesLoading && (
                     <div className="flex items-center justify-center py-12">
-                      <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
+                      <div className="size-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
                       <span className="ml-2 text-gray-600">Loading billing schedules...</span>
                     </div>
                   )}
@@ -353,7 +353,7 @@ const GenerateBillPage = () => {
 
                   {!billingSchedulesLoading && !billingSchedulesError && billingSchedules.length === 0 && (
                     <div className="py-12 text-center">
-                      <FileText className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+                      <FileText className="mx-auto mb-4 size-12 text-gray-400" />
                       <h3 className="mb-2 text-lg font-medium text-gray-900">No billing schedules found</h3>
                       <p className="text-gray-600">There are currently no billing schedule blueprints available.</p>
                     </div>

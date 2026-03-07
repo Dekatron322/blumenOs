@@ -989,7 +989,7 @@ const AddNewVendor = () => {
                                 />
                                 <div className="flex flex-col items-center space-y-2">
                                   <svg
-                                    className="h-10 w-10 text-gray-400"
+                                    className="size-10 text-gray-400"
                                     fill="none"
                                     viewBox="0 0 24 24"
                                     stroke="currentColor"

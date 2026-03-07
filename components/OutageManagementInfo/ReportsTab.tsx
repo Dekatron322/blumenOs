@@ -402,7 +402,7 @@ const MobileFilterSidebar = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col bg-white p-4 shadow-xl"
+            className="flex size-full max-w-sm flex-col bg-white p-4 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}

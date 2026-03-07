@@ -221,7 +221,7 @@ const TableSkeleton = () => {
           >
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-12 w-12 animate-pulse rounded-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
+                <div className="size-12 animate-pulse rounded-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
                 <div>
                   <div className="h-5 w-32 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
                   <div className="mt-1 flex gap-2">
@@ -315,7 +315,7 @@ const CustomerPaymentHistoryTableSkeleton = () => {
         <div className="h-4 w-32 animate-pulse rounded bg-gray-200"></div>
         <div className="flex gap-2">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-8 w-8 animate-pulse rounded bg-gray-200"></div>
+            <div key={i} className="size-8 animate-pulse rounded bg-gray-200"></div>
           ))}
         </div>
         <div className="h-4 w-32 animate-pulse rounded bg-gray-200"></div>
@@ -1076,7 +1076,7 @@ export default function AgentManagementDashboard() {
             <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
               <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 sm:h-12 sm:w-12">
+                  <div className="flex size-10 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 sm:h-12 sm:w-12">
                     <svg
                       className="size-5 text-white sm:h-6 sm:w-6"
                       fill="none"
@@ -1229,7 +1229,7 @@ export default function AgentManagementDashboard() {
                             <div className="text-center">
                               <div className="rounded-lg bg-white/20 p-3 backdrop-blur-sm sm:p-4">
                                 <svg
-                                  className="mx-auto mb-2 h-8 w-8 text-white sm:h-12 sm:w-12"
+                                  className="mx-auto mb-2 size-8 text-white sm:h-12 sm:w-12"
                                   fill="none"
                                   viewBox="0 0 24 24"
                                   stroke="currentColor"
@@ -1357,7 +1357,7 @@ export default function AgentManagementDashboard() {
                           {/* Today's Collection */}
                           <div className="border-gray-200 last:border-r-0 max-2xl:pb-6 max-sm:border-b max-sm:pb-4 sm:max-2xl:rounded-md sm:max-2xl:bg-[#f9f9f9] sm:max-2xl:p-4 md:pr-6  2xl:border-r">
                             <div className="flex items-center justify-between">
-                              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
+                              <div className="flex size-10 items-center justify-center rounded-lg bg-blue-100">
                                 <svg
                                   className="size-5  text-blue-600"
                                   fill="none"
@@ -1407,7 +1407,7 @@ export default function AgentManagementDashboard() {
                           {/* Pending Confirmations */}
                           <div className="border-gray-200 last:border-r-0 max-2xl:pb-6 max-sm:border-b max-sm:pb-4 sm:max-2xl:rounded-md sm:max-2xl:bg-[#f9f9f9] sm:max-2xl:p-4 md:pr-6  2xl:border-r">
                             <div className="flex items-center justify-between">
-                              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-yellow-100">
+                              <div className="flex size-10 items-center justify-center rounded-lg bg-yellow-100">
                                 <svg
                                   className="size-5  text-yellow-600"
                                   fill="none"
@@ -1462,7 +1462,7 @@ export default function AgentManagementDashboard() {
                           {/* Settled Today */}
                           <div className="border-gray-200 last:border-r-0 max-2xl:pb-6 max-sm:border-b max-sm:pb-4 sm:max-2xl:rounded-md sm:max-2xl:bg-[#f9f9f9] sm:max-2xl:p-4 md:pr-6  2xl:border-r">
                             <div className="flex items-center justify-between">
-                              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
+                              <div className="flex size-10 items-center justify-center rounded-lg bg-green-100">
                                 <svg
                                   className="size-5  text-green-600"
                                   fill="none"
@@ -1513,7 +1513,7 @@ export default function AgentManagementDashboard() {
                           {/* Available Balance */}
                           <div className="border-gray-200 last:border-r-0 max-2xl:pb-6 max-sm:border-b max-sm:pb-4 sm:max-2xl:rounded-md sm:max-2xl:bg-[#f9f9f9] sm:max-2xl:p-4 md:pr-6  2xl:border-r">
                             <div className="flex items-center justify-between">
-                              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100">
+                              <div className="flex size-10 items-center justify-center rounded-lg bg-purple-100">
                                 <svg
                                   className="size-5  text-purple-600"
                                   fill="none"

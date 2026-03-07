@@ -3,33 +3,11 @@
 import React, { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
-import {
-  ArrowLeft,
-  ChevronDown,
-  ChevronUp,
-  Filter,
-  SortAsc,
-  SortDesc,
-  X,
-  AlertCircle,
-  Info,
-  Search,
-} from "lucide-react"
+import { ArrowLeft, ChevronDown, ChevronUp, Filter, Info, Search, SortAsc, SortDesc, X } from "lucide-react"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
-import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
+
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos } from "react-icons/md"
-import {
-  AddAgentIcon,
-  BillsIcon,
-  FloatIcon,
-  MapIcon,
-  PerformanceIcon,
-  PhoneIcon,
-  RateIcon,
-  RouteIcon,
-  TargetIcon,
-  UserIcon,
-} from "components/Icons/Icons"
+import { UserIcon } from "components/Icons/Icons"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { type Agent, AgentsRequestParams, fetchAgents, setPagination } from "lib/redux/agentSlice"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
@@ -597,6 +575,23 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
     })
   }
 
+  // Fetch agents with filters
+  useEffect(() => {
+    const params: AgentsRequestParams = {
+      pageNumber: currentPage,
+      pageSize,
+      ...(searchText && { search: searchText }),
+      ...(appliedFilters.status && { status: appliedFilters.status }),
+      ...(appliedFilters.canCollectCash !== undefined && { canCollectCash: appliedFilters.canCollectCash }),
+      ...(appliedFilters.areaOfficeId && { areaOfficeId: appliedFilters.areaOfficeId }),
+      ...(appliedFilters.sortBy && { sortBy: appliedFilters.sortBy }),
+      ...(appliedFilters.sortOrder && { sortOrder: appliedFilters.sortOrder }),
+      AgentType: "SalesRep",
+    }
+
+    dispatch(fetchAgents(params))
+  }, [dispatch, currentPage, pageSize, searchText, appliedFilters])
+
   if (loading && agents.length === 0) return <LoadingSkeleton />
 
   if (error) {
@@ -639,23 +634,6 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
       setCurrentPage(1)
     }
   }
-
-  // Fetch agents with filters
-  useEffect(() => {
-    const params: AgentsRequestParams = {
-      pageNumber: currentPage,
-      pageSize,
-      ...(searchText && { search: searchText }),
-      ...(appliedFilters.status && { status: appliedFilters.status }),
-      ...(appliedFilters.canCollectCash !== undefined && { canCollectCash: appliedFilters.canCollectCash }),
-      ...(appliedFilters.areaOfficeId && { areaOfficeId: appliedFilters.areaOfficeId }),
-      ...(appliedFilters.sortBy && { sortBy: appliedFilters.sortBy }),
-      ...(appliedFilters.sortOrder && { sortOrder: appliedFilters.sortOrder }),
-      AgentType: "SalesRep",
-    }
-
-    dispatch(fetchAgents(params))
-  }, [dispatch, currentPage, pageSize, searchText, appliedFilters])
 
   return (
     <div className="w-full space-y-5">
@@ -807,7 +785,7 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
                   <table className="w-full min-w-[1000px]">
                     <thead>
                       <tr className="border-b border-gray-200 bg-gray-50/80">
-                        <th className="px-2 py-2 text-left">
+                        <th className="p-2 text-left">
                           <button
                             onClick={() => {
                               const option = sortOptions.find((o) => o.value === "name")
@@ -819,7 +797,7 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
                             <RxCaretSort className="size-3.5" />
                           </button>
                         </th>
-                        <th className="px-2 py-2 text-left">
+                        <th className="p-2 text-left">
                           <button
                             onClick={() => {
                               const option = sortOptions.find((o) => o.value === "name")
@@ -831,7 +809,7 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
                             <RxCaretSort className="size-3.5" />
                           </button>
                         </th>
-                        <th className="px-2 py-2 text-left">
+                        <th className="p-2 text-left">
                           <button
                             onClick={() => {
                               const option = sortOptions.find((o) => o.value === "name")
@@ -843,7 +821,7 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
                             <RxCaretSort className="size-3.5" />
                           </button>
                         </th>
-                        <th className="px-2 py-2 text-left">
+                        <th className="p-2 text-left">
                           <button
                             onClick={() => {
                               const option = sortOptions.find((o) => o.value === "cashAtHand")
@@ -855,7 +833,7 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
                             <RxCaretSort className="size-3.5" />
                           </button>
                         </th>
-                        <th className="px-2 py-2 text-left">
+                        <th className="p-2 text-left">
                           <button
                             onClick={() => {
                               const option = sortOptions.find((o) => o.value === "cashAtHand")
@@ -867,7 +845,7 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
                             <RxCaretSort className="size-3.5" />
                           </button>
                         </th>
-                        <th className="px-2 py-2 text-left">
+                        <th className="p-2 text-left">
                           <button
                             onClick={() => {
                               const option = sortOptions.find((o) => o.value === "status")
@@ -879,7 +857,7 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
                             <RxCaretSort className="size-3.5" />
                           </button>
                         </th>
-                        <th className="px-2 py-2 text-left">
+                        <th className="p-2 text-left">
                           <button
                             onClick={() => {
                               const option = sortOptions.find((o) => o.value === "name")
@@ -891,7 +869,7 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
                             <RxCaretSort className="size-3.5" />
                           </button>
                         </th>
-                        <th className="px-2 py-2 text-left">
+                        <th className="p-2 text-left">
                           <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">
                             Actions
                           </span>
@@ -909,7 +887,7 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
                             transition={{ duration: 0.2, delay: index * 0.01 }}
                             className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50"
                           >
-                            <td className="whitespace-nowrap px-2 py-2 text-xs">
+                            <td className="whitespace-nowrap p-2 text-xs">
                               <div className="flex items-center gap-2">
                                 <div className="flex size-6 items-center justify-center rounded-full bg-gray-100">
                                   <UserIcon />
@@ -920,31 +898,31 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
                                 </div>
                               </div>
                             </td>
-                            <td className="whitespace-nowrap px-2 py-2 text-xs text-gray-700">
+                            <td className="whitespace-nowrap p-2 text-xs text-gray-700">
                               <div className="flex items-center gap-1">
                                 <span>{agent.user.phoneNumber}</span>
                               </div>
                             </td>
-                            <td className="whitespace-nowrap px-2 py-2 text-xs text-gray-700">
+                            <td className="whitespace-nowrap p-2 text-xs text-gray-700">
                               <div className="flex items-center gap-1">
                                 <span>{agent.areaOfficeName || agent.serviceCenterName || "N/A"}</span>
                               </div>
                             </td>
-                            <td className="whitespace-nowrap px-2 py-2 text-xs font-semibold text-gray-900">
+                            <td className="whitespace-nowrap p-2 text-xs font-semibold text-gray-900">
                               {formatCurrency(agent.cashAtHand)}
                             </td>
-                            <td className="whitespace-nowrap px-2 py-2 text-xs font-semibold text-green-600">
+                            <td className="whitespace-nowrap p-2 text-xs font-semibold text-green-600">
                               {formatCurrency(agent.cashCollectionLimit)}
                             </td>
-                            <td className="whitespace-nowrap px-2 py-2 text-xs">
+                            <td className="whitespace-nowrap p-2 text-xs">
                               <div className="flex items-center gap-1">
                                 <span className="text-green-600">{agent.status}</span>
                               </div>
                             </td>
-                            <td className="whitespace-nowrap px-2 py-2 text-xs text-gray-700">
+                            <td className="whitespace-nowrap p-2 text-xs text-gray-700">
                               {formatDate(agent.lastCashCollectionDate)}
                             </td>
-                            <td className="whitespace-nowrap px-2 py-2">
+                            <td className="whitespace-nowrap p-2">
                               <ActionButtons agent={agent} onViewDetails={handleViewDetails} />
                             </td>
                           </motion.tr>
