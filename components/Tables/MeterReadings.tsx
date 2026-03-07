@@ -252,7 +252,7 @@ const MobileFilterSidebar: React.FC<{
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col bg-white"
+            className="flex size-full max-w-sm flex-col bg-white"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Fixed Header */}
@@ -1030,7 +1030,7 @@ const MeterReadings: React.FC = () => {
               </button>
 
               <div>
-                <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Meter Readings</p>
+                <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Meter Readings</p>
                 <p className="text-sm text-gray-600">Manage and validate customer meter readings</p>
               </div>
             </div>

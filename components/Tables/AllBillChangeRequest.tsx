@@ -273,7 +273,7 @@ const MobileFilterSidebar = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col bg-white p-4 shadow-xl"
+            className="flex size-full max-w-sm flex-col bg-white p-4 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -942,7 +942,7 @@ const BillingChangeRequestsTable = () => {
                   )}
                 </button>
 
-                <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">Billing Change Requests</p>
+                <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-xl">Billing Change Requests</p>
               </div>
 
               <div className="flex items-center gap-2">

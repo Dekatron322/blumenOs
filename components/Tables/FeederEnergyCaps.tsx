@@ -944,7 +944,7 @@ const FeederEnergyCaps: React.FC = () => {
 
                 {/* Export CSV button for mobile/tablet */}
 
-                <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">Feeder Energy Caps</p>
+                <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-xl">Feeder Energy Caps</p>
               </div>
 
               <div className="flex items-center gap-2">

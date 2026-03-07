@@ -698,7 +698,7 @@ const SubstationsTab: React.FC = () => {
                 )}
               </button>
               <div>
-                <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Injection Substations</p>
+                <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Injection Substations</p>
                 <p className="text-sm text-gray-600">Manage and monitor injection substations operations</p>
               </div>
             </div>

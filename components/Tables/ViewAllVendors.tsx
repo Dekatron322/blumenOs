@@ -1075,7 +1075,7 @@ const AllVendors: React.FC = () => {
         >
           <div className="flex flex-col py-2">
             <div className="mb-3 flex w-full flex-col items-start justify-between gap-3 sm:flex-row sm:items-center sm:gap-0">
-              <p className="text-lg font-medium sm:text-xl md:text-2xl">All Vendors</p>
+              <p className="text-lg font-medium sm:text-xl md:text-xl">All Vendors</p>
 
               <div className="flex items-center gap-2">
                 {/* Mobile Filter Button */}

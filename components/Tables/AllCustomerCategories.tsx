@@ -544,7 +544,7 @@ const AllCustomerCategoriesTable: React.FC = () => {
         transition={{ duration: 0.3 }}
       >
         <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Customer Categories</p>
+          <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Customer Categories</p>
           <p className="text-sm text-gray-600">Manage customer categories and sub-categories</p>
         </div>
         <div className="flex items-center gap-4">

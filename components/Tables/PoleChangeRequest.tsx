@@ -604,7 +604,7 @@ const PoleChangeRequest = () => {
                     </span>
                   )}
                 </button>
-                <p className="text-base font-medium sm:text-lg md:text-2xl">Pole Change Requests</p>
+                <p className="text-base font-medium sm:text-lg md:text-xl">Pole Change Requests</p>
               </div>
               <button
                 className="button-oulined p-2hover:border-[#2563EB] flex items-center justify-center gap-1.5 self-start border-[#2563EB] bg-[#DBEAFE] hover:bg-[#DBEAFE] sm:gap-2 sm:px-3"

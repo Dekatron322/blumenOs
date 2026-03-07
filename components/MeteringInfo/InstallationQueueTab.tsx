@@ -476,7 +476,7 @@ const InstallationQueueTable: React.FC = () => {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.3 }}
       >
-        <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Installation Queue</p>
+        <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Installation Queue</p>
         <div className="flex gap-4">
           <div className="relative">
             <input

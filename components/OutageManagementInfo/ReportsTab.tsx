@@ -402,7 +402,7 @@ const MobileFilterSidebar = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col bg-white p-4 shadow-xl"
+            className="flex size-full max-w-sm flex-col bg-white p-4 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -852,7 +852,7 @@ const ReportsTab: React.FC = () => {
         >
           <div className="items-center justify-between border-b py-2 md:flex md:py-4">
             <div>
-              <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Reports Management</p>
+              <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Reports Management</p>
               <p className="text-sm text-gray-500">Generate and manage system reports</p>
             </div>
             <div className="mt-3 flex w-full flex-col gap-2 sm:mt-4 sm:flex-row sm:items-center sm:justify-end md:mt-0 md:w-auto md:gap-4">

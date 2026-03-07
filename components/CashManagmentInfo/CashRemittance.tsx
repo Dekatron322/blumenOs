@@ -2,10 +2,10 @@
 
 import React, { useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import { motion } from "framer-motion"
-
-import { HiChevronDown, HiChevronUp } from "react-icons/hi"
+import { AnimatePresence, motion } from "framer-motion"
+import { AlertCircle, FileText, Info, Search, Upload, X } from "lucide-react"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
+import { RxCaretSort } from "react-icons/rx"
 import { AppDispatch, RootState } from "lib/redux/store"
 import {
   CashRemittanceRecord,
@@ -16,6 +16,130 @@ import {
 import { ButtonModule } from "components/ui/Button/Button"
 import CashRemittanceModal from "components/ui/Modal/cash-remittance-modal"
 import ReceiptUploadModal from "components/ui/Modal/receipt-upload-modal"
+import { HiChevronDown } from "react-icons/hi"
+
+// ==================== Status Badge Component ====================
+const StatusBadge = ({ status }: { status: CashRemittanceStatus }) => {
+  const getStatusStyles = () => {
+    switch (status) {
+      case CashRemittanceStatus.Verified:
+        return "bg-emerald-50 text-emerald-700 border-emerald-200"
+      case CashRemittanceStatus.Pending:
+        return "bg-amber-50 text-amber-700 border-amber-200"
+      case CashRemittanceStatus.Deposited:
+        return "bg-blue-50 text-blue-700 border-blue-200"
+      default:
+        return "bg-gray-50 text-gray-700 border-gray-200"
+    }
+  }
+
+  const getDotColor = () => {
+    switch (status) {
+      case CashRemittanceStatus.Verified:
+        return "bg-emerald-500"
+      case CashRemittanceStatus.Pending:
+        return "bg-amber-500"
+      case CashRemittanceStatus.Deposited:
+        return "bg-blue-500"
+      default:
+        return "bg-gray-500"
+    }
+  }
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium ${getStatusStyles()}`}
+    >
+      <span className={`size-1.5 rounded-full ${getDotColor()}`} />
+      {status}
+    </span>
+  )
+}
+
+// ==================== Bank Badge Component ====================
+const BankBadge = ({ bankName }: { bankName: string }) => {
+  const getBankStyles = () => {
+    switch (bankName.toLowerCase()) {
+      case "access bank":
+        return "bg-orange-50 text-orange-700 border-orange-200"
+      case "zenith bank":
+        return "bg-red-50 text-red-700 border-red-200"
+      case "gtbank":
+        return "bg-blue-50 text-blue-700 border-blue-200"
+      case "first bank":
+        return "bg-purple-50 text-purple-700 border-purple-200"
+      case "uba":
+        return "bg-green-50 text-green-700 border-green-200"
+      default:
+        return "bg-gray-50 text-gray-700 border-gray-200"
+    }
+  }
+
+  return (
+    <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${getBankStyles()}`}>
+      {bankName}
+    </span>
+  )
+}
+
+// ==================== Loading Skeleton ====================
+const LoadingSkeleton = () => {
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white">
+      {/* Header Skeleton */}
+      <div className="border-b border-gray-200 p-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="h-6 w-40 rounded-lg bg-gray-200"></div>
+            <div className="mt-1 h-4 w-56 rounded-lg bg-gray-200"></div>
+          </div>
+          <div className="flex gap-2">
+            <div className="h-9 w-28 rounded-lg bg-gray-200"></div>
+            <div className="h-9 w-28 rounded-lg bg-gray-200"></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Table Skeleton */}
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[1000px]">
+          <thead>
+            <tr className="border-b border-gray-200 bg-gray-50/50">
+              {[...Array(8)].map((_, i) => (
+                <th key={i} className="px-3 py-2.5">
+                  <div className="h-3.5 w-16 rounded bg-gray-200"></div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {[...Array(8)].map((_, rowIndex) => (
+              <tr key={rowIndex} className="border-b border-gray-100">
+                {[...Array(8)].map((_, cellIndex) => (
+                  <td key={cellIndex} className="px-3 py-2.5">
+                    <div className="h-3.5 w-full rounded bg-gray-200"></div>
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination Skeleton */}
+      <div className="border-t border-gray-200 p-4">
+        <div className="flex items-center justify-between">
+          <div className="h-3.5 w-40 rounded bg-gray-200"></div>
+          <div className="flex gap-1.5">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="size-7 rounded-lg bg-gray-200"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const CashRemittance = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -601,163 +725,294 @@ const CashRemittance = () => {
   //   </div>
   // )
 
-  // Calculate statistics
-  const statusCounts = filteredRecords.reduce(
-    (acc, record) => {
-      const status = getStatusText(record.status)
-      acc[status] = (acc[status] || 0) + 1
-      return acc
-    },
-    {} as Record<string, number>
-  )
+  // Format currency for display
+  const formatCurrency = (amount: number) => {
+    return `₦${amount.toLocaleString()}`
+  }
 
-  const totalAmount = filteredRecords.reduce((sum, record) => sum + record.amount, 0)
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    })
+  }
+
+  // Format date range for display
+  const formatDateRange = (startDate: string, endDate: string) => {
+    const start = new Date(startDate).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    })
+    const end = new Date(endDate).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    })
+    return `${start} - ${end}`
+  }
+
+  if (recordsLoading) return <LoadingSkeleton />
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="flex flex-col gap-4 lg:flex-row lg:gap-6"
-    >
-      {/* Left Column - Records List */}
-      <div className="flex-1">
-        <div className="rounded-lg border bg-white p-3 md:p-4 lg:p-6">
-          <div className="mb-4 flex flex-col gap-3 md:mb-6 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-center justify-between md:block">
-              <h3 className="text-base font-semibold md:text-lg">Cash Mop Up Records</h3>
-              <button
-                onClick={() => setShowSidebar(!showSidebar)}
-                className="flex items-center gap-1 rounded-lg border border-gray-200 px-2 py-1.5 text-xs hover:bg-gray-50 md:hidden"
-                aria-label="Toggle sidebar"
-              >
-                <span>Stats</span>
-                {showSidebar ? <HiChevronUp className="size-3" /> : <HiChevronDown className="size-3" />}
-              </button>
-            </div>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3 md:max-w-lg">
-              <DateFilter />
-              {agent && agent.agentType === "ClearingCashier" && (
-                <ButtonModule variant="primary" size="md" onClick={() => setShowRecordModal(true)}>
-                  Record Cash Mopup
-                </ButtonModule>
-              )}
-            </div>
+    <div className="space-y-5">
+      {/* Header Section */}
+      <div className="rounded-xl border border-gray-200 bg-white p-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">Cash Remittance Records</h2>
+            <p className="mt-1 text-xs text-gray-600">View and manage cash mop up records</p>
           </div>
 
-          {/* Loading State */}
-          {recordsLoading && (
-            <div className="flex items-center justify-center py-8">
-              <div className="text-sm text-gray-500">Loading cash mop up records...</div>
-            </div>
-          )}
-
-          {/* Error State */}
-          {recordsError && (
-            <div className="rounded-lg bg-red-50 p-4">
-              <p className="text-sm text-red-600">Error: {recordsError}</p>
-            </div>
-          )}
-
-          {/* Records List */}
-          {!recordsLoading && !recordsError && (
-            <div className="space-y-2">
-              {filteredRecords.length === 0 ? (
-                <div className="py-8 text-center">
-                  <p className="text-sm text-gray-500">No cash mop up records found</p>
-                </div>
-              ) : (
-                filteredRecords.map((record, index) => <RecordCard key={record.id} record={record} index={index} />)
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Search */}
+            <div className="relative min-w-[220px]">
+              <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                placeholder="Search records..."
+                className="h-9 w-full rounded-lg border border-gray-300 bg-white pl-8 pr-8 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              {searchText && (
+                <button
+                  onClick={handleCancelSearch}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="size-3.5" />
+                </button>
               )}
             </div>
-          )}
 
-          {/* Pagination Controls */}
-          {!recordsLoading && !recordsError && pagination.totalPages > 1 && (
-            <div className="mt-4 flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <span>
-                  Showing {(pagination.currentPage - 1) * pagination.pageSize + 1} to{" "}
-                  {Math.min(pagination.currentPage * pagination.pageSize, pagination.totalCount)} of{" "}
-                  {pagination.totalCount} records
-                </span>
-              </div>
+            {/* Date Filter */}
+            <DateFilter />
 
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 text-sm">
-                  <span className="text-gray-600">Show rows</span>
-                  <select
-                    value={pagination.pageSize}
-                    onChange={handleRowsChange}
-                    className="rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  >
-                    <option value={5}>5</option>
-                    <option value={10}>10</option>
-                    <option value={20}>20</option>
-                    <option value={50}>50</option>
-                  </select>
-                </div>
-
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => changePage(pagination.currentPage - 1)}
-                    disabled={pagination.currentPage === 1}
-                    className={`rounded p-1 ${
-                      pagination.currentPage === 1
-                        ? "cursor-not-allowed text-gray-400"
-                        : "text-gray-600 hover:bg-gray-100"
-                    }`}
-                  >
-                    <BiSolidLeftArrow className="size-4" />
-                  </button>
-
-                  {getPageItems().map((item, index) => (
-                    <button
-                      key={index}
-                      onClick={() => typeof item === "number" && changePage(item)}
-                      disabled={typeof item !== "number"}
-                      className={`rounded px-2 py-1 text-sm ${
-                        typeof item === "number" && item === pagination.currentPage
-                          ? "bg-blue-600 text-white"
-                          : typeof item === "number"
-                          ? "text-gray-600 hover:bg-gray-100"
-                          : "cursor-default text-gray-400"
-                      }`}
-                    >
-                      {item}
-                    </button>
-                  ))}
-
-                  <button
-                    onClick={() => changePage(pagination.currentPage + 1)}
-                    disabled={pagination.currentPage === pagination.totalPages}
-                    className={`rounded p-1 ${
-                      pagination.currentPage === pagination.totalPages
-                        ? "cursor-not-allowed text-gray-400"
-                        : "text-gray-600 hover:bg-gray-100"
-                    }`}
-                  >
-                    <BiSolidRightArrow className="size-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+            {/* New Record Button */}
+            {agent && agent.agentType === "ClearingCashier" && (
+              <button
+                onClick={() => setShowRecordModal(true)}
+                className="flex items-center gap-1.5 rounded-lg bg-[#004B23] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[#003618]"
+              >
+                <Upload className="size-3.5" />
+                <span className="hidden sm:inline">Record Cash Mop Up</span>
+                <span className="sm:hidden">New Record</span>
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* Error Message */}
+        <AnimatePresence>
+          {recordsError && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mt-3 overflow-hidden"
+            >
+              <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-2">
+                <AlertCircle className="size-4 text-red-600" />
+                <p className="text-xs text-red-700">{recordsError}</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* Mobile Quick Actions Button */}
-      {/* <MobileQuickActions /> */}
+      {/* Main Content with Table */}
+      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+        {records.length === 0 ? (
+          <div className="flex h-72 flex-col items-center justify-center px-4">
+            <div className="rounded-full bg-gray-100 p-3">
+              <Info className="size-6 text-gray-400" />
+            </div>
+            <p className="mt-3 text-base font-medium text-gray-900">No records found</p>
+            <p className="mt-1 text-xs text-gray-600">
+              {searchText || (startDate && endDate)
+                ? "Try adjusting your search or filters"
+                : "Cash remittance records will appear here once recorded"}
+            </p>
+            {(searchText || (startDate && endDate)) && (
+              <button
+                onClick={() => {
+                  setSearchText("")
+                  clearDateFilters()
+                }}
+                className="mt-3 rounded-lg bg-[#004B23] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[#003618]"
+              >
+                Clear all filters
+              </button>
+            )}
+          </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[1000px]">
+                <thead>
+                  <tr className="border-b border-gray-200 bg-gray-50/80">
+                    <th className="p-2 text-left">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">Amount</span>
+                    </th>
+                    <th className="p-2 text-left">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">
+                        Collection Officer
+                      </span>
+                    </th>
+                    <th className="p-2 text-left">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">Bank</span>
+                    </th>
+                    <th className="p-2 text-left">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">
+                        Teller Number
+                      </span>
+                    </th>
+                    <th className="p-2 text-left">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">Period</span>
+                    </th>
+                    <th className="p-2 text-left">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">
+                        Deposited Date
+                      </span>
+                    </th>
+                    <th className="p-2 text-left">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">Status</span>
+                    </th>
+                    <th className="p-2 text-left">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">Actions</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <AnimatePresence>
+                    {filteredRecords.map((record, index) => (
+                      <motion.tr
+                        key={record.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2, delay: index * 0.01 }}
+                        className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50"
+                      >
+                        <td className="whitespace-nowrap p-2 text-xs font-semibold text-gray-900">
+                          {formatCurrency(record.amount)}
+                        </td>
+                        <td className="whitespace-nowrap p-2 text-xs">
+                          <div className="font-medium text-gray-900">{record.collectionOfficer.fullName}</div>
+                        </td>
+                        <td className="whitespace-nowrap p-2">
+                          <BankBadge bankName={record.bankName} />
+                        </td>
+                        <td className="whitespace-nowrap p-2 text-xs text-gray-700">#{record.tellerNumber}</td>
+                        <td className="whitespace-nowrap p-2 text-xs text-gray-700">
+                          {formatDateRange(record.startDateUtc, record.endDateUtc)}
+                        </td>
+                        <td className="whitespace-nowrap p-2 text-xs text-gray-700">
+                          {formatDate(record.depositedAtUtc)}
+                        </td>
+                        <td className="whitespace-nowrap p-2">
+                          <StatusBadge status={record.status} />
+                        </td>
+                        <td className="whitespace-nowrap p-2">
+                          <div className="flex items-center gap-1">
+                            {record.tellerUrl ? (
+                              <a
+                                href={record.tellerUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                              >
+                                <FileText className="size-3" />
+                                <span className="hidden sm:inline">Receipt</span>
+                              </a>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  setSelectedRecordForReceipt(record)
+                                  setShowReceiptModal(true)
+                                }}
+                                className="flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                              >
+                                <Upload className="size-3" />
+                                <span className="hidden sm:inline">Attach</span>
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </AnimatePresence>
+                </tbody>
+              </table>
+            </div>
 
-      {/* Mobile Toggle Sidebar Button */}
-      {/* <button
-        onClick={() => setShowSidebar(!showSidebar)}
-        className="fixed bottom-4 right-4 z-40 flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-lg hover:bg-blue-700 lg:hidden"
-        aria-label="Toggle sidebar"
-      >
-        <span>{showSidebar ? "Hide" : "Show"} Stats</span>
-        {showSidebar ? <HiChevronUp className="size-4" /> : <HiChevronDown className="size-4" />}
-      </button> */}
+            {/* Pagination */}
+            <div className="flex items-center justify-between border-t border-gray-200 px-3 py-2.5">
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-gray-600">Show rows</p>
+                <select
+                  value={pagination.pageSize}
+                  onChange={handleRowsChange}
+                  className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+                <p className="text-xs text-gray-600">
+                  {(pagination.currentPage - 1) * pagination.pageSize + 1}-
+                  {Math.min(pagination.currentPage * pagination.pageSize, pagination.totalCount)} of{" "}
+                  {pagination.totalCount}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => changePage(pagination.currentPage - 1)}
+                  disabled={pagination.currentPage === 1}
+                  className="flex size-6 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <BiSolidLeftArrow className="size-3" />
+                </button>
+
+                {getPageItems().map((item, index) => {
+                  if (typeof item === "number") {
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => changePage(item)}
+                        className={`flex size-6 items-center justify-center rounded-lg text-xs font-medium transition-colors ${
+                          item === pagination.currentPage
+                            ? "bg-[#004B23] text-white"
+                            : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        {item}
+                      </button>
+                    )
+                  } else {
+                    return (
+                      <span key={index} className="flex items-center px-1 text-xs text-gray-500">
+                        {item}
+                      </span>
+                    )
+                  }
+                })}
+
+                <button
+                  onClick={() => changePage(pagination.currentPage + 1)}
+                  disabled={pagination.currentPage === pagination.totalPages}
+                  className="flex size-6 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <BiSolidRightArrow className="size-3" />
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
 
       {/* Cash Remittance Modal */}
       <CashRemittanceModal isOpen={showRecordModal} onRequestClose={() => setShowRecordModal(false)} />
@@ -771,7 +1026,7 @@ const CashRemittance = () => {
         }}
         record={selectedRecordForReceipt}
       />
-    </motion.div>
+    </div>
   )
 }
 

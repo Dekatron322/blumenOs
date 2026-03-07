@@ -244,7 +244,7 @@ const MobileFilterSidebar = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col bg-white shadow-xl"
+            className="flex size-full max-w-sm flex-col bg-white shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header - Fixed */}
@@ -917,7 +917,7 @@ const VendorChangeRequests = () => {
         >
           <div className="flex w-full flex-col py-2">
             <div className="mb-3 flex w-full items-center justify-between gap-3">
-              <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">Vendor Change Requests</p>
+              <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-xl">Vendor Change Requests</p>
 
               <div className="flex items-center gap-2">
                 {/* Mobile Filter Button */}

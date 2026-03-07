@@ -539,7 +539,7 @@ const CustomersTab: React.FC = () => {
         transition={{ duration: 0.3 }}
       >
         <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Customer Management</p>
+          <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Customer Management</p>
           <p className="text-sm text-gray-500">Manage customer accounts and information</p>
         </div>
         <div className="flex gap-4">

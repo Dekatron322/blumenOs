@@ -1,11 +1,39 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React, { useCallback, useEffect, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { ArrowLeft, Filter, X } from "lucide-react"
-import { MdCalendarToday, MdCheck, MdClose, MdCode, MdDevices, MdFilterList, MdPerson } from "react-icons/md"
+import {
+  AlertCircle,
+  ArrowLeft,
+  Calendar,
+  CheckCircle,
+  ChevronDown,
+  Clock,
+  Filter,
+  Loader2,
+  PieChart,
+  RefreshCw,
+  TrendingDown,
+  TrendingUp,
+  X,
+} from "lucide-react"
+import {
+  MdAccountBalance,
+  MdAttachMoney,
+  MdCalendarToday,
+  MdCheck,
+  MdClose,
+  MdCode,
+  MdDevices,
+  MdFilterList,
+  MdPerson,
+  MdReceipt,
+  MdStore,
+  MdSwapHoriz,
+} from "react-icons/md"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import { ButtonModule } from "components/ui/Button/Button"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { AgentsRequestParams, fetchAgents } from "lib/redux/agentSlice"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
@@ -15,7 +43,669 @@ import { fetchCustomers } from "lib/redux/customerSlice"
 import { fetchVendors } from "lib/redux/vendorSlice"
 import AllRefundsTable from "components/Tables/AllRefundTable"
 
-// Filter Modal Component
+// ==================== Dropdown Popover Component ====================
+const DropdownPopover = ({
+  options,
+  selectedValue,
+  onSelect,
+  children,
+}: {
+  options: { value: number; label: string }[]
+  selectedValue: number
+  onSelect: (value: number) => void
+  children: React.ReactNode
+}) => {
+  const [isOpen, setIsOpen] = useState(false)
+
+  const selectedOption = options.find((opt) => opt.value === selectedValue)
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+      >
+        {children}
+        <ChevronDown className={`size-4 text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="absolute right-0 z-20 mt-1 min-w-[120px] overflow-hidden rounded-lg border border-gray-200 bg-white py-1 text-sm shadow-lg"
+            >
+              {options.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    onSelect(option.value)
+                    setIsOpen(false)
+                  }}
+                  className={`block w-full px-3 py-2 text-left text-xs transition-colors ${
+                    option.value === selectedValue
+                      ? "bg-blue-50 font-medium text-blue-700"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+// ==================== Modern Analytics Card ====================
+const AnalyticsCard = ({
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  color = "blue",
+  trend,
+  trendValue,
+  isLoading = false,
+}: {
+  title: string
+  value: string | number
+  subtitle?: string
+  icon: React.ElementType
+  color?: "blue" | "green" | "purple" | "amber" | "emerald" | "red"
+  trend?: "up" | "down"
+  trendValue?: string
+  isLoading?: boolean
+}) => {
+  const colorClasses = {
+    blue: "bg-blue-50 text-blue-700 border-blue-200",
+    green: "bg-green-50 text-green-700 border-green-200",
+    purple: "bg-purple-50 text-purple-700 border-purple-200",
+    amber: "bg-amber-50 text-amber-700 border-amber-200",
+    emerald: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    red: "bg-red-50 text-red-700 border-red-200",
+  }
+
+  const iconColors = {
+    blue: "text-blue-600",
+    green: "text-green-600",
+    purple: "text-purple-600",
+    amber: "text-amber-600",
+    emerald: "text-emerald-600",
+    red: "text-red-600",
+  }
+
+  if (isLoading) {
+    return (
+      <motion.div
+        className="rounded-xl border border-gray-200 bg-white p-5"
+        initial={{ opacity: 0.6 }}
+        animate={{
+          opacity: [0.6, 1, 0.6],
+          transition: {
+            duration: 1.5,
+            repeat: Infinity,
+            ease: "easeInOut",
+          },
+        }}
+      >
+        <div className="flex items-start justify-between">
+          <div className="size-10 rounded-lg bg-gray-200"></div>
+          <div className="h-6 w-16 rounded-full bg-gray-200"></div>
+        </div>
+        <div className="mt-3 space-y-2">
+          <div className="h-4 w-24 rounded bg-gray-200"></div>
+          <div className="h-8 w-32 rounded bg-gray-200"></div>
+          <div className="h-3 w-20 rounded bg-gray-200"></div>
+        </div>
+      </motion.div>
+    )
+  }
+
+  return (
+    <motion.div
+      whileHover={{ y: -2 }}
+      className="rounded-xl border border-gray-200 bg-white p-5 transition-all hover:border-gray-300 hover:shadow-sm"
+    >
+      <div className="flex items-start justify-between">
+        <div className={`rounded-lg p-2.5 ${colorClasses[color].split(" ")[0]}`}>
+          <Icon className={`size-5 ${iconColors[color]}`} />
+        </div>
+        {trend && (
+          <span
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${
+              trend === "up" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+            }`}
+          >
+            {trend === "up" ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
+            {trendValue}
+          </span>
+        )}
+      </div>
+
+      <div className="mt-3">
+        <p className="text-sm text-gray-600">{title}</p>
+        <p className="mt-1 text-2xl font-semibold text-gray-900">{value.toLocaleString()}</p>
+        {subtitle && <p className="mt-1 text-xs text-gray-500">{subtitle}</p>}
+      </div>
+    </motion.div>
+  )
+}
+
+// ==================== Channel Breakdown Card ====================
+const ChannelBreakdownCard = ({
+  channel,
+  count,
+  amount,
+  netAmount,
+  color = "blue",
+}: {
+  channel: string
+  count: number
+  amount: number
+  netAmount: number
+  color?: "blue" | "purple" | "amber" | "emerald"
+}) => {
+  const colorClasses = {
+    blue: "bg-blue-50 border-blue-200",
+    purple: "bg-purple-50 border-purple-200",
+    amber: "bg-amber-50 border-amber-200",
+    emerald: "bg-emerald-50 border-emerald-200",
+  }
+
+  const iconColors = {
+    blue: "text-blue-600",
+    purple: "text-purple-600",
+    amber: "text-amber-600",
+    emerald: "text-emerald-600",
+  }
+
+  return (
+    <div className={`rounded-lg border p-4 ${colorClasses[color]}`}>
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-sm font-medium text-gray-900">{channel}</p>
+          <p className="mt-1 text-xs text-gray-600">{count} transactions</p>
+        </div>
+        <MdDevices className={`size-5 ${iconColors[color]}`} />
+      </div>
+      <div className="mt-3 space-y-1">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-gray-600">Amount:</span>
+          <span className="font-medium text-gray-900">₦{amount.toLocaleString()}</span>
+        </div>
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-gray-600">Net:</span>
+          <span className="font-medium text-emerald-600">₦{netAmount.toLocaleString()}</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ==================== Vendor Breakdown Item ====================
+const VendorBreakdownItem = ({
+  vendor,
+  count,
+  amount,
+  netAmount,
+}: {
+  vendor: string
+  count: number
+  amount: number
+  netAmount: number
+}) => {
+  return (
+    <div className="flex items-center justify-between rounded-lg border border-gray-100 bg-white p-3 hover:border-gray-200">
+      <div className="flex items-center gap-3">
+        <div className="rounded-full bg-purple-100 p-2">
+          <MdStore className="size-4 text-purple-600" />
+        </div>
+        <div>
+          <p className="text-sm font-medium text-gray-900">{vendor}</p>
+          <p className="text-xs text-gray-500">{count} transactions</p>
+        </div>
+      </div>
+      <div className="text-right">
+        <p className="text-sm font-medium text-gray-900">₦{amount.toLocaleString()}</p>
+        <p className="text-xs text-emerald-600">₦{netAmount.toLocaleString()}</p>
+      </div>
+    </div>
+  )
+}
+
+// ==================== Date Breakdown Item ====================
+const DateBreakdownItem = ({
+  date,
+  count,
+  amount,
+  netAmount,
+}: {
+  date: string
+  count: number
+  amount: number
+  netAmount: number
+}) => {
+  return (
+    <div className="flex items-center justify-between rounded-lg border border-gray-100 bg-white p-3 hover:border-gray-200">
+      <div className="flex items-center gap-3">
+        <div className="rounded-full bg-amber-100 p-2">
+          <Calendar className="size-4 text-amber-600" />
+        </div>
+        <div>
+          <p className="text-sm font-medium text-gray-900">{new Date(date).toLocaleDateString()}</p>
+          <p className="text-xs text-gray-500">{count} transactions</p>
+        </div>
+      </div>
+      <div className="text-right">
+        <p className="text-sm font-medium text-gray-900">₦{amount.toLocaleString()}</p>
+        <p className="text-xs text-emerald-600">₦{netAmount.toLocaleString()}</p>
+      </div>
+    </div>
+  )
+}
+
+// ==================== Refund Summary Section ====================
+const RefundSummarySection = ({ data, isLoading, error }: { data: any; isLoading: boolean; error: string | null }) => {
+  const [activeTab, setActiveTab] = useState<"channel" | "vendor" | "date">("channel")
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
+          <AnalyticsCard key={i} title="" value="" icon={MdAttachMoney} isLoading={true} />
+        ))}
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+        <div className="flex items-start gap-3">
+          <AlertCircle className="mt-0.5 size-5 flex-shrink-0 text-red-600" />
+          <div>
+            <p className="font-medium text-red-900">Failed to load refund summary</p>
+            <p className="text-sm text-red-700">{error}</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!data) return null
+
+  // Calculate trends (mock data - in real app, compare with previous period)
+  const totalAmountTrend = "+12.5%"
+  const netAmountTrend = "+8.3%"
+  const volumeTrend = "+5.2%"
+
+  return (
+    <div className="space-y-6">
+      {/* Analytics Cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <AnalyticsCard
+          title="Total Refunds"
+          value={data.totalCount || 0}
+          subtitle="All refund transactions"
+          icon={MdReceipt}
+          color="blue"
+          trend="up"
+          trendValue={volumeTrend}
+        />
+        <AnalyticsCard
+          title="Total Amount"
+          value={`₦${(data.totalAmount || 0).toLocaleString()}`}
+          subtitle="Gross amount"
+          icon={MdAttachMoney}
+          color="green"
+          trend="up"
+          trendValue={totalAmountTrend}
+        />
+        <AnalyticsCard
+          title="Net Amount"
+          value={`₦${(data.totalNetAmount || 0).toLocaleString()}`}
+          subtitle="After deductions"
+          icon={MdAccountBalance}
+          color="purple"
+          trend="up"
+          trendValue={netAmountTrend}
+        />
+        <AnalyticsCard
+          title="Top Channel"
+          value={data.byChannel?.[0]?.channel || "N/A"}
+          subtitle={`${data.byChannel?.[0]?.totalCount || 0} transactions`}
+          icon={MdSwapHoriz}
+          color="amber"
+        />
+      </div>
+
+      {/* Refund Breakdown Section */}
+      {(data.byChannel?.length > 0 || data.byVendor?.length > 0 || data.byDate?.length > 0) && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-xl border border-gray-200 bg-white p-5"
+        >
+          {/* Header */}
+          <div className="mb-4 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
+            <div className="flex items-center gap-2">
+              <div className="rounded-lg bg-blue-100 p-2">
+                <PieChart className="size-5 text-blue-700" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">Refund Breakdown</h2>
+                <p className="text-sm text-gray-600">Analysis by channel, vendor, and date</p>
+              </div>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex space-x-1 rounded-lg border border-gray-200 bg-gray-50 p-1">
+              {data.byChannel?.length > 0 && (
+                <button
+                  onClick={() => setActiveTab("channel")}
+                  className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                    activeTab === "channel" ? "bg-white text-blue-700 shadow-sm" : "text-gray-600 hover:bg-white/50"
+                  }`}
+                >
+                  By Channel
+                </button>
+              )}
+              {data.byVendor?.length > 0 && (
+                <button
+                  onClick={() => setActiveTab("vendor")}
+                  className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                    activeTab === "vendor" ? "bg-white text-purple-700 shadow-sm" : "text-gray-600 hover:bg-white/50"
+                  }`}
+                >
+                  By Vendor
+                </button>
+              )}
+              {data.byDate?.length > 0 && (
+                <button
+                  onClick={() => setActiveTab("date")}
+                  className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                    activeTab === "date" ? "bg-white text-amber-700 shadow-sm" : "text-gray-600 hover:bg-white/50"
+                  }`}
+                >
+                  By Date
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Tab Content */}
+          <AnimatePresence mode="wait">
+            {activeTab === "channel" && data.byChannel?.length > 0 && (
+              <motion.div
+                key="channel"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="grid grid-cols-1 gap-4 lg:grid-cols-3"
+              >
+                {data.byChannel.slice(0, 6).map((item: any, index: number) => {
+                  const colors = [
+                    { bg: "bg-blue-50", text: "text-blue-700", gradient: "from-blue-500 to-blue-600" },
+                    { bg: "bg-purple-50", text: "text-purple-700", gradient: "from-purple-500 to-purple-600" },
+                    { bg: "bg-emerald-50", text: "text-emerald-700", gradient: "from-emerald-500 to-emerald-600" },
+                  ][index % 3] || { bg: "bg-gray-50", text: "text-gray-700", gradient: "from-gray-500 to-gray-600" }
+                  const percentage = data.totalCount > 0 ? Math.round((item.totalCount / data.totalCount) * 100) : 0
+
+                  return (
+                    <motion.div
+                      key={`channel-${index}`}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="group rounded-lg border border-gray-100 bg-white p-4 transition-all hover:border-gray-200 hover:shadow-sm"
+                    >
+                      {/* Header */}
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className={`rounded-lg p-2 ${colors.bg}`}>
+                            <MdDevices className={`size-4 ${colors.text}`} />
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-gray-900">{item.channel}</h3>
+                            <p className="text-xs text-gray-500">Payment Channel</p>
+                          </div>
+                        </div>
+                        <span className={`text-sm font-semibold ${colors.text}`}>
+                          {item.totalCount.toLocaleString()}
+                        </span>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="mt-3">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-600">Distribution</span>
+                          <span className="font-medium text-gray-900">{percentage}%</span>
+                        </div>
+                        <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${percentage}%` }}
+                            transition={{ duration: 0.5, delay: index * 0.1 + 0.3 }}
+                            className={`h-full rounded-full bg-gradient-to-r ${colors.gradient}`}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Amount Breakdown */}
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        <div className="rounded-lg bg-emerald-50 p-2 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <MdAttachMoney className="size-3 text-emerald-600" />
+                            <span className="text-xs font-medium text-emerald-700">Gross</span>
+                          </div>
+                          <p className="mt-1 text-sm font-semibold text-emerald-900">
+                            ₦{item.totalAmount?.toLocaleString() || 0}
+                          </p>
+                        </div>
+                        <div className="rounded-lg bg-amber-50 p-2 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <MdSwapHoriz className="size-3 text-amber-600" />
+                            <span className="text-xs font-medium text-amber-700">Net</span>
+                          </div>
+                          <p className="mt-1 text-sm font-semibold text-amber-900">
+                            ₦{item.totalNetAmount?.toLocaleString() || 0}
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )
+                })}
+              </motion.div>
+            )}
+
+            {activeTab === "vendor" && data.byVendor?.length > 0 && (
+              <motion.div
+                key="vendor"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="grid grid-cols-1 gap-4 lg:grid-cols-3"
+              >
+                {data.byVendor.slice(0, 6).map((item: any, index: number) => {
+                  const colors = [
+                    { bg: "bg-purple-50", text: "text-purple-700", gradient: "from-purple-500 to-purple-600" },
+                    { bg: "bg-blue-50", text: "text-blue-700", gradient: "from-blue-500 to-blue-600" },
+                    { bg: "bg-emerald-50", text: "text-emerald-700", gradient: "from-emerald-500 to-emerald-600" },
+                  ][index % 3] || { bg: "bg-gray-50", text: "text-gray-700", gradient: "from-gray-500 to-gray-600" }
+                  const percentage = data.totalCount > 0 ? Math.round((item.totalCount / data.totalCount) * 100) : 0
+
+                  return (
+                    <motion.div
+                      key={`vendor-${index}`}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="group rounded-lg border border-gray-100 bg-white p-4 transition-all hover:border-gray-200 hover:shadow-sm"
+                    >
+                      {/* Header */}
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className={`rounded-lg p-2 ${colors.bg}`}>
+                            <MdStore className={`size-4 ${colors.text}`} />
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-gray-900">{item.vendorName}</h3>
+                            <p className="text-xs text-gray-500">Payment Vendor</p>
+                          </div>
+                        </div>
+                        <span className={`text-sm font-semibold ${colors.text}`}>
+                          {item.totalCount.toLocaleString()}
+                        </span>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="mt-3">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-600">Distribution</span>
+                          <span className="font-medium text-gray-900">{percentage}%</span>
+                        </div>
+                        <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${percentage}%` }}
+                            transition={{ duration: 0.5, delay: index * 0.1 + 0.3 }}
+                            className={`h-full rounded-full bg-gradient-to-r ${colors.gradient}`}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Amount Breakdown */}
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        <div className="rounded-lg bg-emerald-50 p-2 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <MdAttachMoney className="size-3 text-emerald-600" />
+                            <span className="text-xs font-medium text-emerald-700">Gross</span>
+                          </div>
+                          <p className="mt-1 text-sm font-semibold text-emerald-900">
+                            ₦{item.totalAmount?.toLocaleString() || 0}
+                          </p>
+                        </div>
+                        <div className="rounded-lg bg-amber-50 p-2 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <MdSwapHoriz className="size-3 text-amber-600" />
+                            <span className="text-xs font-medium text-amber-700">Net</span>
+                          </div>
+                          <p className="mt-1 text-sm font-semibold text-amber-900">
+                            ₦{item.totalNetAmount?.toLocaleString() || 0}
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )
+                })}
+              </motion.div>
+            )}
+
+            {activeTab === "date" && data.byDate?.length > 0 && (
+              <motion.div
+                key="date"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="grid grid-cols-1 gap-4 lg:grid-cols-3"
+              >
+                {data.byDate.slice(0, 6).map((item: any, index: number) => {
+                  const colors = [
+                    { bg: "bg-amber-50", text: "text-amber-700", gradient: "from-amber-500 to-amber-600" },
+                    { bg: "bg-blue-50", text: "text-blue-700", gradient: "from-blue-500 to-blue-600" },
+                    { bg: "bg-purple-50", text: "text-purple-700", gradient: "from-purple-500 to-purple-600" },
+                  ][index % 3] || { bg: "bg-gray-50", text: "text-gray-700", gradient: "from-gray-500 to-gray-600" }
+                  const percentage = data.totalCount > 0 ? Math.round((item.totalCount / data.totalCount) * 100) : 0
+
+                  return (
+                    <motion.div
+                      key={`date-${index}`}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="group rounded-lg border border-gray-100 bg-white p-4 transition-all hover:border-gray-200 hover:shadow-sm"
+                    >
+                      {/* Header */}
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className={`rounded-lg p-2 ${colors.bg}`}>
+                            <MdCalendarToday className={`size-4 ${colors.text}`} />
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-gray-900">
+                              {new Date(item.date).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })}
+                            </h3>
+                            <p className="text-xs text-gray-500">Refund Date</p>
+                          </div>
+                        </div>
+                        <span className={`text-sm font-semibold ${colors.text}`}>
+                          {item.totalCount.toLocaleString()}
+                        </span>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="mt-3">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-600">Distribution</span>
+                          <span className="font-medium text-gray-900">{percentage}%</span>
+                        </div>
+                        <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${percentage}%` }}
+                            transition={{ duration: 0.5, delay: index * 0.1 + 0.3 }}
+                            className={`h-full rounded-full bg-gradient-to-r ${colors.gradient}`}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Amount Breakdown */}
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        <div className="rounded-lg bg-emerald-50 p-2 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <MdAttachMoney className="size-3 text-emerald-600" />
+                            <span className="text-xs font-medium text-emerald-700">Gross</span>
+                          </div>
+                          <p className="mt-1 text-sm font-semibold text-emerald-900">
+                            ₦{item.totalAmount?.toLocaleString() || 0}
+                          </p>
+                        </div>
+                        <div className="rounded-lg bg-amber-50 p-2 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <MdSwapHoriz className="size-3 text-amber-600" />
+                            <span className="text-xs font-medium text-amber-700">Net</span>
+                          </div>
+                          <p className="mt-1 text-sm font-semibold text-amber-900">
+                            ₦{item.totalNetAmount?.toLocaleString() || 0}
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )
+                })}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      )}
+    </div>
+  )
+}
+
+// ==================== Filter Modal ====================
 const FilterModal = ({
   isOpen,
   onRequestClose,
@@ -435,198 +1125,54 @@ const FilterModal = ({
     </motion.div>
   )
 }
-const MobileFilterSidebar = ({
-  isOpen,
-  onClose,
-  localFilters,
-  handleFilterChange,
-  applyFilters,
-  resetFilters,
-  getActiveFilterCount,
-  agentOptions,
-  channelOptions,
-}: {
-  isOpen: boolean
-  onClose: () => void
-  localFilters: any
-  handleFilterChange: (key: string, value: string | number | undefined) => void
-  applyFilters: () => void
-  resetFilters: () => void
-  getActiveFilterCount: () => number
-  agentOptions: Array<{ value: string | number; label: string }>
-  channelOptions: Array<{ value: string; label: string }>
-}) => {
+
+// ==================== Loading State ====================
+const LoadingState = () => {
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          key="mobile-filter-sidebar"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[999] flex items-stretch justify-end bg-black/30 backdrop-blur-sm 2xl:hidden"
-          onClick={onClose}
-        >
-          <motion.div
-            key="mobile-filter-content"
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col bg-white shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header - Fixed */}
-            <div className="flex-shrink-0 border-b bg-white p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={onClose}
-                    className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
-                  >
-                    <ArrowLeft className="size-5" />
-                  </button>
-                  <div>
-                    <h2 className="text-lg font-semibold">Filters & Sorting</h2>
-                    {getActiveFilterCount() > 0 && (
-                      <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
-                    )}
-                  </div>
-                </div>
-                <button
-                  onClick={resetFilters}
-                  className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 md:text-sm"
-                >
-                  <X className="size-3 md:size-4" />
-                  Clear All
-                </button>
-              </div>
-            </div>
+    <div className="w-full">
+      {/* Analytics Cards Skeleton */}
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
+          <AnalyticsCard key={i} title="" value="" icon={MdAttachMoney} isLoading={true} />
+        ))}
+      </div>
 
-            {/* Filter Content - Scrollable */}
-            <div className="flex-1 overflow-y-auto p-4">
-              <div className="space-y-4">
-                {/* Customer ID Filter */}
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Customer ID</label>
-                  <input
-                    type="number"
-                    value={localFilters.customerId || ""}
-                    onChange={(e) =>
-                      handleFilterChange("customerId", e.target.value ? Number(e.target.value) : undefined)
-                    }
-                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                    placeholder="Enter customer ID"
-                  />
-                </div>
+      {/* Breakdown Section Skeleton */}
+      <div className="mt-6 rounded-xl border border-gray-200 bg-white p-5">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="h-6 w-40 rounded bg-gray-200"></div>
+          <div className="h-6 w-24 rounded-full bg-gray-200"></div>
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="h-32 rounded-lg bg-gray-100"></div>
+          ))}
+        </div>
+      </div>
 
-                {/* Vendor ID Filter */}
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Vendor ID</label>
-                  <input
-                    type="number"
-                    value={localFilters.vendorId || ""}
-                    onChange={(e) =>
-                      handleFilterChange("vendorId", e.target.value ? Number(e.target.value) : undefined)
-                    }
-                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                    placeholder="Enter vendor ID"
-                  />
-                </div>
-
-                {/* Agent Filter */}
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Agent</label>
-                  <FormSelectModule
-                    name="agentId"
-                    value={localFilters.agentId || ""}
-                    onChange={(e) => handleFilterChange("agentId", e.target.value ? Number(e.target.value) : undefined)}
-                    options={agentOptions}
-                    className="w-full"
-                    controlClassName="h-9 text-sm"
-                  />
-                </div>
-
-                {/* Channel Filter */}
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Channel</label>
-                  <FormSelectModule
-                    name="channel"
-                    value={localFilters.channel || ""}
-                    onChange={(e) => handleFilterChange("channel", e.target.value || undefined)}
-                    options={channelOptions}
-                    className="w-full"
-                    controlClassName="h-9 text-sm"
-                  />
-                </div>
-
-                {/* Refund Type Key Filter */}
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Refund Type</label>
-                  <input
-                    type="text"
-                    value={localFilters.refundTypeKey || ""}
-                    onChange={(e) => handleFilterChange("refundTypeKey", e.target.value || undefined)}
-                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                    placeholder="Enter refund type key"
-                  />
-                </div>
-
-                {/* Date Range Filters */}
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">From Date</label>
-                  <input
-                    type="date"
-                    value={localFilters.fromUtc || ""}
-                    onChange={(e) => handleFilterChange("fromUtc", e.target.value || undefined)}
-                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">To Date</label>
-                  <input
-                    type="date"
-                    value={localFilters.toUtc || ""}
-                    onChange={(e) => handleFilterChange("toUtc", e.target.value || undefined)}
-                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Bottom Action Buttons - Fixed */}
-            <div className="flex-shrink-0 border-t bg-white p-4 2xl:hidden">
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    applyFilters()
-                    onClose()
-                  }}
-                  className="button-filled flex-1"
-                >
-                  <Filter className="size-4" />
-                  Apply Filters
-                </button>
-                <button
-                  onClick={() => {
-                    resetFilters()
-                    onClose()
-                  }}
-                  className="button-oulined flex-1"
-                >
-                  <X className="size-4" />
-                  Reset All
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+      {/* Table Skeleton */}
+      <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <div className="h-7 w-48 rounded bg-gray-200"></div>
+            <div className="mt-1 h-4 w-64 rounded bg-gray-200"></div>
+          </div>
+          <div className="flex gap-2">
+            <div className="h-9 w-24 rounded bg-gray-200"></div>
+            <div className="h-9 w-24 rounded bg-gray-200"></div>
+          </div>
+        </div>
+        <div className="space-y-4">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-16 w-full rounded bg-gray-100"></div>
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }
 
+// ==================== Main Page Component ====================
 export default function RefundOverviewPage() {
   const dispatch = useAppDispatch()
   const { agents } = useAppSelector((state) => state.agents)
@@ -636,17 +1182,9 @@ export default function RefundOverviewPage() {
   const { customers } = useAppSelector((state) => state.customers)
   const { vendors } = useAppSelector((state) => state.vendors)
 
-  const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [showFilterModal, setShowFilterModal] = useState(false)
-
-  // Tab state for refund breakdown sections
-  const [activeTab, setActiveTab] = useState("channel")
-
-  // Tab selection function
-  const selectTab = (tab: string) => {
-    setActiveTab(tab)
-  }
+  const [isPolling, setIsPolling] = useState(true)
+  const [pollingInterval, setPollingInterval] = useState(480000) // 8 minutes default
 
   // Local state for filters to avoid too many Redux dispatches
   const [localFilters, setLocalFilters] = useState({
@@ -716,6 +1254,17 @@ export default function RefundOverviewPage() {
     }
   }, [dispatch])
 
+  // Short polling effect
+  useEffect(() => {
+    if (!isPolling) return
+
+    const interval = setInterval(() => {
+      dispatch(fetchRefundSummary(appliedFilters))
+    }, pollingInterval)
+
+    return () => clearInterval(interval)
+  }, [dispatch, isPolling, pollingInterval, appliedFilters])
+
   // Filter options
   const agentOptions = [
     { value: "", label: "All Agents" },
@@ -754,6 +1303,15 @@ export default function RefundOverviewPage() {
     { value: "Migration", label: "Migration" },
   ]
 
+  // Polling interval options
+  const pollingOptions = [
+    { value: 480000, label: "8m" },
+    { value: 660000, label: "11m" },
+    { value: 840000, label: "14m" },
+    { value: 1020000, label: "17m" },
+    { value: 1200000, label: "20m" },
+  ]
+
   // Filter handlers
   const applyFilters = () => {
     // Convert date strings to ISO format with time components
@@ -778,7 +1336,6 @@ export default function RefundOverviewPage() {
     })
   }
 
-  // Filter handlers
   const handleFilterChange = (key: string, value: string | number | undefined) => {
     setLocalFilters((prev) => ({
       ...prev,
@@ -799,6 +1356,14 @@ export default function RefundOverviewPage() {
     setAppliedFilters({})
   }
 
+  const togglePolling = () => {
+    setIsPolling(!isPolling)
+  }
+
+  const handleRefreshData = useCallback(() => {
+    dispatch(fetchRefundSummary(appliedFilters))
+  }, [dispatch, appliedFilters])
+
   const getActiveFilterCount = () => {
     let count = 0
     if (appliedFilters.CustomerId) count++
@@ -812,35 +1377,26 @@ export default function RefundOverviewPage() {
   }
 
   return (
-    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-8">
+    <section className="min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100 pb-24 sm:pb-20">
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto w-full px-3 py-4 2xl:container sm:px-4 lg:px-6 2xl:px-16">
-            {/* Hero Header Section */}
-            <motion.div
-              className="relative mb-6 overflow-hidden rounded-xl bg-gradient-to-r from-[#004B23] to-[#006B33] p-4 shadow-lg md:p-6 lg:p-8"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-            >
-              {/* Background Pattern */}
-              <div className="absolute inset-0 opacity-10">
-                <div className="absolute -right-10 -top-10 size-40 rounded-full bg-white/20" />
-                <div className="absolute -bottom-10 -left-10 size-32 rounded-full bg-white/10" />
-                <div className="absolute right-1/4 top-1/2 size-20 rounded-full bg-white/10" />
-              </div>
 
-              {/* Header Content */}
-              <div className="relative z-10">
-                <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <h1 className="text-2xl font-bold text-white md:text-3xl">Refund Overview</h1>
-                    <p className="mt-1 text-sm text-white/80 md:text-base">Track and manage all refund transactions</p>
-                  </div>
+          <div className="w-full px-4 py-6 sm:px-6 lg:px-8">
+            {/* Page Header */}
+            <div className="mb-8">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900 sm:text-2xl">Refund Overview</h1>
+                  <p className="mt-1 text-sm text-gray-600">Track and manage all refund transactions</p>
+                </div>
+
+                {/* Header Actions */}
+                <div className="flex items-center gap-3">
+                  {/* Filter Button */}
                   <button
                     onClick={() => setShowFilterModal(true)}
-                    className="flex items-center gap-2 rounded-lg bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-all hover:bg-white/20"
+                    className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
                   >
                     <Filter className="size-4" />
                     Filters
@@ -850,410 +1406,67 @@ export default function RefundOverviewPage() {
                       </span>
                     )}
                   </button>
-                </div>
 
-                {/* Filter Button */}
+                  {/* Polling Controls */}
+                  <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white p-1">
+                    <button
+                      onClick={togglePolling}
+                      className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                        isPolling ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      }`}
+                    >
+                      <RefreshCw className={`size-3.5 ${isPolling ? "animate-spin" : ""}`} />
+                      {isPolling ? "ON" : "OFF"}
+                    </button>
 
-                <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-                  {/* Total Refunds Card */}
-                  <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
-                    <div className="absolute -right-4 -top-4 size-16 rounded-full bg-white/5 transition-transform group-hover:scale-110" />
-                    <div className="relative">
-                      <div className="mb-1 flex items-center gap-2">
-                        <div className="flex size-8 items-center justify-center rounded-lg bg-white/20">
-                          <span className="text-sm">🔄</span>
-                        </div>
-                      </div>
-                      <p className="text-xs font-medium uppercase tracking-wider text-white/70">Total Refunds</p>
-                      <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
-                        {refundSummaryLoading ? (
-                          <span className="animate-pulse">...</span>
-                        ) : refundSummaryError ? (
-                          <span className="text-red-300">Error</span>
-                        ) : (
-                          refundSummaryData?.totalCount?.toLocaleString() || "0"
-                        )}
-                      </p>
-                      <p className="mt-1 text-xs text-white/60">transactions</p>
-                    </div>
-                  </div>
-
-                  {/* Total Amount Card */}
-                  <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
-                    <div className="absolute -right-4 -top-4 size-16 rounded-full bg-emerald-400/10 transition-transform group-hover:scale-110" />
-                    <div className="relative">
-                      <div className="mb-1 flex items-center gap-2">
-                        <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-400/20">
-                          <span className="text-sm text-emerald-300">₦</span>
-                        </div>
-                      </div>
-                      <p className="text-xs font-medium uppercase tracking-wider text-white/70">Total Amount</p>
-                      <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
-                        {refundSummaryLoading ? (
-                          <span className="animate-pulse">...</span>
-                        ) : refundSummaryError ? (
-                          <span className="text-red-300">Error</span>
-                        ) : (
-                          new Intl.NumberFormat("en-NG", {
-                            style: "currency",
-                            currency: "NGN",
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 0,
-                          }).format(refundSummaryData?.totalAmount || 0)
-                        )}
-                      </p>
-                      <p className="mt-1 text-xs text-emerald-300/80">gross amount</p>
-                    </div>
-                  </div>
-
-                  {/* Net Amount Card */}
-                  <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
-                    <div className="absolute -right-4 -top-4 size-16 rounded-full bg-blue-400/10 transition-transform group-hover:scale-110" />
-                    <div className="relative">
-                      <div className="mb-1 flex items-center gap-2">
-                        <div className="flex size-8 items-center justify-center rounded-lg bg-blue-400/20">
-                          <span className="text-sm text-blue-300">💎</span>
-                        </div>
-                      </div>
-                      <p className="text-xs font-medium uppercase tracking-wider text-white/70">Net Amount</p>
-                      <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
-                        {refundSummaryLoading ? (
-                          <span className="animate-pulse">...</span>
-                        ) : refundSummaryError ? (
-                          <span className="text-red-300">Error</span>
-                        ) : (
-                          new Intl.NumberFormat("en-NG", {
-                            style: "currency",
-                            currency: "NGN",
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 0,
-                          }).format(refundSummaryData?.totalNetAmount || 0)
-                        )}
-                      </p>
-                      <p className="mt-1 text-xs text-blue-300/80">after deductions</p>
-                    </div>
-                  </div>
-
-                  {/* Top Channel Card */}
-                  <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
-                    <div className="absolute -right-4 -top-4 size-16 rounded-full bg-amber-400/10 transition-transform group-hover:scale-110" />
-                    <div className="relative">
-                      <div className="mb-1 flex items-center gap-2">
-                        <div className="flex size-8 items-center justify-center rounded-lg bg-amber-400/20">
-                          <span className="text-sm text-amber-300">🏆</span>
-                        </div>
-                      </div>
-                      <p className="text-xs font-medium uppercase tracking-wider text-white/70">Top Channel</p>
-                      <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
-                        {refundSummaryLoading ? (
-                          <span className="animate-pulse">...</span>
-                        ) : refundSummaryError ? (
-                          <span className="text-red-300">Error</span>
-                        ) : (
-                          refundSummaryData?.byChannel?.[0]?.channel || "N/A"
-                        )}
-                      </p>
-                      <p className="mt-1 text-xs text-amber-300/80">
-                        {refundSummaryData?.byChannel?.[0]?.totalCount || 0} refunds
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Refund Breakdown Tabs */}
-                <div className="mt-6">
-                  {/* Tab Navigation */}
-                  <div className="flex space-x-1 rounded-lg border bg-white/10 p-1 backdrop-blur-sm">
-                    {refundSummaryData?.byChannel && refundSummaryData.byChannel.length > 0 && (
-                      <button
-                        onClick={() => selectTab("channel")}
-                        className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-                          activeTab === "channel"
-                            ? "bg-white/20 text-white"
-                            : "text-white/70 hover:bg-white/10 hover:text-white"
-                        }`}
+                    {isPolling && (
+                      <DropdownPopover
+                        options={pollingOptions}
+                        selectedValue={pollingInterval}
+                        onSelect={setPollingInterval}
                       >
-                        By Channel
-                      </button>
-                    )}
-                    {refundSummaryData?.byVendor && refundSummaryData.byVendor.length > 0 && (
-                      <button
-                        onClick={() => selectTab("vendor")}
-                        className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-                          activeTab === "vendor"
-                            ? "bg-white/20 text-white"
-                            : "text-white/70 hover:bg-white/10 hover:text-white"
-                        }`}
-                      >
-                        By Vendor
-                      </button>
-                    )}
-                    {refundSummaryData?.byDate && refundSummaryData.byDate.length > 0 && (
-                      <button
-                        onClick={() => selectTab("date")}
-                        className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-                          activeTab === "date"
-                            ? "bg-white/20 text-white"
-                            : "text-white/70 hover:bg-white/10 hover:text-white"
-                        }`}
-                      >
-                        By Date
-                      </button>
+                        {pollingOptions.find((opt) => opt.value === pollingInterval)?.label}
+                      </DropdownPopover>
                     )}
                   </div>
 
-                  {/* Tab Content */}
-                  <div className="mt-4">
-                    {/* By Channel Tab Content */}
-                    {activeTab === "channel" &&
-                      refundSummaryData?.byChannel &&
-                      refundSummaryData.byChannel.length > 0 && (
-                        <div className="rounded-lg border bg-white/10 p-4 backdrop-blur-sm">
-                          <h3 className="mb-4 text-lg font-semibold text-white">Refunds by Channel</h3>
-                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                            {refundSummaryData.byChannel.map((channel, index) => (
-                              <div key={index} className="rounded-lg border bg-white/10 p-4 backdrop-blur-sm">
-                                <div className="flex items-center justify-between">
-                                  <div>
-                                    <p className="text-sm font-medium text-white">{channel.channel}</p>
-                                    <p className="text-xs text-white/70">{channel.count} refunds</p>
-                                  </div>
-                                  <div className="text-right">
-                                    <p className="text-sm font-bold text-white">
-                                      ₦{channel.totalAmount.toLocaleString()}
-                                    </p>
-                                    <p className="text-xs text-white/70">
-                                      Net: ₦{channel.totalNetAmount.toLocaleString()}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                    {/* By Vendor Tab Content */}
-                    {activeTab === "vendor" && refundSummaryData?.byVendor && refundSummaryData.byVendor.length > 0 && (
-                      <div className="rounded-lg border bg-white/10 p-4 backdrop-blur-sm">
-                        <h3 className="mb-4 text-lg font-semibold text-white">Refunds by Vendor</h3>
-                        <div className="overflow-x-auto">
-                          <div className="min-w-full">
-                            {refundSummaryData.byVendor.slice(0, 5).map((vendor, index) => (
-                              <div key={index} className="mb-3 rounded-lg border bg-white/10 p-4 backdrop-blur-sm">
-                                <div className="flex items-center justify-between">
-                                  <div>
-                                    <p className="text-sm font-medium text-white">{vendor.vendorName}</p>
-                                    <p className="text-xs text-white/70">{vendor.totalCount} refunds</p>
-                                  </div>
-                                  <div className="text-right">
-                                    <p className="text-sm font-bold text-white">
-                                      ₦{vendor.totalAmount.toLocaleString()}
-                                    </p>
-                                    <p className="text-xs text-white/70">
-                                      Net: ₦{vendor.totalNetAmount.toLocaleString()}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                            {refundSummaryData.byVendor.length > 5 && (
-                              <p className="text-center text-sm text-white/70">
-                                +{refundSummaryData.byVendor.length - 5} more vendors
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* By Date Tab Content */}
-                    {activeTab === "date" && refundSummaryData?.byDate && refundSummaryData.byDate.length > 0 && (
-                      <div className="rounded-lg border bg-white/10 p-4 backdrop-blur-sm">
-                        <h3 className="mb-4 text-lg font-semibold text-white">Refunds by Date</h3>
-                        <div className="overflow-x-auto">
-                          <div className="min-w-full">
-                            {refundSummaryData.byDate.slice(0, 7).map((date, index) => (
-                              <div key={index} className="mb-3 rounded-lg border bg-white/10 p-4 backdrop-blur-sm">
-                                <div className="flex items-center justify-between">
-                                  <div>
-                                    <p className="text-sm font-medium text-white">
-                                      {new Date(date.date).toLocaleDateString()}
-                                    </p>
-                                    <p className="text-xs text-white/70">{date.totalCount} refunds</p>
-                                  </div>
-                                  <div className="text-right">
-                                    <p className="text-sm font-bold text-white">₦{date.totalAmount.toLocaleString()}</p>
-                                    <p className="text-xs text-white/70">
-                                      Net: ₦{date.totalNetAmount.toLocaleString()}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                            {refundSummaryData.byDate.length > 7 && (
-                              <p className="text-center text-sm text-white/70">
-                                +{refundSummaryData.byDate.length - 7} more dates
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <ButtonModule
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRefreshData}
+                    disabled={refundSummaryLoading}
+                    className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                  >
+                    <RefreshCw className={`mr-2 size-4 ${refundSummaryLoading ? "animate-spin" : ""}`} />
+                    Refresh
+                  </ButtonModule>
                 </div>
               </div>
-            </motion.div>
-            <AllRefundsTable />
-
-            <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row">
-              {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
-              {showDesktopFilters && (
-                <motion.div
-                  key="desktop-filters-sidebar"
-                  initial={{ opacity: 1 }}
-                  animate={{ opacity: 1 }}
-                  className="hidden w-full flex-col rounded-md border bg-white 2xl:flex 2xl:w-80 2xl:self-start"
-                >
-                  {/* Header - Fixed */}
-                  <div className="flex-shrink-0 border-b bg-white p-3 md:p-5">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
-                      <button
-                        onClick={resetFilters}
-                        className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
-                      >
-                        <X className="size-3 md:size-4" />
-                        Clear All
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Filter Content - Scrollable */}
-                  <div className="flex-1 overflow-y-auto p-3 md:p-5">
-                    <div className="space-y-4">
-                      {/* Customer ID Filter */}
-                      <div>
-                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Customer ID</label>
-                        <input
-                          type="number"
-                          value={localFilters.customerId || ""}
-                          onChange={(e) =>
-                            handleFilterChange("customerId", e.target.value ? Number(e.target.value) : undefined)
-                          }
-                          className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                          placeholder="Enter customer ID"
-                        />
-                      </div>
-
-                      {/* Vendor ID Filter */}
-                      <div>
-                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Vendor ID</label>
-                        <input
-                          type="number"
-                          value={localFilters.vendorId || ""}
-                          onChange={(e) =>
-                            handleFilterChange("vendorId", e.target.value ? Number(e.target.value) : undefined)
-                          }
-                          className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                          placeholder="Enter vendor ID"
-                        />
-                      </div>
-
-                      {/* Agent Filter */}
-                      <div>
-                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Agent</label>
-                        <FormSelectModule
-                          name="agentId"
-                          value={localFilters.agentId || ""}
-                          onChange={(e) =>
-                            handleFilterChange("agentId", e.target.value ? Number(e.target.value) : undefined)
-                          }
-                          options={agentOptions}
-                          className="w-full"
-                          controlClassName="h-9 text-sm"
-                        />
-                      </div>
-
-                      {/* Channel Filter */}
-                      <div>
-                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Channel</label>
-                        <FormSelectModule
-                          name="channel"
-                          value={localFilters.channel || ""}
-                          onChange={(e) => handleFilterChange("channel", e.target.value || undefined)}
-                          options={channelOptions}
-                          className="w-full"
-                          controlClassName="h-9 text-sm"
-                        />
-                      </div>
-
-                      {/* Refund Type Key Filter */}
-                      <div>
-                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Refund Type</label>
-                        <input
-                          type="text"
-                          value={localFilters.refundTypeKey || ""}
-                          onChange={(e) => handleFilterChange("refundTypeKey", e.target.value || undefined)}
-                          className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                          placeholder="Enter refund type key"
-                        />
-                      </div>
-
-                      {/* Date Range Filters */}
-                      <div>
-                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">From Date</label>
-                        <input
-                          type="date"
-                          value={localFilters.fromUtc || ""}
-                          onChange={(e) => handleFilterChange("fromUtc", e.target.value || undefined)}
-                          className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">To Date</label>
-                        <input
-                          type="date"
-                          value={localFilters.toUtc || ""}
-                          onChange={(e) => handleFilterChange("toUtc", e.target.value || undefined)}
-                          className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons - Fixed */}
-                  <div className="flex-shrink-0 space-y-3 border-t bg-white p-3 md:p-5">
-                    <button
-                      onClick={applyFilters}
-                      className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
-                    >
-                      <Filter className="size-4" />
-                      Apply Filters
-                    </button>
-                    <button
-                      onClick={resetFilters}
-                      className="button-oulined flex w-full items-center justify-center gap-2 text-sm md:text-base"
-                    >
-                      <X className="size-4" />
-                      Reset All
-                    </button>
-                  </div>
-
-                  {/* Summary Stats - Fixed */}
-                  <div className="flex-shrink-0 rounded-lg bg-gray-50 p-3 md:p-4">
-                    <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
-                    <div className="space-y-1 text-xs md:text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Active Filters:</span>
-                        <span className="font-medium">{getActiveFilterCount()}</span>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
             </div>
+
+            {/* Main Content */}
+            {refundSummaryLoading && !refundSummaryData ? (
+              <LoadingState />
+            ) : (
+              <div className="space-y-6">
+                {/* Refund Summary Section */}
+                <RefundSummarySection
+                  data={refundSummaryData}
+                  isLoading={refundSummaryLoading}
+                  error={refundSummaryError}
+                />
+
+                {/* All Refunds Table */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  className="overflow-hidden rounded-xl border border-gray-200 bg-white p-4"
+                >
+                  <AllRefundsTable />
+                </motion.div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1271,6 +1484,33 @@ export default function RefundOverviewPage() {
         customerOptions={customerOptions}
         vendorOptions={vendorOptions}
       />
+
+      {/* Loading Overlay */}
+      <AnimatePresence>
+        {refundSummaryLoading && !refundSummaryData && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="rounded-xl bg-white p-6 shadow-xl"
+            >
+              <div className="flex flex-col items-center gap-4">
+                <div className="size-12 animate-spin rounded-full border-4 border-[#004B23] border-t-transparent" />
+                <div className="text-center">
+                  <p className="font-medium text-gray-900">Loading Refund Data</p>
+                  <p className="text-sm text-gray-600">Please wait</p>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   )
 }

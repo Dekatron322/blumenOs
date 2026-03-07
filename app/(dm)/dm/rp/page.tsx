@@ -370,7 +370,7 @@ const AgingData = ({
           {[...Array(5)].map((_, index) => (
             <div key={index} className="flex items-center justify-between rounded-lg border p-3">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 animate-pulse rounded-full bg-gray-200"></div>
+                <div className="size-10 animate-pulse rounded-full bg-gray-200"></div>
                 <div className="space-y-2">
                   <div className="h-4 w-32 animate-pulse rounded bg-gray-200"></div>
                   <div className="h-3 w-24 animate-pulse rounded bg-gray-200"></div>
@@ -675,7 +675,7 @@ const RecoveryPolicies = ({
           {[...Array(5)].map((_, index) => (
             <div key={index} className="flex items-center justify-between rounded-lg border p-3">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 animate-pulse rounded-full bg-gray-200"></div>
+                <div className="size-10 animate-pulse rounded-full bg-gray-200"></div>
                 <div className="space-y-2">
                   <div className="h-4 w-32 animate-pulse rounded bg-gray-200"></div>
                   <div className="h-3 w-24 animate-pulse rounded bg-gray-200"></div>
@@ -1322,11 +1322,11 @@ export default function DebtAgingDashboard() {
     <section className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200">
       <div className="flex min-h-screen w-full pb-20">
         <div className="flex w-full flex-col">
-          <div className="mx-auto flex w-full flex-col px-3 2xl:container sm:px-3 xl:px-6 2xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3  sm:px-3 xl:px-6 2xl:px-16">
             {/* Page Header - Always Visible */}
             <div className="flex w-full flex-col items-start justify-between gap-4 py-4 sm:py-6 md:gap-6 md:py-8 xl:flex-row xl:items-start">
               <div className="flex-1">
-                <h4 className="text-lg font-semibold sm:text-xl md:text-2xl">Recovery Policies</h4>
+                <h4 className="text-lg font-semibold sm:text-xl md:text-xl">Recovery Policies</h4>
                 <p className="text-sm text-gray-600 sm:text-base">
                   Debt recovery policies and configurations management
                 </p>

@@ -451,7 +451,7 @@ const FileManagementPage = () => {
         <div className="flex w-full flex-col">
           <DashboardNav />
 
-          <div className="mx-auto flex w-full flex-col px-3 py-4 2xl:container sm:px-4 md:px-6 md:py-4 2xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3 py-4  sm:px-4 md:px-6 md:py-4 2xl:px-16">
             {/* Page Header - Mobile Optimized */}
             <div className="mb-6">
               <div className="flex items-center justify-between gap-3">
@@ -640,7 +640,7 @@ const FileManagementPage = () => {
                   >
                     <div className="mb-3 flex items-center">
                       <div
-                        className={`mr-3 flex h-8 w-8 items-center justify-center rounded-full ${
+                        className={`mr-3 flex size-8 items-center justify-center rounded-full ${
                           uploadProgress.percentage === 100 ? "bg-green-100" : "bg-blue-100"
                         }`}
                       >

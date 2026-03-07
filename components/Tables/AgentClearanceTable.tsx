@@ -1050,7 +1050,7 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({ agentId, appl
 
             {/* Sidebar */}
             <motion.div
-              className="fixed right-0 top-0 z-[150] h-full w-full max-w-md bg-white shadow-xl"
+              className="fixed right-0 top-0 z-[150] size-full max-w-md bg-white shadow-xl"
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}

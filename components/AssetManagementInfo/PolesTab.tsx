@@ -852,7 +852,7 @@ const PolesTab: React.FC = () => {
                 )}
               </button>
               <div>
-                <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Pole Management</p>
+                <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Pole Management</p>
                 <p className="text-sm text-gray-600">Monitor and manage electrical poles infrastructure</p>
               </div>
             </div>

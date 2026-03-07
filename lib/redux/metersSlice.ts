@@ -1213,6 +1213,7 @@ export interface PrepaidTransactionParams {
   agentId?: number
   areaOfficeId?: number
   distributionSubstationId?: number
+  injectionSubstationId?: number
   feederId?: number
   serviceCenterId?: number
   postpaidBillId?: number
@@ -1232,6 +1233,8 @@ export interface PrepaidTransactionParams {
   customerIsUrban?: boolean
   customerProvinceId?: number
   isMeterActive?: boolean
+  sortBy?: string
+  sortOrder?: "asc" | "desc"
 }
 
 // Interface for Prepaid Transaction Response

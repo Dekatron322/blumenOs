@@ -293,7 +293,7 @@ const MobileFilterSidebar = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col bg-white shadow-xl"
+            className="flex size-full max-w-sm flex-col bg-white shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header - Fixed */}
@@ -1036,7 +1036,7 @@ const BillingJobs: React.FC = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto w-full px-3 py-4 2xl:container max-sm:px-3 sm:px-4 md:px-6 2xl:px-16">
+          <div className="mx-auto w-full px-3 py-4  max-sm:px-3 sm:px-4 md:px-6 2xl:px-16">
             <div className="mb-6 flex w-full flex-col justify-between gap-4 lg:flex-row lg:items-center">
               <div className="flex-1">
                 <h4 className="text-2xl font-semibold">Billing Jobs</h4>

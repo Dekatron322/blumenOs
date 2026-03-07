@@ -1,13 +1,26 @@
 "use client"
 
-import React, { useEffect, useRef, useState } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
-import { ArrowLeft, Calendar, ChevronDown, ChevronUp, Download, Filter, SortAsc, SortDesc, X } from "lucide-react"
-import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
-import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
-import { SearchModule } from "components/ui/Search/search-module"
-import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import {
+  AlertCircle,
+  Calendar,
+  CheckCircle,
+  ChevronDown,
+  ChevronUp,
+  Download,
+  Eye,
+  FileText,
+  Filter,
+  Loader2,
+  RefreshCw,
+  Search,
+  SortAsc,
+  SortDesc,
+  X,
+  XCircle,
+} from "lucide-react"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { DataQualityItem, DataQualityParams, fetchDataQuality } from "lib/redux/customerSlice"
 import { fetchCustomers } from "lib/redux/formDataSlice"
@@ -16,181 +29,9 @@ import { fetchAgents } from "lib/redux/agentSlice"
 import { fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import ResolveDataQualityModal from "components/Modals/ResolveDataQualityModal"
+import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 
-interface ActionDropdownProps {
-  dataQualityItem: DataQualityItem
-  onViewDetails: (dataQualityItem: DataQualityItem) => void
-}
-
-const ActionDropdown: React.FC<ActionDropdownProps> = ({ dataQualityItem, onViewDetails }) => {
-  const [isOpen, setIsOpen] = useState(false)
-  const [dropdownDirection, setDropdownDirection] = useState<"bottom" | "top">("bottom")
-  const dropdownRef = useRef<HTMLDivElement>(null)
-  const router = useRouter()
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [])
-
-  const calculateDropdownPosition = () => {
-    if (!dropdownRef.current) return
-
-    const buttonRect = dropdownRef.current.getBoundingClientRect()
-    const spaceBelow = window.innerHeight - buttonRect.bottom
-    const spaceAbove = buttonRect.top
-    const dropdownHeight = 120
-
-    if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
-      setDropdownDirection("top")
-    } else {
-      setDropdownDirection("bottom")
-    }
-  }
-
-  const handleButtonClick = () => {
-    calculateDropdownPosition()
-    setIsOpen(!isOpen)
-  }
-
-  const handleViewDetails = (e: React.MouseEvent) => {
-    e.preventDefault()
-    onViewDetails(dataQualityItem)
-    setIsOpen(false)
-  }
-
-  return (
-    <div className="relative" ref={dropdownRef}>
-      <motion.div
-        className="focus::bg-gray-100 flex size-7 cursor-pointer items-center justify-center gap-2 rounded-full transition-all duration-200 ease-in-out hover:bg-gray-200"
-        onClick={handleButtonClick}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <RxDotsVertical />
-      </motion.div>
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            className="fixed z-50 w-48 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-            style={
-              dropdownDirection === "bottom"
-                ? {
-                    top: dropdownRef.current
-                      ? dropdownRef.current.getBoundingClientRect().bottom + window.scrollY + 2
-                      : 0,
-                    right: dropdownRef.current
-                      ? window.innerWidth - dropdownRef.current.getBoundingClientRect().right
-                      : 0,
-                  }
-                : {
-                    bottom: dropdownRef.current
-                      ? window.innerHeight - dropdownRef.current.getBoundingClientRect().top + window.scrollY + 2
-                      : 0,
-                    right: dropdownRef.current
-                      ? window.innerWidth - dropdownRef.current.getBoundingClientRect().right
-                      : 0,
-                  }
-            }
-            initial={{ opacity: 0, scale: 0.95, y: dropdownDirection === "bottom" ? -10 : 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: dropdownDirection === "bottom" ? -10 : 10 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
-          >
-            <div className="py-1">
-              <motion.button
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={handleViewDetails}
-                whileHover={{ backgroundColor: "#f3f4f6" }}
-                transition={{ duration: 0.1 }}
-              >
-                View Details
-              </motion.button>
-
-              <motion.button
-                className="block w-full px-4 py-2 text-left text-sm text-blue-700 hover:bg-blue-50"
-                onClick={() => {
-                  // Navigate to customer details
-                  router.push(`/customers/${dataQualityItem.customerId}`)
-                  setIsOpen(false)
-                }}
-                whileHover={{ backgroundColor: "#eff6ff" }}
-                transition={{ duration: 0.1 }}
-              >
-                View Customer
-              </motion.button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  )
-}
-
-const LoadingSkeleton = () => {
-  return (
-    <div className="flex-3 mt-5 flex flex-col rounded-md border bg-white p-5">
-      {/* Header Section Skeleton */}
-      <div className="items-center justify-between border-b py-2 md:flex md:py-4">
-        <div className="mb-3 md:mb-0">
-          <div className="mb-2 h-8 w-48 rounded bg-gray-200"></div>
-          <div className="h-4 w-64 rounded bg-gray-200"></div>
-        </div>
-        <div className="flex gap-4">
-          <div className="h-10 w-48 rounded bg-gray-200"></div>
-          <div className="h-10 w-24 rounded bg-gray-200"></div>
-        </div>
-      </div>
-
-      {/* Table Skeleton */}
-      <div className="w-full overflow-x-auto border-x bg-[#f9f9f9]">
-        <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
-          <thead>
-            <tr>
-              {[...Array(11)].map((_, i) => (
-                <th key={i} className="whitespace-nowrap border-b p-4">
-                  <div className="h-4 w-24 rounded bg-gray-200"></div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {[...Array(5)].map((_, rowIndex) => (
-              <tr key={rowIndex}>
-                {[...Array(11)].map((_, cellIndex) => (
-                  <td key={cellIndex} className="whitespace-nowrap border-b px-4 py-3">
-                    <div className="h-4 w-full rounded bg-gray-200"></div>
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination Section Skeleton */}
-      <div className="flex items-center justify-between border-t py-3">
-        <div className="h-6 w-48 rounded bg-gray-200"></div>
-        <div className="flex items-center gap-2">
-          <div className="size-8 rounded bg-gray-200"></div>
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="size-8 rounded bg-gray-200"></div>
-          ))}
-          <div className="size-8 rounded bg-gray-200"></div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
+// Types
 interface SortOption {
   label: string
   value: string
@@ -203,9 +44,11 @@ interface AppliedFilters {
   serviceCenterId?: number
   distributionSubstationId?: number
   feederId?: number
+  paymentTypeId?: number
   ruleKey?: string
   status?: "Open" | "Resolved" | "Ignored"
   severity?: "Warning" | "Error"
+  resolutionAction?: string
   fromUtc?: string
   toUtc?: string
   detectedFromUtc?: string
@@ -230,6 +73,9 @@ const MobileFilterSidebar = ({
   resetFilters,
   getActiveFilterCount,
   customerOptions,
+  vendorOptions,
+  agentOptions,
+  channelOptions,
   statusOptions,
   severityOptions,
   sortOptions,
@@ -272,7 +118,7 @@ const MobileFilterSidebar = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[999] flex items-stretch justify-end bg-black/30 backdrop-blur-sm 2xl:hidden"
+          className="fixed inset-0 z-[999] flex items-stretch justify-end bg-black/30 backdrop-blur-sm lg:hidden"
           onClick={onClose}
         >
           <motion.div
@@ -281,7 +127,7 @@ const MobileFilterSidebar = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col bg-white"
+            className="flex size-full max-w-sm flex-col bg-white"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Fixed Header */}
@@ -291,7 +137,7 @@ const MobileFilterSidebar = ({
                   onClick={onClose}
                   className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
                 >
-                  <ArrowLeft className="size-5" />
+                  <X className="size-5" />
                 </button>
                 <div>
                   <h2 className="text-lg font-semibold">Filters & Sorting</h2>
@@ -310,7 +156,7 @@ const MobileFilterSidebar = ({
               <div className="space-y-4">
                 {/* Customer Filter */}
                 <div>
-                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Customer</label>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700">Customer</label>
                   <FormSelectModule
                     name="customerId"
                     value={localFilters.customerId || ""}
@@ -327,7 +173,7 @@ const MobileFilterSidebar = ({
 
                 {/* Severity Filter */}
                 <div>
-                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Severity</label>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700">Severity</label>
                   <FormSelectModule
                     name="severity"
                     value={localFilters.severity || ""}
@@ -340,7 +186,7 @@ const MobileFilterSidebar = ({
 
                 {/* Rule Key Filter */}
                 <div>
-                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Rule Key</label>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700">Rule Key</label>
                   <FormSelectModule
                     name="ruleKey"
                     value={localFilters.ruleKey || ""}
@@ -353,7 +199,7 @@ const MobileFilterSidebar = ({
 
                 {/* Status Filter */}
                 <div>
-                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700">Status</label>
                   <div className="grid grid-cols-2 gap-2">
                     {statusOptions
                       .filter((opt) => opt.value !== "")
@@ -366,7 +212,7 @@ const MobileFilterSidebar = ({
                               localFilters.status === option.value ? undefined : option.value
                             )
                           }
-                          className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                          className={`rounded-md px-3 py-2 text-xs transition-colors ${
                             localFilters.status === option.value
                               ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
                               : "bg-gray-50 text-gray-700 hover:bg-gray-100"
@@ -380,7 +226,7 @@ const MobileFilterSidebar = ({
 
                 {/* Payment Type Filter */}
                 <div>
-                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Payment Type</label>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700">Payment Type</label>
                   <FormSelectModule
                     name="paymentTypeId"
                     value={localFilters.paymentTypeId || ""}
@@ -393,7 +239,7 @@ const MobileFilterSidebar = ({
 
                 {/* Resolution Action Filter */}
                 <div>
-                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Resolution Action</label>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700">Resolution Action</label>
                   <div className="grid grid-cols-2 gap-2">
                     {resolutionActionOptions
                       .filter((opt) => opt.value !== "")
@@ -406,7 +252,7 @@ const MobileFilterSidebar = ({
                               localFilters.resolutionAction === option.value ? undefined : option.value
                             )
                           }
-                          className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                          className={`rounded-md px-3 py-2 text-xs transition-colors ${
                             localFilters.resolutionAction === option.value
                               ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
                               : "bg-gray-50 text-gray-700 hover:bg-gray-100"
@@ -420,7 +266,7 @@ const MobileFilterSidebar = ({
 
                 {/* Amount Range Filters */}
                 <div>
-                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Min Amount</label>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700">Min Amount</label>
                   <input
                     type="number"
                     value={localFilters.minAmount || ""}
@@ -433,7 +279,7 @@ const MobileFilterSidebar = ({
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Max Amount</label>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700">Max Amount</label>
                   <input
                     type="number"
                     value={localFilters.maxAmount || ""}
@@ -447,7 +293,7 @@ const MobileFilterSidebar = ({
 
                 {/* Date Range Filters */}
                 <div>
-                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Detected From</label>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700">Detected From</label>
                   <input
                     type="date"
                     value={localFilters.detectedFromUtc || ""}
@@ -457,7 +303,7 @@ const MobileFilterSidebar = ({
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Detected To</label>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700">Detected To</label>
                   <input
                     type="date"
                     value={localFilters.detectedToUtc || ""}
@@ -467,7 +313,7 @@ const MobileFilterSidebar = ({
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Paid From</label>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700">Paid From</label>
                   <input
                     type="date"
                     value={localFilters.paidFromUtc || ""}
@@ -477,23 +323,11 @@ const MobileFilterSidebar = ({
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Paid To</label>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700">Paid To</label>
                   <input
                     type="date"
                     value={localFilters.paidToUtc || ""}
                     onChange={(e) => handleFilterChange("paidToUtc", e.target.value || undefined)}
-                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                  />
-                </div>
-
-                {/* Text Input Filters */}
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Rule Key</label>
-                  <input
-                    type="text"
-                    value={localFilters.ruleKey || ""}
-                    onChange={(e) => handleFilterChange("ruleKey", e.target.value || undefined)}
-                    placeholder="Enter rule key..."
                     className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
                   />
                 </div>
@@ -503,7 +337,7 @@ const MobileFilterSidebar = ({
                   <button
                     type="button"
                     onClick={() => setIsSortExpanded((prev) => !prev)}
-                    className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                    className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700"
                     aria-expanded={isSortExpanded}
                   >
                     <span>Sort By</span>
@@ -516,7 +350,7 @@ const MobileFilterSidebar = ({
                         <button
                           key={`${option.value}-${option.order}`}
                           onClick={() => handleSortChange(option)}
-                          className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                          className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors ${
                             localFilters.sortBy === option.value && localFilters.sortOrder === option.order
                               ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
                               : "bg-gray-50 text-gray-700 hover:bg-gray-100"
@@ -548,9 +382,8 @@ const MobileFilterSidebar = ({
                     applyFilters()
                     onClose()
                   }}
-                  className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
+                  className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
                 >
-                  <Filter className="size-4" />
                   Apply Filters
                 </button>
                 <button
@@ -558,9 +391,8 @@ const MobileFilterSidebar = ({
                     resetFilters()
                     onClose()
                   }}
-                  className="button-outlined flex w-full items-center justify-center gap-2 text-sm md:text-base"
+                  className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
-                  <X className="size-4" />
                   Reset
                 </button>
               </div>
@@ -572,135 +404,475 @@ const MobileFilterSidebar = ({
   )
 }
 
+// Severity configuration
+const getSeverityConfig = (severity: string) => {
+  const configs = {
+    Warning: {
+      label: "Warning",
+      color: "bg-amber-50 text-amber-700 border-amber-200",
+      icon: <AlertCircle className="size-3.5 text-amber-600" />,
+    },
+    Error: {
+      label: "Error",
+      color: "bg-red-50 text-red-700 border-red-200",
+      icon: <XCircle className="size-3.5 text-red-600" />,
+    },
+  }
+  return configs[severity as keyof typeof configs] || configs.Warning
+}
+
+// Status configuration
+const getStatusConfig = (status: string) => {
+  const configs = {
+    Open: {
+      label: "Open",
+      color: "bg-red-50 text-red-700 border-red-200",
+      icon: <AlertCircle className="size-3.5 text-red-600" />,
+    },
+    Resolved: {
+      label: "Resolved",
+      color: "bg-emerald-50 text-emerald-700 border-emerald-200",
+      icon: <CheckCircle className="size-3.5 text-emerald-600" />,
+    },
+    Ignored: {
+      label: "Ignored",
+      color: "bg-gray-100 text-gray-700 border-gray-200",
+      icon: <XCircle className="size-3.5 text-gray-600" />,
+    },
+  }
+  return configs[status as keyof typeof configs] || configs.Open
+}
+
+// Formatting utilities
+const formatDate = (dateString: string | null | undefined): string => {
+  if (!dateString) return "—"
+  try {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+    })
+  } catch {
+    return "—"
+  }
+}
+
+const formatDateTime = (dateString: string, isStartDate: boolean = true) => {
+  if (!dateString) return undefined
+  const date = new Date(dateString)
+  if (isNaN(date.getTime())) return undefined
+
+  if (isStartDate) {
+    date.setHours(0, 0, 0, 0)
+  } else {
+    date.setHours(23, 59, 59, 999)
+  }
+
+  return date.toISOString()
+}
+
+// Loading Skeleton
+const TableSkeleton = () => (
+  <div className="space-y-4">
+    {/* Header skeleton */}
+    <div className="flex items-center justify-between">
+      <div>
+        <div className="h-8 w-48 rounded bg-gray-200"></div>
+        <div className="mt-1 h-4 w-64 rounded bg-gray-200"></div>
+      </div>
+      <div className="flex gap-2">
+        <div className="h-10 w-64 rounded bg-gray-200"></div>
+        <div className="h-10 w-32 rounded bg-gray-200"></div>
+        <div className="h-10 w-32 rounded bg-gray-200"></div>
+        <div className="h-10 w-24 rounded bg-gray-200"></div>
+      </div>
+    </div>
+
+    {/* Filters skeleton */}
+    <div className="flex flex-wrap gap-3">
+      <div className="h-10 w-64 rounded bg-gray-200"></div>
+      <div className="h-10 w-32 rounded bg-gray-200"></div>
+      <div className="h-10 w-32 rounded bg-gray-200"></div>
+    </div>
+
+    {/* Table skeleton */}
+    <div className="overflow-x-auto rounded-lg border border-gray-200">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
+          <tr>
+            {[...Array(9)].map((_, i) => (
+              <th key={i} className="px-4 py-3">
+                <div className="h-4 w-24 rounded bg-gray-200"></div>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-200 bg-white">
+          {[...Array(5)].map((_, rowIndex) => (
+            <tr key={rowIndex}>
+              {[...Array(9)].map((_, cellIndex) => (
+                <td key={cellIndex} className="px-4 py-3">
+                  <div className="h-4 w-full rounded bg-gray-200"></div>
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    {/* Pagination skeleton */}
+    <div className="flex items-center justify-between">
+      <div className="h-4 w-48 rounded bg-gray-200"></div>
+      <div className="flex gap-2">
+        <div className="h-8 w-20 rounded bg-gray-200"></div>
+        <div className="h-8 w-20 rounded bg-gray-200"></div>
+      </div>
+    </div>
+  </div>
+)
+
+// Export Modal Component
+const ExportModal = ({
+  isOpen,
+  onClose,
+  onExport,
+  customerOptions,
+  statusOptions,
+  channelOptions,
+  vendorOptions,
+  agentOptions,
+  paymentTypeOptions,
+  searchTerms,
+  searchLoading,
+  handleCustomerSearch,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  onExport: (params: any) => void
+  customerOptions: Array<{ value: string | number; label: string }>
+  statusOptions: Array<{ value: string; label: string }>
+  channelOptions: Array<{ value: string; label: string }>
+  vendorOptions: Array<{ value: string | number; label: string }>
+  agentOptions: Array<{ value: string | number; label: string }>
+  paymentTypeOptions: Array<{ value: string | number; label: string }>
+  searchTerms?: Record<string, string>
+  searchLoading?: Record<string, boolean>
+  handleCustomerSearch?: (searchTerm: string) => void
+}) => {
+  const [exportDateRange, setExportDateRange] = useState<"all" | "today" | "week" | "month" | "custom">("all")
+  const [exportFromDate, setExportFromDate] = useState("")
+  const [exportToDate, setExportToDate] = useState("")
+  const [exportCustomerId, setExportCustomerId] = useState("")
+  const [exportRuleKey, setExportRuleKey] = useState("")
+  const [exportStatus, setExportStatus] = useState("")
+  const [exportSeverity, setExportSeverity] = useState("")
+  const [exportChannel, setExportChannel] = useState("")
+  const [exportReference, setExportReference] = useState("")
+  const [exportVendorId, setExportVendorId] = useState("")
+  const [exportAgentId, setExportAgentId] = useState("")
+  const [exportPaymentTypeId, setExportPaymentTypeId] = useState("")
+
+  const handleExport = () => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    let fromDate: string | undefined
+    let toDate: string | undefined
+
+    switch (exportDateRange) {
+      case "today":
+        fromDate = today.toISOString()
+        toDate = new Date(today.setHours(23, 59, 59, 999)).toISOString()
+        break
+      case "week":
+        const weekAgo = new Date(today)
+        weekAgo.setDate(weekAgo.getDate() - 7)
+        fromDate = weekAgo.toISOString()
+        toDate = new Date().toISOString()
+        break
+      case "month":
+        const monthAgo = new Date(today)
+        monthAgo.setMonth(monthAgo.getMonth() - 1)
+        fromDate = monthAgo.toISOString()
+        toDate = new Date().toISOString()
+        break
+      case "custom":
+        fromDate = exportFromDate ? new Date(exportFromDate).toISOString() : undefined
+        toDate = exportToDate ? new Date(exportToDate + "T23:59:59").toISOString() : undefined
+        break
+    }
+
+    onExport({
+      dateRange: exportDateRange,
+      fromDate,
+      toDate,
+      customerId: exportCustomerId || undefined,
+      ruleKey: exportRuleKey || undefined,
+      status: exportStatus || undefined,
+      severity: exportSeverity || undefined,
+      channel: exportChannel || undefined,
+      reference: exportReference || undefined,
+      vendorId: exportVendorId || undefined,
+      agentId: exportAgentId || undefined,
+      paymentTypeId: exportPaymentTypeId || undefined,
+    })
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-sm"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+    >
+      <motion.div
+        className="w-full max-w-2xl rounded-lg bg-white shadow-xl"
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="border-b border-gray-200 p-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900">Export Data Quality Issues</h3>
+            <button onClick={onClose} className="rounded-full p-1 hover:bg-gray-100">
+              <X className="size-5 text-gray-500" />
+            </button>
+          </div>
+        </div>
+
+        <div className="max-h-96 overflow-y-auto p-4">
+          <div className="space-y-4">
+            {/* Date Range */}
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">Date Range</label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { value: "all", label: "All Time" },
+                  { value: "today", label: "Today" },
+                  { value: "week", label: "Last 7 Days" },
+                  { value: "month", label: "Last 30 Days" },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => setExportDateRange(option.value as typeof exportDateRange)}
+                    className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                      exportDateRange === option.value
+                        ? "border-blue-600 bg-blue-50 text-blue-700"
+                        : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setExportDateRange("custom")}
+                className={`mt-2 w-full rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                  exportDateRange === "custom"
+                    ? "border-blue-600 bg-blue-50 text-blue-700"
+                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <Calendar className="mr-2 inline-block size-4" />
+                Custom Date Range
+              </button>
+            </div>
+
+            {exportDateRange === "custom" && (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">From</label>
+                  <input
+                    type="date"
+                    value={exportFromDate}
+                    onChange={(e) => setExportFromDate(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">To</label>
+                  <input
+                    type="date"
+                    value={exportToDate}
+                    onChange={(e) => setExportToDate(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Status and Channel */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">Status</label>
+                <FormSelectModule
+                  name="exportStatus"
+                  value={exportStatus}
+                  onChange={(e) => setExportStatus(e.target.value)}
+                  options={statusOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">Channel</label>
+                <FormSelectModule
+                  name="exportChannel"
+                  value={exportChannel}
+                  onChange={(e) => setExportChannel(e.target.value)}
+                  options={channelOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+            </div>
+
+            {/* Customer and Reference */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">Customer</label>
+                <FormSelectModule
+                  name="exportCustomerId"
+                  value={exportCustomerId}
+                  onChange={(e) => setExportCustomerId(e.target.value)}
+                  options={customerOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                  onSearchChange={handleCustomerSearch}
+                  searchTerm={searchTerms?.customer || ""}
+                  searchable
+                  disabled={searchLoading?.customer}
+                />
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">Reference</label>
+                <input
+                  type="text"
+                  placeholder="Enter reference"
+                  value={exportReference}
+                  onChange={(e) => setExportReference(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                />
+              </div>
+            </div>
+
+            {/* Vendor and Agent */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">Vendor</label>
+                <FormSelectModule
+                  name="exportVendorId"
+                  value={exportVendorId}
+                  onChange={(e) => setExportVendorId(e.target.value)}
+                  options={vendorOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">Agent</label>
+                <FormSelectModule
+                  name="exportAgentId"
+                  value={exportAgentId}
+                  onChange={(e) => setExportAgentId(e.target.value)}
+                  options={agentOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+            </div>
+
+            {/* Payment Type */}
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">Payment Type</label>
+              <FormSelectModule
+                name="exportPaymentTypeId"
+                value={exportPaymentTypeId}
+                onChange={(e) => setExportPaymentTypeId(e.target.value)}
+                options={paymentTypeOptions}
+                className="w-full"
+                controlClassName="h-9 text-sm"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-gray-200 p-4">
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleExport}
+              className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+            >
+              <Download className="mr-2 inline-block size-4" />
+              Export
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
+// Main Component
 interface AllDataQualityTableProps {
   agentId?: number
   customerId?: number
   appliedFilters?: AppliedFilters
   showStatisticsOnly?: boolean
-  showMobileFilters?: boolean
-  setShowMobileFilters?: (show: boolean) => void
-  showDesktopFilters?: boolean
-  setShowDesktopFilters?: (show: boolean) => void
-  getActiveFilterCount?: () => number
 }
 
 const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId }) => {
   const dispatch = useAppDispatch()
   const router = useRouter()
+
   const customersState = useAppSelector((state) => state.customers)
   const { dataQuality, dataQualityLoading, dataQualityError, dataQualityPagination } = customersState
   const { customers } = useAppSelector((state) => state.formData)
   const { vendors } = useAppSelector((state) => state.vendors)
   const { agents } = useAppSelector((state) => state.agents)
   const { paymentTypes } = useAppSelector((state) => state.paymentTypes)
-  const { user } = useAppSelector((state) => state.auth)
 
-  // Helper functions to find names by ID
-  const getAgentName = (agentId: number) => {
-    const agent = agents.find((a) => a.id === agentId)
-    return agent ? agent.user.fullName : `ID: ${agentId}`
-  }
-
-  const getVendorName = (vendorId: number) => {
-    const vendor = vendors.find((v) => v.id === vendorId)
-    return vendor ? vendor.name : `ID: ${vendorId}`
-  }
-
-  const [sortColumn, setSortColumn] = useState<string | null>(null)
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
+  // Local state
   const [searchText, setSearchText] = useState("")
   const [searchInput, setSearchInput] = useState("")
-  const [selectedDataQualityItem, setSelectedDataQualityItem] = useState<DataQualityItem | null>(null)
-  const [showMobileFiltersLocal, setShowMobileFiltersLocal] = useState(false)
-  const [showDesktopFiltersLocal, setShowDesktopFiltersLocal] = useState(true)
+  const [selectedItem, setSelectedItem] = useState<DataQualityItem | null>(null)
+  const [isResolveModalOpen, setIsResolveModalOpen] = useState(false)
+  const [showExportModal, setShowExportModal] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
   const [isSortExpanded, setIsSortExpanded] = useState(false)
 
   // Search states for dropdowns
-  const [searchTerms, setSearchTerms] = useState<Record<string, string>>({
-    customer: "",
-  })
+  const [searchTerms, setSearchTerms] = useState<Record<string, string>>({ customer: "" })
+  const [searchLoading, setSearchLoading] = useState<Record<string, boolean>>({ customer: false })
 
-  // Search loading states
-  const [searchLoading, setSearchLoading] = useState<Record<string, boolean>>({
-    customer: false,
-  })
+  // Debounced search ref
+  const debouncedSearchRef = useRef<Record<string, NodeJS.Timeout>>({})
 
-  // Debounced search handlers
-  const debouncedSearchRef = React.useRef<Record<string, NodeJS.Timeout>>({})
-
-  // Debounced search handlers
-  const handleCustomerSearch = React.useCallback(
-    (searchTerm: string) => {
-      setSearchTerms((prev) => ({ ...prev, customer: searchTerm }))
-
-      // Clear existing timeout
-      if (debouncedSearchRef.current.customer) {
-        clearTimeout(debouncedSearchRef.current.customer)
-      }
-
-      // Set new timeout for debounced API call
-      debouncedSearchRef.current.customer = setTimeout(() => {
-        if (searchTerm.trim()) {
-          setSearchLoading((prev) => ({ ...prev, customer: true }))
-
-          // Check if search term is a pure number (ID search)
-          const isNumericSearch = /^\d+$/.test(searchTerm.trim())
-          const searchValue = isNumericSearch ? searchTerm.trim() : searchTerm.trim()
-
-          dispatch(
-            fetchCustomers({
-              PageNumber: 1,
-              PageSize: 50,
-              Search: searchValue,
-            })
-          ).finally(() => {
-            setSearchLoading((prev) => ({ ...prev, customer: false }))
-          })
-        } else if (searchTerm === "") {
-          // Only reload default data when search is explicitly cleared (empty string)
-          // Don't reload on initial mount or when dropdown closes
-          dispatch(
-            fetchCustomers({
-              PageNumber: 1,
-              PageSize: 100,
-            })
-          )
-        }
-      }, 500) // 500ms debounce delay
-    },
-    [dispatch]
-  )
-
-  // Resolve data quality modal state
-  const [isResolveModalOpen, setIsResolveModalOpen] = useState(false)
-  const [selectedResolveItem, setSelectedResolveItem] = useState<DataQualityItem | null>(null)
-
-  // Export CSV state
-  const [isExporting, setIsExporting] = useState(false)
-  const [showExportModal, setShowExportModal] = useState(false)
-  const [exportDateRange, setExportDateRange] = useState<"all" | "today" | "week" | "month" | "custom">("all")
-  const [exportFromDate, setExportFromDate] = useState("")
-  const [exportToDate, setExportToDate] = useState("")
-  const [exportCustomerId, setExportCustomerId] = useState<string>("")
-  const [exportRuleKey, setExportRuleKey] = useState<string>("")
-  const [exportStatus, setExportStatus] = useState<string>("")
-  const [exportSeverity, setExportSeverity] = useState<string>("")
-  const [exportChannel, setExportChannel] = useState<string>("all")
-  const [exportReference, setExportReference] = useState<string>("")
-  const [exportVendorId, setExportVendorId] = useState<string>("")
-  const [exportAgentId, setExportAgentId] = useState<string>("")
-  const [exportPaymentTypeId, setExportPaymentTypeId] = useState<string>("")
-
-  // Local state for filters
+  // Filter states
   const [localFilters, setLocalFilters] = useState({
     customerId: undefined as number | undefined,
     provinceId: undefined as number | undefined,
     serviceCenterId: undefined as number | undefined,
     distributionSubstationId: undefined as number | undefined,
     feederId: undefined as number | undefined,
+    paymentTypeId: undefined as number | undefined,
     ruleKey: undefined as string | undefined,
     status: undefined as "Open" | "Resolved" | "Ignored" | undefined,
     severity: undefined as "Warning" | "Error" | undefined,
+    resolutionAction: undefined as string | undefined,
     fromUtc: undefined as string | undefined,
     toUtc: undefined as string | undefined,
     detectedFromUtc: undefined as string | undefined,
@@ -710,306 +882,20 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
     search: undefined as string | undefined,
     minAmount: undefined as number | undefined,
     maxAmount: undefined as number | undefined,
-    sortBy: "",
-    sortOrder: "asc" as "asc" | "desc",
+    sortBy: "detectedAtUtc",
+    sortOrder: "desc" as "asc" | "desc",
   })
 
-  // Applied filters state - triggers API calls
-  const [appliedFiltersLocal, setAppliedFiltersLocal] = useState({
-    customerId: undefined as number | undefined,
-    provinceId: undefined as number | undefined,
-    serviceCenterId: undefined as number | undefined,
-    distributionSubstationId: undefined as number | undefined,
-    feederId: undefined as number | undefined,
-    ruleKey: undefined as string | undefined,
-    status: undefined as "Open" | "Resolved" | "Ignored" | undefined,
-    severity: undefined as "Warning" | "Error" | undefined,
-    fromUtc: undefined as string | undefined,
-    toUtc: undefined as string | undefined,
-    detectedFromUtc: undefined as string | undefined,
-    detectedToUtc: undefined as string | undefined,
-    paidFromUtc: undefined as string | undefined,
-    paidToUtc: undefined as string | undefined,
-    search: undefined as string | undefined,
-    minAmount: undefined as number | undefined,
-    maxAmount: undefined as number | undefined,
-    sortBy: undefined as string | undefined,
-    sortOrder: undefined as "asc" | "desc" | undefined,
-  })
+  // Applied filters that trigger API calls
+  const [appliedFilters, setAppliedFilters] = useState(localFilters)
 
-  const handleViewDataQualityDetails = (dataQualityItem: DataQualityItem) => {
-    setSelectedDataQualityItem(dataQualityItem)
-    // You can add navigation to details page or modal here
-  }
-
-  const handleResolveDataQuality = (dataQualityItem: DataQualityItem) => {
-    setSelectedResolveItem(dataQualityItem)
-    setIsResolveModalOpen(true)
-  }
-
-  const handleCloseResolveModal = () => {
-    setIsResolveModalOpen(false)
-    setSelectedResolveItem(null)
-    // Refresh data quality list after resolution
-    const currentPage = dataQualityPagination?.currentPage || 1
-    const pageSize = dataQualityPagination?.pageSize || 10
-    dispatch(
-      fetchDataQuality({
-        PageNumber: currentPage,
-        PageSize: pageSize,
-        ...appliedFiltersLocal,
-      })
-    )
-  }
-
-  // Get pagination values from Redux state
+  // Pagination
   const currentPage = dataQualityPagination?.currentPage || 1
   const pageSize = dataQualityPagination?.pageSize || 10
   const totalRecords = dataQualityPagination?.totalCount || 0
   const totalPages = dataQualityPagination?.totalPages || 0
 
-  // Fetch related data for filters
-  useEffect(() => {
-    dispatch(
-      fetchCustomers({
-        PageNumber: 1,
-        PageSize: 100,
-      })
-    )
-    dispatch(
-      fetchVendors({
-        pageNumber: 1,
-        pageSize: 100,
-      })
-    )
-    dispatch(
-      fetchAgents({
-        pageNumber: 1,
-        pageSize: 100,
-      })
-    )
-    dispatch(fetchPaymentTypes())
-  }, [dispatch])
-
-  // Fetch data quality on component mount and when search/pagination/filters change
-  useEffect(() => {
-    const fetchParams: DataQualityParams = {
-      PageNumber: currentPage,
-      PageSize: pageSize,
-      // Use customerId prop if provided, otherwise use appliedFilters.customerId
-      ...(customerId !== undefined && { CustomerId: customerId }),
-      ...(searchText && { RuleKey: searchText }), // Using searchText to search by rule key
-      // Applied filters from local state
-      ...(appliedFiltersLocal.customerId && { CustomerId: appliedFiltersLocal.customerId }),
-      ...(appliedFiltersLocal.provinceId && { ProvinceId: appliedFiltersLocal.provinceId }),
-      ...(appliedFiltersLocal.serviceCenterId && { ServiceCenterId: appliedFiltersLocal.serviceCenterId }),
-      ...(appliedFiltersLocal.distributionSubstationId && {
-        DistributionSubstationId: appliedFiltersLocal.distributionSubstationId,
-      }),
-      ...(appliedFiltersLocal.feederId && { FeederId: appliedFiltersLocal.feederId }),
-      ...(appliedFiltersLocal.ruleKey && { RuleKey: appliedFiltersLocal.ruleKey }),
-      ...(appliedFiltersLocal.status && { Status: appliedFiltersLocal.status }),
-      ...(appliedFiltersLocal.severity && { Severity: appliedFiltersLocal.severity }),
-      ...(appliedFiltersLocal.fromUtc && { FromUtc: formatDateTime(appliedFiltersLocal.fromUtc, true) }),
-      ...(appliedFiltersLocal.toUtc && { ToUtc: formatDateTime(appliedFiltersLocal.toUtc, false) }),
-      ...(appliedFiltersLocal.search && { RuleKey: appliedFiltersLocal.search }),
-      ...(appliedFiltersLocal.sortBy && { RuleKey: appliedFiltersLocal.sortBy }), // Using sortBy as RuleKey for now
-      ...(appliedFiltersLocal.sortOrder &&
-        {
-          /* Sort order handled by API if needed */
-        }),
-    }
-
-    dispatch(fetchDataQuality(fetchParams))
-  }, [dispatch, currentPage, pageSize, searchText, customerId, JSON.stringify(appliedFiltersLocal)])
-
-  const formatDateTime = (dateString: string, isStartDate: boolean = true) => {
-    if (!dateString) return undefined
-    const date = new Date(dateString)
-    if (isNaN(date.getTime())) return undefined
-
-    if (isStartDate) {
-      // For start date, set time to beginning of day (00:00:00.000 local time)
-      date.setHours(0, 0, 0, 0)
-    } else {
-      // For end date, set time to end of day (23:59:59.999 local time)
-      date.setHours(23, 59, 59, 999)
-    }
-
-    return date.toISOString()
-  }
-
-  const toggleSort = (column: string) => {
-    const isAscending = sortColumn === column && sortOrder === "asc"
-    setSortOrder(isAscending ? "desc" : "asc")
-    setSortColumn(column)
-    handleSortChange({
-      label: column,
-      value: column,
-      order: isAscending ? "desc" : "asc",
-    })
-  }
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchInput(e.target.value)
-  }
-
-  const handleManualSearch = () => {
-    const trimmed = searchInput.trim()
-    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
-
-    if (shouldUpdate) {
-      setSearchText(trimmed)
-      // The useEffect will handle the API call with updated searchText
-    }
-  }
-
-  const handleCancelSearch = () => {
-    setSearchText("")
-    setSearchInput("")
-    // The useEffect will handle the API call with updated searchText
-  }
-
-  // Handle individual filter changes (local state)
-  const handleFilterChange = (key: string, value: string | number | boolean | undefined) => {
-    setLocalFilters((prev) => ({
-      ...prev,
-      [key]: value,
-    }))
-  }
-
-  // Handle sort change
-  const handleSortChange = (option: SortOption) => {
-    setLocalFilters((prev) => ({
-      ...prev,
-      sortBy: option.value,
-      sortOrder: option.order,
-    }))
-  }
-
-  // Apply all filters at once
-  const applyFilters = () => {
-    setAppliedFiltersLocal({
-      customerId: localFilters.customerId,
-      provinceId: localFilters.provinceId,
-      serviceCenterId: localFilters.serviceCenterId,
-      distributionSubstationId: localFilters.distributionSubstationId,
-      feederId: localFilters.feederId,
-      ruleKey: localFilters.ruleKey,
-      status: localFilters.status,
-      severity: localFilters.severity,
-      fromUtc: localFilters.fromUtc,
-      toUtc: localFilters.toUtc,
-      detectedFromUtc: localFilters.detectedFromUtc,
-      detectedToUtc: localFilters.detectedToUtc,
-      paidFromUtc: localFilters.paidFromUtc,
-      paidToUtc: localFilters.paidToUtc,
-      search: localFilters.search,
-      minAmount: localFilters.minAmount,
-      maxAmount: localFilters.maxAmount,
-      sortBy: localFilters.sortBy || undefined,
-      sortOrder: localFilters.sortOrder || undefined,
-    })
-
-    // The useEffect will handle the API call with updated appliedFiltersLocal
-  }
-
-  // Reset all filters
-  const resetFilters = () => {
-    setLocalFilters({
-      customerId: undefined,
-      provinceId: undefined,
-      serviceCenterId: undefined,
-      distributionSubstationId: undefined,
-      feederId: undefined,
-      ruleKey: undefined,
-      status: undefined,
-      severity: undefined,
-      fromUtc: undefined,
-      toUtc: undefined,
-      detectedFromUtc: undefined,
-      detectedToUtc: undefined,
-      paidFromUtc: undefined,
-      paidToUtc: undefined,
-      search: undefined,
-      minAmount: undefined,
-      maxAmount: undefined,
-      sortBy: "",
-      sortOrder: "asc" as "asc" | "desc",
-    })
-
-    setAppliedFiltersLocal({
-      customerId: undefined,
-      provinceId: undefined,
-      serviceCenterId: undefined,
-      distributionSubstationId: undefined,
-      feederId: undefined,
-      ruleKey: undefined,
-      status: undefined,
-      severity: undefined,
-      fromUtc: undefined,
-      toUtc: undefined,
-      detectedFromUtc: undefined,
-      detectedToUtc: undefined,
-      paidFromUtc: undefined,
-      paidToUtc: undefined,
-      search: undefined,
-      minAmount: undefined,
-      maxAmount: undefined,
-      sortBy: undefined,
-      sortOrder: undefined,
-    })
-    setSearchText("")
-    setSearchInput("")
-  }
-
-  // Get active filter count
-  const getActiveFilterCountLocal = () => {
-    let count = 0
-    if (appliedFiltersLocal.customerId) count++
-    if (appliedFiltersLocal.provinceId) count++
-    if (appliedFiltersLocal.serviceCenterId) count++
-    if (appliedFiltersLocal.distributionSubstationId) count++
-    if (appliedFiltersLocal.feederId) count++
-    if (appliedFiltersLocal.ruleKey) count++
-    if (appliedFiltersLocal.status) count++
-    if (appliedFiltersLocal.severity) count++
-    if (appliedFiltersLocal.fromUtc) count++
-    if (appliedFiltersLocal.toUtc) count++
-    if (appliedFiltersLocal.search) count++
-    if (appliedFiltersLocal.sortBy) count++
-    return count
-  }
-
-  const paginate = (pageNumber: number) => {
-    const fetchParams: DataQualityParams = {
-      PageNumber: pageNumber,
-      PageSize: pageSize,
-      ...(customerId !== undefined && { CustomerId: customerId }),
-      ...(searchText && { RuleKey: searchText }),
-      ...(appliedFiltersLocal.customerId && { CustomerId: appliedFiltersLocal.customerId }),
-      ...(appliedFiltersLocal.provinceId && { ProvinceId: appliedFiltersLocal.provinceId }),
-      ...(appliedFiltersLocal.serviceCenterId && { ServiceCenterId: appliedFiltersLocal.serviceCenterId }),
-      ...(appliedFiltersLocal.distributionSubstationId && {
-        DistributionSubstationId: appliedFiltersLocal.distributionSubstationId,
-      }),
-      ...(appliedFiltersLocal.feederId && { FeederId: appliedFiltersLocal.feederId }),
-      ...(appliedFiltersLocal.ruleKey && { RuleKey: appliedFiltersLocal.ruleKey }),
-      ...(appliedFiltersLocal.status && { Status: appliedFiltersLocal.status }),
-      ...(appliedFiltersLocal.severity && { Severity: appliedFiltersLocal.severity }),
-      ...(appliedFiltersLocal.fromUtc && { FromUtc: formatDateTime(appliedFiltersLocal.fromUtc, true) }),
-      ...(appliedFiltersLocal.toUtc && { ToUtc: formatDateTime(appliedFiltersLocal.toUtc, false) }),
-      ...(appliedFiltersLocal.search && { RuleKey: appliedFiltersLocal.search }),
-      ...(appliedFiltersLocal.sortBy && { RuleKey: appliedFiltersLocal.sortBy }),
-      ...(appliedFiltersLocal.sortOrder &&
-        {
-          /* Sort order handled by API if needed */
-        }),
-    }
-    dispatch(fetchDataQuality(fetchParams))
-  }
-
-  // Filter options
+  // Filter dropdown options
   const customerOptions = [
     { value: "", label: "All Customers" },
     ...(customers?.map((customer) => ({
@@ -1031,60 +917,29 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
     { value: "Error", label: "Error" },
   ]
 
-  // Sort options
-  const sortOptions: SortOption[] = [
-    { label: "Customer Name A-Z", value: "customerName", order: "asc" },
-    { label: "Customer Name Z-A", value: "customerName", order: "desc" },
-    { label: "Rule Key A-Z", value: "ruleKey", order: "asc" },
-    { label: "Rule Key Z-A", value: "ruleKey", order: "desc" },
-    { label: "Severity", value: "severity", order: "asc" },
-    { label: "Status", value: "status", order: "asc" },
-    { label: "Detected Date Oldest", value: "detectedAtUtc", order: "asc" },
-    { label: "Detected Date Newest", value: "detectedAtUtc", order: "desc" },
-  ]
-
-  // Payment type options
-  const paymentTypeOptions = [
-    { value: "", label: "All Payment Types" },
-    ...(paymentTypes?.map((type) => ({
-      value: type.id,
-      label: type.name,
-    })) || []),
-  ]
-
-  // Vendor options
-  const vendorOptions = [
-    { value: "", label: "All Vendors" },
-    ...(vendors?.map((vendor) => ({
-      value: vendor.id,
-      label: vendor.name,
-    })) || []),
-  ]
-
-  // Agent options
-  const agentOptions = [
-    { value: "", label: "All Agents" },
-    ...(agents?.map((agent) => ({
-      value: agent.id,
-      label: agent.user.fullName,
-    })) || []),
-  ]
-
-  // Channel options
   const channelOptions = [
     { value: "", label: "All Channels" },
     { value: "Cash", label: "Cash" },
     { value: "BankTransfer", label: "Bank Transfer" },
     { value: "Pos", label: "POS" },
     { value: "Card", label: "Card" },
-    { value: "VendorWallet", label: "Vendor Wallet" },
-    { value: "Chaque", label: "Chaque" },
-    { value: "BankDeposit", label: "Bank Deposit" },
-    { value: "Vendor", label: "Vendor" },
-    { value: "Migration", label: "Migration" },
   ]
 
-  // Resolution action options
+  const vendorOptions = [
+    { value: "", label: "All Vendors" },
+    ...(vendors?.map((vendor) => ({ value: vendor.id, label: vendor.name })) || []),
+  ]
+
+  const agentOptions = [
+    { value: "", label: "All Agents" },
+    ...(agents?.map((agent) => ({ value: agent.id, label: agent.user.fullName })) || []),
+  ]
+
+  const paymentTypeOptions = [
+    { value: "", label: "All Payment Types" },
+    ...(paymentTypes?.map((type) => ({ value: type.id, label: type.name })) || []),
+  ]
+
   const resolutionActionOptions = [
     { value: "", label: "All Actions" },
     { value: "MarkAsResolved", label: "Mark as Resolved" },
@@ -1093,87 +948,229 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
     { value: "Investigate", label: "Investigate" },
   ]
 
-  const getExportDateRange = () => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+  const sortOptions: SortOption[] = [
+    { label: "Detected Date (Newest)", value: "detectedAtUtc", order: "desc" },
+    { label: "Detected Date (Oldest)", value: "detectedAtUtc", order: "asc" },
+    { label: "Customer Name A-Z", value: "customerName", order: "asc" },
+    { label: "Customer Name Z-A", value: "customerName", order: "desc" },
+    { label: "Severity", value: "severity", order: "asc" },
+    { label: "Status", value: "status", order: "asc" },
+  ]
 
-    switch (exportDateRange) {
-      case "today":
-        const endOfToday = new Date(today)
-        endOfToday.setHours(23, 59, 59, 999)
-        return {
-          from: today.toISOString(),
-          to: endOfToday.toISOString(),
+  // Fetch related data
+  useEffect(() => {
+    dispatch(fetchCustomers({ PageNumber: 1, PageSize: 100 }))
+    dispatch(fetchVendors({ pageNumber: 1, pageSize: 100 }))
+    dispatch(fetchAgents({ pageNumber: 1, pageSize: 100 }))
+    dispatch(fetchPaymentTypes())
+  }, [dispatch])
+
+  // Fetch data quality issues
+  useEffect(() => {
+    const params: DataQualityParams = {
+      PageNumber: currentPage,
+      PageSize: pageSize,
+      ...(customerId !== undefined && { CustomerId: customerId }),
+      ...(searchText && { RuleKey: searchText }),
+      ...(appliedFilters.customerId && { CustomerId: appliedFilters.customerId }),
+      ...(appliedFilters.provinceId && { ProvinceId: appliedFilters.provinceId }),
+      ...(appliedFilters.serviceCenterId && { ServiceCenterId: appliedFilters.serviceCenterId }),
+      ...(appliedFilters.distributionSubstationId && {
+        DistributionSubstationId: appliedFilters.distributionSubstationId,
+      }),
+      ...(appliedFilters.feederId && { FeederId: appliedFilters.feederId }),
+      ...(appliedFilters.ruleKey && { RuleKey: appliedFilters.ruleKey }),
+      ...(appliedFilters.status && { Status: appliedFilters.status }),
+      ...(appliedFilters.severity && { Severity: appliedFilters.severity }),
+      ...(appliedFilters.detectedFromUtc && { FromUtc: formatDateTime(appliedFilters.detectedFromUtc, true) }),
+      ...(appliedFilters.detectedToUtc && { ToUtc: formatDateTime(appliedFilters.detectedToUtc, false) }),
+      ...(appliedFilters.minAmount && { MinAmount: appliedFilters.minAmount }),
+      ...(appliedFilters.maxAmount && { MaxAmount: appliedFilters.maxAmount }),
+      SortBy: appliedFilters.sortBy,
+      SortOrder: appliedFilters.sortOrder,
+    }
+
+    dispatch(fetchDataQuality(params))
+  }, [dispatch, currentPage, pageSize, searchText, customerId, appliedFilters])
+
+  const handleCustomerSearch = useCallback(
+    (searchTerm: string) => {
+      setSearchTerms((prev) => ({ ...prev, customer: searchTerm }))
+
+      if (debouncedSearchRef.current.customer) {
+        clearTimeout(debouncedSearchRef.current.customer)
+      }
+
+      debouncedSearchRef.current.customer = setTimeout(() => {
+        if (searchTerm.trim()) {
+          setSearchLoading((prev) => ({ ...prev, customer: true }))
+          dispatch(
+            fetchCustomers({
+              PageNumber: 1,
+              PageSize: 50,
+              Search: searchTerm.trim(),
+            })
+          ).finally(() => {
+            setSearchLoading((prev) => ({ ...prev, customer: false }))
+          })
+        } else {
+          dispatch(fetchCustomers({ PageNumber: 1, PageSize: 100 }))
         }
-      case "week":
-        const weekAgo = new Date(today)
-        weekAgo.setDate(weekAgo.getDate() - 7)
-        const endOfWeek = new Date()
-        endOfWeek.setHours(23, 59, 59, 999)
-        return {
-          from: weekAgo.toISOString(),
-          to: endOfWeek.toISOString(),
-        }
-      case "month":
-        const monthAgo = new Date(today)
-        monthAgo.setMonth(monthAgo.getMonth() - 1)
-        const endOfMonth = new Date()
-        endOfMonth.setHours(23, 59, 59, 999)
-        return {
-          from: monthAgo.toISOString(),
-          to: endOfMonth.toISOString(),
-        }
-      case "custom":
-        return {
-          from: exportFromDate ? new Date(exportFromDate).toISOString() : undefined,
-          to: exportToDate ? new Date(exportToDate + "T23:59:59").toISOString() : undefined,
-        }
-      default:
-        return { from: undefined, to: undefined }
+      }, 500)
+    },
+    [dispatch]
+  )
+
+  const handleFilterChange = (key: string, value: any) => {
+    setLocalFilters((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const handleSortChange = (option: SortOption) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      sortBy: option.value,
+      sortOrder: option.order,
+    }))
+  }
+
+  const applyFilters = () => {
+    setAppliedFilters(localFilters)
+  }
+
+  const resetFilters = () => {
+    setLocalFilters({
+      customerId: undefined,
+      provinceId: undefined,
+      serviceCenterId: undefined,
+      distributionSubstationId: undefined,
+      feederId: undefined,
+      paymentTypeId: undefined,
+      ruleKey: undefined,
+      status: undefined,
+      severity: undefined,
+      resolutionAction: undefined,
+      fromUtc: undefined,
+      toUtc: undefined,
+      detectedFromUtc: undefined,
+      detectedToUtc: undefined,
+      paidFromUtc: undefined,
+      paidToUtc: undefined,
+      search: undefined,
+      minAmount: undefined,
+      maxAmount: undefined,
+      sortBy: "detectedAtUtc",
+      sortOrder: "desc",
+    })
+    setAppliedFilters({
+      customerId: undefined,
+      provinceId: undefined,
+      serviceCenterId: undefined,
+      distributionSubstationId: undefined,
+      feederId: undefined,
+      paymentTypeId: undefined,
+      ruleKey: undefined,
+      status: undefined,
+      severity: undefined,
+      resolutionAction: undefined,
+      fromUtc: undefined,
+      toUtc: undefined,
+      detectedFromUtc: undefined,
+      detectedToUtc: undefined,
+      paidFromUtc: undefined,
+      paidToUtc: undefined,
+      search: undefined,
+      minAmount: undefined,
+      maxAmount: undefined,
+      sortBy: "detectedAtUtc",
+      sortOrder: "desc",
+    })
+    setSearchText("")
+    setSearchInput("")
+  }
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchInput(e.target.value)
+  }
+
+  const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    if (trimmed.length === 0 || trimmed.length >= 3) {
+      setSearchText(trimmed)
     }
   }
 
-  const exportToCSV = async () => {
-    console.log("Export function called!")
+  const handleCancelSearch = () => {
+    setSearchText("")
+    setSearchInput("")
+  }
+
+  const handleResolve = (item: DataQualityItem) => {
+    setSelectedItem(item)
+    setIsResolveModalOpen(true)
+  }
+
+  const handleCloseResolveModal = () => {
+    setIsResolveModalOpen(false)
+    setSelectedItem(null)
+    // Refresh data
+    dispatch(
+      fetchDataQuality({
+        PageNumber: currentPage,
+        PageSize: pageSize,
+        ...appliedFilters,
+      })
+    )
+  }
+
+  const handleViewCustomer = (customerId: number) => {
+    router.push(`/customers/${customerId}`)
+  }
+
+  const handleExport = async (exportParams: any) => {
     setIsExporting(true)
     setShowExportModal(false)
 
     try {
-      const dateRange = getExportDateRange()
-
-      // Build filtered data based on export criteria
+      // Build filtered data for export
       let filteredData = dataQuality || []
 
-      // Apply filters if needed
-      if (exportCustomerId) {
-        filteredData = filteredData.filter((item) => item.customerId === parseInt(exportCustomerId))
+      // Apply export filters
+      if (exportParams.customerId) {
+        filteredData = filteredData.filter((item) => item.customerId === parseInt(exportParams.customerId))
       }
-      if (exportStatus !== "all") {
-        filteredData = filteredData.filter((item) => item.status === exportStatus)
+      if (exportParams.status) {
+        filteredData = filteredData.filter((item) => item.status === exportParams.status)
       }
-      if (exportSeverity) {
-        filteredData = filteredData.filter((item) => item.severity === exportSeverity)
+      if (exportParams.severity) {
+        filteredData = filteredData.filter((item) => item.severity === exportParams.severity)
       }
-      if (exportRuleKey) {
-        filteredData = filteredData.filter((item) => item.ruleKey.toLowerCase().includes(exportRuleKey.toLowerCase()))
+      if (exportParams.ruleKey) {
+        filteredData = filteredData.filter((item) =>
+          item.ruleKey.toLowerCase().includes(exportParams.ruleKey.toLowerCase())
+        )
+      }
+      if (exportParams.fromDate) {
+        filteredData = filteredData.filter(
+          (item) => item.detectedAtUtc && new Date(item.detectedAtUtc) >= new Date(exportParams.fromDate)
+        )
+      }
+      if (exportParams.toDate) {
+        filteredData = filteredData.filter(
+          (item) => item.detectedAtUtc && new Date(item.detectedAtUtc) <= new Date(exportParams.toDate)
+        )
       }
 
-      let dataQualityItems: DataQualityItem[] = filteredData
-
-      console.log("Data quality issues found:", dataQualityItems.length)
-
-      if (dataQualityItems.length === 0) {
-        console.log("No data quality issues found for export")
-        alert("No data quality issues found matching your criteria. Please adjust your filters and try again.")
+      if (filteredData.length === 0) {
+        alert("No data quality issues found matching your criteria.")
         setIsExporting(false)
         return
       }
 
+      // Generate CSV
       const headers = [
         "ID",
         "Customer Name",
-        "Customer Account Number",
-        "Customer ID",
+        "Account Number",
         "Rule Key",
         "Issue",
         "Severity",
@@ -1181,22 +1178,16 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
         "Detected At",
         "Resolved At",
         "Resolution Note",
-        "Province ID",
-        "Service Center ID",
-        "Distribution Substation ID",
-        "Feeder ID",
-        "Tariff ID",
         "Phone Number",
         "Email",
         "Address",
         "Is PPM",
       ]
 
-      const csvRows = dataQualityItems.map((item) => [
+      const csvRows = filteredData.map((item) => [
         item.id,
         item.customerName || "-",
         item.customerAccountNumber || "-",
-        item.customerId || "-",
         item.ruleKey || "-",
         item.issue || "-",
         item.severity || "-",
@@ -1204,11 +1195,6 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
         item.detectedAtUtc ? new Date(item.detectedAtUtc).toLocaleString() : "-",
         item.resolvedAtUtc ? new Date(item.resolvedAtUtc).toLocaleString() : "-",
         item.resolutionNote || "-",
-        item.provinceId || "-",
-        item.serviceCenterId || "-",
-        item.distributionSubstationId || "-",
-        item.feederId || "-",
-        item.tariffId || "-",
         item.phoneNumber || "-",
         item.email || "-",
         item.address || "-",
@@ -1227,102 +1213,195 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
         "\n"
       )
 
-      console.log("CSV content generated, length:", csvContent.length)
-
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
       const url = URL.createObjectURL(blob)
       const link = document.createElement("a")
       link.setAttribute("href", url)
       link.setAttribute("download", `data_quality_export_${new Date().toISOString().split("T")[0]}.csv`)
-      link.style.visibility = "hidden"
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
       URL.revokeObjectURL(url)
-
-      console.log("Export completed successfully")
     } catch (error) {
-      console.error("Failed to export data quality issues:", error)
-      alert(
-        `Failed to export data quality issues: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }. Please try again.`
-      )
+      console.error("Export failed:", error)
+      alert("Failed to export data. Please try again.")
     } finally {
       setIsExporting(false)
     }
   }
 
-  if (dataQualityLoading) return <LoadingSkeleton />
+  const handleSort = (column: string) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      sortBy: column,
+      sortOrder: prev.sortBy === column && prev.sortOrder === "asc" ? "desc" : "asc",
+    }))
+  }
+
+  const getActiveFilterCount = () => {
+    let count = 0
+    if (appliedFilters.customerId) count++
+    if (appliedFilters.provinceId) count++
+    if (appliedFilters.serviceCenterId) count++
+    if (appliedFilters.distributionSubstationId) count++
+    if (appliedFilters.feederId) count++
+    if (appliedFilters.ruleKey) count++
+    if (appliedFilters.status) count++
+    if (appliedFilters.severity) count++
+    if (appliedFilters.fromUtc) count++
+    if (appliedFilters.toUtc) count++
+    if (appliedFilters.detectedFromUtc) count++
+    if (appliedFilters.detectedToUtc) count++
+    if (appliedFilters.search) count++
+    if (appliedFilters.minAmount) count++
+    if (appliedFilters.maxAmount) count++
+    return count
+  }
+
+  const paginate = (pageNumber: number) => {
+    dispatch(
+      fetchDataQuality({
+        PageNumber: pageNumber,
+        PageSize: pageSize,
+        ...appliedFilters,
+      })
+    )
+  }
+
+  if (dataQualityLoading && dataQuality.length === 0) {
+    return (
+      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <TableSkeleton />
+      </div>
+    )
+  }
 
   return (
     <div className="w-full">
-      {/* Header Section with Title, Search and Filters */}
+      {/* Header Section */}
       <div className="mb-4 space-y-4">
-        {/* Title Row */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h4 className="text-xl font-semibold text-gray-900 md:text-2xl">Data Quality Issues</h4>
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">Data Quality Issues</h2>
+            <p className="text-sm text-gray-500">
+              {totalRecords} issue(s) found • {dataQuality.filter((i) => i.status === "Open").length} open
+            </p>
+          </div>
+
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center border-b">
-              <SearchModule
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
                 value={searchInput}
                 onChange={handleSearch}
-                onCancel={handleCancelSearch}
-                onSearch={handleManualSearch}
-                placeholder="Search data quality issues..."
-                className="w-full max-w-md"
-                bgClassName="bg-gray-50"
+                onKeyDown={(e) => e.key === "Enter" && handleManualSearch()}
+                placeholder="Search by rule key..."
+                className="h-10 w-64 rounded-lg border border-gray-300 pl-10 pr-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
+
             {/* Mobile Filter Button */}
             <button
-              onClick={() => setShowMobileFiltersLocal(true)}
-              className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 2xl:hidden"
+              onClick={() => setShowMobileFilters(true)}
+              className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 lg:hidden"
             >
               <Filter className="size-4" />
-              <span className="hidden xs:inline">Filters</span>
-              {getActiveFilterCountLocal() > 0 && (
-                <span className="flex size-5 items-center justify-center rounded-full bg-[#004B23] text-xs font-semibold text-white">
-                  {getActiveFilterCountLocal()}
+              <span>Filters</span>
+              {getActiveFilterCount() > 0 && (
+                <span className="flex size-5 items-center justify-center rounded-full bg-blue-600 text-xs text-white">
+                  {getActiveFilterCount()}
                 </span>
               )}
             </button>
 
             {/* Desktop Filter Toggle */}
             <button
-              onClick={() => setShowDesktopFiltersLocal(!showDesktopFiltersLocal)}
-              className="hidden items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 2xl:flex"
+              onClick={() => setShowDesktopFilters(!showDesktopFilters)}
+              className="hidden items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 lg:flex"
             >
-              {showDesktopFiltersLocal ? <X className="size-4" /> : <Filter className="size-4" />}
-              {showDesktopFiltersLocal ? "Hide Filters" : "Show Filters"}
-              {getActiveFilterCountLocal() > 0 && (
-                <span className="ml-1 flex size-5 items-center justify-center rounded-full bg-[#004B23] text-xs font-semibold text-white">
-                  {getActiveFilterCountLocal()}
+              {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
+              {showDesktopFilters ? "Hide Filters" : "Show Filters"}
+              {getActiveFilterCount() > 0 && (
+                <span className="ml-1 flex size-5 items-center justify-center rounded-full bg-blue-600 text-xs text-white">
+                  {getActiveFilterCount()}
                 </span>
               )}
             </button>
-            {/* Export CSV Button */}
-            <button
+
+            {/* Export button */}
+            <ButtonModule
+              variant="outline"
+              size="sm"
               onClick={() => setShowExportModal(true)}
-              disabled={isExporting}
-              className={`flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium transition-colors ${
-                isExporting ? "cursor-not-allowed text-gray-400" : "text-gray-700 hover:bg-gray-50"
-              }`}
+              disabled={isExporting || dataQuality.length === 0}
+              className="border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
             >
-              <Download className={`size-4 ${isExporting ? "animate-pulse" : ""}`} />
-              {isExporting ? "Exporting..." : "Export"}
-            </button>
+              <Download className={`mr-2 size-4 ${isExporting ? "animate-pulse" : ""}`} />
+              {isExporting ? "Exporting..." : "Export CSV"}
+            </ButtonModule>
+
+            {/* Refresh button */}
+            <ButtonModule
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                dispatch(
+                  fetchDataQuality({
+                    PageNumber: currentPage,
+                    PageSize: pageSize,
+                    ...appliedFilters,
+                  })
+                )
+              }}
+              disabled={dataQualityLoading}
+              className="border-gray-300 bg-white hover:bg-gray-50"
+            >
+              <RefreshCw className={`mr-2 size-4 ${dataQualityLoading ? "animate-spin" : ""}`} />
+              Refresh
+            </ButtonModule>
           </div>
         </div>
+
+        {/* Active filters display */}
+        {getActiveFilterCount() > 0 && (
+          <div className="flex flex-wrap items-center gap-2 rounded-lg bg-blue-50 p-2">
+            {Object.entries(appliedFilters).map(([key, value]) => {
+              if (!value || value === "asc" || value === "detectedAtUtc") return null
+              return (
+                <span
+                  key={key}
+                  className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-medium text-blue-700 shadow-sm"
+                >
+                  {key}: {String(value)}
+                  <button
+                    onClick={() => {
+                      setLocalFilters((prev) => ({ ...prev, [key]: undefined }))
+                      setAppliedFilters((prev) => ({ ...prev, [key]: undefined }))
+                    }}
+                    className="ml-1 rounded-full hover:bg-blue-100"
+                  >
+                    <X className="size-3" />
+                  </button>
+                </span>
+              )
+            })}
+            <button onClick={resetFilters} className="text-xs font-medium text-blue-700 hover:text-blue-800">
+              Clear all
+            </button>
+          </div>
+        )}
       </div>
 
-      <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row">
-        {/* Main Content */}
+      {/* Main Content with Sidebar */}
+      <div className="flex flex-col-reverse items-start gap-6 lg:flex-row">
+        {/* Main Table */}
         <motion.div
           className={
-            showDesktopFiltersLocal
-              ? "w-full rounded-md border bg-white p-3 md:p-5 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
-              : "w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1"
+            showDesktopFilters
+              ? "w-full rounded-md border bg-white p-3 md:p-5 lg:max-w-[calc(100%-356px)] lg:flex-1"
+              : "w-full rounded-md border bg-white p-3 md:p-5 lg:flex-1"
           }
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -1330,282 +1409,209 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
         >
           {/* Error Message */}
           {dataQualityError && (
-            <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700 md:p-4 md:text-base">
+            <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">
               <p>Error loading data quality issues: {dataQualityError}</p>
             </div>
           )}
 
           {dataQuality.length === 0 ? (
-            <motion.div
-              className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4 }}
-            >
-              <motion.p
-                className="text-base font-bold text-[#202B3C]"
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.2 }}
-              >
-                {searchText ? "No matching data quality issues found" : "No data quality issues available"}
-              </motion.p>
-              <motion.p
-                className="text-sm text-gray-600"
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.3 }}
-              >
-                {searchText
-                  ? "Try adjusting your search term"
-                  : "Data quality issues will appear here once customer data is analyzed"}
-              </motion.p>
-            </motion.div>
+            <div className="flex flex-col items-center justify-center py-16">
+              <div className="flex size-12 items-center justify-center rounded-full bg-gray-100">
+                <FileText className="size-6 text-gray-400" />
+              </div>
+              <h3 className="mt-4 text-base font-medium text-gray-900">No issues found</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                {searchText || getActiveFilterCount() > 0
+                  ? "Try adjusting your search or filters"
+                  : "No data quality issues detected"}
+              </p>
+            </div>
           ) : (
             <>
-              <motion.div
-                className="w-full overflow-x-auto border-x bg-[#FFFFFF]"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-              >
-                <table className="w-full min-w-[1000px] border-separate border-spacing-0 text-left">
-                  <thead>
+              <div className="overflow-x-auto rounded-lg border border-gray-200">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
                     <tr>
-                      <th className="whitespace-nowrap border-b p-4 text-sm">
-                        <div className="flex items-center gap-2">
-                          <MdOutlineCheckBoxOutlineBlank className="text-lg" />
-                          ID
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        ID
+                      </th>
+                      <th
+                        className="cursor-pointer px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 hover:text-gray-700"
+                        onClick={() => handleSort("customerName")}
+                      >
+                        <div className="flex items-center gap-1">
+                          Customer
+                          {appliedFilters.sortBy === "customerName" && (appliedFilters.sortOrder === "asc" ? "↑" : "↓")}
+                        </div>
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Rule Key
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Issue
+                      </th>
+                      <th
+                        className="cursor-pointer px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 hover:text-gray-700"
+                        onClick={() => handleSort("severity")}
+                      >
+                        <div className="flex items-center gap-1">
+                          Severity
+                          {appliedFilters.sortBy === "severity" && (appliedFilters.sortOrder === "asc" ? "↑" : "↓")}
                         </div>
                       </th>
                       <th
-                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                        onClick={() => toggleSort("customerName")}
+                        className="cursor-pointer px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 hover:text-gray-700"
+                        onClick={() => handleSort("status")}
                       >
-                        <div className="flex items-center gap-2">
-                          Customer <RxCaretSort />
+                        <div className="flex items-center gap-1">
+                          Status
+                          {appliedFilters.sortBy === "status" && (appliedFilters.sortOrder === "asc" ? "↑" : "↓")}
                         </div>
                       </th>
                       <th
-                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                        onClick={() => toggleSort("ruleKey")}
+                        className="cursor-pointer px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 hover:text-gray-700"
+                        onClick={() => handleSort("detectedAtUtc")}
                       >
-                        <div className="flex items-center gap-2">
-                          Rule Key <RxCaretSort />
+                        <div className="flex items-center gap-1">
+                          Detected
+                          {appliedFilters.sortBy === "detectedAtUtc" &&
+                            (appliedFilters.sortOrder === "asc" ? "↑" : "↓")}
                         </div>
                       </th>
-                      <th className="whitespace-nowrap border-b p-4 text-sm">Issue</th>
-                      <th
-                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                        onClick={() => toggleSort("severity")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Severity <RxCaretSort />
-                        </div>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Type
                       </th>
-                      <th
-                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                        onClick={() => toggleSort("status")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Status <RxCaretSort />
-                        </div>
+                      <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Actions
                       </th>
-                      <th
-                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                        onClick={() => toggleSort("detectedAtUtc")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Detected <RxCaretSort />
-                        </div>
-                      </th>
-                      <th className="whitespace-nowrap border-b p-4 text-sm">Type</th>
-                      <th className="whitespace-nowrap border-b p-4 text-sm">Actions</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    <AnimatePresence>
-                      {dataQuality.map((item, index) => (
-                        <motion.tr
-                          key={item.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.3, delay: index * 0.05 }}
-                          exit={{ opacity: 0, y: -10 }}
-                        >
-                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">{item.id}</td>
-                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                  <tbody className="divide-y divide-gray-200 bg-white">
+                    {dataQuality.map((item: DataQualityItem) => {
+                      const severityConfig = getSeverityConfig(item.severity)
+                      const statusConfig = getStatusConfig(item.status)
+
+                      return (
+                        <tr key={item.id} className="transition-colors hover:bg-gray-50">
+                          <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900">{item.id}</td>
+                          <td className="whitespace-nowrap px-4 py-3">
                             <div>
-                              <div className="font-medium">{item.customerName || "-"}</div>
-                              <div className="text-gray-500">{item.customerAccountNumber || "-"}</div>
+                              <p className="text-sm font-medium text-gray-900">{item.customerName || "-"}</p>
+                              <p className="text-xs text-gray-500">{item.customerAccountNumber || "-"}</p>
                             </div>
                           </td>
-                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{item.ruleKey || "-"}</td>
-                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                            <div className="max-w-xs truncate" title={item.issue}>
+                          <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{item.ruleKey || "-"}</td>
+                          <td className="px-4 py-3">
+                            <div className="max-w-xs truncate text-sm text-gray-700" title={item.issue}>
                               {item.issue || "-"}
                             </div>
                           </td>
-                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                            <motion.div
-                              className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs ${
-                                item.severity === "Error"
-                                  ? "bg-red-500/20 text-red-700"
-                                  : "bg-amber-500/20 text-amber-700"
-                              }`}
-                              whileHover={{ scale: 1.05 }}
-                              transition={{ duration: 0.1 }}
+                          <td className="whitespace-nowrap px-4 py-3">
+                            <span
+                              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium ${severityConfig.color}`}
                             >
-                              {item.severity}
-                            </motion.div>
+                              {severityConfig.icon}
+                              {severityConfig.label}
+                            </span>
                           </td>
-                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                            <motion.div
-                              className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs ${
-                                item.status === "Open"
-                                  ? "bg-red-500/20 text-red-700"
-                                  : item.status === "Resolved"
-                                  ? "bg-green-500/20 text-green-700"
-                                  : "bg-gray-500/20 text-gray-700"
-                              }`}
-                              whileHover={{ scale: 1.05 }}
-                              transition={{ duration: 0.1 }}
+                          <td className="whitespace-nowrap px-4 py-3">
+                            <span
+                              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium ${statusConfig.color}`}
                             >
-                              {item.status}
-                            </motion.div>
+                              {statusConfig.icon}
+                              {statusConfig.label}
+                            </span>
                           </td>
-                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                            {item.detectedAtUtc ? new Date(item.detectedAtUtc).toLocaleDateString() : "-"}
+                          <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
+                            {formatDate(item.detectedAtUtc)}
                           </td>
-                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                            <div className="flex items-center justify-center gap-1">
-                              {item.isPPM ? (
-                                <span className="inline-flex items-center justify-center rounded-full bg-blue-500/20 px-2 py-1 text-xs text-blue-700">
-                                  PPM
-                                </span>
-                              ) : (
-                                <p className="text-gray-500">-</p>
+                          <td className="whitespace-nowrap px-4 py-3">
+                            {item.isPPM ? (
+                              <span className="inline-flex rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+                                PPM
+                              </span>
+                            ) : (
+                              <span className="text-xs text-gray-400">—</span>
+                            )}
+                          </td>
+                          <td className="whitespace-nowrap px-4 py-3">
+                            <div className="flex justify-end gap-2">
+                              {item.status === "Open" && (
+                                <button
+                                  onClick={() => handleResolve(item)}
+                                  className="inline-flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100"
+                                >
+                                  <CheckCircle className="size-3.5" />
+                                  Resolve
+                                </button>
                               )}
+                              <button
+                                onClick={() => handleViewCustomer(item.customerId)}
+                                className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                              >
+                                <Eye className="size-3.5" />
+                                View
+                              </button>
                             </div>
                           </td>
-                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                            <ButtonModule size="sm" variant="outline" onClick={() => handleResolveDataQuality(item)}>
-                              Resolve
-                            </ButtonModule>
-                          </td>
-                        </motion.tr>
-                      ))}
-                    </AnimatePresence>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
-              </motion.div>
+              </div>
 
-              <motion.div
-                className="flex items-center justify-between border-t py-3"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.2 }}
-              >
+              {/* Pagination */}
+              <div className="mt-4 flex items-center justify-between">
                 <div className="text-sm text-gray-700">
                   Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalRecords)} of{" "}
-                  {totalRecords} anomalies
+                  {totalRecords} issues
                 </div>
                 <div className="flex items-center gap-2">
-                  <motion.button
+                  <ButtonModule
+                    variant="outline"
+                    size="sm"
                     onClick={() => paginate(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className={`flex items-center justify-center rounded-md p-2 ${
-                      currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
-                    }`}
-                    whileHover={{ scale: currentPage === 1 ? 1 : 1.1 }}
-                    whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
+                    className="border-gray-300"
                   >
-                    <MdOutlineArrowBackIosNew />
-                  </motion.button>
+                    Previous
+                  </ButtonModule>
 
-                  {Array.from({ length: Math.min(5, totalPages) }).map((_, index) => {
-                    let pageNum
-                    if (totalPages <= 5) {
-                      pageNum = index + 1
-                    } else if (currentPage <= 3) {
-                      pageNum = index + 1
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNum = totalPages - 4 + index
-                    } else {
-                      pageNum = currentPage - 2 + index
-                    }
+                  <span className="text-sm text-gray-700">
+                    Page {currentPage} of {totalPages}
+                  </span>
 
-                    return (
-                      <motion.button
-                        key={index}
-                        onClick={() => paginate(pageNum)}
-                        className={`flex size-8 items-center justify-center rounded-md text-sm ${
-                          currentPage === pageNum
-                            ? "bg-[#004B23] text-white"
-                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                        }`}
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ duration: 0.2, delay: index * 0.05 }}
-                      >
-                        {pageNum}
-                      </motion.button>
-                    )
-                  })}
-
-                  {totalPages > 5 && currentPage < totalPages - 2 && <span className="px-2">...</span>}
-
-                  {totalPages > 5 && currentPage < totalPages - 1 && (
-                    <motion.button
-                      onClick={() => paginate(totalPages)}
-                      className={`flex size-8 items-center justify-center rounded-md text-sm ${
-                        currentPage === totalPages
-                          ? "bg-[#004B23] text-white"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      {totalPages}
-                    </motion.button>
-                  )}
-
-                  <motion.button
+                  <ButtonModule
+                    variant="outline"
+                    size="sm"
                     onClick={() => paginate(currentPage + 1)}
                     disabled={currentPage === totalPages}
-                    className={`flex items-center justify-center rounded-md p-2 ${
-                      currentPage === totalPages
-                        ? "cursor-not-allowed text-gray-400"
-                        : "text-[#003F9F] hover:bg-gray-100"
-                    }`}
-                    whileHover={{ scale: currentPage === totalPages ? 1 : 1.1 }}
-                    whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
+                    className="border-gray-300"
                   >
-                    <MdOutlineArrowForwardIos />
-                  </motion.button>
+                    Next
+                  </ButtonModule>
                 </div>
-              </motion.div>
+              </div>
             </>
           )}
         </motion.div>
 
-        {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
-        {showDesktopFiltersLocal && (
+        {/* Desktop Filters Sidebar */}
+        {showDesktopFilters && (
           <motion.div
             key="desktop-filters-sidebar"
             initial={{ opacity: 1 }}
             animate={{ opacity: 1 }}
-            className="hidden w-full flex-col rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:flex 2xl:w-80 2xl:self-start"
+            className="hidden w-full flex-col rounded-md border bg-white p-3 md:p-5 lg:mt-0 lg:flex lg:w-80 lg:self-start"
           >
-            <div className="mb-4 flex shrink-0 items-center justify-between border-b pb-3 md:pb-4">
-              <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
+            <div className="mb-4 flex shrink-0 items-center justify-between border-b pb-3">
+              <h2 className="text-base font-semibold text-gray-900">Filters & Sorting</h2>
               <button
                 onClick={resetFilters}
-                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
+                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
               >
-                <X className="size-3 md:size-4" />
+                <X className="size-3" />
                 Clear All
               </button>
             </div>
@@ -1613,7 +1619,7 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
             <div className="flex-1 space-y-4 overflow-y-auto" style={{ maxHeight: "calc(100vh - 400px)" }}>
               {/* Customer Filter */}
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Customer</label>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700">Customer</label>
                 <FormSelectModule
                   name="customerId"
                   value={localFilters.customerId || ""}
@@ -1630,7 +1636,7 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
 
               {/* Severity Filter */}
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Severity</label>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700">Severity</label>
                 <FormSelectModule
                   name="severity"
                   value={localFilters.severity || ""}
@@ -1643,15 +1649,12 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
 
               {/* Rule Key Filter */}
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Rule Key</label>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700">Rule Key</label>
                 <FormSelectModule
                   name="ruleKey"
                   value={localFilters.ruleKey || ""}
                   onChange={(e) => handleFilterChange("ruleKey", e.target.value || undefined)}
-                  options={[
-                    { value: "", label: "All Rules" },
-                    // You can add specific rule options here if needed
-                  ]}
+                  options={[{ value: "", label: "All Rules" }]}
                   className="w-full"
                   controlClassName="h-9 text-sm"
                 />
@@ -1659,7 +1662,7 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
 
               {/* Status Filter */}
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700">Status</label>
                 <div className="grid grid-cols-2 gap-2">
                   {statusOptions
                     .filter((opt) => opt.value !== "")
@@ -1669,8 +1672,48 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
                         onClick={() =>
                           handleFilterChange("status", localFilters.status === option.value ? undefined : option.value)
                         }
-                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                        className={`rounded-md px-3 py-2 text-xs transition-colors ${
                           localFilters.status === option.value
+                            ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                </div>
+              </div>
+
+              {/* Payment Type Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700">Payment Type</label>
+                <FormSelectModule
+                  name="paymentTypeId"
+                  value={localFilters.paymentTypeId || ""}
+                  onChange={(e) => handleFilterChange("paymentTypeId", e.target.value || undefined)}
+                  options={paymentTypeOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Resolution Action Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700">Resolution Action</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {resolutionActionOptions
+                    .filter((opt) => opt.value !== "")
+                    .map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() =>
+                          handleFilterChange(
+                            "resolutionAction",
+                            localFilters.resolutionAction === option.value ? undefined : option.value
+                          )
+                        }
+                        className={`rounded-md px-3 py-2 text-xs transition-colors ${
+                          localFilters.resolutionAction === option.value
                             ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
                             : "bg-gray-50 text-gray-700 hover:bg-gray-100"
                         }`}
@@ -1683,7 +1726,7 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
 
               {/* Amount Range Filters */}
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Min Amount</label>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700">Min Amount</label>
                 <input
                   type="number"
                   value={localFilters.minAmount || ""}
@@ -1696,7 +1739,7 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Max Amount</label>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700">Max Amount</label>
                 <input
                   type="number"
                   value={localFilters.maxAmount || ""}
@@ -1710,7 +1753,7 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
 
               {/* Date Range Filters */}
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Detected From</label>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700">Detected From</label>
                 <input
                   type="date"
                   value={localFilters.detectedFromUtc || ""}
@@ -1720,7 +1763,7 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Detected To</label>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700">Detected To</label>
                 <input
                   type="date"
                   value={localFilters.detectedToUtc || ""}
@@ -1730,7 +1773,7 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Paid From</label>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700">Paid From</label>
                 <input
                   type="date"
                   value={localFilters.paidFromUtc || ""}
@@ -1740,23 +1783,11 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Paid To</label>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700">Paid To</label>
                 <input
                   type="date"
                   value={localFilters.paidToUtc || ""}
                   onChange={(e) => handleFilterChange("paidToUtc", e.target.value || undefined)}
-                  className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                />
-              </div>
-
-              {/* Text Input Filters */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Rule Key</label>
-                <input
-                  type="text"
-                  value={localFilters.ruleKey || ""}
-                  onChange={(e) => handleFilterChange("ruleKey", e.target.value || undefined)}
-                  placeholder="Enter rule key..."
                   className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
                 />
               </div>
@@ -1766,7 +1797,7 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
                 <button
                   type="button"
                   onClick={() => setIsSortExpanded((prev) => !prev)}
-                  className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                  className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700"
                   aria-expanded={isSortExpanded}
                 >
                   <span>Sort By</span>
@@ -1779,7 +1810,7 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
                       <button
                         key={`${option.value}-${option.order}`}
                         onClick={() => handleSortChange(option)}
-                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors ${
                           localFilters.sortBy === option.value && localFilters.sortOrder === option.order
                             ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
                             : "bg-gray-50 text-gray-700 hover:bg-gray-100"
@@ -1802,24 +1833,22 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
             <div className="mt-6 shrink-0 space-y-3 border-t pt-4">
               <button
                 onClick={applyFilters}
-                className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
+                className="w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
               >
-                <Filter className="size-4" />
                 Apply Filters
               </button>
               <button
                 onClick={resetFilters}
-                className="button-outlined flex w-full items-center justify-center gap-2 text-sm md:text-base"
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
               >
-                <X className="size-4" />
                 Reset All
               </button>
             </div>
 
             {/* Summary Stats */}
-            <div className="mt-4 shrink-0 rounded-lg bg-gray-50 p-3 md:mt-6">
-              <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
-              <div className="space-y-1 text-xs md:text-sm">
+            <div className="mt-4 shrink-0 rounded-lg bg-gray-50 p-3">
+              <h3 className="mb-2 text-sm font-medium text-gray-900">Summary</h3>
+              <div className="space-y-1 text-xs">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Total Records:</span>
                   <span className="font-medium">{totalRecords?.toLocaleString() || 0}</span>
@@ -1832,7 +1861,7 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Active Filters:</span>
-                  <span className="font-medium">{getActiveFilterCountLocal()}</span>
+                  <span className="font-medium">{getActiveFilterCount()}</span>
                 </div>
               </div>
             </div>
@@ -1842,14 +1871,14 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
 
       {/* Mobile Filter Sidebar */}
       <MobileFilterSidebar
-        isOpen={showMobileFiltersLocal}
-        onClose={() => setShowMobileFiltersLocal(false)}
+        isOpen={showMobileFilters}
+        onClose={() => setShowMobileFilters(false)}
         localFilters={localFilters}
         handleFilterChange={handleFilterChange}
         handleSortChange={handleSortChange}
         applyFilters={applyFilters}
         resetFilters={resetFilters}
-        getActiveFilterCount={getActiveFilterCountLocal}
+        getActiveFilterCount={getActiveFilterCount}
         customerOptions={customerOptions}
         vendorOptions={vendorOptions}
         agentOptions={agentOptions}
@@ -1866,233 +1895,30 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
         searchLoading={searchLoading}
       />
 
-      {/* Export CSV Modal */}
-      <AnimatePresence>
-        {showExportModal && (
-          <motion.div
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setShowExportModal(false)}
-          >
-            <motion.div
-              className="w-full max-w-2xl rounded-lg bg-white shadow-xl"
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="border-b border-gray-200 p-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">Export Anomalies to CSV</h3>
-                  <button onClick={() => setShowExportModal(false)} className="rounded-full p-1 hover:bg-gray-100">
-                    <X className="size-5 text-gray-500" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="max-h-96 overflow-y-auto p-4">
-                <div className="space-y-4">
-                  {/* Date Range */}
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-700">Date Range</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {[
-                        { value: "all", label: "All Time" },
-                        { value: "today", label: "Today" },
-                        { value: "week", label: "Last 7 Days" },
-                        { value: "month", label: "Last 30 Days" },
-                      ].map((option) => (
-                        <button
-                          key={option.value}
-                          onClick={() => setExportDateRange(option.value as typeof exportDateRange)}
-                          className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-                            exportDateRange === option.value
-                              ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
-                              : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                          }`}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                    <button
-                      onClick={() => setExportDateRange("custom")}
-                      className={`mt-2 w-full rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-                        exportDateRange === "custom"
-                          ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
-                          : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                      }`}
-                    >
-                      <Calendar className="mr-2 inline-block size-4" />
-                      Custom Date Range
-                    </button>
-                  </div>
-
-                  {exportDateRange === "custom" && (
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">From</label>
-                        <input
-                          type="date"
-                          value={exportFromDate}
-                          onChange={(e) => setExportFromDate(e.target.value)}
-                          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
-                        />
-                      </div>
-                      <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">To</label>
-                        <input
-                          type="date"
-                          value={exportToDate}
-                          onChange={(e) => setExportToDate(e.target.value)}
-                          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Status and Channel */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-700">Status</label>
-                      <FormSelectModule
-                        name="exportStatus"
-                        value={exportStatus}
-                        onChange={(e) => setExportStatus(e.target.value)}
-                        options={statusOptions}
-                        className="w-full"
-                        controlClassName="h-9 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-700">Channel</label>
-                      <FormSelectModule
-                        name="exportChannel"
-                        value={exportChannel}
-                        onChange={(e) => setExportChannel(e.target.value)}
-                        options={channelOptions}
-                        className="w-full"
-                        controlClassName="h-9 text-sm"
-                      />
-                    </div>
-                  </div>
-
-                  {/* ID Filters */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-700">Customer</label>
-                      <FormSelectModule
-                        name="exportCustomerId"
-                        value={exportCustomerId}
-                        onChange={(e) => setExportCustomerId(e.target.value)}
-                        options={customerOptions}
-                        className="w-full"
-                        controlClassName="h-9 text-sm"
-                        onSearchChange={handleCustomerSearch}
-                        searchTerm={searchTerms?.customer || ""}
-                        searchable
-                        disabled={searchLoading?.customer}
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-700">Reference</label>
-                      <input
-                        type="text"
-                        placeholder="Enter reference"
-                        value={exportReference}
-                        onChange={(e) => setExportReference(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Additional Filters */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-700">Vendor</label>
-                      <FormSelectModule
-                        name="exportVendorId"
-                        value={exportVendorId}
-                        onChange={(e) => setExportVendorId(e.target.value)}
-                        options={vendorOptions}
-                        className="w-full"
-                        controlClassName="h-9 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-700">Agent</label>
-                      <FormSelectModule
-                        name="exportAgentId"
-                        value={exportAgentId}
-                        onChange={(e) => setExportAgentId(e.target.value)}
-                        options={agentOptions}
-                        className="w-full"
-                        controlClassName="h-9 text-sm"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Payment Type */}
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-700">Payment Type</label>
-                    <FormSelectModule
-                      name="exportPaymentTypeId"
-                      value={exportPaymentTypeId}
-                      onChange={(e) => setExportPaymentTypeId(e.target.value)}
-                      options={paymentTypeOptions}
-                      className="w-full"
-                      controlClassName="h-9 text-sm"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="border-t border-gray-200 p-4">
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setShowExportModal(false)}
-                    className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={exportToCSV}
-                    disabled={exportDateRange === "custom" && !exportFromDate && !exportToDate}
-                    className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors ${
-                      exportDateRange === "custom" && !exportFromDate && !exportToDate
-                        ? "cursor-not-allowed bg-gray-400"
-                        : "bg-[#004B23] hover:bg-[#003a1b]"
-                    }`}
-                  >
-                    <Download className="mr-2 inline-block size-4" />
-                    Export
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Resolve Data Quality Modal */}
-      <ResolveDataQualityModal
-        isOpen={isResolveModalOpen}
-        onClose={handleCloseResolveModal}
-        dataQualityItem={
-          selectedResolveItem || {
-            id: 0,
-            customerName: "",
-            customerAccountNumber: "",
-            ruleKey: "",
-            issue: "",
-            severity: "Warning",
-            status: "Open",
-            detectedAtUtc: "",
-          }
-        }
+      {/* Export Modal */}
+      <ExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        onExport={handleExport}
+        customerOptions={customerOptions}
+        statusOptions={statusOptions}
+        channelOptions={channelOptions}
+        vendorOptions={vendorOptions}
+        agentOptions={agentOptions}
+        paymentTypeOptions={paymentTypeOptions}
+        searchTerms={searchTerms}
+        searchLoading={searchLoading}
+        handleCustomerSearch={handleCustomerSearch}
       />
+
+      {/* Resolve Modal */}
+      {selectedItem && (
+        <ResolveDataQualityModal
+          isOpen={isResolveModalOpen}
+          onClose={handleCloseResolveModal}
+          dataQualityItem={selectedItem}
+        />
+      )}
     </div>
   )
 }

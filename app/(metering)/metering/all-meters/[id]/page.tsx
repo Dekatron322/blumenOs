@@ -897,7 +897,7 @@ const MeterBasicInfoTab = ({
           >
             <div className="text-center">
               <div className="relative inline-block">
-                <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-[#f9f9f9] text-2xl font-bold text-[#004B23] sm:size-20 sm:text-3xl">
+                <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-[#f9f9f9] text-2xl font-bold text-[#004B23] sm:size-20 sm:text-2xl">
                   <MeteringOutlineIcon className="size-8 sm:size-10" />
                 </div>
                 <div

@@ -69,7 +69,7 @@ export const PaymentDisputeList: React.FC<PaymentDisputeListProps> = ({
   if (loading && disputes.length === 0) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
+        <div className="size-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
       </div>
     )
   }

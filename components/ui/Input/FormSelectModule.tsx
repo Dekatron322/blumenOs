@@ -21,6 +21,8 @@ interface FormSelectModuleProps {
   onSearchClick?: () => void
   // Loading state for search operations
   loading?: boolean
+  // Visual focus tone for the control and search actions
+  focusVariant?: "default" | "neutral"
 }
 
 export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
@@ -39,6 +41,7 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
   onSearchChange,
   onSearchClick,
   loading = false,
+  focusVariant = "default",
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
@@ -49,6 +52,7 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
 
   // Use external search term if searchable, otherwise use local search
   const effectiveSearchTerm = searchable ? searchTerm : localSearchTerm
+  const isNeutralFocus = focusVariant === "neutral"
 
   // Don't filter options when searchable - only show all options
   const displayOptions = searchable
@@ -108,7 +112,13 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
         className={`
           flex cursor-pointer items-center justify-between rounded-md border px-3
           py-2 ${error ? "border-[#D14343]" : "border-[#E0E0E0]"}
-          ${isFocused ? "bg-[#F0fdf4] ring-2 ring-[#f58634]" : "bg-[#F9F9F9]"}
+          ${
+            isFocused
+              ? isNeutralFocus
+                ? "bg-white ring-2 ring-blue-200"
+                : "bg-[#F0fdf4] ring-2 ring-[#f58634]"
+              : "bg-[#F9F9F9]"
+          }
           ${disabled ? "cursor-not-allowed bg-[#a0a0a0]" : ""}
           transition-all duration-200 ${controlClassName ?? "h-[46px]"}
         `}
@@ -140,7 +150,7 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
       {isOpen && (
         <div
           id={`${name}-options`}
-          className="absolute z-10 mt-1 w-full rounded-md border border-[#E0E0E0] bg-white shadow-lg"
+          className="absolute z-[1000] mt-1 w-full rounded-md border border-[#E0E0E0] bg-white shadow-lg"
           onClick={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
           onMouseUp={(e) => e.stopPropagation()}
@@ -188,7 +198,9 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
                   e.stopPropagation()
                 }}
                 placeholder="Search by ID, code, or name..."
-                className="h-8 flex-1 rounded border border-[#E0E0E0] bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#004B23]"
+                className={`h-8 flex-1 rounded border border-[#E0E0E0] bg-white px-2 text-sm focus:outline-none focus:ring-2 ${
+                  isNeutralFocus ? "focus:ring-blue-500" : "focus:ring-[#004B23]"
+                }`}
                 autoFocus
               />
               {searchable && (
@@ -220,7 +232,11 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
                     e.stopPropagation()
                     e.preventDefault()
                   }}
-                  className="h-8 rounded bg-[#004B23] px-3 text-xs font-medium text-white hover:bg-[#003819] focus:outline-none focus:ring-2 focus:ring-[#004B23]"
+                  className={`h-8 rounded px-3 text-xs font-medium text-white focus:outline-none focus:ring-2 ${
+                    isNeutralFocus
+                      ? "bg-blue-600 hover:bg-blue-700 focus:ring-blue-500"
+                      : "bg-[#004B23] hover:bg-[#003819] focus:ring-[#004B23]"
+                  }`}
                 >
                   Search
                 </button>

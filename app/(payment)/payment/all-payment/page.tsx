@@ -3,10 +3,8 @@ import React, { useCallback, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
 import {
-  AlertCircle,
   ArrowLeft,
   Calendar,
-  CheckCircle,
   ChevronDown,
   ChevronUp,
   Download,
@@ -17,13 +15,11 @@ import {
   X,
 } from "lucide-react"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
-import { RxDotsVertical } from "react-icons/rx"
 
-import AddAgentModal from "components/ui/Modal/add-agent-modal"
 import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
-import { MapIcon, PlusIcon, UserIcon } from "components/Icons/Icons"
+import { PlusIcon, UserIcon } from "components/Icons/Icons"
 import { SearchModule } from "components/ui/Search/search-module"
 
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
@@ -33,7 +29,6 @@ import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { clearCustomers, fetchCustomers } from "lib/redux/customerSlice"
 import { clearPaymentTypes, fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
 import {
-  cancelPayment,
   clearExportPayments,
   clearPayments,
   exportPayments,
@@ -50,10 +45,8 @@ import { clearFeeders, fetchFeeders } from "lib/redux/feedersSlice"
 import { clearServiceStations, fetchServiceStations } from "lib/redux/serviceStationsSlice"
 import { clearBills, fetchPostpaidBills } from "lib/redux/postpaidSlice"
 import { clearCountries, fetchCountries } from "lib/redux/countriesSlice"
-import { VscEye, VscTrash } from "react-icons/vsc"
-import { API_ENDPOINTS, buildApiUrl } from "lib/config/api"
-import { api } from "lib/redux/authSlice"
-import { notify } from "components/ui/Notification/Notification"
+import { VscEye } from "react-icons/vsc"
+import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 
 // Boolean options for filters
 const booleanOptions = [
@@ -69,6 +62,214 @@ const clearanceStatusOptions = [
   { value: "Cleared", label: "Cleared" },
   { value: "ClearedWithCondition", label: "Cleared with Condition" },
 ]
+
+// ==================== Status Badge Component ====================
+const StatusBadge = ({ status }: { status: "Pending" | "Confirmed" | "Failed" | "Reversed" }) => {
+  const getStatusStyles = () => {
+    switch (status) {
+      case "Confirmed":
+        return "bg-emerald-50 text-emerald-700 border-emerald-200"
+      case "Pending":
+        return "bg-amber-50 text-amber-700 border-amber-200"
+      case "Failed":
+        return "bg-red-50 text-red-700 border-red-200"
+      case "Reversed":
+        return "bg-blue-50 text-blue-700 border-blue-200"
+      default:
+        return "bg-gray-50 text-gray-700 border-gray-200"
+    }
+  }
+
+  const getDotColor = () => {
+    switch (status) {
+      case "Confirmed":
+        return "bg-emerald-500"
+      case "Pending":
+        return "bg-amber-500"
+      case "Failed":
+        return "bg-red-500"
+      case "Reversed":
+        return "bg-blue-500"
+      default:
+        return "bg-gray-500"
+    }
+  }
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium ${getStatusStyles()}`}
+    >
+      <span className={`size-1.5 rounded-full ${getDotColor()}`} />
+      {status}
+    </span>
+  )
+}
+
+// ==================== Channel Badge Component ====================
+const ChannelBadge = ({ channel }: { channel: string }) => {
+  const getChannelStyles = () => {
+    switch (channel) {
+      case "Cash":
+        return "bg-purple-50 text-purple-700 border-purple-200"
+      case "BankTransfer":
+        return "bg-blue-50 text-blue-700 border-blue-200"
+      case "Pos":
+        return "bg-amber-50 text-amber-700 border-amber-200"
+      case "Card":
+        return "bg-pink-50 text-pink-700 border-pink-200"
+      case "VendorWallet":
+        return "bg-emerald-50 text-emerald-700 border-emerald-200"
+      case "Chaque":
+        return "bg-orange-50 text-orange-700 border-orange-200"
+      case "BankDeposit":
+        return "bg-green-50 text-green-700 border-green-200"
+      case "Vendor":
+        return "bg-indigo-50 text-indigo-700 border-indigo-200"
+      case "Migration":
+        return "bg-cyan-50 text-cyan-700 border-cyan-200"
+      default:
+        return "bg-gray-50 text-gray-700 border-gray-200"
+    }
+  }
+
+  return (
+    <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${getChannelStyles()}`}>
+      {channel}
+    </span>
+  )
+}
+
+// ==================== Collector Type Badge ====================
+const CollectorTypeBadge = ({ type }: { type: string }) => {
+  const getTypeStyles = () => {
+    switch (type) {
+      case "Customer":
+        return "bg-blue-50 text-blue-700 border-blue-200"
+      case "Agent":
+        return "bg-purple-50 text-purple-700 border-purple-200"
+      case "Vendor":
+        return "bg-emerald-50 text-emerald-700 border-emerald-200"
+      case "Staff":
+        return "bg-amber-50 text-amber-700 border-amber-200"
+      default:
+        return "bg-gray-50 text-gray-700 border-gray-200"
+    }
+  }
+
+  return (
+    <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${getTypeStyles()}`}>{type}</span>
+  )
+}
+
+// ==================== Action Dropdown Component ====================
+interface ActionDropdownProps {
+  payment: Payment
+  onViewDetails: (payment: Payment) => void
+}
+
+const ActionDropdown: React.FC<ActionDropdownProps> = ({ payment, onViewDetails }) => {
+  const [isOpen, setIsOpen] = useState(false)
+  const [dropdownDirection, setDropdownDirection] = useState<"bottom" | "top">("bottom")
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [])
+
+  const calculateDropdownPosition = () => {
+    if (!dropdownRef.current) return
+
+    const buttonRect = dropdownRef.current.getBoundingClientRect()
+    const spaceBelow = window.innerHeight - buttonRect.bottom
+    const spaceAbove = buttonRect.top
+    const dropdownHeight = 120
+
+    if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
+      setDropdownDirection("top")
+    } else {
+      setDropdownDirection("bottom")
+    }
+  }
+
+  const handleButtonClick = () => {
+    calculateDropdownPosition()
+    setIsOpen(!isOpen)
+  }
+
+  const handleViewDetails = (e: React.MouseEvent) => {
+    e.preventDefault()
+    onViewDetails(payment)
+    setIsOpen(false)
+  }
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <motion.button
+        className="flex size-7 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
+        onClick={handleButtonClick}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <RxDotsVertical className="size-4" />
+      </motion.button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            className="fixed z-50 min-w-36 rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+            style={
+              dropdownDirection === "bottom"
+                ? {
+                    top: dropdownRef.current
+                      ? dropdownRef.current.getBoundingClientRect().bottom + window.scrollY + 4
+                      : 0,
+                    right: dropdownRef.current
+                      ? window.innerWidth - dropdownRef.current.getBoundingClientRect().right
+                      : 0,
+                  }
+                : {
+                    bottom: dropdownRef.current
+                      ? window.innerHeight - dropdownRef.current.getBoundingClientRect().top + window.scrollY + 4
+                      : 0,
+                    right: dropdownRef.current
+                      ? window.innerWidth - dropdownRef.current.getBoundingClientRect().right
+                      : 0,
+                  }
+            }
+            initial={{ opacity: 0, scale: 0.95, y: dropdownDirection === "bottom" ? -5 : 5 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: dropdownDirection === "bottom" ? -5 : 5 }}
+            transition={{ duration: 0.15 }}
+          >
+            <button
+              onClick={handleViewDetails}
+              className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-gray-700 transition-colors hover:bg-gray-50"
+            >
+              <VscEye className="size-3.5" />
+              View Details
+            </button>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-gray-700 transition-colors hover:bg-gray-50"
+            >
+              <RefreshCw className="size-3.5" />
+              Update Payment
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
 
 // Channel mapping utilities
 const channelStringToEnum = (channelString: string): PaymentChannel => {
@@ -166,140 +367,13 @@ interface SortOption {
   order: "asc" | "desc"
 }
 
-interface ActionDropdownProps {
-  payment: Payment
-  onViewDetails: (payment: Payment) => void
-}
-
-const ActionDropdown: React.FC<ActionDropdownProps> = ({ payment, onViewDetails }) => {
-  const [isAddPaymentModalOpen, setIsAddPaymentModalOpen] = useState(false)
-  const [isOpen, setIsOpen] = useState(false)
-  const [dropdownDirection, setDropdownDirection] = useState<"bottom" | "top">("bottom")
-  const dropdownRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [])
-
-  const calculateDropdownPosition = () => {
-    if (!dropdownRef.current) return
-
-    const buttonRect = dropdownRef.current.getBoundingClientRect()
-    const spaceBelow = window.innerHeight - buttonRect.bottom
-    const spaceAbove = buttonRect.top
-    const dropdownHeight = 120
-
-    if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
-      setDropdownDirection("top")
-    } else {
-      setDropdownDirection("bottom")
-    }
-  }
-
-  const handleButtonClick = () => {
-    calculateDropdownPosition()
-    setIsOpen(!isOpen)
-  }
-
-  const handleViewDetails = (e: React.MouseEvent) => {
-    e.preventDefault()
-    onViewDetails(payment)
-    setIsOpen(false)
-  }
-
-  return (
-    <div className="relative" ref={dropdownRef}>
-      <motion.div
-        className="focus::bg-gray-100 flex size-7 cursor-pointer items-center justify-center gap-2 rounded-full transition-all duration-200 ease-in-out hover:bg-gray-200"
-        onClick={handleButtonClick}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <RxDotsVertical />
-      </motion.div>
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            className="fixed z-50 w-48 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-            style={
-              dropdownDirection === "bottom"
-                ? {
-                    top: dropdownRef.current
-                      ? dropdownRef.current.getBoundingClientRect().bottom + window.scrollY + 2
-                      : 0,
-                    right: dropdownRef.current
-                      ? window.innerWidth - dropdownRef.current.getBoundingClientRect().right
-                      : 0,
-                  }
-                : {
-                    bottom: dropdownRef.current
-                      ? window.innerHeight - dropdownRef.current.getBoundingClientRect().top + window.scrollY + 2
-                      : 0,
-                    right: dropdownRef.current
-                      ? window.innerWidth - dropdownRef.current.getBoundingClientRect().right
-                      : 0,
-                  }
-            }
-            initial={{ opacity: 0, scale: 0.95, y: dropdownDirection === "bottom" ? -10 : 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: dropdownDirection === "bottom" ? -10 : 10 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
-          >
-            <div className="py-1">
-              <motion.button
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={handleViewDetails}
-                whileHover={{ backgroundColor: "#f3f4f6" }}
-                transition={{ duration: 0.1 }}
-              >
-                View Details
-              </motion.button>
-              <motion.button
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => {
-                  console.log("Process refund:", payment.id)
-                  setIsOpen(false)
-                }}
-                whileHover={{ backgroundColor: "#f3f4f6" }}
-                transition={{ duration: 0.1 }}
-              >
-                Process Refund
-              </motion.button>
-              <motion.button
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => {
-                  console.log("Export receipt:", payment.id)
-                  setIsOpen(false)
-                }}
-                whileHover={{ backgroundColor: "#f3f4f6" }}
-                transition={{ duration: 0.1 }}
-              >
-                Export Receipt
-              </motion.button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  )
-}
-
 const LoadingSkeleton = () => {
   return (
     <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200">
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto w-full px-4 py-8 2xl:container max-sm:px-2 xl:px-16">
+          <div className="mx-auto w-full px-4 py-8  max-sm:px-2 xl:px-16">
             <div className="mb-6 flex w-full flex-col justify-between gap-4 lg:flex-row lg:items-center">
               <div className="flex-1">
                 <h4 className="text-2xl font-semibold">Payment Management</h4>
@@ -444,7 +518,7 @@ const MobileFilterSidebar = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col bg-white"
+            className="flex size-full max-w-sm flex-col bg-white"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Fixed Header */}
@@ -1051,11 +1125,7 @@ const AllPayments: React.FC = () => {
     payments,
     loading,
     error,
-    success,
     pagination,
-    cancelPaymentLoading,
-    cancelPaymentError,
-    cancelPaymentSuccess,
     exportPaymentsLoading,
     exportPaymentsError,
     exportPaymentsSuccess,
@@ -1095,41 +1165,13 @@ const AllPayments: React.FC = () => {
   const [exportFromDate, setExportFromDate] = useState("")
   const [exportToDate, setExportToDate] = useState("")
   const [exportPaymentCategory, setExportPaymentCategory] = useState<"all" | "prepaid" | "postpaid">("all")
-
-  // Additional state for modal tabs
-  const [exportModalTab, setExportModalTab] = useState<"basic" | "advanced">("basic")
-  const [exportChannel, setExportChannel] = useState<string>("all")
-  const [exportStatus, setExportStatus] = useState<string>("all")
-  const [exportCollectorType, setExportCollectorType] = useState<string>("all")
-  const [exportClearanceStatus, setExportClearanceStatus] = useState<string>("all")
+  const [exportAreaOfficeId, setExportAreaOfficeId] = useState("")
+  const [exportDistributionSubstationId, setExportDistributionSubstationId] = useState("")
+  const [exportFeederId, setExportFeederId] = useState("")
+  const [exportRegionId, setExportRegionId] = useState("")
 
   // User permissions state
   const [userPermissions, setUserPermissions] = useState<UserPermission | null>(null)
-  const [exportCustomerId, setExportCustomerId] = useState<string>("")
-  const [exportVendorId, setExportVendorId] = useState<string>("")
-  const [exportAgentId, setExportAgentId] = useState<string>("")
-  const [exportPaymentTypeId, setExportPaymentTypeId] = useState<string>("")
-  const [exportAreaOfficeId, setExportAreaOfficeId] = useState<string>("")
-  const [exportDistributionSubstationId, setExportDistributionSubstationId] = useState<string>("")
-  const [exportFeederId, setExportFeederId] = useState<string>("")
-  const [exportServiceCenterId, setExportServiceCenterId] = useState<string>("")
-  const [exportPostpaidBillId, setExportPostpaidBillId] = useState<string>("")
-  const [exportCustomerProvinceId, setExportCustomerProvinceId] = useState<string>("")
-  const [exportRegionId, setExportRegionId] = useState<string>("")
-
-  // Cancel payment state
-  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false)
-  const [paymentToCancel, setPaymentToCancel] = useState<Payment | null>(null)
-  const [cancelReason, setCancelReason] = useState("")
-  const [exportReference, setExportReference] = useState<string>("")
-  const [exportAccountNumber, setExportAccountNumber] = useState<string>("")
-  const [exportMeterNumber, setExportMeterNumber] = useState<string>("")
-  const [exportSearch, setExportSearch] = useState<string>("")
-  const [exportIsCleared, setExportIsCleared] = useState<string>("all")
-  const [exportIsRemitted, setExportIsRemitted] = useState<string>("all")
-  const [exportCustomerIsPPM, setExportCustomerIsPPM] = useState<string>("all")
-  const [exportCustomerIsMD, setExportCustomerIsMD] = useState<string>("all")
-  const [exportCustomerIsUrban, setExportCustomerIsUrban] = useState<string>("all")
 
   // Local state for filters to avoid too many Redux dispatches
   const [localFilters, setLocalFilters] = useState({
@@ -1499,66 +1541,6 @@ const AllPayments: React.FC = () => {
     }).format(amount)
   }
 
-  // Cancel payment handlers
-  const handleCancelPayment = (payment: Payment) => {
-    setPaymentToCancel(payment)
-    setIsCancelModalOpen(true)
-  }
-
-  const confirmCancelPayment = async () => {
-    console.log("confirmCancelPayment called", { paymentToCancel, cancelReason })
-
-    if (!paymentToCancel || !cancelReason.trim()) {
-      notify("warning", "Please provide a reason for cancellation")
-      return
-    }
-
-    try {
-      console.log("Dispatching cancelPayment with:", {
-        id: paymentToCancel.id,
-        cancelData: { reason: cancelReason },
-      })
-
-      const result = await dispatch(
-        cancelPayment({
-          id: paymentToCancel.id,
-          cancelData: { reason: cancelReason },
-        })
-      ).unwrap()
-
-      console.log("Cancel payment successful:", result)
-
-      setIsCancelModalOpen(false)
-      setPaymentToCancel(null)
-      setCancelReason("")
-
-      // Show success notification
-      notify("success", "Payment cancelled successfully!")
-    } catch (error) {
-      console.error("Failed to cancel payment:", error)
-      notify("error", `Failed to cancel payment: ${error}`)
-    }
-  }
-
-  const canCancelPayment = (payment: Payment) => {
-    // Check payment status first
-    const validStatus = payment.status === "Pending" || payment.status === "Confirmed"
-    if (!validStatus) return false
-
-    // Check if user has execute payment privilege
-    if (!userPermissions) return false
-
-    // Use the same hasPermission function as the sidebar
-    const paymentLinkItem = {
-      name: "Cancel Payment",
-      privilegeKey: "payments",
-      requiredActions: ["E"],
-      icon: ({ isActive }: { isActive: boolean }) => <div />, // Dummy icon since this is only for permission checking
-    }
-
-    return hasPermission(paymentLinkItem, userPermissions)
-  }
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return new Intl.DateTimeFormat("en-GB", {
@@ -1907,19 +1889,48 @@ const AllPayments: React.FC = () => {
     setCurrentPage(1)
   }
 
-  const handleAddPaymentSuccess = async () => {
-    setIsAddPaymentModalOpen(false)
-    // Refresh data after adding payment
-    const fetchParams: PaymentsRequestParams = {
-      pageNumber: currentPage,
-      pageSize,
-      ...(searchText && { search: searchText }),
-      ...appliedFilters,
-    }
-    void dispatch(fetchPayments(fetchParams))
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
+
+  const handleViewDetails = (payment: Payment) => {
+    router.push(`/payment/payment-detail/${payment.id}`)
   }
 
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
+  const toggleSort = (field: string) => {
+    const currentOrder = localFilters.sortOrder
+    const currentField = localFilters.sortBy
+
+    if (currentField === field) {
+      // Toggle between asc and desc
+      handleSortChange({
+        label: "",
+        value: field,
+        order: currentOrder === "asc" ? "desc" : "asc",
+      })
+    } else {
+      // Start with desc for new field
+      handleSortChange({
+        label: "",
+        value: field,
+        order: "desc",
+      })
+    }
+  }
+
+  const formatDateTime = (dateString: string | undefined) => {
+    if (!dateString) return "-"
+    try {
+      const date = new Date(dateString)
+      return date.toLocaleString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    } catch {
+      return dateString
+    }
+  }
 
   const getExportDateRange = () => {
     const today = new Date()
@@ -1995,19 +2006,11 @@ const AllPayments: React.FC = () => {
         link.click()
         document.body.removeChild(link)
         window.URL.revokeObjectURL(url)
-        // notify({
-        //   type: "success",
-        //   message: `Payments exported successfully as ${fileName}`,
-        // })
       } else {
         throw new Error((result.payload as string) || "Export failed")
       }
     } catch (error) {
       console.error("Failed to export payments:", error)
-      // notify({
-      //   type: "error",
-      //   message: `Failed to export payments: ${error instanceof Error ? error.message : "Unknown error"}`,
-      // })
     } finally {
       setIsExporting(false)
     }
@@ -2019,10 +2022,6 @@ const AllPayments: React.FC = () => {
       setIsExporting(false)
       setShowExportModal(false)
       const { fileName } = exportPaymentsData
-      // notify({
-      //   type: "success",
-      //   message: `Payments exported successfully as ${fileName}`,
-      // })
       dispatch(clearExportPayments())
     }
   }, [exportPaymentsSuccess, exportPaymentsData, dispatch])
@@ -2032,10 +2031,6 @@ const AllPayments: React.FC = () => {
     if (exportPaymentsError) {
       setIsExporting(false)
       setShowExportModal(false)
-      // notify({
-      //   type: "error",
-      //   message: exportPaymentsError,
-      // })
       dispatch(clearExportPayments())
     }
   }, [exportPaymentsError, dispatch])
@@ -2048,7 +2043,7 @@ const AllPayments: React.FC = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto w-full px-3 py-4 2xl:container max-sm:px-3 md:px-4 lg:px-6 2xl:px-16">
+          <div className="mx-auto w-full px-3 py-4  max-sm:px-3 md:px-4 lg:px-6 2xl:px-16">
             <div className="mb-6 flex w-full flex-col justify-between gap-4 lg:flex-row lg:items-center">
               <div className="flex-1">
                 <h4 className="text-2xl font-semibold">Payment Management</h4>
@@ -2208,202 +2203,206 @@ const AllPayments: React.FC = () => {
                 ) : (
                   <>
                     {/* Table Container with Max Width and Scroll */}
-                    <div className="w-full overflow-hidden rounded-lg border border-gray-200">
-                      <div className="max-w-full overflow-x-auto">
-                        <table className="w-full min-w-[1200px] border-separate border-spacing-0 text-left">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
-                                <div className="flex items-center gap-2">
-                                  <MdOutlineCheckBoxOutlineBlank className="text-lg text-gray-400" />
+                    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+                      <div className="overflow-x-auto">
+                        <table className="w-full min-w-[1200px]">
+                          <thead>
+                            <tr className="border-b border-gray-200 bg-gray-50/80">
+                              <th className="p-2 text-left">
+                                <button
+                                  onClick={() => toggleSort("customerName")}
+                                  className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
+                                >
                                   Customer
-                                </div>
+                                  <RxCaretSort className="size-3.5" />
+                                </button>
                               </th>
-                              <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
-                                <div className="flex items-center gap-2">Amount</div>
+                              <th className="p-2 text-left">
+                                <button
+                                  onClick={() => toggleSort("amount")}
+                                  className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
+                                >
+                                  Amount
+                                  <RxCaretSort className="size-3.5" />
+                                </button>
                               </th>
-                              <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
-                                <div className="flex items-center gap-2">Payment Type</div>
+                              <th className="p-2 text-left">
+                                <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">
+                                  Payment Type
+                                </span>
                               </th>
-                              <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
-                                <div className="flex items-center gap-2">Purchase Type</div>
+                              <th className="p-2 text-left">
+                                <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">
+                                  Purchase Type
+                                </span>
                               </th>
-                              <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
-                                <div className="flex items-center gap-2">Status</div>
+                              <th className="p-2 text-left">
+                                <button
+                                  onClick={() => toggleSort("status")}
+                                  className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
+                                >
+                                  Status
+                                  <RxCaretSort className="size-3.5" />
+                                </button>
                               </th>
-                              <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
-                                <div className="flex items-center gap-2">Payment Method</div>
+                              <th className="p-2 text-left">
+                                <button
+                                  onClick={() => toggleSort("channel")}
+                                  className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
+                                >
+                                  Channel
+                                  <RxCaretSort className="size-3.5" />
+                                </button>
                               </th>
-                              <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
-                                <div className="flex items-center gap-2">Reference</div>
+                              <th className="p-2 text-left">
+                                <button
+                                  onClick={() => toggleSort("reference")}
+                                  className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
+                                >
+                                  Reference
+                                  <RxCaretSort className="size-3.5" />
+                                </button>
                               </th>
-                              <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
-                                <div className="flex items-center gap-2">Timestamp</div>
+                              <th className="p-2 text-left">
+                                <button
+                                  onClick={() => toggleSort("paidAtUtc")}
+                                  className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
+                                >
+                                  Date
+                                  <RxCaretSort className="size-3.5" />
+                                </button>
                               </th>
-                              <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
-                                <div className="flex items-center gap-2">Collector Type</div>
+                              <th className="p-2 text-left">
+                                <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">
+                                  Collector
+                                </span>
                               </th>
-                              {/* <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
-                                <div className="flex items-center gap-2">Location</div>
-                              </th> */}
-                              <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
-                                <div className="flex items-center gap-2">Actions</div>
+                              <th className="p-2 text-left">
+                                <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">
+                                  Actions
+                                </span>
                               </th>
                             </tr>
                           </thead>
-                          <tbody className="bg-white">
-                            {payments.map((payment) => (
-                              <motion.tr
-                                key={payment.id}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.3 }}
-                                className="hover:bg-gray-50"
-                              >
-                                <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-medium">
-                                  <div className="flex items-center gap-2">
-                                    <UserIcon />
+                          <tbody>
+                            <AnimatePresence>
+                              {payments.map((payment, index) => (
+                                <motion.tr
+                                  key={payment.id}
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  exit={{ opacity: 0 }}
+                                  transition={{ duration: 0.2, delay: index * 0.01 }}
+                                  className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50"
+                                >
+                                  <td className="whitespace-nowrap p-2 text-xs font-medium text-gray-900">
                                     <div>
-                                      <div className="font-medium text-gray-900">{payment.customerName}</div>
-                                      <div className="text-xs text-gray-500">{payment.customerAccountNumber}</div>
+                                      <div className="font-medium text-gray-900">{payment.customerName || "-"}</div>
+                                      {payment.customerAccountNumber && (
+                                        <div className="text-[10px] text-gray-500">{payment.customerAccountNumber}</div>
+                                      )}
                                       {payment.postpaidBillPeriod && (
-                                        <div className="text-xs text-blue-600">{payment.postpaidBillPeriod}</div>
+                                        <div className="text-[10px] text-blue-600">{payment.postpaidBillPeriod}</div>
                                       )}
                                     </div>
-                                  </div>
-                                </td>
-                                <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-semibold text-gray-900">
-                                  {formatCurrency(payment.amount || 0, payment.currency)}
-                                </td>
-                                <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-900">
-                                  <div className="font-medium">{payment.paymentTypeName || "-"}</div>
-                                </td>
-                                <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                                  <motion.div
-                                    className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
-                                    whileHover={{ scale: 1.05 }}
-                                    transition={{ duration: 0.1 }}
-                                    style={{
-                                      backgroundColor:
-                                        payment.isPrepaid === true
-                                          ? "#dbeafe"
-                                          : payment.isPrepaid === false
-                                          ? "#f3e8ff"
-                                          : "#f3f4f6",
-                                      color:
-                                        payment.isPrepaid === true
-                                          ? "#1e40af"
-                                          : payment.isPrepaid === false
-                                          ? "#6b21a8"
-                                          : "#374151",
-                                    }}
-                                  >
-                                    {payment.isPrepaid === true
-                                      ? "Prepaid"
-                                      : payment.isPrepaid === false
-                                      ? "Postpaid"
-                                      : "-"}
-                                  </motion.div>
-                                </td>
-                                <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                                  <motion.div
-                                    style={getStatusStyle(payment.status)}
-                                    className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs"
-                                    whileHover={{ scale: 1.05 }}
-                                    transition={{ duration: 0.1 }}
-                                  >
-                                    <span
-                                      className="size-2 rounded-full"
-                                      style={{
-                                        backgroundColor:
-                                          payment.status === "Confirmed"
-                                            ? "#589E67"
-                                            : payment.status === "Pending"
-                                            ? "#D97706"
-                                            : payment.status === "Failed"
-                                            ? "#AF4B4B"
-                                            : "#6B7280",
-                                      }}
-                                    ></span>
-                                    {payment.status}
-                                  </motion.div>
-                                </td>
-                                <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                                  <motion.div
-                                    style={getPaymentMethodStyle(payment.channel)}
-                                    className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs"
-                                    whileHover={{ scale: 1.05 }}
-                                    transition={{ duration: 0.1 }}
-                                  >
-                                    {payment.channel}
-                                  </motion.div>
-                                </td>
-                                <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                                  {payment.reference}
-                                </td>
-                                <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                                  {formatDate(payment.paidAtUtc)}
-                                </td>
-                                <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                                  {payment.collector && (
+                                  </td>
+                                  <td className="whitespace-nowrap p-2 text-xs font-semibold text-gray-900">
+                                    {formatCurrency(payment.amount || 0, payment.currency)}
+                                  </td>
+                                  <td className="whitespace-nowrap p-2 text-xs text-gray-700">
+                                    {payment.paymentTypeName || "-"}
+                                  </td>
+                                  <td className="whitespace-nowrap p-2">
                                     <motion.div
-                                      style={getCollectorTypeStyle(payment.collector.type)}
-                                      className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-sm font-medium"
+                                      className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
                                       whileHover={{ scale: 1.05 }}
                                       transition={{ duration: 0.1 }}
+                                      style={{
+                                        backgroundColor:
+                                          payment.isPrepaid === true
+                                            ? "#dbeafe"
+                                            : payment.isPrepaid === false
+                                            ? "#f3e8ff"
+                                            : "#f3f4f6",
+                                        color:
+                                          payment.isPrepaid === true
+                                            ? "#1e40af"
+                                            : payment.isPrepaid === false
+                                            ? "#6b21a8"
+                                            : "#374151",
+                                      }}
                                     >
-                                      {payment.collector.type} - {payment.collector.name}
+                                      {payment.isPrepaid === true
+                                        ? "Prepaid"
+                                        : payment.isPrepaid === false
+                                        ? "Postpaid"
+                                        : "-"}
                                     </motion.div>
-                                  )}
-                                </td>
-                                {/* <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                                  <div className="flex items-center gap-2">
-                                    <MapIcon />
-                                    {payment.areaOfficeName}
-                                  </div>
-                                </td> */}
-                                <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                                  <div className="flex gap-1 ">
-                                    <ButtonModule
-                                      size="sm"
-                                      variant="outline"
-                                      icon={<VscEye />}
-                                      onClick={() => router.push(`/payment/payment-detail/${payment.id}`)}
-                                    >
-                                      View
-                                    </ButtonModule>
-                                  </div>
-                                </td>
-                              </motion.tr>
-                            ))}
+                                  </td>
+                                  <td className="whitespace-nowrap p-2">
+                                    <StatusBadge
+                                      status={payment.status as "Pending" | "Confirmed" | "Failed" | "Reversed"}
+                                    />
+                                  </td>
+                                  <td className="whitespace-nowrap p-2">
+                                    <ChannelBadge channel={payment.channel} />
+                                  </td>
+                                  <td className="whitespace-nowrap p-2 text-xs text-gray-700">
+                                    {payment.reference || "-"}
+                                  </td>
+                                  <td className="whitespace-nowrap p-2 text-xs text-gray-700">
+                                    {formatDateTime(payment.paidAtUtc)}
+                                  </td>
+                                  <td className="whitespace-nowrap p-2">
+                                    {payment.collector ? (
+                                      <CollectorTypeBadge type={payment.collector.type} />
+                                    ) : (
+                                      <span className="text-xs text-gray-500">-</span>
+                                    )}
+                                  </td>
+                                  <td className="whitespace-nowrap p-2">
+                                    <ActionDropdown payment={payment} onViewDetails={handleViewDetails} />
+                                  </td>
+                                </motion.tr>
+                              ))}
+                            </AnimatePresence>
                           </tbody>
                         </table>
                       </div>
                     </div>
 
                     {/* Pagination */}
-                    <motion.div
-                      className="flex flex-col items-center justify-between gap-4 pt-6 sm:flex-row"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: 0.2 }}
-                    >
-                      <div className="text-sm text-gray-700">
-                        Showing {(currentPage - 1) * pageSize + 1} to{" "}
-                        {Math.min(currentPage * pageSize, pagination.totalCount)} of {pagination.totalCount} entries
+                    <div className="flex items-center justify-between border-t border-gray-200 px-3 py-2.5">
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs text-gray-600">Show rows</p>
+                        <select
+                          value={pageSize}
+                          onChange={(e) => {
+                            const newSize = Number(e.target.value)
+                            // Note: You might need to add a handler for page size changes
+                            setCurrentPage(1)
+                          }}
+                          className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        >
+                          <option value={10}>10</option>
+                          <option value={20}>20</option>
+                          <option value={50}>50</option>
+                          <option value={100}>100</option>
+                        </select>
+                        <p className="text-xs text-gray-600">
+                          {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, pagination.totalCount)}{" "}
+                          of {pagination.totalCount}
+                        </p>
                       </div>
+
                       <div className="flex items-center gap-1">
-                        <motion.button
+                        <button
                           onClick={() => paginate(currentPage - 1)}
                           disabled={currentPage === 1}
-                          className={`flex items-center justify-center rounded-md p-2 ${
-                            currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
-                          }`}
-                          whileHover={{ scale: currentPage === 1 ? 1 : 1.1 }}
-                          whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
+                          className="flex size-6 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                          <MdOutlineArrowBackIosNew size={16} />
-                        </motion.button>
+                          <MdOutlineArrowBackIosNew className="size-3" />
+                        </button>
 
                         {Array.from({ length: Math.min(5, pagination.totalPages) }).map((_, index) => {
                           let pageNum: number
@@ -2418,59 +2417,33 @@ const AllPayments: React.FC = () => {
                           }
 
                           return (
-                            <motion.button
+                            <button
                               key={index}
                               onClick={() => paginate(pageNum)}
-                              className={`flex size-8 items-center justify-center rounded-md text-sm ${
+                              className={`flex size-6 items-center justify-center rounded-lg text-xs font-medium transition-colors ${
                                 currentPage === pageNum
                                   ? "bg-[#004B23] text-white"
-                                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                  : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                               }`}
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.95 }}
-                              initial={{ scale: 0.9, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              transition={{ duration: 0.2, delay: index * 0.05 }}
                             >
                               {pageNum}
-                            </motion.button>
+                            </button>
                           )
                         })}
 
                         {pagination.totalPages > 5 && currentPage < pagination.totalPages - 2 && (
-                          <span className="px-1 text-gray-500">...</span>
+                          <span className="text-xs text-gray-500">...</span>
                         )}
 
-                        {pagination.totalPages > 5 && currentPage < pagination.totalPages - 1 && (
-                          <motion.button
-                            onClick={() => paginate(pagination.totalPages)}
-                            className={`flex size-8 items-center justify-center rounded-md text-sm ${
-                              currentPage === pagination.totalPages
-                                ? "bg-[#004B23] text-white"
-                                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                            }`}
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            {pagination.totalPages}
-                          </motion.button>
-                        )}
-
-                        <motion.button
+                        <button
                           onClick={() => paginate(currentPage + 1)}
                           disabled={currentPage === pagination.totalPages}
-                          className={`flex items-center justify-center rounded-md p-2 ${
-                            currentPage === pagination.totalPages
-                              ? "cursor-not-allowed text-gray-400"
-                              : "text-[#003F9F] hover:bg-gray-100"
-                          }`}
-                          whileHover={{ scale: currentPage === pagination.totalPages ? 1 : 1.1 }}
-                          whileTap={{ scale: currentPage === pagination.totalPages ? 1 : 0.95 }}
+                          className="flex size-6 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                          <MdOutlineArrowForwardIos size={16} />
-                        </motion.button>
+                          <MdOutlineArrowForwardIos className="size-3" />
+                        </button>
                       </div>
-                    </motion.div>
+                    </div>
                   </>
                 )}
               </motion.div>
@@ -3098,12 +3071,6 @@ const AllPayments: React.FC = () => {
         </div>
       </div>
 
-      <AddAgentModal
-        isOpen={isAddPaymentModalOpen}
-        onRequestClose={() => setIsAddPaymentModalOpen(false)}
-        onSuccess={handleAddPaymentSuccess}
-      />
-
       {/* Mobile Filter Sidebar */}
       <MobileFilterSidebar
         isOpen={showMobileFilters}
@@ -3156,342 +3123,187 @@ const AllPayments: React.FC = () => {
                     <X className="size-5 text-gray-500" />
                   </button>
                 </div>
-
-                {/* <div className="mt-3 flex space-x-1 rounded-lg bg-gray-100 p-1">
-                  <button
-                    onClick={() => setExportModalTab("basic")}
-                    className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                      exportModalTab === "basic"
-                        ? "bg-white text-[#004B23] shadow-sm"
-                        : "text-gray-600 hover:text-gray-900"
-                    }`}
-                  >
-                    Basic Filters
-                  </button>
-                  <button
-                    onClick={() => setExportModalTab("advanced")}
-                    className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                      exportModalTab === "advanced"
-                        ? "bg-white text-[#004B23] shadow-sm"
-                        : "text-gray-600 hover:text-gray-900"
-                    }`}
-                  >
-                    Advanced Filters
-                  </button>
-                </div> */}
               </div>
 
               <div className="flex-1 overflow-y-auto p-4">
-                {exportModalTab === "basic" ? (
-                  <div className="space-y-4">
-                    {/* Date Range */}
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-700">Date Range</label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {[
-                          { value: "all", label: "All Time" },
-                          { value: "today", label: "Today" },
-                          { value: "week", label: "Last 7 Days" },
-                          { value: "month", label: "Last 30 Days" },
-                        ].map((option) => (
-                          <button
-                            key={option.value}
-                            onClick={() => setExportDateRange(option.value as typeof exportDateRange)}
-                            className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-                              exportDateRange === option.value
-                                ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
-                                : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                            }`}
-                          >
-                            {option.label}
-                          </button>
-                        ))}
-                      </div>
-                      <button
-                        onClick={() => setExportDateRange("custom")}
-                        className={`mt-2 w-full rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-                          exportDateRange === "custom"
-                            ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
-                            : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                        }`}
-                      >
-                        <Calendar className="mr-2 inline-block size-4" />
-                        Custom Date Range
-                      </button>
+                <div className="space-y-4">
+                  {/* Date Range */}
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-700">Date Range</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { value: "all", label: "All Time" },
+                        { value: "today", label: "Today" },
+                        { value: "week", label: "Last 7 Days" },
+                        { value: "month", label: "Last 30 Days" },
+                      ].map((option) => (
+                        <button
+                          key={option.value}
+                          onClick={() => setExportDateRange(option.value as typeof exportDateRange)}
+                          className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                            exportDateRange === option.value
+                              ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
+                              : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
                     </div>
+                    <button
+                      onClick={() => setExportDateRange("custom")}
+                      className={`mt-2 w-full rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                        exportDateRange === "custom"
+                          ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
+                          : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      <Calendar className="mr-2 inline-block size-4" />
+                      Custom Date Range
+                    </button>
+                  </div>
 
-                    {exportDateRange === "custom" && (
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="mb-1 block text-sm font-medium text-gray-700">From</label>
-                          <input
-                            type="date"
-                            value={exportFromDate}
-                            onChange={(e) => setExportFromDate(e.target.value)}
-                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
-                          />
-                        </div>
-                        <div>
-                          <label className="mb-1 block text-sm font-medium text-gray-700">To</label>
-                          <input
-                            type="date"
-                            value={exportToDate}
-                            onChange={(e) => setExportToDate(e.target.value)}
-                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
-                          />
-                        </div>
+                  {exportDateRange === "custom" && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">From</label>
+                        <input
+                          type="date"
+                          value={exportFromDate}
+                          onChange={(e) => setExportFromDate(e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                        />
                       </div>
-                    )}
-
-                    {/* Payment Category */}
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-700">Payment Category</label>
-                      <div className="grid grid-cols-3 gap-2">
-                        {[
-                          { value: "all", label: "All" },
-                          { value: "prepaid", label: "Prepaid" },
-                          { value: "postpaid", label: "Postpaid" },
-                        ].map((option) => (
-                          <button
-                            key={option.value}
-                            onClick={() => setExportPaymentCategory(option.value as typeof exportPaymentCategory)}
-                            className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-                              exportPaymentCategory === option.value
-                                ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
-                                : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                            }`}
-                          >
-                            {option.label}
-                          </button>
-                        ))}
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">To</label>
+                        <input
+                          type="date"
+                          value={exportToDate}
+                          onChange={(e) => setExportToDate(e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                        />
                       </div>
                     </div>
+                  )}
 
-                    {/* Area Office */}
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-700">Area Office</label>
-                      {areaOfficesLoading ? (
-                        <div className="h-9 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500">
-                          Loading area offices...
-                        </div>
-                      ) : (
-                        <FormSelectModule
-                          name="exportAreaOfficeId"
-                          value={exportAreaOfficeId}
-                          onChange={(e) => setExportAreaOfficeId(e.target.value)}
-                          options={[
-                            { value: "", label: "All Area Offices" },
-                            ...areaOffices.map((office) => ({
-                              value: office.id.toString(),
-                              label: office.nameOfNewOAreaffice || `Office ${office.id}`,
-                            })),
-                          ]}
-                          className="w-full"
-                          controlClassName="h-9 text-sm"
-                        />
-                      )}
-                    </div>
-
-                    {/* Distribution Substation */}
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-700">Distribution Substation</label>
-                      {distributionSubstations.length === 0 ? (
-                        <div className="h-9 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500">
-                          Loading distribution substations...
-                        </div>
-                      ) : (
-                        <FormSelectModule
-                          name="exportDistributionSubstationId"
-                          value={exportDistributionSubstationId}
-                          onChange={(e) => setExportDistributionSubstationId(e.target.value)}
-                          options={[
-                            { value: "", label: "All Distribution Substations" },
-                            ...distributionSubstations.map((dss) => ({
-                              value: dss.id.toString(),
-                              label: dss.name || `DSS ${dss.id}`,
-                            })),
-                          ]}
-                          className="w-full"
-                          controlClassName="h-9 text-sm"
-                        />
-                      )}
-                    </div>
-
-                    {/* Feeder */}
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-700">Feeder</label>
-                      {feeders.length === 0 ? (
-                        <div className="h-9 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500">
-                          Loading feeders...
-                        </div>
-                      ) : (
-                        <FormSelectModule
-                          name="exportFeederId"
-                          value={exportFeederId}
-                          onChange={(e) => setExportFeederId(e.target.value)}
-                          options={[
-                            { value: "", label: "All Feeders" },
-                            ...feeders.map((feeder) => ({
-                              value: feeder.id.toString(),
-                              label: feeder.name || `Feeder ${feeder.id}`,
-                            })),
-                          ]}
-                          className="w-full"
-                          controlClassName="h-9 text-sm"
-                        />
-                      )}
-                    </div>
-
-                    {/* Region */}
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-700">Region</label>
-                      {countries.length === 0 ? (
-                        <div className="h-9 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500">
-                          Loading regions...
-                        </div>
-                      ) : (
-                        <FormSelectModule
-                          name="exportRegionId"
-                          value={exportRegionId}
-                          onChange={(e) => setExportRegionId(e.target.value)}
-                          options={regionOptions}
-                          className="w-full"
-                          controlClassName="h-9 text-sm"
-                        />
-                      )}
+                  {/* Payment Category */}
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-700">Payment Category</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { value: "all", label: "All" },
+                        { value: "prepaid", label: "Prepaid" },
+                        { value: "postpaid", label: "Postpaid" },
+                      ].map((option) => (
+                        <button
+                          key={option.value}
+                          onClick={() => setExportPaymentCategory(option.value as typeof exportPaymentCategory)}
+                          className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                            exportPaymentCategory === option.value
+                              ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
+                              : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
                     </div>
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    {/* Status and Channel */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="mb-2 block text-sm font-medium text-gray-700">Status</label>
-                        <select
-                          value={exportStatus}
-                          onChange={(e) => setExportStatus(e.target.value)}
-                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
-                        >
-                          <option value="all">All Status</option>
-                          <option value="Pending">Pending</option>
-                          <option value="Confirmed">Confirmed</option>
-                          <option value="Failed">Failed</option>
-                          <option value="Reversed">Reversed</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="mb-2 block text-sm font-medium text-gray-700">Channel</label>
-                        <select
-                          value={exportChannel}
-                          onChange={(e) => setExportChannel(e.target.value)}
-                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
-                        >
-                          <option value="all">All Channels</option>
-                          <option value="Cash">Cash</option>
-                          <option value="BankTransfer">Bank Transfer</option>
-                          <option value="Pos">POS</option>
-                          <option value="Card">Card</option>
-                          <option value="VendorWallet">Vendor Wallet</option>
-                        </select>
-                      </div>
-                    </div>
 
-                    {/* Collector Type and Clearance Status */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="mb-2 block text-sm font-medium text-gray-700">Collector Type</label>
-                        <select
-                          value={exportCollectorType}
-                          onChange={(e) => setExportCollectorType(e.target.value)}
-                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
-                        >
-                          <option value="all">All Types</option>
-                          <option value="Customer">Customer</option>
-                          <option value="SalesRep">Sales Rep</option>
-                          <option value="Vendor">Vendor</option>
-                          <option value="Staff">Staff</option>
-                        </select>
+                  {/* Area Office */}
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-700">Area Office</label>
+                    {areaOfficesLoading ? (
+                      <div className="h-9 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500">
+                        Loading area offices...
                       </div>
-                      <div>
-                        <label className="mb-2 block text-sm font-medium text-gray-700">Clearance Status</label>
-                        <select
-                          value={exportClearanceStatus}
-                          onChange={(e) => setExportClearanceStatus(e.target.value)}
-                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
-                        >
-                          <option value="all">All Status</option>
-                          <option value="Uncleared">Uncleared</option>
-                          <option value="Cleared">Cleared</option>
-                          <option value="ClearedWithCondition">Cleared with Condition</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    {/* ID Filters */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="mb-2 block text-sm font-medium text-gray-700">Customer ID</label>
-                        <input
-                          type="text"
-                          placeholder="Enter ID"
-                          value={exportCustomerId}
-                          onChange={(e) => setExportCustomerId(e.target.value)}
-                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
-                        />
-                      </div>
-                      <div>
-                        <label className="mb-2 block text-sm font-medium text-gray-700">Reference</label>
-                        <input
-                          type="text"
-                          placeholder="Enter reference"
-                          value={exportReference}
-                          onChange={(e) => setExportReference(e.target.value)}
-                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Account Number */}
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-700">Account Number</label>
-                      <input
-                        type="text"
-                        placeholder="Enter account number"
-                        value={exportAccountNumber}
-                        onChange={(e) => setExportAccountNumber(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                    ) : (
+                      <FormSelectModule
+                        name="exportAreaOfficeId"
+                        value={exportAreaOfficeId}
+                        onChange={(e) => setExportAreaOfficeId(e.target.value)}
+                        options={[
+                          { value: "", label: "All Area Offices" },
+                          ...areaOffices.map((office) => ({
+                            value: office.id.toString(),
+                            label: office.nameOfNewOAreaffice || `Office ${office.id}`,
+                          })),
+                        ]}
+                        className="w-full"
+                        controlClassName="h-9 text-sm"
                       />
-                    </div>
-
-                    {/* Boolean Filters */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="mb-2 block text-sm font-medium text-gray-700">Cleared Status</label>
-                        <select
-                          value={exportIsCleared}
-                          onChange={(e) => setExportIsCleared(e.target.value)}
-                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
-                        >
-                          <option value="all">Any</option>
-                          <option value="true">Cleared</option>
-                          <option value="false">Not Cleared</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="mb-2 block text-sm font-medium text-gray-700">Remitted Status</label>
-                        <select
-                          value={exportIsRemitted}
-                          onChange={(e) => setExportIsRemitted(e.target.value)}
-                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
-                        >
-                          <option value="all">Any</option>
-                          <option value="true">Remitted</option>
-                          <option value="false">Not Remitted</option>
-                        </select>
-                      </div>
-                    </div>
+                    )}
                   </div>
-                )}
+
+                  {/* Distribution Substation */}
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-700">Distribution Substation</label>
+                    {distributionSubstations.length === 0 ? (
+                      <div className="h-9 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500">
+                        Loading distribution substations...
+                      </div>
+                    ) : (
+                      <FormSelectModule
+                        name="exportDistributionSubstationId"
+                        value={exportDistributionSubstationId}
+                        onChange={(e) => setExportDistributionSubstationId(e.target.value)}
+                        options={[
+                          { value: "", label: "All Distribution Substations" },
+                          ...distributionSubstations.map((dss) => ({
+                            value: dss.id.toString(),
+                            label: dss.name || `DSS ${dss.id}`,
+                          })),
+                        ]}
+                        className="w-full"
+                        controlClassName="h-9 text-sm"
+                      />
+                    )}
+                  </div>
+
+                  {/* Feeder */}
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-700">Feeder</label>
+                    {feeders.length === 0 ? (
+                      <div className="h-9 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500">
+                        Loading feeders...
+                      </div>
+                    ) : (
+                      <FormSelectModule
+                        name="exportFeederId"
+                        value={exportFeederId}
+                        onChange={(e) => setExportFeederId(e.target.value)}
+                        options={[
+                          { value: "", label: "All Feeders" },
+                          ...feeders.map((feeder) => ({
+                            value: feeder.id.toString(),
+                            label: feeder.name || `Feeder ${feeder.id}`,
+                          })),
+                        ]}
+                        className="w-full"
+                        controlClassName="h-9 text-sm"
+                      />
+                    )}
+                  </div>
+
+                  {/* Region */}
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-700">Region</label>
+                    {countries.length === 0 ? (
+                      <div className="h-9 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500">
+                        Loading regions...
+                      </div>
+                    ) : (
+                      <FormSelectModule
+                        name="exportRegionId"
+                        value={exportRegionId}
+                        onChange={(e) => setExportRegionId(e.target.value)}
+                        options={regionOptions}
+                        className="w-full"
+                        controlClassName="h-9 text-sm"
+                      />
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div className="border-t border-gray-200 p-4">

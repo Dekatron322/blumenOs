@@ -240,7 +240,7 @@ const ReceiptUploadModal: React.FC<ReceiptUploadModalProps> = ({ isOpen, onReque
                   htmlFor="receipt-file"
                   className="flex h-32 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:bg-gray-100"
                 >
-                  <CloudArrowUpIcon className="mb-2 h-8 w-8 text-gray-400" />
+                  <CloudArrowUpIcon className="mb-2 size-8 text-gray-400" />
                   <span className="text-center text-sm text-gray-600">
                     {selectedFile ? selectedFile.name : "Click to upload receipt"}
                   </span>

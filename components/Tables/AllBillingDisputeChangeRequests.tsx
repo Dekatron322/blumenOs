@@ -602,7 +602,7 @@ const AllBillingDisputeChangeRequests = () => {
         <div className="w-full rounded-md border bg-white p-3 md:p-5">
           <div className="flex w-full flex-col py-2">
             <div className="mb-3 flex w-full items-center justify-between gap-3">
-              <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">
+              <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-xl">
                 Billing Dispute Change Requests
               </p>
 

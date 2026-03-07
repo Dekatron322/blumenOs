@@ -1204,7 +1204,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
       <div className="mb-4 space-y-4">
         {/* Title Row */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h4 className="text-xl font-semibold text-gray-900 md:text-2xl">Payments</h4>
+          <h4 className="text-xl font-semibold text-gray-900 md:text-xl">Payments</h4>
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center border-b">
               <SearchModule

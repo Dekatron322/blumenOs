@@ -273,7 +273,7 @@ const LoadingSkeleton = () => {
           />
         </div>
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded bg-gray-200">
+          <div className="size-8 rounded bg-gray-200">
             <motion.div
               className="size-full rounded bg-gray-300"
               initial={{ opacity: 0.3 }}
@@ -289,7 +289,7 @@ const LoadingSkeleton = () => {
             />
           </div>
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-8 w-8 rounded bg-gray-200">
+            <div key={i} className="size-8 rounded bg-gray-200">
               <motion.div
                 className="size-full rounded bg-gray-300"
                 initial={{ opacity: 0.3 }}
@@ -305,7 +305,7 @@ const LoadingSkeleton = () => {
               />
             </div>
           ))}
-          <div className="h-8 w-8 rounded bg-gray-200">
+          <div className="size-8 rounded bg-gray-200">
             <motion.div
               className="size-full rounded bg-gray-300"
               initial={{ opacity: 0.3 }}
@@ -807,7 +807,7 @@ const FailedTransactionTable: React.FC<FailedTransactionTableProps> = ({ pageSiz
                       )}
                     </button>
 
-                    <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">Failed Payments</p>
+                    <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-xl">Failed Payments</p>
                   </div>
 
                   <div className="flex items-center gap-2">

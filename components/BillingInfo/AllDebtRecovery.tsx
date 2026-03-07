@@ -299,7 +299,7 @@ const MobileFilterSidebar = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col bg-white"
+            className="flex size-full max-w-sm flex-col bg-white"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Fixed Header */}
@@ -842,7 +842,7 @@ const AllDebtRecoveryContent: React.FC = () => {
 
   if (loading)
     return (
-      <div className="flex items-center justify-center px-3 2xl:container sm:px-4 md:px-6 2xl:px-16">
+      <div className="flex items-center justify-center px-3  sm:px-4 md:px-6 2xl:px-16">
         <LoadingSkeleton />
       </div>
     )
@@ -884,7 +884,7 @@ const AllDebtRecoveryContent: React.FC = () => {
               </button>
 
               <div>
-                <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Debt Recovery</p>
+                <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Debt Recovery</p>
                 <p className="text-sm text-gray-600">Manage and monitor all debt recovery activities</p>
               </div>
             </div>

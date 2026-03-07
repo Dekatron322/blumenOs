@@ -465,7 +465,7 @@ const MobileFilterSidebar = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col bg-white shadow-xl"
+            className="flex size-full max-w-sm flex-col bg-white shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header - Fixed */}
@@ -1051,7 +1051,7 @@ const AllSupervisors: React.FC = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto w-full px-3 py-8 2xl:container sm:px-4 lg:px-6 2xl:px-16">
+          <div className="mx-auto w-full px-3 py-8  sm:px-4 lg:px-6 2xl:px-16">
             <div className="mb-4 flex w-full justify-between max-md:flex-col max-sm:my-4 ">
               <div>
                 <h4 className="text-2xl font-semibold">Supervisors Management</h4>
@@ -1143,7 +1143,7 @@ const AllSupervisors: React.FC = () => {
                       )}
                     </button>
                     <div>
-                      <h3 className="text-lg font-medium max-sm:pb-2 md:text-2xl">Supervisors Directory</h3>
+                      <h3 className="text-lg font-medium max-sm:pb-2 md:text-xl">Supervisors Directory</h3>
                       <p className="text-sm text-gray-600">View and manage all supervisors</p>
                     </div>
                   </div>

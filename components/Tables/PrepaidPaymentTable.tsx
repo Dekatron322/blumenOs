@@ -758,7 +758,7 @@ const AllPrepaidPaymentsTable: React.FC<AllPrepaidPaymentsTableProps> = ({
       <div className="mb-4 space-y-4">
         {/* Title Row */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h4 className="text-xl font-semibold text-gray-900 md:text-2xl">Prepaid Payments</h4>
+          <h4 className="text-xl font-semibold text-gray-900 md:text-xl">Prepaid Payments</h4>
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center border-b">
               <SearchModule

@@ -62,7 +62,7 @@ const MobileFilterSidebar = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col bg-white shadow-xl"
+            className="flex size-full max-w-sm flex-col bg-white shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header - Fixed */}
@@ -318,7 +318,7 @@ export default function AgentChangeRequestManagement() {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto w-full px-3 py-8 2xl:container md:px-4 lg:px-6 2xl:px-16">
+          <div className="mx-auto w-full px-3 py-8  md:px-4 lg:px-6 2xl:px-16">
             <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row">
               {/* Main Content - Change Requests Table */}
               <motion.div

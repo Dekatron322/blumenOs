@@ -125,7 +125,7 @@ const CustomerVending: React.FC<CustomerVendingProps> = ({
         transition={{ duration: 0.3 }}
       >
         <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">My Meters</p>
+          <p className="text-lg font-medium max-sm:pb-3 md:text-xl">My Meters</p>
           <p className="text-sm text-gray-600">Manage your electricity meters</p>
         </div>
       </motion.div>

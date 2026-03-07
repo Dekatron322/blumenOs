@@ -157,7 +157,7 @@ const CollectPaymentBillingDisputePage: React.FC = () => {
         <div className="flex w-full flex-col">
           <DashboardNav />
 
-          <div className="mx-auto flex w-full flex-col px-3 2xl:container sm:px-4 lg:px-6 2xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3  sm:px-4 lg:px-6 2xl:px-16">
             <div className="flex w-full flex-col justify-between gap-4 py-4 sm:py-6 md:flex-row md:items-center md:gap-6">
               <div>
                 <h4 className="text-xl font-semibold sm:text-2xl">Raise Billing Dispute</h4>
@@ -327,7 +327,7 @@ const CollectPaymentBillingDisputePage: React.FC = () => {
                                 id="disputeFiles"
                                 type="file"
                                 multiple
-                                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                                className="absolute inset-0 size-full cursor-pointer opacity-0"
                                 onChange={(e) => {
                                   const selectedFiles = Array.from(e.target.files || [])
                                   setFiles(selectedFiles)

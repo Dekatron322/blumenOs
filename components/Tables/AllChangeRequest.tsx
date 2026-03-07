@@ -628,7 +628,7 @@ const AllChangeRequest = () => {
         <div className="w-full rounded-md border bg-white p-3 md:p-5">
           <div className="flex w-full flex-col py-2">
             <div className="mb-3 flex w-full items-center justify-between gap-3">
-              <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">Change Requests</p>
+              <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-xl">Change Requests</p>
 
               <div className="flex items-center gap-2">
                 {/* Mobile search icon button */}

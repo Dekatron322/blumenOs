@@ -281,7 +281,7 @@ const LoadingSkeleton = () => {
           />
         </div>
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded bg-gray-200">
+          <div className="size-8 rounded bg-gray-200">
             <motion.div
               className="size-full rounded bg-gray-300"
               initial={{ opacity: 0.3 }}
@@ -297,7 +297,7 @@ const LoadingSkeleton = () => {
             />
           </div>
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-8 w-8 rounded bg-gray-200">
+            <div key={i} className="size-8 rounded bg-gray-200">
               <motion.div
                 className="size-full rounded bg-gray-300"
                 initial={{ opacity: 0.3 }}
@@ -313,7 +313,7 @@ const LoadingSkeleton = () => {
               />
             </div>
           ))}
-          <div className="h-8 w-8 rounded bg-gray-200">
+          <div className="size-8 rounded bg-gray-200">
             <motion.div
               className="size-full rounded bg-gray-300"
               initial={{ opacity: 0.3 }}
@@ -724,7 +724,7 @@ const VendorTopUpHistory: React.FC<VendorTopUpHistoryProps> = ({ pageSize: propP
             <div className="border-b pb-4">
               <div className="mb-3 flex w-full items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">Vendor Top-up History</p>
+                  <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-xl">Vendor Top-up History</p>
                 </div>
 
                 <div className="flex items-center gap-2">

@@ -35,11 +35,11 @@ export default function StatusMapDashboard() {
       <div className="relative z-0 flex min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-50 pb-20 xl:z-auto">
         <div className="relative z-0 flex w-full flex-col xl:z-auto">
           <DashboardNav />
-          <div className="relative z-0 mx-auto flex w-full flex-col px-3 2xl:container md:px-4 lg:px-6 xl:z-auto 2xl:px-16">
+          <div className="relative z-0 mx-auto flex w-full flex-col px-3  md:px-4 lg:px-6 xl:z-auto 2xl:px-16">
             {/* Page Header */}
             <div className="relative z-0 flex w-full items-start justify-between gap-6 max-md:flex-col max-sm:my-4 md:my-8 xl:z-auto">
               <div>
-                <h4 className="text-lg font-semibold sm:text-xl md:text-2xl">Status Map</h4>
+                <h4 className="text-lg font-semibold sm:text-xl md:text-xl">Status Map</h4>
                 <p className="text-sm sm:text-base">Visualize customer and asset status across the network</p>
               </div>
             </div>

@@ -572,7 +572,7 @@ const LocationsTab: React.FC = () => {
         transition={{ duration: 0.3 }}
       >
         <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Location Management</p>
+          <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Location Management</p>
           <p className="text-sm text-gray-500">Manage geographical locations and infrastructure</p>
         </div>
         <div className="flex gap-4">
