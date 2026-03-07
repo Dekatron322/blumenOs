@@ -1,16 +1,26 @@
 "use client"
 
 import DashboardNav from "components/Navbar/DashboardNav"
-import { useEffect, useState } from "react"
-import { motion } from "framer-motion"
-import { CustomeraIcon, MetersProgrammedIcon, PlusIcon, TamperIcon, VendingIcon } from "components/Icons/Icons"
+import { useCallback, useEffect, useState } from "react"
 import AddAgentModal from "components/ui/Modal/add-agent-modal"
-import { ButtonModule } from "components/ui/Button/Button"
+import { AnimatePresence, motion } from "framer-motion"
 import VendorManagement from "components/VendorManagementInfo/VendorManagment"
-import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import { ButtonModule } from "components/ui/Button/Button"
 import { fetchVendorSummaryAnalytics } from "lib/redux/analyticsSlice"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import { VscAdd } from "react-icons/vsc"
+import {
+  AlertCircle,
+  AlertTriangle,
+  CheckCircle,
+  MapPin,
+  RefreshCw,
+  TrendingDown,
+  TrendingUp,
+  Users,
+} from "lucide-react"
 
-// Dropdown Popover Component
+// Dropdown Popover Component (redesigned)
 const DropdownPopover = ({
   options,
   selectedValue,
@@ -31,7 +41,7 @@ const DropdownPopover = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 shadow-sm hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
       >
         {children}
         <svg
@@ -48,105 +58,196 @@ const DropdownPopover = ({
         </svg>
       </button>
 
-      {isOpen && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 z-20 mt-1 w-32 rounded-md border border-gray-200 bg-white py-1 text-sm shadow-lg">
-            {options.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => {
-                  onSelect(option.value)
-                  setIsOpen(false)
-                }}
-                className={`block w-full px-3 py-2 text-left ${
-                  option.value === selectedValue ? "bg-blue-50 text-blue-700" : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="absolute right-0 z-20 mt-1 min-w-[120px] overflow-hidden rounded-lg border border-gray-200 bg-white py-1 text-sm shadow-lg"
+            >
+              {options.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    onSelect(option.value)
+                    setIsOpen(false)
+                  }}
+                  className={`block w-full px-3 py-2 text-left text-xs transition-colors ${
+                    option.value === selectedValue
+                      ? "bg-blue-50 font-medium text-blue-700"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
 
-// Enhanced Skeleton Loader Component for Cards
-const SkeletonLoader = () => {
-  return (
-    <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      {[...Array(4)].map((_, index) => (
-        <motion.div
-          key={index}
-          className="small-card rounded-md bg-white p-4 shadow-sm transition duration-500 md:border"
-          initial={{ opacity: 0.6 }}
-          animate={{
-            opacity: [0.6, 1, 0.6],
-            transition: {
-              duration: 1.5,
-              repeat: Infinity,
-              ease: "easeInOut",
-            },
-          }}
-        >
-          <div className="flex items-center gap-2 border-b pb-4">
-            <div className="size-6 rounded-full bg-gray-200"></div>
-            <div className="h-4 w-24 rounded bg-gray-200 sm:w-32"></div>
-          </div>
-          <div className="flex flex-col gap-3 pt-4">
-            {[...Array(2)].map((_, i) => (
-              <div key={i} className="flex w-full justify-between">
-                <div className="h-4 w-20 rounded bg-gray-200 sm:w-24"></div>
-                <div className="h-4 w-14 rounded bg-gray-200 sm:w-16"></div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      ))}
-    </div>
-  )
-}
+// Modern Analytics Card Component
+const AnalyticsCard = ({
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  color = "blue",
+  trend,
+  trendValue,
+}: {
+  title: string
+  value: string | number
+  subtitle?: string
+  icon: React.ElementType
+  color?: "blue" | "green" | "purple" | "amber" | "emerald" | "orange"
+  trend?: "up" | "down"
+  trendValue?: string
+}) => {
+  const colorClasses = {
+    blue: "bg-blue-50 text-blue-700 border-blue-200",
+    green: "bg-green-50 text-green-700 border-green-200",
+    purple: "bg-purple-50 text-purple-700 border-purple-200",
+    amber: "bg-amber-50 text-amber-700 border-amber-200",
+    emerald: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    orange: "bg-orange-50 text-orange-700 border-orange-200",
+  }
 
-// Enhanced Skeleton for Customer Categories
-const CategoriesSkeleton = () => {
+  const iconColors = {
+    blue: "text-blue-600",
+    green: "text-green-600",
+    purple: "text-purple-600",
+    amber: "text-amber-600",
+    emerald: "text-emerald-600",
+    orange: "text-orange-600",
+  }
+
   return (
-    <div className="w-full rounded-md border bg-white p-5 lg:w-80">
-      <div className="border-b pb-4">
-        <div className="h-6 w-40 rounded bg-gray-200"></div>
+    <motion.div
+      whileHover={{ y: -2 }}
+      className="rounded-xl border border-gray-200 bg-white p-5 transition-all hover:border-gray-300 hover:shadow-sm"
+    >
+      <div className="flex items-start justify-between">
+        <div className={`rounded-lg p-2.5 ${colorClasses[color].split(" ")[0]}`}>
+          <Icon className={`size-5 ${iconColors[color]}`} />
+        </div>
+        {trend && (
+          <span
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${
+              trend === "up" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+            }`}
+          >
+            {trend === "up" ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
+            {trendValue}
+          </span>
+        )}
       </div>
 
-      <div className="mt-4 space-y-3">
+      <div className="mt-3">
+        <p className="text-sm text-gray-600">{title}</p>
+        <p className="mt-1 text-2xl font-semibold text-gray-900">{value.toLocaleString()}</p>
+        {subtitle && <p className="mt-1 text-xs text-gray-500">{subtitle}</p>}
+      </div>
+    </motion.div>
+  )
+}
+
+// Modern Skeleton Loader for Analytics Cards
+const AnalyticsCardSkeleton = () => (
+  <motion.div
+    className="rounded-xl border border-gray-200 bg-white p-5"
+    initial={{ opacity: 0.6 }}
+    animate={{
+      opacity: [0.6, 1, 0.6],
+      transition: {
+        duration: 1.5,
+        repeat: Infinity,
+        ease: "easeInOut",
+      },
+    }}
+  >
+    <div className="flex items-start justify-between">
+      <div className="size-10 rounded-lg bg-gray-200"></div>
+      <div className="h-6 w-16 rounded-full bg-gray-200"></div>
+    </div>
+    <div className="mt-3 space-y-2">
+      <div className="h-4 w-24 rounded bg-gray-200"></div>
+      <div className="h-8 w-32 rounded bg-gray-200"></div>
+      <div className="h-3 w-20 rounded bg-gray-200"></div>
+    </div>
+  </motion.div>
+)
+
+// Modern Skeleton Loader for State Distribution Section
+const StateDistributionSkeleton = () => {
+  return (
+    <motion.div
+      className="mt-6 rounded-xl border border-gray-200 bg-white p-5"
+      initial={{ opacity: 0.6 }}
+      animate={{
+        opacity: [0.6, 1, 0.6],
+        transition: {
+          duration: 1.5,
+          repeat: Infinity,
+          ease: "easeInOut",
+        },
+      }}
+    >
+      <div className="mb-4 flex items-center justify-between">
+        <div className="h-6 w-48 rounded bg-gray-200"></div>
+        <div className="h-6 w-24 rounded-full bg-gray-200"></div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {[...Array(6)].map((_, index) => (
-          <div key={index} className="rounded-lg border bg-white p-3">
+          <div key={index} className="rounded-lg border border-gray-100 bg-gray-50 p-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="h-5 w-12 rounded bg-gray-200"></div>
-                <div className="h-5 w-20 rounded bg-gray-200"></div>
-              </div>
+              <div className="h-4 w-20 rounded bg-gray-200"></div>
               <div className="h-4 w-16 rounded bg-gray-200"></div>
-            </div>
-            <div className="mt-3 space-y-1">
-              <div className="flex justify-between">
-                <div className="h-4 w-20 rounded bg-gray-200"></div>
-                <div className="h-4 w-16 rounded bg-gray-200"></div>
-              </div>
             </div>
           </div>
         ))}
       </div>
+    </motion.div>
+  )
+}
 
-      {/* Summary Skeleton */}
-      <div className="mt-6 rounded-lg bg-gray-50 p-3">
-        <div className="mb-2 h-5 w-20 rounded bg-gray-200"></div>
-        <div className="space-y-1">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="flex justify-between">
-              <div className="h-4 w-24 rounded bg-gray-200"></div>
-              <div className="h-4 w-12 rounded bg-gray-200"></div>
-            </div>
+// Loading State Component
+const LoadingState = () => {
+  return (
+    <div className="w-full">
+      {/* Analytics Cards Skeleton */}
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
+          <AnalyticsCardSkeleton key={i} />
+        ))}
+      </div>
+
+      {/* State Distribution Section Skeleton */}
+      <StateDistributionSkeleton />
+
+      {/* Main Content Skeleton */}
+      <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <div className="h-7 w-48 rounded bg-gray-200"></div>
+            <div className="mt-1 h-4 w-64 rounded bg-gray-200"></div>
+          </div>
+          <div className="flex gap-2">
+            <div className="h-9 w-24 rounded bg-gray-200"></div>
+            <div className="h-9 w-24 rounded bg-gray-200"></div>
+          </div>
+        </div>
+        <div className="space-y-4">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-16 w-full rounded bg-gray-100"></div>
           ))}
         </div>
       </div>
@@ -154,200 +255,132 @@ const CategoriesSkeleton = () => {
   )
 }
 
-// Enhanced Skeleton for the table and grid view
-const TableSkeleton = () => {
+// Vendor State Distribution Section Component
+const VendorStateDistributionSection = ({ vendorData }: { vendorData: any }) => {
+  if (!vendorData?.vendorsByState || vendorData.vendorsByState.length === 0) {
+    return null
+  }
+
+  const topStates = vendorData.vendorsByState.slice(0, 6)
+  const totalStates = vendorData.vendorsByState.length
+  const avgVendorsPerState = Math.round(vendorData.totalVendors / totalStates)
+
   return (
-    <div className="flex-1 rounded-md border bg-white p-4 sm:p-5">
-      {/* Header Skeleton */}
-      <div className="flex flex-col items-start justify-between gap-4 border-b pb-4 sm:flex-row sm:items-center">
-        <div className="h-8 w-40 rounded bg-gray-200"></div>
-        <div className="flex w-full flex-col gap-4 sm:w-auto sm:flex-row">
-          <div className="h-10 w-full rounded bg-gray-200 sm:w-80"></div>
-          <div className="flex gap-2">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-10 w-20 rounded bg-gray-200 sm:w-24"></div>
-            ))}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mt-6 rounded-xl border border-gray-200 bg-white p-5"
+    >
+      {/* Header */}
+      <div className="mb-4 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
+        <div className="flex items-center gap-2">
+          <div className="rounded-lg bg-blue-100 p-2">
+            <MapPin className="size-5 text-blue-700" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">Vendor Distribution by State</h2>
+            <p className="text-sm text-gray-600">Geographic coverage and vendor presence</p>
           </div>
         </div>
+        <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700">
+          {totalStates} states covered
+        </span>
       </div>
 
-      {/* Grid View Skeleton */}
-      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {[...Array(6)].map((_, index) => (
-          <div key={index} className="rounded-lg border bg-white p-4 shadow-sm">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div className="size-10 rounded-full bg-gray-200 sm:size-12"></div>
+      {/* States Grid */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {topStates.map((state: any, index: number) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className="group rounded-lg border border-gray-100 bg-white p-4 transition-all hover:border-gray-200 hover:shadow-sm"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="rounded-lg bg-blue-50 p-2">
+                  <MapPin className="size-4 text-blue-600" />
+                </div>
                 <div>
-                  <div className="h-5 w-28 rounded bg-gray-200 sm:w-32"></div>
-                  <div className="mt-1 flex flex-wrap gap-2">
-                    <div className="h-6 w-14 rounded-full bg-gray-200 sm:w-16"></div>
-                    <div className="h-6 w-16 rounded-full bg-gray-200 sm:w-20"></div>
-                  </div>
+                  <h3 className="font-medium text-gray-900">{state.state}</h3>
+                  <p className="text-xs text-gray-500">Vendor presence</p>
                 </div>
               </div>
-              <div className="size-6 rounded bg-gray-200"></div>
+              <span className="text-sm font-semibold text-blue-600">{state.count.toLocaleString()}</span>
             </div>
-
-            <div className="mt-4 space-y-2">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex justify-between">
-                  <div className="h-4 w-16 rounded bg-gray-200 sm:w-20"></div>
-                  <div className="h-4 w-12 rounded bg-gray-200 sm:w-16"></div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-3 border-t pt-3">
-              <div className="h-4 w-full rounded bg-gray-200"></div>
-            </div>
-
-            <div className="mt-3 flex gap-2">
-              <div className="h-9 flex-1 rounded bg-gray-200"></div>
-            </div>
-          </div>
+          </motion.div>
         ))}
       </div>
 
-      {/* Pagination Skeleton */}
-      <div className="mt-4 flex flex-col items-center justify-between gap-4 sm:flex-row">
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-16 rounded bg-gray-200"></div>
-          <div className="h-8 w-16 rounded bg-gray-200"></div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="size-8 rounded bg-gray-200"></div>
-          <div className="flex gap-2">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="size-7 rounded bg-gray-200"></div>
-            ))}
-          </div>
-          <div className="size-8 rounded bg-gray-200"></div>
-        </div>
-
-        <div className="h-4 w-24 rounded bg-gray-200"></div>
-      </div>
-    </div>
-  )
-}
-
-// List View Skeleton
-const ListSkeleton = () => {
-  return (
-    <div className="flex-1 rounded-md border bg-white p-4 sm:p-5">
-      {/* Header Skeleton */}
-      <div className="flex flex-col items-start justify-between gap-4 border-b pb-4 sm:flex-row sm:items-center">
-        <div className="h-8 w-40 rounded bg-gray-200"></div>
-        <div className="flex w-full flex-col gap-4 sm:w-auto sm:flex-row">
-          <div className="h-10 w-full rounded bg-gray-200 sm:w-80"></div>
-          <div className="flex gap-2">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-10 w-20 rounded bg-gray-200 sm:w-24"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* List View Skeleton */}
-      <div className="divide-y">
-        {[...Array(5)].map((_, index) => (
-          <div key={index} className="border-b bg-white p-4">
-            <div className="flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">
-              <div className="flex items-center gap-4">
-                <div className="size-10 rounded-full bg-gray-200"></div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-col items-start gap-3 lg:flex-row lg:items-center">
-                    <div className="h-5 w-40 rounded bg-gray-200"></div>
-                    <div className="flex gap-2">
-                      <div className="h-6 w-14 rounded-full bg-gray-200 sm:w-16"></div>
-                      <div className="h-6 w-16 rounded-full bg-gray-200 sm:w-20"></div>
-                    </div>
-                  </div>
-                  <div className="mt-1 flex flex-wrap gap-4">
-                    {[...Array(4)].map((_, i) => (
-                      <div key={i} className="h-4 w-20 rounded bg-gray-200 sm:w-24"></div>
-                    ))}
-                  </div>
-                  <div className="mt-1 h-4 w-full rounded bg-gray-200 sm:w-64"></div>
-                </div>
-              </div>
-
-              <div className="flex w-full items-center justify-between gap-3 lg:w-auto">
-                <div className="text-right">
-                  <div className="h-4 w-20 rounded bg-gray-200 sm:w-24"></div>
-                  <div className="mt-1 h-4 w-16 rounded bg-gray-200 sm:w-20"></div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-9 w-16 rounded bg-gray-200 sm:w-20"></div>
-                  <div className="size-6 rounded bg-gray-200"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Pagination Skeleton */}
-      <div className="mt-4 flex flex-col items-center justify-between gap-4 sm:flex-row">
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-16 rounded bg-gray-200"></div>
-          <div className="h-8 w-16 rounded bg-gray-200"></div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="size-8 rounded bg-gray-200"></div>
-          <div className="flex gap-2">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="size-7 rounded bg-gray-200"></div>
-            ))}
-          </div>
-          <div className="size-8 rounded bg-gray-200"></div>
-        </div>
-
-        <div className="h-4 w-24 rounded bg-gray-200"></div>
-      </div>
-    </div>
-  )
-}
-
-// Main Loading Component
-const LoadingState = ({ showCategories = true }) => {
-  return (
-    <div className="relative mt-5 flex flex-col items-start gap-6 lg:flex-row">
-      {showCategories ? (
-        <>
-          <TableSkeleton />
-          <CategoriesSkeleton />
-        </>
-      ) : (
-        <div className="w-full">
-          <TableSkeleton />
+      {totalStates > 6 && (
+        <div className="mt-4 text-center">
+          <p className="text-sm text-gray-600">+{totalStates - 6} more states with vendor coverage</p>
         </div>
       )}
-    </div>
+
+      {/* Summary Stats */}
+      <div className="mt-4 grid grid-cols-1 gap-4 rounded-lg bg-gray-50 p-4 md:grid-cols-2">
+        <div>
+          <h4 className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-600">Coverage Metrics</h4>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between rounded-lg bg-white p-2">
+              <div className="flex items-center gap-2">
+                <div className="rounded-full bg-blue-100 p-1">
+                  <MapPin className="size-3 text-blue-700" />
+                </div>
+                <span className="text-sm text-gray-700">States Covered</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-gray-900">{totalStates.toLocaleString()}</span>
+                <span className="text-xs text-gray-500">total</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between rounded-lg bg-white p-2">
+              <div className="flex items-center gap-2">
+                <div className="rounded-full bg-purple-100 p-1">
+                  <Users className="size-3 text-purple-700" />
+                </div>
+                <span className="text-sm text-gray-700">Avg Vendors/State</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-gray-900">{avgVendorsPerState.toLocaleString()}</span>
+                <span className="text-xs text-gray-500">average</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h4 className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-600">Top Performing States</h4>
+          <div className="space-y-2">
+            {topStates.slice(0, 2).map((state: any, index: number) => (
+              <div key={index} className="flex items-center justify-between rounded-lg bg-white p-2">
+                <div className="flex items-center gap-2">
+                  <div className="rounded-full bg-emerald-100 p-1">
+                    <TrendingUp className="size-3 text-emerald-700" />
+                  </div>
+                  <span className="text-sm text-gray-700">{state.state}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-gray-900">{state.count.toLocaleString()}</span>
+                  <span className="text-xs text-gray-500">
+                    ({Math.round((state.count / vendorData.totalVendors) * 100)}%)
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </motion.div>
   )
-}
-
-// Format currency
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency: "NGN",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount)
-}
-
-const formatNumber = (num: number) => {
-  return num.toLocaleString()
 }
 
 export default function VendorManagementDashboard() {
   const [isAddVendorModalOpen, setIsAddVendorModalOpen] = useState(false)
-  const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
   const [isPolling, setIsPolling] = useState(true)
-  const [pollingInterval, setPollingInterval] = useState(480000) // Default 8 minutes (480,000 ms)
+  const [pollingInterval, setPollingInterval] = useState(480000) // 8 minutes default
 
   const dispatch = useAppDispatch()
   const { vendorSummaryData, vendorSummaryLoading, vendorSummaryError, vendorSummarySuccess } = useAppSelector(
@@ -355,46 +388,19 @@ export default function VendorManagementDashboard() {
   )
   const { user } = useAppSelector((state) => state.auth)
 
+  // Check if user has Write permission for vendors
   const canAddVendor = !!user?.privileges?.some(
     (p) => (p.key === "vendor-management" || p.key === "vendors") && p.actions?.includes("W")
   )
 
-  // Calculate derived metrics from vendor data
-  const calculateDerivedMetrics = () => {
-    if (!vendorSummaryData) return null
-
-    const { totalVendors, activeVendors, suspendedVendors, vendorsByState } = vendorSummaryData
-
-    return {
-      totalVendors,
-      activeVendors,
-      suspendedVendors,
-      vendorsByState,
-    }
-  }
-
-  const derivedMetrics = calculateDerivedMetrics()
-
+  // Fetch vendor analytics on component mount
   useEffect(() => {
-    // Fetch vendor analytics when component mounts
     dispatch(fetchVendorSummaryAnalytics({}))
   }, [dispatch])
 
-  const handleAddVendorSuccess = async () => {
-    setIsAddVendorModalOpen(false)
-    // Refresh vendor analytics after adding vendor
+  const handleRefreshData = useCallback(() => {
     dispatch(fetchVendorSummaryAnalytics({}))
-  }
-
-  const handleAddCustomerSuccess = async () => {
-    setIsAddCustomerModalOpen(false)
-    // Refresh vendor analytics after adding customer
-    dispatch(fetchVendorSummaryAnalytics({}))
-  }
-
-  const handleRefreshData = () => {
-    dispatch(fetchVendorSummaryAnalytics({}))
-  }
+  }, [dispatch])
 
   const togglePolling = () => {
     setIsPolling(!isPolling)
@@ -404,10 +410,10 @@ export default function VendorManagementDashboard() {
     setPollingInterval(interval)
   }
 
-  // Polling interval options - 8 minutes as default
+  // Polling interval options
   const pollingOptions = [
     { value: 480000, label: "8m" },
-    { value: 600000, label: "10m" },
+    { value: 660000, label: "11m" },
     { value: 840000, label: "14m" },
     { value: 1020000, label: "17m" },
     { value: 1200000, label: "20m" },
@@ -422,314 +428,212 @@ export default function VendorManagementDashboard() {
     }, pollingInterval)
 
     return () => clearInterval(interval)
-  }, [isPolling, pollingInterval])
+  }, [dispatch, isPolling, pollingInterval, handleRefreshData])
 
-  // Show loading state
-  const isLoading = vendorSummaryLoading
+  const handleAddVendorSuccess = async () => {
+    setIsAddVendorModalOpen(false)
+    // Refresh vendor analytics after adding vendor
+    dispatch(fetchVendorSummaryAnalytics({}))
+  }
+
+  // Format numbers with commas
+  const formatNumber = (num: number) => {
+    return num.toLocaleString()
+  }
 
   return (
-    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+    <section className="min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100 pb-24 sm:pb-20">
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col px-3  sm:px-4 lg:px-6 ">
-            {/* Page Header - Always Visible */}
-            <div className="my-4 flex w-full flex-col justify-between gap-4 md:flex-row md:gap-6">
-              <div className="flex-1">
-                <h4 className="text-xl font-semibold sm:text-2xl">Vendor Management</h4>
-                <p className="text-sm text-gray-600 sm:text-base">
-                  Vendor onboarding, commissions, and performance tracking
-                </p>
-              </div>
-              <motion.div
-                className="flex items-center justify-start gap-3 md:justify-end"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-              >
-                {canAddVendor && (
-                  <ButtonModule
-                    variant="primary"
-                    size="md"
-                    className="w-full sm:w-auto"
-                    icon={<PlusIcon />}
-                    onClick={() => setIsAddVendorModalOpen(true)}
-                  >
-                    <span className="hidden sm:inline">Add New Vendor</span>
-                    <span className="sm:hidden">Add Vendor</span>
-                  </ButtonModule>
-                )}
-              </motion.div>
 
-              {/* Auto-refresh controls */}
-              <div className="flex items-center gap-2 rounded-md border-r bg-white p-2 pr-3">
-                <span className="text-sm font-medium text-gray-500">Auto-refresh:</span>
-                <button
-                  onClick={togglePolling}
-                  className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                    isPolling
-                      ? "bg-green-100 text-green-700 hover:bg-green-200"
-                      : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                  }`}
-                >
-                  {isPolling ? (
-                    <>
-                      <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                        />
-                      </svg>
-                      ON
-                    </>
-                  ) : (
-                    <>
-                      <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      OFF
-                    </>
+          <div className="w-full px-4 py-6 sm:px-6 lg:px-8">
+            {/* Page Header */}
+            <div className="mb-8">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900 sm:text-2xl">Vendor Management</h1>
+                  <p className="mt-1 text-sm text-gray-600">Vendor onboarding, commissions, and performance tracking</p>
+                </div>
+
+                {/* Header Actions */}
+                <div className="flex items-center gap-3">
+                  {canAddVendor && (
+                    <ButtonModule
+                      variant="primary"
+                      size="md"
+                      onClick={() => setIsAddVendorModalOpen(true)}
+                      icon={<VscAdd className="size-4" />}
+                      iconPosition="start"
+                      className="bg-[#004B23] text-white hover:bg-[#003618]"
+                    >
+                      Add Vendor
+                    </ButtonModule>
                   )}
-                </button>
 
-                {isPolling && (
-                  <DropdownPopover
-                    options={pollingOptions}
-                    selectedValue={pollingInterval}
-                    onSelect={handlePollingIntervalChange}
-                  >
-                    <span className="text-sm font-medium">
-                      {pollingOptions.find((opt) => opt.value === pollingInterval)?.label}
-                    </span>
-                  </DropdownPopover>
-                )}
-              </div>
-            </div>
+                  {/* Polling Controls */}
+                  <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white p-1">
+                    <button
+                      onClick={togglePolling}
+                      className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                        isPolling ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      }`}
+                    >
+                      <RefreshCw className={`size-3.5 ${isPolling ? "animate-spin" : ""}`} />
+                      {isPolling ? "ON" : "OFF"}
+                    </button>
 
-            {/* Error State */}
-            {vendorSummaryError && (
-              <div className="mb-4 rounded-md bg-red-50 p-4">
-                <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-                  <div className="flex items-start gap-3">
-                    <div className="shrink-0">
-                      <TamperIcon />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-medium text-red-800">Failed to load vendor analytics</h3>
-                      <p className="mt-1 text-sm text-red-700">{vendorSummaryError}</p>
-                    </div>
+                    {isPolling && (
+                      <DropdownPopover
+                        options={pollingOptions}
+                        selectedValue={pollingInterval}
+                        onSelect={handlePollingIntervalChange}
+                      >
+                        {pollingOptions.find((opt) => opt.value === pollingInterval)?.label}
+                      </DropdownPopover>
+                    )}
                   </div>
+
                   <ButtonModule
-                    variant="secondary"
+                    variant="outline"
                     size="sm"
                     onClick={handleRefreshData}
-                    disabled={isLoading}
-                    className="w-full sm:w-auto"
+                    disabled={vendorSummaryLoading}
+                    className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                   >
-                    Retry
+                    <RefreshCw className={`mr-2 size-4 ${vendorSummaryLoading ? "animate-spin" : ""}`} />
+                    Refresh
                   </ButtonModule>
                 </div>
               </div>
-            )}
-
-            {/* Main Content Area */}
-            <div className="flex w-full flex-col gap-6 lg:flex-row">
-              <div className="w-full">
-                {isLoading ? (
-                  // Loading State
-                  <>
-                    <SkeletonLoader />
-                    <LoadingState showCategories={true} />
-                  </>
-                ) : (
-                  // Loaded State - Updated Vendor Management Dashboard with real data
-                  <>
-                    <motion.div
-                      className="w-full"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                        {/* Total Vendors Card */}
-                        <motion.div
-                          className="small-card rounded-md bg-white p-4 shadow-sm transition duration-500 md:border"
-                          whileHover={{ y: -3, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                        >
-                          <div className="flex items-center gap-2 border-b pb-4">
-                            <div className="text-blue-600">
-                              <CustomeraIcon />
-                            </div>
-                            <span className="text-sm font-medium sm:text-base">Total Vendors</span>
-                          </div>
-                          <div className="flex flex-col gap-3 pt-4">
-                            <div className="flex w-full justify-between">
-                              <p className="text-sm text-gray-600 sm:text-base">All Vendors:</p>
-                              <p className="text-secondary text-lg font-bold sm:text-xl">
-                                {derivedMetrics ? formatNumber(derivedMetrics.totalVendors) : 0}
-                              </p>
-                            </div>
-                            <div className="flex w-full justify-between">
-                              <p className="text-sm text-gray-600 sm:text-base">Active/Suspended:</p>
-                              <div className="flex items-center gap-1">
-                                <div className="size-2 rounded-full bg-green-500"></div>
-                                <p className="text-secondary text-sm font-medium sm:text-base">
-                                  {derivedMetrics
-                                    ? `${derivedMetrics.activeVendors}/${derivedMetrics.suspendedVendors}`
-                                    : "0/0"}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </motion.div>
-
-                        {/* Active Vendors Card */}
-                        <motion.div
-                          className="small-card rounded-md bg-white p-4 shadow-sm transition duration-500 md:border"
-                          whileHover={{ y: -3, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                        >
-                          <div className="flex items-center gap-2 border-b pb-4">
-                            <div className="text-green-600">
-                              <MetersProgrammedIcon />
-                            </div>
-                            <span className="text-sm font-medium sm:text-base">Active Vendors</span>
-                          </div>
-                          <div className="flex flex-col gap-3 pt-4">
-                            <div className="flex w-full justify-between">
-                              <p className="text-sm text-gray-600 sm:text-base">Currently Active:</p>
-                              <p className="text-secondary text-lg font-bold sm:text-xl">
-                                {derivedMetrics ? formatNumber(derivedMetrics.activeVendors) : 0}
-                              </p>
-                            </div>
-                            <div className="flex w-full justify-between">
-                              <p className="text-sm text-gray-600 sm:text-base">Percentage:</p>
-                              <p className="text-secondary text-sm font-medium sm:text-base">
-                                {derivedMetrics && derivedMetrics.totalVendors > 0
-                                  ? `${Math.round(
-                                      (derivedMetrics.activeVendors / derivedMetrics.totalVendors) * 100
-                                    )}% of total`
-                                  : "0%"}
-                              </p>
-                            </div>
-                          </div>
-                        </motion.div>
-
-                        {/* Suspended Vendors Card */}
-                        <motion.div
-                          className="small-card rounded-md bg-white p-4 shadow-sm transition duration-500 md:border"
-                          whileHover={{ y: -3, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                        >
-                          <div className="flex items-center gap-2 border-b pb-4">
-                            <div className="text-purple-600">
-                              <VendingIcon />
-                            </div>
-                            <span className="text-sm font-medium sm:text-base">Suspended Vendors</span>
-                          </div>
-                          <div className="flex flex-col gap-3 pt-4">
-                            <div className="flex w-full justify-between">
-                              <p className="text-sm text-gray-600 sm:text-base">Currently Suspended:</p>
-                              <p className="text-secondary text-lg font-bold sm:text-xl">
-                                {derivedMetrics ? formatNumber(derivedMetrics.suspendedVendors) : 0}
-                              </p>
-                            </div>
-                            <div className="flex w-full justify-between">
-                              <p className="text-sm text-gray-600 sm:text-base">Share of Total:</p>
-                              <p className="text-secondary text-sm font-medium sm:text-base">
-                                {derivedMetrics && derivedMetrics.totalVendors > 0
-                                  ? `${Math.round(
-                                      (derivedMetrics.suspendedVendors / derivedMetrics.totalVendors) * 100
-                                    )}% of total`
-                                  : "0%"}
-                              </p>
-                            </div>
-                          </div>
-                        </motion.div>
-
-                        {/* Coverage Metrics Card */}
-                        <motion.div
-                          className="small-card rounded-md bg-white p-4 shadow-sm transition duration-500 md:border"
-                          whileHover={{ y: -3, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                        >
-                          <div className="flex items-center gap-2 border-b pb-4">
-                            <div className="text-orange-600">
-                              <TamperIcon />
-                            </div>
-                            <span className="text-sm font-medium sm:text-base">Coverage Metrics</span>
-                          </div>
-                          <div className="flex flex-col gap-3 pt-4">
-                            <div className="flex w-full justify-between">
-                              <p className="text-sm text-gray-600 sm:text-base">States Covered:</p>
-                              <p className="text-secondary text-lg font-bold sm:text-xl">
-                                {derivedMetrics && derivedMetrics.vendorsByState
-                                  ? formatNumber(derivedMetrics.vendorsByState.length)
-                                  : 0}
-                              </p>
-                            </div>
-                            <div className="flex w-full justify-between">
-                              <p className="text-sm text-gray-600 sm:text-base">Avg Vendors / State:</p>
-                              <p className="text-secondary text-sm font-medium sm:text-base">
-                                {derivedMetrics &&
-                                derivedMetrics.vendorsByState &&
-                                derivedMetrics.vendorsByState.length > 0
-                                  ? formatNumber(
-                                      Math.round(derivedMetrics.totalVendors / derivedMetrics.vendorsByState.length)
-                                    )
-                                  : 0}
-                              </p>
-                            </div>
-                          </div>
-                        </motion.div>
-                      </div>
-                    </motion.div>
-
-                    {/* State Distribution Section */}
-                    {derivedMetrics && derivedMetrics.vendorsByState && derivedMetrics.vendorsByState.length > 0 && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.5, delay: 0.2 }}
-                        className="mt-6 rounded-lg bg-white p-4 shadow-sm sm:p-6"
-                      >
-                        <h3 className="mb-4 text-lg font-semibold">Vendor Distribution by State</h3>
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                          {derivedMetrics.vendorsByState.slice(0, 6).map((state, index) => (
-                            <div key={index} className="flex items-center justify-between rounded-lg border p-3">
-                              <span className="text-sm font-medium sm:text-base">{state.state}</span>
-                              <span className="text-sm font-bold text-blue-600 sm:text-base">
-                                {formatNumber(state.count)} vendors
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                        {derivedMetrics.vendorsByState.length > 6 && (
-                          <div className="mt-4 text-center">
-                            <p className="text-sm text-gray-600">
-                              +{derivedMetrics.vendorsByState.length - 6} more states
-                            </p>
-                          </div>
-                        )}
-                      </motion.div>
-                    )}
-
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.3 }}
-                      className="mt-6"
-                    >
-                      <VendorManagement />
-                    </motion.div>
-                  </>
-                )}
-              </div>
             </div>
+
+            {/* Error Message */}
+            <AnimatePresence>
+              {vendorSummaryError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4"
+                >
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="mt-0.5 size-5 shrink-0 text-red-600" />
+                    <div>
+                      <p className="font-medium text-red-900">Failed to load vendor analytics</p>
+                      <p className="text-sm text-red-700">{vendorSummaryError}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Main Content */}
+            {vendorSummaryLoading && !vendorSummaryData ? (
+              <LoadingState />
+            ) : vendorSummaryData ? (
+              <div className="w-full">
+                {/* Analytics Cards Row */}
+                <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <AnalyticsCard
+                    title="Total Vendors"
+                    value={vendorSummaryData.totalVendors}
+                    subtitle="All registered vendors"
+                    icon={Users}
+                    color="blue"
+                  />
+                  <AnalyticsCard
+                    title="Active Vendors"
+                    value={vendorSummaryData.activeVendors}
+                    subtitle={`${Math.round(
+                      (vendorSummaryData.activeVendors / vendorSummaryData.totalVendors) * 100
+                    )}% of total`}
+                    icon={CheckCircle}
+                    color="green"
+                  />
+                  <AnalyticsCard
+                    title="Suspended Vendors"
+                    value={vendorSummaryData.suspendedVendors}
+                    subtitle={`${Math.round(
+                      (vendorSummaryData.suspendedVendors / vendorSummaryData.totalVendors) * 100
+                    )}% of total`}
+                    icon={AlertTriangle}
+                    color="orange"
+                  />
+                  <AnalyticsCard
+                    title="States Covered"
+                    value={vendorSummaryData.vendorsByState?.length || 0}
+                    subtitle="Geographic coverage"
+                    icon={MapPin}
+                    color="purple"
+                  />
+                </div>
+
+                {/* Vendor State Distribution Section */}
+                <VendorStateDistributionSection vendorData={vendorSummaryData} />
+
+                {/* Vendor Management Table/Grid */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  className="mt-6 overflow-hidden rounded-xl border border-gray-200 bg-white p-4"
+                >
+                  <VendorManagement />
+                </motion.div>
+              </div>
+            ) : (
+              // Empty State
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white p-12"
+              >
+                <div className="text-center">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+                    <Users className="size-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900">No Vendor Data</h3>
+                  <p className="mt-2 text-sm text-gray-500">
+                    No vendor analytics data available. Try refreshing the data.
+                  </p>
+                  <div className="mt-6 flex items-center justify-center gap-3">
+                    <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white p-1">
+                      <button
+                        onClick={togglePolling}
+                        className={`flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-colors ${
+                          isPolling ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        }`}
+                      >
+                        <RefreshCw className={`size-3.5 ${isPolling ? "animate-spin" : ""}`} />
+                        {isPolling ? "ON" : "OFF"}
+                      </button>
+
+                      {isPolling && (
+                        <DropdownPopover
+                          options={pollingOptions}
+                          selectedValue={pollingInterval}
+                          onSelect={handlePollingIntervalChange}
+                        >
+                          {pollingOptions.find((opt) => opt.value === pollingInterval)?.label}
+                        </DropdownPopover>
+                      )}
+                    </div>
+
+                    <ButtonModule
+                      variant="primary"
+                      size="sm"
+                      onClick={handleRefreshData}
+                      icon={<RefreshCw className="size-4" />}
+                      iconPosition="start"
+                      className="bg-[#004B23] text-white hover:bg-[#003618]"
+                    >
+                      Refresh Data
+                    </ButtonModule>
+                  </div>
+                </div>
+              </motion.div>
+            )}
           </div>
         </div>
       </div>
@@ -740,6 +644,33 @@ export default function VendorManagementDashboard() {
         onRequestClose={() => setIsAddVendorModalOpen(false)}
         onSuccess={handleAddVendorSuccess}
       />
+
+      {/* Loading Overlay */}
+      <AnimatePresence>
+        {vendorSummaryLoading && !vendorSummaryData && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="rounded-xl bg-white p-6 shadow-xl"
+            >
+              <div className="flex flex-col items-center gap-4">
+                <div className="size-12 animate-spin rounded-full border-4 border-[#004B23] border-t-transparent" />
+                <div className="text-center">
+                  <p className="font-medium text-gray-900">Loading Vendor Data</p>
+                  <p className="text-sm text-gray-600">Please wait</p>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   )
 }

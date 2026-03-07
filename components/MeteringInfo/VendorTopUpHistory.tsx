@@ -1,18 +1,31 @@
 "use client"
 
 import React, { useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
+import {
+  AlertCircle,
+  Calendar,
+  ChevronDown,
+  ChevronUp,
+  Download,
+  Eye,
+  Filter,
+  Info,
+  Loader2,
+  RefreshCw,
+  Search,
+  SortAsc,
+  SortDesc,
+  X,
+} from "lucide-react"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos } from "react-icons/md"
 import { SearchModule } from "components/ui/Search/search-module"
+import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import { ButtonModule } from "components/ui/Button/Button"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { fetchVendorTopUpHistory } from "lib/redux/vendorSlice"
-import { ButtonModule } from "components/ui/Button/Button"
-import { VscChevronDown, VscChevronUp, VscEye } from "react-icons/vsc"
-import { useRouter } from "next/navigation"
-import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
-import { FormSelectModule } from "components/ui/Input/FormSelectModule"
-import Image from "next/image"
 
 interface VendorTopUpHistoryItem {
   id: number
@@ -39,223 +52,132 @@ interface VendorTopUpHistoryResponse {
   }
 }
 
-interface ActionDropdownProps {
+// ==================== Status Badge Component ====================
+const StatusBadge = ({ status }: { status: "Pending" | "Confirmed" | "Failed" }) => {
+  const getStatusStyles = () => {
+    switch (status) {
+      case "Confirmed":
+        return "bg-emerald-50 text-emerald-700 border-emerald-200"
+      case "Pending":
+        return "bg-amber-50 text-amber-700 border-amber-200"
+      case "Failed":
+        return "bg-red-50 text-red-700 border-red-200"
+      default:
+        return "bg-gray-50 text-gray-700 border-gray-200"
+    }
+  }
+
+  const getDotColor = () => {
+    switch (status) {
+      case "Confirmed":
+        return "bg-emerald-500"
+      case "Pending":
+        return "bg-amber-500"
+      case "Failed":
+        return "bg-red-500"
+      default:
+        return "bg-gray-500"
+    }
+  }
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium ${getStatusStyles()}`}
+    >
+      <span className={`size-1.5 rounded-full ${getDotColor()}`} />
+      {status}
+    </span>
+  )
+}
+
+// ==================== TopUp By Badge Component ====================
+const TopUpByBadge = ({ topUpBy }: { topUpBy: "Vendor" | "Admin" }) => {
+  const getTopUpByStyles = () => {
+    switch (topUpBy) {
+      case "Vendor":
+        return "bg-blue-50 text-blue-700 border-blue-200"
+      case "Admin":
+        return "bg-purple-50 text-purple-700 border-purple-200"
+      default:
+        return "bg-gray-50 text-gray-700 border-gray-200"
+    }
+  }
+
+  return (
+    <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${getTopUpByStyles()}`}>
+      {topUpBy}
+    </span>
+  )
+}
+
+// ==================== Action Buttons Component ====================
+interface ActionButtonsProps {
   item: VendorTopUpHistoryItem
   onViewDetails: (item: VendorTopUpHistoryItem) => void
 }
 
-const ActionDropdown: React.FC<ActionDropdownProps> = ({ item, onViewDetails }) => {
-  const [isOpen, setIsOpen] = useState(false)
-  const [dropdownDirection, setDropdownDirection] = useState<"bottom" | "top">("bottom")
-  const dropdownRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [])
-
-  const calculateDropdownPosition = () => {
-    if (!dropdownRef.current) return
-
-    const buttonRect = dropdownRef.current.getBoundingClientRect()
-    const spaceBelow = window.innerHeight - buttonRect.bottom
-    const spaceAbove = buttonRect.top
-    const dropdownHeight = 120
-
-    if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
-      setDropdownDirection("top")
-    } else {
-      setDropdownDirection("bottom")
-    }
-  }
-
-  const handleButtonClick = () => {
-    calculateDropdownPosition()
-    setIsOpen(!isOpen)
-  }
-
+const ActionButtons: React.FC<ActionButtonsProps> = ({ item, onViewDetails }) => {
   const handleViewDetails = (e: React.MouseEvent) => {
     e.preventDefault()
     onViewDetails(item)
-    setIsOpen(false)
+  }
+
+  const handleViewHistory = (e: React.MouseEvent) => {
+    e.preventDefault()
+    console.log("View history:", item.reference)
   }
 
   return (
-    <div className="relative" ref={dropdownRef}>
-      <motion.div
-        className="focus::bg-gray-100 flex size-7 cursor-pointer items-center justify-center gap-2 rounded-full transition-all duration-200 ease-in-out hover:bg-gray-200"
-        onClick={handleButtonClick}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
+    <div className="flex items-center gap-1">
+      <motion.button
+        onClick={handleViewDetails}
+        className="flex items-center gap-1 rounded-lg bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100"
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
       >
-        <RxDotsVertical />
-      </motion.div>
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            className="fixed z-50 w-48 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-            style={
-              dropdownDirection === "bottom"
-                ? {
-                    top: dropdownRef.current
-                      ? dropdownRef.current.getBoundingClientRect().bottom + window.scrollY + 2
-                      : 0,
-                    right: dropdownRef.current
-                      ? window.innerWidth - dropdownRef.current.getBoundingClientRect().right
-                      : 0,
-                  }
-                : {
-                    bottom: dropdownRef.current
-                      ? window.innerHeight - dropdownRef.current.getBoundingClientRect().top + window.scrollY + 2
-                      : 0,
-                    right: dropdownRef.current
-                      ? window.innerWidth - dropdownRef.current.getBoundingClientRect().right
-                      : 0,
-                  }
-            }
-            initial={{ opacity: 0, scale: 0.95, y: dropdownDirection === "bottom" ? -10 : 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: dropdownDirection === "bottom" ? -10 : 10 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
-          >
-            <div className="py-1">
-              <motion.button
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={handleViewDetails}
-                whileHover={{ backgroundColor: "#f3f4f6" }}
-                transition={{ duration: 0.1 }}
-              >
-                View Details
-              </motion.button>
-              <motion.button
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => {
-                  console.log("View history:", item.reference)
-                  setIsOpen(false)
-                }}
-                whileHover={{ backgroundColor: "#f3f4f6" }}
-                transition={{ duration: 0.1 }}
-              >
-                View History
-              </motion.button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        <Eye className="size-3" />
+        View Details
+      </motion.button>
     </div>
   )
 }
 
+// ==================== Loading Skeleton ====================
 const LoadingSkeleton = () => {
   return (
-    <motion.div
-      className="flex-3 mt-5 flex flex-col rounded-md border bg-white p-5"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-    >
-      <div className="items-center justify-between border-b py-2 md:flex md:py-4">
-        <div className="h-8 w-40 rounded bg-gray-200">
-          <motion.div
-            className="size-full rounded bg-gray-300"
-            initial={{ opacity: 0.3 }}
-            animate={{
-              opacity: [0.3, 0.6, 0.3],
-              transition: {
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-              },
-            }}
-          />
-        </div>
-        <div className="mt-3 flex gap-4 md:mt-0">
-          <div className="h-10 w-48 rounded bg-gray-200">
-            <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
-              animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.2,
-                },
-              }}
-            />
+    <div className="rounded-xl border border-gray-200 bg-white">
+      {/* Header Skeleton */}
+      <div className="border-b border-gray-200 p-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="h-6 w-40 rounded-lg bg-gray-200"></div>
+            <div className="mt-1 h-4 w-56 rounded-lg bg-gray-200"></div>
           </div>
-          <div className="h-10 w-24 rounded bg-gray-200">
-            <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
-              animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.4,
-                },
-              }}
-            />
+          <div className="flex gap-2">
+            <div className="h-9 w-28 rounded-lg bg-gray-200"></div>
+            <div className="h-9 w-28 rounded-lg bg-gray-200"></div>
           </div>
         </div>
       </div>
 
-      <div className="w-full overflow-x-auto border-x bg-[#f9f9f9]">
-        <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
+      {/* Table Skeleton */}
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[1000px]">
           <thead>
-            <tr>
-              {[...Array(6)].map((_, i) => (
-                <th key={i} className="whitespace-nowrap border-b p-4">
-                  <div className="h-4 w-24 rounded bg-gray-200">
-                    <motion.div
-                      className="size-full rounded bg-gray-300"
-                      initial={{ opacity: 0.3 }}
-                      animate={{
-                        opacity: [0.3, 0.6, 0.3],
-                        transition: {
-                          duration: 1.5,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                          delay: i * 0.1,
-                        },
-                      }}
-                    />
-                  </div>
+            <tr className="border-b border-gray-200 bg-gray-50/50">
+              {[...Array(8)].map((_, i) => (
+                <th key={i} className="px-3 py-2.5">
+                  <div className="h-3.5 w-16 rounded bg-gray-200"></div>
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {[...Array(5)].map((_, rowIndex) => (
-              <tr key={rowIndex}>
-                {[...Array(6)].map((_, cellIndex) => (
-                  <td key={cellIndex} className="whitespace-nowrap border-b px-4 py-3">
-                    <div className="h-4 w-20 rounded bg-gray-200">
-                      <motion.div
-                        className="size-full rounded bg-gray-300"
-                        initial={{ opacity: 0.3 }}
-                        animate={{
-                          opacity: [0.3, 0.6, 0.3],
-                          transition: {
-                            duration: 1.5,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                            delay: (rowIndex * 6 + cellIndex) * 0.05,
-                          },
-                        }}
-                      />
-                    </div>
+            {[...Array(8)].map((_, rowIndex) => (
+              <tr key={rowIndex} className="border-b border-gray-100">
+                {[...Array(8)].map((_, cellIndex) => (
+                  <td key={cellIndex} className="px-3 py-2.5">
+                    <div className="h-3.5 w-full rounded bg-gray-200"></div>
                   </td>
                 ))}
               </tr>
@@ -264,73 +186,18 @@ const LoadingSkeleton = () => {
         </table>
       </div>
 
-      <div className="flex items-center justify-between border-t py-3">
-        <div className="h-8 w-48 rounded bg-gray-200">
-          <motion.div
-            className="size-full rounded bg-gray-300"
-            initial={{ opacity: 0.3 }}
-            animate={{
-              opacity: [0.3, 0.6, 0.3],
-              transition: {
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: 0.6,
-              },
-            }}
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="size-8 rounded bg-gray-200">
-            <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
-              animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.8,
-                },
-              }}
-            />
-          </div>
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="size-8 rounded bg-gray-200">
-              <motion.div
-                className="size-full rounded bg-gray-300"
-                initial={{ opacity: 0.3 }}
-                animate={{
-                  opacity: [0.3, 0.6, 0.3],
-                  transition: {
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: 0.8 + i * 0.1,
-                  },
-                }}
-              />
-            </div>
-          ))}
-          <div className="size-8 rounded bg-gray-200">
-            <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
-              animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 1.3,
-                },
-              }}
-            />
+      {/* Pagination Skeleton */}
+      <div className="border-t border-gray-200 p-4">
+        <div className="flex items-center justify-between">
+          <div className="h-3.5 w-40 rounded bg-gray-200"></div>
+          <div className="flex gap-1.5">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="size-7 rounded-lg bg-gray-200"></div>
+            ))}
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   )
 }
 
@@ -344,6 +211,7 @@ interface VendorTopUpHistoryProps {
   pageSize?: number
 }
 
+// ==================== Mobile Filter Sidebar ====================
 const MobileFilterSidebar = ({
   isOpen,
   onClose,
@@ -353,18 +221,400 @@ const MobileFilterSidebar = ({
   applyFilters,
   resetFilters,
   getActiveFilterCount,
+  sortOptions,
+  isSortExpanded,
+  setIsSortExpanded,
 }: {
   isOpen: boolean
   onClose: () => void
   localFilters: any
-  handleFilterChange: (key: string, value: string) => void
+  handleFilterChange: (key: string, value: string | undefined) => void
   handleSortChange: (option: SortOption) => void
   applyFilters: () => void
   resetFilters: () => void
   getActiveFilterCount: () => number
+  sortOptions: SortOption[]
+  isSortExpanded: boolean
+  setIsSortExpanded: (value: boolean | ((prev: boolean) => boolean)) => void
 }) => {
-  const [isSortExpanded, setIsSortExpanded] = useState(true)
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div
+            className="fixed inset-0 z-[999] bg-black/30 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+          />
+          <motion.div
+            className="fixed inset-y-0 right-0 z-[1000] flex size-full max-w-sm flex-col bg-white shadow-xl"
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+          >
+            {/* Header */}
+            <div className="border-b border-gray-200 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">Filters & Sorting</h2>
+                  {getActiveFilterCount() > 0 && (
+                    <p className="mt-1 text-sm text-gray-600">{getActiveFilterCount()} active filter(s)</p>
+                  )}
+                </div>
+                <button
+                  onClick={onClose}
+                  className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                >
+                  <X className="size-5" />
+                </button>
+              </div>
+            </div>
 
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="space-y-5">
+                {/* Quick Actions */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">Active Filters</span>
+                  <button onClick={resetFilters} className="text-sm font-medium text-blue-600 hover:text-blue-800">
+                    Clear All
+                  </button>
+                </div>
+
+                {/* Status Filter */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-gray-700">Status</label>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {["Pending", "Confirmed", "Failed"].map((statusValue) => (
+                      <button
+                        key={statusValue}
+                        onClick={() =>
+                          handleFilterChange("status", localFilters.status === statusValue ? undefined : statusValue)
+                        }
+                        className={`rounded-lg border px-2 py-1.5 text-xs font-medium transition-colors ${
+                          localFilters.status === statusValue
+                            ? "border-blue-500 bg-blue-50 text-blue-700"
+                            : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        {statusValue}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* TopUp By Filter */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-gray-700">Top-up By</label>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {["Vendor", "Admin"].map((topUpByValue) => (
+                      <button
+                        key={topUpByValue}
+                        onClick={() =>
+                          handleFilterChange(
+                            "topUpBy",
+                            localFilters.topUpBy === topUpByValue ? undefined : topUpByValue
+                          )
+                        }
+                        className={`rounded-lg border px-2 py-1.5 text-xs font-medium transition-colors ${
+                          localFilters.topUpBy === topUpByValue
+                            ? "border-purple-500 bg-purple-50 text-purple-700"
+                            : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        {topUpByValue}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Sort Options */}
+                <div className="space-y-1.5">
+                  <button
+                    onClick={() => setIsSortExpanded(!isSortExpanded)}
+                    className="flex w-full items-center justify-between text-xs font-medium text-gray-700"
+                  >
+                    <span>Sort By</span>
+                    {isSortExpanded ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
+                  </button>
+
+                  <AnimatePresence>
+                    {isSortExpanded && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="space-y-1.5 overflow-hidden"
+                      >
+                        {sortOptions.map((option) => (
+                          <button
+                            key={`${option.value}-${option.order}`}
+                            onClick={() => handleSortChange(option)}
+                            className={`flex w-full items-center justify-between rounded-lg border px-2 py-1.5 text-xs transition-colors ${
+                              localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                                ? "border-purple-500 bg-purple-50 text-purple-700"
+                                : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                            }`}
+                          >
+                            <span>{option.label}</span>
+                            {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                              <span>
+                                {option.order === "asc" ? (
+                                  <SortAsc className="size-3.5" />
+                                ) : (
+                                  <SortDesc className="size-3.5" />
+                                )}
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="border-t border-gray-200 p-4">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    applyFilters()
+                    onClose()
+                  }}
+                  className="flex-1 rounded-lg bg-[#004B23] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#003618]"
+                >
+                  Apply Filters
+                </button>
+                <button
+                  onClick={() => {
+                    resetFilters()
+                    onClose()
+                  }}
+                  className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  )
+}
+
+// ==================== Desktop Filter Panel (Right Side) ====================
+const DesktopFilterPanel = ({
+  localFilters,
+  handleFilterChange,
+  handleSortChange,
+  applyFilters,
+  resetFilters,
+  getActiveFilterCount,
+  sortOptions,
+  isSortExpanded,
+  setIsSortExpanded,
+  totalRecords,
+  currentPage,
+  totalPages,
+}: {
+  localFilters: any
+  handleFilterChange: (key: string, value: string | undefined) => void
+  handleSortChange: (option: SortOption) => void
+  applyFilters: () => void
+  resetFilters: () => void
+  getActiveFilterCount: () => number
+  sortOptions: SortOption[]
+  isSortExpanded: boolean
+  setIsSortExpanded: (value: boolean | ((prev: boolean) => boolean)) => void
+  totalRecords: number
+  currentPage: number
+  totalPages: number
+}) => {
+  return (
+    <div className="w-72 shrink-0 rounded-xl border border-gray-200 bg-white">
+      {/* Header */}
+      <div className="border-b border-gray-200 p-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-gray-900">Filters & Sorting</h3>
+          <button onClick={resetFilters} className="text-xs font-medium text-blue-600 hover:text-blue-800">
+            Clear All
+          </button>
+        </div>
+        {getActiveFilterCount() > 0 && (
+          <p className="mt-1 text-xs text-gray-600">{getActiveFilterCount()} active filter(s)</p>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="max-h-[calc(100vh-320px)] overflow-y-auto p-3">
+        <div className="space-y-4">
+          {/* Status Filter */}
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-gray-700">Status</label>
+            <div className="grid grid-cols-2 gap-1">
+              {["Pending", "Confirmed", "Failed"].map((statusValue) => (
+                <button
+                  key={statusValue}
+                  onClick={() =>
+                    handleFilterChange("status", localFilters.status === statusValue ? undefined : statusValue)
+                  }
+                  className={`rounded-lg border px-2 py-1 text-xs font-medium transition-colors ${
+                    localFilters.status === statusValue
+                      ? "border-blue-500 bg-blue-50 text-blue-700"
+                      : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  {statusValue}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* TopUp By Filter */}
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-gray-700">Top-up By</label>
+            <div className="grid grid-cols-2 gap-1">
+              {["Vendor", "Admin"].map((topUpByValue) => (
+                <button
+                  key={topUpByValue}
+                  onClick={() =>
+                    handleFilterChange("topUpBy", localFilters.topUpBy === topUpByValue ? undefined : topUpByValue)
+                  }
+                  className={`rounded-lg border px-2 py-1 text-xs font-medium transition-colors ${
+                    localFilters.topUpBy === topUpByValue
+                      ? "border-purple-500 bg-purple-50 text-purple-700"
+                      : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  {topUpByValue}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Sort Options */}
+          <div className="space-y-1">
+            <button
+              onClick={() => setIsSortExpanded(!isSortExpanded)}
+              className="flex w-full items-center justify-between text-xs font-medium text-gray-700"
+            >
+              <span>Sort By</span>
+              {isSortExpanded ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
+            </button>
+
+            <AnimatePresence>
+              {isSortExpanded && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-1 overflow-hidden"
+                >
+                  {sortOptions.map((option) => (
+                    <button
+                      key={`${option.value}-${option.order}`}
+                      onClick={() => handleSortChange(option)}
+                      className={`flex w-full items-center justify-between rounded-lg border px-2 py-1 text-xs transition-colors ${
+                        localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                          ? "border-purple-500 bg-purple-50 text-purple-700"
+                          : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      <span>{option.label}</span>
+                      {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                        <span>
+                          {option.order === "asc" ? (
+                            <SortAsc className="size-3.5" />
+                          ) : (
+                            <SortDesc className="size-3.5" />
+                          )}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="border-t border-gray-200 p-3">
+        <button
+          onClick={applyFilters}
+          className="mb-2 w-full rounded-lg bg-[#004B23] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[#003618]"
+        >
+          Apply Filters
+        </button>
+
+        {/* Summary */}
+        <div className="rounded-lg bg-gray-50 p-2">
+          <h4 className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-500">Summary</h4>
+          <div className="space-y-0.5 text-xs">
+            <div className="flex justify-between">
+              <span className="text-gray-600">Total:</span>
+              <span className="font-medium text-gray-900">{totalRecords.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Page:</span>
+              <span className="font-medium text-gray-900">
+                {currentPage}/{totalPages || 1}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Filters:</span>
+              <span className="font-medium text-gray-900">{getActiveFilterCount()}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const VendorTopUpHistory: React.FC<VendorTopUpHistoryProps> = ({ pageSize: propPageSize = 10 }) => {
+  const dispatch = useAppDispatch()
+  const router = useRouter()
+  const { vendorTopUpHistory, vendorTopUpHistoryPagination, vendorTopUpHistoryLoading, vendorTopUpHistoryError } =
+    useAppSelector((state) => state.vendors)
+
+  const [sortColumn, setSortColumn] = useState<string | null>(null)
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
+  const [searchText, setSearchText] = useState("")
+  const [searchInput, setSearchInput] = useState("")
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [isSortExpanded, setIsSortExpanded] = useState(false)
+
+  // Local state for filters
+  const [localFilters, setLocalFilters] = useState({
+    status: undefined as string | undefined,
+    topUpBy: undefined as string | undefined,
+    sortBy: "",
+    sortOrder: "asc" as "asc" | "desc",
+  })
+
+  // Applied filters state - triggers API calls
+  const [appliedFilters, setAppliedFilters] = useState({
+    status: undefined as string | undefined,
+    topUpBy: undefined as string | undefined,
+    sortBy: undefined as string | undefined,
+    sortOrder: undefined as "asc" | "desc" | undefined,
+  })
+
+  const currentPage = vendorTopUpHistoryPagination?.currentPage || 1
+  const pageSize = vendorTopUpHistoryPagination?.pageSize || propPageSize
+  const totalRecords = vendorTopUpHistoryPagination?.totalCount || 0
+  const totalPages = vendorTopUpHistoryPagination?.totalPages || 0
+
+  // Sort options
   const sortOptions: SortOption[] = [
     { label: "Reference A-Z", value: "reference", order: "asc" },
     { label: "Reference Z-A", value: "reference", order: "desc" },
@@ -376,271 +626,36 @@ const MobileFilterSidebar = ({
     { label: "Date Oldest", value: "createdAtUtc", order: "asc" },
   ]
 
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[999] flex items-stretch justify-end bg-black/30 backdrop-blur-sm 2xl:hidden"
-          onClick={onClose}
-        >
-          <motion.div
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "tween", duration: 0.3 }}
-            className="flex max-h-screen w-full max-w-sm flex-col bg-white shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header - Fixed */}
-            <div className="shrink-0 border-b bg-white p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={onClose}
-                    className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
-                  >
-                    <ArrowLeft className="size-5" />
-                  </button>
-                  <div>
-                    <h2 className="text-lg font-semibold">Filters & Sorting</h2>
-                    {getActiveFilterCount() > 0 && (
-                      <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
-                    )}
-                  </div>
-                </div>
-                <button onClick={resetFilters} className="text-sm text-blue-600 hover:text-blue-800">
-                  Clear All
-                </button>
-              </div>
-            </div>
-
-            {/* Filter Content - Scrollable */}
-            <div className="flex-1 overflow-y-auto p-4">
-              <div className="space-y-4">
-                {/* Status Filter */}
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700">Status</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {["Pending", "Confirmed", "Failed"].map((status) => (
-                      <button
-                        key={status}
-                        onClick={() => handleFilterChange("status", localFilters.status === status ? "" : status)}
-                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
-                          localFilters.status === status
-                            ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
-                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        {status}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Top-up By Filter */}
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700">Top-up By</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {["Vendor", "Admin"].map((topUpBy) => (
-                      <button
-                        key={topUpBy}
-                        onClick={() => handleFilterChange("topUpBy", localFilters.topUpBy === topUpBy ? "" : topUpBy)}
-                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
-                          localFilters.topUpBy === topUpBy
-                            ? "bg-green-50 text-green-700 ring-1 ring-green-200"
-                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        {topUpBy}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Sort Options */}
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => setIsSortExpanded((prev) => !prev)}
-                    className="mb-1.5 flex w-full items-center justify-between text-sm font-medium text-gray-700"
-                    aria-expanded={isSortExpanded}
-                  >
-                    <span>Sort By</span>
-                    {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-                  </button>
-
-                  {isSortExpanded && (
-                    <div className="space-y-2">
-                      {sortOptions.map((option) => (
-                        <button
-                          key={`${option.value}-${option.order}`}
-                          onClick={() => handleSortChange(option)}
-                          className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
-                            localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                              ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                              : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                          }`}
-                        >
-                          <span>{option.label}</span>
-                          {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
-                            <span className="text-purple-600">
-                              {option.order === "asc" ? (
-                                <SortAsc className="size-4" />
-                              ) : (
-                                <SortDesc className="size-4" />
-                              )}
-                            </span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Bottom Action Buttons - Fixed */}
-            <div className="shrink-0 border-t bg-white p-4 2xl:hidden">
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    applyFilters()
-                    onClose()
-                  }}
-                  className="button-filled flex-1"
-                >
-                  Apply Filters
-                </button>
-                <button
-                  onClick={() => {
-                    resetFilters()
-                    onClose()
-                  }}
-                  className="button-oulined flex-1"
-                >
-                  Reset All
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  )
-}
-
-const VendorTopUpHistory: React.FC<VendorTopUpHistoryProps> = ({ pageSize: propPageSize = 10 }) => {
-  const router = useRouter()
-  const [searchText, setSearchText] = useState("")
-  const [searchInput, setSearchInput] = useState("")
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(propPageSize)
-  const [sortColumn, setSortColumn] = useState<string | null>(null)
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
-  const [selectedItem, setSelectedItem] = useState<VendorTopUpHistoryItem | null>(null)
-
-  // Filter states
-  const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
-  const [localFilters, setLocalFilters] = useState({
-    status: "",
-    topUpBy: "",
-    sortBy: "",
-    sortOrder: "asc" as "asc" | "desc",
-  })
-
-  const dispatch = useAppDispatch()
-  const { vendorTopUpHistory, vendorTopUpHistoryPagination, vendorTopUpHistoryLoading, vendorTopUpHistoryError } =
-    useAppSelector((state) => state.vendors)
-
-  // Fetch vendor top-up history on component mount and when search/page changes
+  // Fetch vendor top-up history based on applied filters
   useEffect(() => {
-    const fetchVendorTopUpHistoryData = () => {
-      const params: any = {
-        pageNumber: currentPage,
-        pageSize: pageSize,
-      }
-
-      // Add search if exists
-      if (searchText) {
-        params.search = searchText
-      }
-
-      // Add filters from localFilters
-      if (localFilters.status) {
-        params.status = localFilters.status
-      }
-      if (localFilters.topUpBy) {
-        params.topUpBy = localFilters.topUpBy
-      }
-
-      dispatch(fetchVendorTopUpHistory(params))
+    const params: any = {
+      pageNumber: currentPage,
+      pageSize: pageSize,
+      search: searchText || undefined,
+      ...appliedFilters,
     }
 
-    fetchVendorTopUpHistoryData()
-  }, [dispatch, currentPage, pageSize, searchText, localFilters])
+    dispatch(fetchVendorTopUpHistory(params))
+  }, [dispatch, currentPage, pageSize, searchText, appliedFilters])
 
-  const handleCancelSearch = () => {
-    setSearchInput("")
-    setSearchText("")
-    setCurrentPage(1)
+  const handleViewDetails = (item: VendorTopUpHistoryItem) => {
+    router.push(`/vendor-management/vendor-topup-detail/${item.id}`)
   }
 
-  const handleSearch = () => {
-    setSearchText(searchInput.trim())
-    setCurrentPage(1)
+  const formatDateTime = (dateString: string | undefined) => {
+    if (!dateString) return "-"
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) return "-"
+
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
   }
 
-  const handleSearchChange = (value: string) => {
-    setSearchInput(value)
-  }
-
-  const toggleSort = (column: string) => {
-    const isAscending = sortColumn === column && sortOrder === "asc"
-    setSortOrder(isAscending ? "desc" : "asc")
-    setSortColumn(column)
-  }
-
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
-
-  // Helper function to get status color
-  const getStatusStyle = (status: string) => {
-    switch (status) {
-      case "Confirmed":
-        return {
-          backgroundColor: "#EEF5F0",
-          color: "#589E67",
-        }
-      case "Pending":
-        return {
-          backgroundColor: "#FEF3C7",
-          color: "#F59E0B",
-        }
-      case "Failed":
-        return {
-          backgroundColor: "#F7EDED",
-          color: "#AF4B4B",
-        }
-      default:
-        return {
-          backgroundColor: "#F3F4F6",
-          color: "#6B7280",
-        }
-    }
-  }
-
-  // Helper function to get top-up by style
-  const getTopUpByStyle = (topUpBy: string) => {
-    return {
-      backgroundColor: topUpBy === "Vendor" ? "#EFF6FF" : "#F5F3FF",
-      color: topUpBy === "Vendor" ? "#1E40AF" : "#5B21B6",
-    }
-  }
-
-  // Helper function to format currency
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-NG", {
       style: "currency",
@@ -649,22 +664,66 @@ const VendorTopUpHistory: React.FC<VendorTopUpHistoryProps> = ({ pageSize: propP
     }).format(amount)
   }
 
-  // Helper function to format date
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString()
+  const toggleSort = (column: string) => {
+    const isAscending = sortColumn === column && sortOrder === "asc"
+    const newOrder = isAscending ? "desc" : "asc"
+    setSortOrder(newOrder)
+    setSortColumn(column)
+    handleSortChange({
+      label: column,
+      value: column,
+      order: newOrder,
+    })
   }
 
-  const handleViewDetails = (item: VendorTopUpHistoryItem) => {
-    setSelectedItem(selectedItem?.id === item.id ? null : item)
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchInput(e.target.value)
+  }
+
+  const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      setSearchText(trimmed)
+      setCurrentPage(1)
+    }
+  }
+
+  const handleCancelSearch = () => {
+    setSearchText("")
+    setSearchInput("")
+  }
+
+  const setCurrentPage = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      const params: any = {
+        pageNumber: page,
+        pageSize: pageSize,
+        search: searchText || undefined,
+        ...appliedFilters,
+      }
+      dispatch(fetchVendorTopUpHistory(params))
+    }
+  }
+
+  const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newPageSize = Number(event.target.value)
+    const params: any = {
+      pageNumber: 1,
+      pageSize: newPageSize,
+      search: searchText || undefined,
+      ...appliedFilters,
+    }
+    dispatch(fetchVendorTopUpHistory(params))
   }
 
   // Filter handlers
-  const handleFilterChange = (key: string, value: string) => {
+  const handleFilterChange = (key: string, value: string | undefined) => {
     setLocalFilters((prev) => ({
       ...prev,
-      [key as keyof typeof localFilters]: value,
+      [key]: value === "" ? undefined : value,
     }))
-    setCurrentPage(1) // Reset to first page when filters change
   }
 
   const handleSortChange = (option: SortOption) => {
@@ -673,427 +732,324 @@ const VendorTopUpHistory: React.FC<VendorTopUpHistoryProps> = ({ pageSize: propP
       sortBy: option.value,
       sortOrder: option.order,
     }))
-    setCurrentPage(1) // Reset to first page when sort changes
   }
 
-  // Apply all filters at once (for the apply button)
   const applyFilters = () => {
-    // Filters are already applied via useEffect when localFilters change
-    // This function is kept for consistency with the UI
-    setCurrentPage(1)
-  }
-
-  // Reset all filters
-  const resetFilters = () => {
-    setLocalFilters({
-      status: "",
-      topUpBy: "",
-      sortBy: "",
-      sortOrder: "asc",
+    setAppliedFilters({
+      status: localFilters.status,
+      topUpBy: localFilters.topUpBy,
+      sortBy: localFilters.sortBy || undefined,
+      sortOrder: localFilters.sortBy ? localFilters.sortOrder : undefined,
     })
     setCurrentPage(1)
   }
 
-  // Get active filter count
+  const resetFilters = () => {
+    setLocalFilters({
+      status: undefined,
+      topUpBy: undefined,
+      sortBy: "",
+      sortOrder: "asc",
+    })
+    setAppliedFilters({
+      status: undefined,
+      topUpBy: undefined,
+      sortBy: undefined,
+      sortOrder: undefined,
+    })
+    setSearchText("")
+    setSearchInput("")
+    setCurrentPage(1)
+  }
+
   const getActiveFilterCount = () => {
     let count = 0
-    if (localFilters.status) count++
-    if (localFilters.topUpBy) count++
-    if (localFilters.sortBy) count++
+    if (appliedFilters.status) count++
+    if (appliedFilters.topUpBy) count++
+    if (appliedFilters.sortBy) count++
     return count
   }
 
-  const totalRecords = vendorTopUpHistoryPagination.totalCount || 0
-  const totalPages = Math.ceil(totalRecords / pageSize)
   const isLoading = vendorTopUpHistoryLoading
 
   if (isLoading && !vendorTopUpHistory?.length) return <LoadingSkeleton />
-  if (vendorTopUpHistoryError) return <div>Error loading vendor top-up history: {vendorTopUpHistoryError}</div>
+  if (vendorTopUpHistoryError)
+    return (
+      <div className="rounded-xl border border-gray-200 bg-white p-8">
+        <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3">
+          <AlertCircle className="size-4 text-red-600" />
+          <p className="text-sm text-red-700">Error loading vendor top-up history: {vendorTopUpHistoryError}</p>
+        </div>
+      </div>
+    )
 
   return (
-    <motion.div className="relative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
-      <div className="relative flex flex-col gap-6 2xl:flex-row">
-        {/* Main Content - Meters Table */}
-        <div className={showDesktopFilters ? "w-full 2xl:max-w-[calc(100%-356px)] 2xl:flex-1" : "w-full 2xl:flex-1"}>
-          <motion.div
-            className="rounded-md border bg-white p-3 md:p-5"
-            initial={{ y: -10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="border-b pb-4">
-              <div className="mb-3 flex w-full items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-xl">Vendor Top-up History</p>
-                </div>
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900">Vendor Top-up History</h2>
+          <p className="mt-1 text-xs text-gray-600">View and manage all vendor top-up transactions</p>
+        </div>
 
-                <div className="flex items-center gap-2">
-                  {/* Mobile search icon button */}
-                  <button
-                    type="button"
-                    className="flex size-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm transition hover:bg-gray-50 sm:hidden md:size-9"
-                    onClick={() => {
-                      /* Handle mobile search toggle if needed */
-                    }}
-                    aria-label="Toggle search"
-                  >
-                    <Image src="/DashboardImages/Search.svg" width={16} height={16} alt="Search Icon" />
-                  </button>
-
-                  {/* Desktop/Tablet search input */}
-                  <div className="hidden sm:block">
-                    <SearchModule
-                      value={searchInput}
-                      onChange={(e) => handleSearchChange(e.target.value)}
-                      onCancel={handleCancelSearch}
-                      onSearch={handleSearch}
-                      placeholder="Search by Reference and Vendor Name"
-                      className="w-full max-w-full sm:max-w-[320px]"
-                      bgClassName="bg-white"
-                    />
-                  </div>
-
-                  {/* Active filters badge - Desktop only (2xl and above) */}
-                  {getActiveFilterCount() > 0 && (
-                    <div className="hidden items-center gap-2 2xl:flex">
-                      <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
-                        {getActiveFilterCount()} active filter{getActiveFilterCount() !== 1 ? "s" : ""}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Hide/Show Filters button - Desktop only (2xl and above) */}
-                  <button
-                    type="button"
-                    onClick={() => setShowDesktopFilters((prev) => !prev)}
-                    className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
-                  >
-                    {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
-                    {showDesktopFilters ? "Hide filters" : "Show filters"}
-                  </button>
-
-                  <button
-                    onClick={() => setShowMobileFilters(true)}
-                    className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
-                  >
-                    <Filter className="size-4" />
-                    Filters
-                    {getActiveFilterCount() > 0 && (
-                      <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
-                        {getActiveFilterCount()}
-                      </span>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Mobile search input revealed when icon is tapped */}
-              <div className="mb-3 sm:hidden">
-                <SearchModule
-                  value={searchInput}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  onCancel={handleCancelSearch}
-                  onSearch={handleSearch}
-                  placeholder="Search by Reference and Vendor Name"
-                  className="w-full"
-                  bgClassName="bg-white"
-                />
-              </div>
-            </div>
-
-            {isLoading && !vendorTopUpHistory?.length ? (
-              <LoadingSkeleton />
-            ) : !vendorTopUpHistory?.length ? (
-              <motion.div
-                className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.4 }}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Search */}
+          <div className="relative min-w-[220px]">
+            <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              value={searchInput}
+              onChange={handleSearch}
+              onKeyDown={(e) => e.key === "Enter" && handleManualSearch()}
+              placeholder="Search top-ups..."
+              className="h-9 w-full rounded-lg border border-gray-300 bg-white pl-8 pr-8 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+            {searchInput && (
+              <button
+                onClick={handleCancelSearch}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
-                <motion.p
-                  className="text-base font-bold text-[#202B3C]"
-                  initial={{ y: 10, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.4, delay: 0.2 }}
-                >
-                  {searchText ? "No matching vendor top-up history found" : "No vendor top-up history available"}
-                </motion.p>
-              </motion.div>
+                <X className="size-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Filter Buttons */}
+          <div className="flex items-center gap-1.5">
+            {/* Mobile Filter Button */}
+            <button
+              onClick={() => setShowMobileFilters(true)}
+              className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 lg:hidden"
+            >
+              <Filter className="size-3.5" />
+              <span>Filters</span>
+              {getActiveFilterCount() > 0 && (
+                <span className="flex size-4 items-center justify-center rounded-full bg-[#004B23] text-[10px] font-semibold text-white">
+                  {getActiveFilterCount()}
+                </span>
+              )}
+            </button>
+
+            {/* Desktop Filter Toggle */}
+            <button
+              onClick={() => setShowDesktopFilters(!showDesktopFilters)}
+              className="hidden items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 lg:flex"
+            >
+              {showDesktopFilters ? <X className="size-3.5" /> : <Filter className="size-3.5" />}
+              <span>{showDesktopFilters ? "Hide Filters" : "Show Filters"}</span>
+              {getActiveFilterCount() > 0 && (
+                <span className="ml-0.5 flex size-4 items-center justify-center rounded-full bg-[#004B23] text-[10px] font-semibold text-white">
+                  {getActiveFilterCount()}
+                </span>
+              )}
+            </button>
+
+            {/* Export Button */}
+            <button className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50">
+              <Download className="size-3.5" />
+              <span className="hidden sm:inline">Export</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Active Filters Summary */}
+      {getActiveFilterCount() > 0 && (
+        <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-gray-200 pt-3">
+          <span className="text-xs text-gray-600">Active:</span>
+          {appliedFilters.status && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700">
+              Status
+              <button onClick={() => handleFilterChange("status", undefined)} className="ml-0.5 hover:text-blue-900">
+                <X className="size-2.5" />
+              </button>
+            </span>
+          )}
+          {appliedFilters.topUpBy && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-medium text-purple-700">
+              Top-up By
+              <button onClick={() => handleFilterChange("topUpBy", undefined)} className="ml-0.5 hover:text-purple-900">
+                <X className="size-2.5" />
+              </button>
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Error Message */}
+      <AnimatePresence>
+        {vendorTopUpHistoryError && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mt-3 overflow-hidden"
+          >
+            <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-2">
+              <AlertCircle className="size-4 text-red-600" />
+              <p className="text-xs text-red-700">{vendorTopUpHistoryError}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Main Content with Table on Left, Filters on Right */}
+      <div className="flex flex-col-reverse gap-5 lg:flex-row">
+        {/* Table - Takes remaining width */}
+        <div className="min-w-0 flex-1">
+          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+            {!vendorTopUpHistory?.length ? (
+              <div className="flex h-72 flex-col items-center justify-center px-4">
+                <div className="rounded-full bg-gray-100 p-3">
+                  <Info className="size-6 text-gray-400" />
+                </div>
+                <p className="mt-3 text-base font-medium text-gray-900">No top-up history found</p>
+                <p className="mt-1 text-xs text-gray-600">
+                  {searchText || getActiveFilterCount() > 0
+                    ? "Try adjusting your search or filters"
+                    : "Vendor top-ups will appear here once processed"}
+                </p>
+                {(searchText || getActiveFilterCount() > 0) && (
+                  <button
+                    onClick={resetFilters}
+                    className="mt-3 rounded-lg bg-[#004B23] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[#003618]"
+                  >
+                    Clear all filters
+                  </button>
+                )}
+              </div>
             ) : (
               <>
-                <motion.div
-                  className="w-full overflow-x-auto border-x bg-[#FFFFFF]"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[1000px]">
                     <thead>
-                      <tr>
-                        <th className="whitespace-nowrap border-b p-4 text-sm">
-                          <div className="flex items-center gap-2">Reference</div>
+                      <tr className="border-b border-gray-200 bg-gray-50/80">
+                        <th className="p-2 text-left">
+                          <button
+                            onClick={() => toggleSort("reference")}
+                            className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
+                          >
+                            Reference
+                            <RxCaretSort className="size-3.5" />
+                          </button>
                         </th>
-                        <th
-                          className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                          onClick={() => toggleSort("vendorName")}
-                        >
-                          <div className="flex items-center gap-2">
-                            Vendor Name <RxCaretSort />
-                          </div>
+                        <th className="p-2 text-left">
+                          <button
+                            onClick={() => toggleSort("vendorName")}
+                            className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
+                          >
+                            Vendor
+                            <RxCaretSort className="size-3.5" />
+                          </button>
                         </th>
-                        <th
-                          className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                          onClick={() => toggleSort("amount")}
-                        >
-                          <div className="flex items-center gap-2">
-                            Amount <RxCaretSort />
-                          </div>
+                        <th className="p-2 text-left">
+                          <button
+                            onClick={() => toggleSort("amount")}
+                            className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
+                          >
+                            Amount
+                            <RxCaretSort className="size-3.5" />
+                          </button>
                         </th>
-                        <th
-                          className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                          onClick={() => toggleSort("status")}
-                        >
-                          <div className="flex items-center gap-2">
-                            Status <RxCaretSort />
-                          </div>
+                        <th className="p-2 text-left">
+                          <button
+                            onClick={() => toggleSort("status")}
+                            className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
+                          >
+                            Status
+                            <RxCaretSort className="size-3.5" />
+                          </button>
                         </th>
-                        <th
-                          className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                          onClick={() => toggleSort("topUpBy")}
-                        >
-                          <div className="flex items-center gap-2">
-                            Top-up By <RxCaretSort />
-                          </div>
+                        <th className="p-2 text-left">
+                          <button
+                            onClick={() => toggleSort("topUpBy")}
+                            className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
+                          >
+                            Top-up By
+                            <RxCaretSort className="size-3.5" />
+                          </button>
                         </th>
-                        <th
-                          className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                          onClick={() => toggleSort("createdAtUtc")}
-                        >
-                          <div className="flex items-center gap-2">
-                            Date <RxCaretSort />
-                          </div>
+                        <th className="p-2 text-left">
+                          <button
+                            onClick={() => toggleSort("createdAtUtc")}
+                            className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
+                          >
+                            Date
+                            <RxCaretSort className="size-3.5" />
+                          </button>
                         </th>
-                        <th className="whitespace-nowrap border-b p-4 text-sm">
-                          <div className="flex items-center gap-2">Actions</div>
+                        <th className="p-2 text-left">
+                          <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">
+                            Actions
+                          </span>
                         </th>
                       </tr>
                     </thead>
                     <tbody>
                       <AnimatePresence>
                         {vendorTopUpHistory?.map((item, index) => (
-                          <React.Fragment key={item.id}>
-                            <motion.tr
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ duration: 0.3, delay: index * 0.05 }}
-                              exit={{ opacity: 0, y: -10 }}
-                              className="hover:bg-gray-50"
-                            >
-                              <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">
-                                {item.reference}
-                              </td>
-                              <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{item.vendorName}</td>
-                              <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                                {formatCurrency(item.amount)}
-                              </td>
-                              <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                                <motion.div
-                                  style={getStatusStyle(item.status)}
-                                  className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1"
-                                  whileHover={{ scale: 1.05 }}
-                                  transition={{ duration: 0.1 }}
-                                >
-                                  <span
-                                    className="size-2 rounded-full"
-                                    style={{
-                                      backgroundColor:
-                                        item.status === "Confirmed"
-                                          ? "#589E67"
-                                          : item.status === "Pending"
-                                          ? "#F59E0B"
-                                          : "#AF4B4B",
-                                    }}
-                                  ></span>
-                                  {item.status}
-                                </motion.div>
-                              </td>
-                              <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                                <motion.div
-                                  style={getTopUpByStyle(item.topUpBy)}
-                                  className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1"
-                                  whileHover={{ scale: 1.05 }}
-                                  transition={{ duration: 0.1 }}
-                                >
-                                  {item.topUpBy}
-                                </motion.div>
-                              </td>
-                              <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                                {formatDate(item.createdAtUtc)}
-                              </td>
-                              <td className="flex items-center gap-2 whitespace-nowrap border-b px-4 py-1 text-sm">
-                                <ButtonModule
-                                  icon={<VscEye />}
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleViewDetails(item)}
-                                >
-                                  View
-                                </ButtonModule>
-
-                                <motion.button
-                                  className="inline-flex items-center justify-center rounded-md border border-gray-300 p-2 text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
-                                  onClick={() => setSelectedItem(selectedItem?.id === item.id ? null : item)}
-                                  whileHover={{ scale: 1.05 }}
-                                  whileTap={{ scale: 0.95 }}
-                                  title={selectedItem?.id === item.id ? "Hide details" : "View details"}
-                                >
-                                  {selectedItem?.id === item.id ? (
-                                    <VscChevronUp className="size-4" />
-                                  ) : (
-                                    <VscChevronDown className="size-4" />
-                                  )}
-                                </motion.button>
-                              </td>
-                            </motion.tr>
-
-                            <AnimatePresence>
-                              {selectedItem?.id === item.id && (
-                                <motion.tr
-                                  initial={{ opacity: 0, height: 0 }}
-                                  animate={{ opacity: 1, height: "auto" }}
-                                  exit={{ opacity: 0, height: 0 }}
-                                  transition={{ duration: 0.3 }}
-                                >
-                                  <td colSpan={7} className="border-b bg-gray-50 p-0">
-                                    <motion.div
-                                      className="p-6"
-                                      initial={{ opacity: 0, y: -20 }}
-                                      animate={{ opacity: 1, y: 0 }}
-                                      exit={{ opacity: 0, y: -20 }}
-                                      transition={{ duration: 0.2 }}
-                                    >
-                                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                                        <div className="space-y-4">
-                                          <div>
-                                            <h4 className="text-sm font-semibold text-gray-900">Top-up Information</h4>
-                                            <div className="mt-2 space-y-2">
-                                              <div className="flex justify-between text-sm">
-                                                <span className="text-gray-500">Reference:</span>
-                                                <span className="font-medium">{selectedItem.reference}</span>
-                                              </div>
-                                              <div className="flex justify-between text-sm">
-                                                <span className="text-gray-500">Amount:</span>
-                                                <span className="font-medium">
-                                                  {formatCurrency(selectedItem.amount)}
-                                                </span>
-                                              </div>
-                                              <div className="flex justify-between text-sm">
-                                                <span className="text-gray-500">Status:</span>
-                                                <motion.div
-                                                  style={getStatusStyle(selectedItem.status)}
-                                                  className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1"
-                                                >
-                                                  <span
-                                                    className="size-2 rounded-full"
-                                                    style={{
-                                                      backgroundColor:
-                                                        selectedItem.status === "Confirmed"
-                                                          ? "#589E67"
-                                                          : selectedItem.status === "Pending"
-                                                          ? "#F59E0B"
-                                                          : "#AF4B4B",
-                                                    }}
-                                                  ></span>
-                                                  {selectedItem.status}
-                                                </motion.div>
-                                              </div>
-                                            </div>
-                                          </div>
-                                        </div>
-
-                                        <div className="space-y-4">
-                                          <div>
-                                            <h4 className="text-sm font-semibold text-gray-900">Vendor Information</h4>
-                                            <div className="mt-2 space-y-2">
-                                              <div className="flex justify-between text-sm">
-                                                <span className="text-gray-500">Vendor Name:</span>
-                                                <span className="font-medium">{selectedItem.vendorName}</span>
-                                              </div>
-                                              <div className="flex justify-between text-sm">
-                                                <span className="text-gray-500">Top-up By:</span>
-                                                <motion.div
-                                                  style={getTopUpByStyle(selectedItem.topUpBy)}
-                                                  className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1"
-                                                >
-                                                  {selectedItem.topUpBy}
-                                                </motion.div>
-                                              </div>
-                                            </div>
-                                          </div>
-                                        </div>
-
-                                        <div className="space-y-4">
-                                          <div>
-                                            <h4 className="text-sm font-semibold text-gray-900">Timestamps</h4>
-                                            <div className="mt-2 space-y-2">
-                                              <div className="flex justify-between text-sm">
-                                                <span className="text-gray-500">Created:</span>
-                                                <span className="font-medium">
-                                                  {formatDate(selectedItem.createdAtUtc)}
-                                                </span>
-                                              </div>
-                                              <div className="flex justify-between text-sm">
-                                                <span className="text-gray-500">Confirmed:</span>
-                                                <span className="font-medium">
-                                                  {selectedItem.confirmedAtUtc
-                                                    ? formatDate(selectedItem.confirmedAtUtc)
-                                                    : "N/A"}
-                                                </span>
-                                              </div>
-                                              {selectedItem.narrative && (
-                                                <div className="flex justify-between text-sm">
-                                                  <span className="text-gray-500">Narrative:</span>
-                                                  <span className="font-medium">{selectedItem.narrative}</span>
-                                                </div>
-                                              )}
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </motion.div>
-                                  </td>
-                                </motion.tr>
-                              )}
-                            </AnimatePresence>
-                          </React.Fragment>
+                          <motion.tr
+                            key={item.id}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2, delay: index * 0.01 }}
+                            className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50"
+                          >
+                            <td className="whitespace-nowrap p-2 text-xs font-medium text-gray-900">
+                              {item.reference}
+                            </td>
+                            <td className="whitespace-nowrap p-2 text-xs text-gray-700">{item.vendorName}</td>
+                            <td className="whitespace-nowrap p-2 text-xs font-semibold text-gray-900">
+                              {formatCurrency(item.amount)}
+                            </td>
+                            <td className="whitespace-nowrap p-2">
+                              <StatusBadge status={item.status} />
+                            </td>
+                            <td className="whitespace-nowrap p-2">
+                              <TopUpByBadge topUpBy={item.topUpBy} />
+                            </td>
+                            <td className="whitespace-nowrap p-2 text-xs text-gray-700">
+                              {formatDateTime(item.createdAtUtc)}
+                            </td>
+                            <td className="whitespace-nowrap p-2">
+                              <ActionButtons item={item} onViewDetails={handleViewDetails} />
+                            </td>
+                          </motion.tr>
                         ))}
                       </AnimatePresence>
                     </tbody>
                   </table>
-                </motion.div>
+                </div>
 
-                <motion.div
-                  className="flex items-center justify-between border-t py-3"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.2 }}
-                >
-                  <div className="text-sm text-gray-700">
-                    Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalRecords)} of{" "}
-                    {totalRecords} entries
-                  </div>
+                {/* Pagination */}
+                <div className="flex items-center justify-between border-t border-gray-200 px-3 py-2.5">
                   <div className="flex items-center gap-2">
-                    <motion.button
-                      onClick={() => paginate(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      className={`flex items-center justify-center rounded-md p-2 ${
-                        currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
-                      }`}
-                      whileHover={{ scale: currentPage === 1 ? 1 : 1.1 }}
-                      whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
+                    <p className="text-xs text-gray-600">Show rows</p>
+                    <select
+                      value={pageSize}
+                      onChange={handleRowsChange}
+                      className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     >
-                      <MdOutlineArrowBackIosNew />
-                    </motion.button>
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                    </select>
+                    <p className="text-xs text-gray-600">
+                      {currentPage * pageSize - pageSize + 1}-{Math.min(currentPage * pageSize, totalRecords)} of{" "}
+                      {totalRecords}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setCurrentPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="flex size-6 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <MdOutlineArrowBackIosNew className="size-3" />
+                    </button>
 
                     {Array.from({ length: Math.min(5, totalPages) }).map((_, index) => {
                       let pageNum
@@ -1108,213 +1064,72 @@ const VendorTopUpHistory: React.FC<VendorTopUpHistoryProps> = ({ pageSize: propP
                       }
 
                       return (
-                        <motion.button
+                        <button
                           key={index}
-                          onClick={() => paginate(pageNum)}
-                          className={`flex size-8 items-center justify-center rounded-md text-sm ${
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`flex size-6 items-center justify-center rounded-lg text-xs font-medium transition-colors ${
                             currentPage === pageNum
                               ? "bg-[#004B23] text-white"
-                              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                              : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                           }`}
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.95 }}
-                          initial={{ scale: 0.9, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          transition={{ duration: 0.2, delay: index * 0.05 }}
                         >
                           {pageNum}
-                        </motion.button>
+                        </button>
                       )
                     })}
 
-                    {totalPages > 5 && currentPage < totalPages - 2 && <span className="px-2">...</span>}
-
-                    {totalPages > 5 && currentPage < totalPages - 1 && (
-                      <motion.button
-                        onClick={() => paginate(totalPages)}
-                        className={`flex size-8 items-center justify-center rounded-md text-sm ${
-                          currentPage === totalPages
-                            ? "bg-[#004B23] text-white"
-                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                        }`}
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        {totalPages}
-                      </motion.button>
+                    {totalPages > 5 && currentPage < totalPages - 2 && (
+                      <span className="text-xs text-gray-500">...</span>
                     )}
 
-                    <motion.button
-                      onClick={() => paginate(currentPage + 1)}
+                    <button
+                      onClick={() => setCurrentPage(currentPage + 1)}
                       disabled={currentPage === totalPages}
-                      className={`flex items-center justify-center rounded-md p-2 ${
-                        currentPage === totalPages
-                          ? "cursor-not-allowed text-gray-400"
-                          : "text-[#003F9F] hover:bg-gray-100"
-                      }`}
-                      whileHover={{ scale: currentPage === totalPages ? 1 : 1.1 }}
-                      whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
+                      className="flex size-6 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      <MdOutlineArrowForwardIos />
-                    </motion.button>
+                      <MdOutlineArrowForwardIos className="size-3" />
+                    </button>
                   </div>
-                </motion.div>
+                </div>
               </>
             )}
-          </motion.div>
+          </div>
         </div>
 
-        {/* Desktop Filters Sidebar (2xl and above) - Toggleable */}
+        {/* Desktop Filter Panel - On the Right */}
         {showDesktopFilters && (
-          <motion.div
-            key="desktop-filters-sidebar"
-            initial={{ opacity: 1 }}
-            animate={{ opacity: 1 }}
-            className="hidden w-full flex-col rounded-md border bg-white 2xl:flex 2xl:w-80 2xl:self-start"
-          >
-            <div className="shrink-0 border-b bg-white p-3 md:p-5">
-              <div className="flex items-center justify-between">
-                <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
-                <button
-                  onClick={resetFilters}
-                  className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
-                >
-                  <X className="size-3 md:size-4" />
-                  Clear All
-                </button>
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-3 md:p-5">
-              <div className="space-y-4">
-                {/* Status Filter */}
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {["Pending", "Confirmed", "Failed"].map((status) => (
-                      <button
-                        key={status}
-                        onClick={() => handleFilterChange("status", localFilters.status === status ? "" : status)}
-                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
-                          localFilters.status === status
-                            ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
-                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        {status}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Top-up By Filter */}
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Top-up By</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {["Vendor", "Admin"].map((topUpBy) => (
-                      <button
-                        key={topUpBy}
-                        onClick={() => handleFilterChange("topUpBy", localFilters.topUpBy === topUpBy ? "" : topUpBy)}
-                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
-                          localFilters.topUpBy === topUpBy
-                            ? "bg-green-50 text-green-700 ring-1 ring-green-200"
-                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        {topUpBy}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Sort Options */}
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      /* Toggle sort expansion if needed */
-                    }}
-                    className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
-                  >
-                    <span>Sort By</span>
-                    <ChevronDown className="size-4" />
-                  </button>
-
-                  <div className="space-y-2">
-                    {[
-                      { label: "Reference A-Z", value: "reference", order: "asc" },
-                      { label: "Reference Z-A", value: "reference", order: "desc" },
-                      { label: "Vendor Name A-Z", value: "vendorName", order: "asc" },
-                      { label: "Vendor Name Z-A", value: "vendorName", order: "desc" },
-                      { label: "Amount Low-High", value: "amount", order: "asc" },
-                      { label: "Amount High-Low", value: "amount", order: "desc" },
-                      { label: "Date Newest", value: "createdAtUtc", order: "desc" },
-                      { label: "Date Oldest", value: "createdAtUtc", order: "asc" },
-                    ].map((option) => (
-                      <button
-                        key={`${option.value}-${option.order}`}
-                        onClick={() => handleSortChange(option as SortOption)}
-                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
-                          localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                            ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        <span>{option.label}</span>
-                        {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
-                          <span className="text-purple-600">
-                            {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="shrink-0 space-y-3 border-t bg-white p-3 md:p-5">
-              <button
-                onClick={applyFilters}
-                className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
-              >
-                <Filter className="size-4" />
-                Apply Filters
-              </button>
-              <button
-                onClick={resetFilters}
-                className="button-oulined flex w-full items-center justify-center gap-2 text-sm md:text-base"
-              >
-                <X className="size-4" />
-                Reset All
-              </button>
-            </div>
-
-            {/* Summary Stats */}
-            <div className="shrink-0 rounded-lg bg-gray-50 p-3 md:p-4">
-              <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
-              <div className="space-y-1 text-xs md:text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Total Records:</span>
-                  <span className="font-medium">{totalRecords.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Current Page:</span>
-                  <span className="font-medium">
-                    {currentPage} / {totalPages}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Active Filters:</span>
-                  <span className="font-medium">{getActiveFilterCount()}</span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
+          <DesktopFilterPanel
+            localFilters={localFilters}
+            handleFilterChange={handleFilterChange}
+            handleSortChange={handleSortChange}
+            applyFilters={applyFilters}
+            resetFilters={resetFilters}
+            getActiveFilterCount={getActiveFilterCount}
+            sortOptions={sortOptions}
+            isSortExpanded={isSortExpanded}
+            setIsSortExpanded={setIsSortExpanded}
+            totalRecords={totalRecords}
+            currentPage={currentPage}
+            totalPages={totalPages}
+          />
         )}
       </div>
-    </motion.div>
+
+      {/* Mobile Filter Sidebar */}
+      <MobileFilterSidebar
+        isOpen={showMobileFilters}
+        onClose={() => setShowMobileFilters(false)}
+        localFilters={localFilters}
+        handleFilterChange={handleFilterChange}
+        handleSortChange={handleSortChange}
+        applyFilters={applyFilters}
+        resetFilters={resetFilters}
+        getActiveFilterCount={getActiveFilterCount}
+        sortOptions={sortOptions}
+        isSortExpanded={isSortExpanded}
+        setIsSortExpanded={setIsSortExpanded}
+      />
+    </div>
   )
 }
 

@@ -2,13 +2,25 @@
 import React, { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
-import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
+import {
+  ArrowLeft,
+  ChevronDown,
+  ChevronUp,
+  Filter,
+  Info,
+  MapPin,
+  Phone,
+  Search,
+  SortAsc,
+  SortDesc,
+  Users,
+  X,
+} from "lucide-react"
+import { RxCaretSort } from "react-icons/rx"
+import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos } from "react-icons/md"
 import { SearchModule } from "components/ui/Search/search-module"
 import { RxDotsVertical } from "react-icons/rx"
-import { MdFormatListBulleted, MdGridView } from "react-icons/md"
-import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
-import { VscEye } from "react-icons/vsc"
-import { ExportCsvIcon, MapIcon, PhoneIcon, UserIcon } from "components/Icons/Icons"
+import { ExportCsvIcon, UserIcon } from "components/Icons/Icons"
 import AddAgentModal from "components/ui/Modal/add-agent-modal"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { fetchVendors, setPagination, VendorsRequestParams } from "lib/redux/vendorSlice"
@@ -46,156 +58,176 @@ interface VendorUI {
   documentUrls: string[]
 }
 
-// Responsive Skeleton Components
-const VendorCardSkeleton = () => (
-  <motion.div
-    className="rounded-lg border bg-white p-4 shadow-sm"
-    initial={{ opacity: 0.6 }}
-    animate={{
-      opacity: [0.6, 1, 0.6],
-      transition: {
-        duration: 1.5,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
-    }}
-  >
-    <div className="flex items-start justify-between">
-      <div className="flex items-center gap-3">
-        <div className="size-10 rounded-full bg-gray-200 sm:size-12"></div>
-        <div>
-          <div className="h-5 w-28 rounded bg-gray-200 sm:w-32"></div>
-          <div className="mt-1 flex gap-2">
-            <div className="h-6 w-14 rounded-full bg-gray-200 sm:w-16"></div>
-            <div className="h-6 w-16 rounded-full bg-gray-200 sm:w-20"></div>
+// ==================== Status Badge Component ====================
+const StatusBadge = ({ status, isSuspended }: { status: string; isSuspended: boolean }) => {
+  const getStatusConfig = () => {
+    if (isSuspended) {
+      return {
+        label: "Suspended",
+        className: "bg-red-50 text-red-700 border-red-200",
+        dotColor: "bg-red-500",
+      }
+    }
+    const normalized = status.toLowerCase()
+    if (normalized === "active") {
+      return {
+        label: "Active",
+        className: "bg-emerald-50 text-emerald-700 border-emerald-200",
+        dotColor: "bg-emerald-500",
+      }
+    }
+    if (normalized === "inactive") {
+      return {
+        label: "Inactive",
+        className: "bg-gray-50 text-gray-700 border-gray-200",
+        dotColor: "bg-gray-500",
+      }
+    }
+    return {
+      label: status,
+      className: "bg-gray-50 text-gray-700 border-gray-200",
+      dotColor: "bg-gray-500",
+    }
+  }
+
+  const config = getStatusConfig()
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium ${config.className}`}
+    >
+      <span className={`size-1.5 rounded-full ${config.dotColor}`} />
+      {config.label}
+    </span>
+  )
+}
+
+// ==================== Action Buttons Component ====================
+interface ActionButtonsProps {
+  vendor: VendorUI
+  onViewDetails: (vendor: VendorUI) => void
+}
+
+const ActionButtons: React.FC<ActionButtonsProps> = ({ vendor, onViewDetails }) => {
+  const [isOpen, setIsOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [])
+
+  const handleViewDetails = (e: React.MouseEvent) => {
+    e.preventDefault()
+    onViewDetails(vendor)
+    setIsOpen(false)
+  }
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <motion.button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        title="Actions"
+      >
+        <Search className="size-3" />
+        <span className="hidden sm:inline">Details</span>
+        <RxDotsVertical className="size-3" />
+      </motion.button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            className="absolute right-0 top-full z-50 mt-1 w-48 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+            initial={{ opacity: 0, scale: 0.95, y: -10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: -10 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+          >
+            <div className="py-1">
+              <motion.button
+                className="block w-full px-4 py-2 text-left text-xs text-gray-700 hover:bg-gray-100"
+                onClick={handleViewDetails}
+                whileHover={{ backgroundColor: "#f3f4f6" }}
+              >
+                View Details
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+// ==================== Loading Skeleton ====================
+const LoadingSkeleton = () => {
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white">
+      {/* Header Skeleton */}
+      <div className="border-b border-gray-200 p-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="h-6 w-40 rounded-lg bg-gray-200"></div>
+            <div className="mt-1 h-4 w-56 rounded-lg bg-gray-200"></div>
+          </div>
+          <div className="flex gap-2">
+            <div className="h-9 w-28 rounded-lg bg-gray-200"></div>
+            <div className="h-9 w-28 rounded-lg bg-gray-200"></div>
           </div>
         </div>
       </div>
-      <div className="size-6 rounded bg-gray-200"></div>
-    </div>
 
-    <div className="mt-4 space-y-2 text-sm">
-      {[...Array(5)].map((_, i) => (
-        <div key={i} className="flex justify-between">
-          <div className="h-4 w-16 rounded bg-gray-200 sm:w-20"></div>
-          <div className="h-4 w-12 rounded bg-gray-200 sm:w-16"></div>
-        </div>
-      ))}
-    </div>
+      {/* Table Skeleton */}
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[1200px]">
+          <thead>
+            <tr className="border-b border-gray-200 bg-gray-50/50">
+              {[...Array(8)].map((_, i) => (
+                <th key={i} className="px-3 py-2.5">
+                  <div className="h-3.5 w-16 rounded bg-gray-200"></div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {[...Array(8)].map((_, rowIndex) => (
+              <tr key={rowIndex} className="border-b border-gray-100">
+                {[...Array(8)].map((_, cellIndex) => (
+                  <td key={cellIndex} className="px-3 py-2.5">
+                    <div className="h-3.5 w-full rounded bg-gray-200"></div>
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-    <div className="mt-3 border-t pt-3">
-      <div className="h-4 w-full rounded bg-gray-200"></div>
-    </div>
-
-    <div className="mt-3 flex gap-2">
-      <div className="h-9 flex-1 rounded bg-gray-200"></div>
-    </div>
-  </motion.div>
-)
-
-const VendorListItemSkeleton = () => (
-  <motion.div
-    className="border-b bg-white p-4"
-    initial={{ opacity: 0.6 }}
-    animate={{
-      opacity: [0.6, 1, 0.6],
-      transition: {
-        duration: 1.5,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
-    }}
-  >
-    <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-      <div className="flex items-center gap-4">
-        <div className="size-10 rounded-full bg-gray-200"></div>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-            <div className="h-5 w-40 rounded bg-gray-200"></div>
-            <div className="flex gap-2">
-              <div className="h-6 w-14 rounded-full bg-gray-200 sm:w-16"></div>
-              <div className="h-6 w-16 rounded-full bg-gray-200 sm:w-20"></div>
-            </div>
-          </div>
-          <div className="mt-2 flex flex-wrap gap-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-4 w-20 rounded bg-gray-200 sm:w-24"></div>
+      {/* Pagination Skeleton */}
+      <div className="border-t border-gray-200 p-4">
+        <div className="flex items-center justify-between">
+          <div className="h-3.5 w-40 rounded bg-gray-200"></div>
+          <div className="flex gap-1.5">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="size-7 rounded-lg bg-gray-200"></div>
             ))}
           </div>
-          <div className="mt-2 hidden h-4 w-64 rounded bg-gray-200 sm:block"></div>
-        </div>
-      </div>
-
-      <div className="flex w-full items-center justify-between gap-3 sm:w-auto">
-        <div className="text-right">
-          <div className="h-4 w-20 rounded bg-gray-200 sm:w-24"></div>
-          <div className="mt-1 h-4 w-16 rounded bg-gray-200 sm:w-20"></div>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="h-9 w-16 rounded bg-gray-200 sm:w-20"></div>
-          <div className="size-6 rounded bg-gray-200"></div>
         </div>
       </div>
     </div>
-  </motion.div>
-)
-
-const PaginationSkeleton = () => (
-  <motion.div
-    className="mt-4 flex flex-col items-center justify-between gap-4 sm:flex-row"
-    initial={{ opacity: 0.6 }}
-    animate={{
-      opacity: [0.6, 1, 0.6],
-      transition: {
-        duration: 1.5,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
-    }}
-  >
-    <div className="flex items-center gap-2">
-      <div className="h-4 w-16 rounded bg-gray-200"></div>
-      <div className="h-8 w-16 rounded bg-gray-200"></div>
-    </div>
-
-    <div className="flex items-center gap-3">
-      <div className="size-8 rounded bg-gray-200"></div>
-      <div className="flex gap-2">
-        {[...Array(5)].map((_, i) => (
-          <div key={i} className="size-7 rounded bg-gray-200"></div>
-        ))}
-      </div>
-      <div className="size-8 rounded bg-gray-200"></div>
-    </div>
-
-    <div className="h-4 w-24 rounded bg-gray-200"></div>
-  </motion.div>
-)
-
-const HeaderSkeleton = () => (
-  <motion.div
-    className="flex flex-col py-2"
-    initial={{ opacity: 0.6 }}
-    animate={{
-      opacity: [0.6, 1, 0.6],
-      transition: {
-        duration: 1.5,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
-    }}
-  >
-    <div className="h-8 w-40 rounded bg-gray-200"></div>
-    <div className="mt-2 flex flex-col gap-4 sm:flex-row">
-      <div className="h-10 w-full rounded bg-gray-200 sm:w-80"></div>
-      <div className="flex gap-2">
-        {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-10 w-20 rounded bg-gray-200 sm:w-24"></div>
-        ))}
-      </div>
-    </div>
-  </motion.div>
-)
+  )
+}
 
 const ActionDropdown: React.FC<{ vendor: VendorUI; onViewDetails: (vendor: VendorUI) => void }> = ({
   vendor,
@@ -524,16 +556,14 @@ const AllVendors: React.FC = () => {
   const [searchText, setSearchText] = useState("")
   const [searchInput, setSearchInput] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list")
-  const [showMobileSearch, setShowMobileSearch] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
-  const [isSortExpanded, setIsSortExpanded] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
 
   const dispatch = useAppDispatch()
   const { vendors, loading: isLoading, error, pagination } = useAppSelector((state) => state.vendors)
 
   const pageSize = pagination.pageSize || 10
+  const totalPages = pagination.totalPages || 1
 
   // Filter state
   const [localFilters, setLocalFilters] = useState<{
@@ -598,6 +628,8 @@ const AllVendors: React.FC = () => {
     { label: "Name (Z-A)", value: "name", order: "desc" },
     { label: "Status (A-Z)", value: "status", order: "asc" },
     { label: "Status (Z-A)", value: "status", order: "desc" },
+    { label: "Location (A-Z)", value: "city", order: "asc" },
+    { label: "Location (Z-A)", value: "city", order: "desc" },
   ]
 
   // Handle filter changes
@@ -664,12 +696,8 @@ const AllVendors: React.FC = () => {
       ...(appliedFilters.status && { status: appliedFilters.status }),
       ...(appliedFilters.state && { state: appliedFilters.state }),
       ...(appliedFilters.isSuspended !== undefined && { isSuspended: appliedFilters.isSuspended }),
-      ...(appliedFilters.canProcessPrepaid !== undefined && {
-        canProcessPrepaid: appliedFilters.canProcessPrepaid,
-      }),
-      ...(appliedFilters.canProcessPostpaid !== undefined && {
-        canProcessPostpaid: appliedFilters.canProcessPostpaid,
-      }),
+      ...(appliedFilters.canProcessPrepaid !== undefined && { canProcessPrepaid: appliedFilters.canProcessPrepaid }),
+      ...(appliedFilters.canProcessPostpaid !== undefined && { canProcessPostpaid: appliedFilters.canProcessPostpaid }),
       ...(appliedFilters.sortBy && { sortBy: appliedFilters.sortBy }),
       ...(appliedFilters.sortOrder && { sortOrder: appliedFilters.sortOrder }),
     }
@@ -677,54 +705,10 @@ const AllVendors: React.FC = () => {
     dispatch(fetchVendors(params))
   }, [dispatch, currentPage, pageSize, searchText, appliedFilters])
 
-  const totalRecords = pagination.totalCount || vendors.length
-  const totalPages = pagination.totalPages || Math.ceil((vendors.length || 1) / pageSize)
-
-  const uiVendors: VendorUI[] = vendors.map((vendor) => ({
-    id: vendor.id,
-    accountId: vendor.accountId,
-    blumenpayId: vendor.blumenpayId,
-    name: vendor.name,
-    phoneNumber: vendor.phoneNumber,
-    email: vendor.email,
-    address: vendor.address,
-    city: vendor.city,
-    state: vendor.state,
-    canProcessPostpaid: vendor.canProcessPostpaid,
-    canProcessPrepaid: vendor.canProcessPrepaid,
-    posCollectionAllowed: vendor.posCollectionAllowed,
-    status: (vendor.isSuspended ? "Inactive" : vendor.status || "Active") as "Active" | "Inactive",
-    isSuspended: vendor.isSuspended,
-    urbanCommissionPercent: vendor.urbanCommissionPercent,
-    ruralCommissionPercent: vendor.ruralCommissionPercent,
-    employeeUserId: vendor.employeeUserId,
-    employeeName: vendor.employeeName,
-    apiPublicKey: vendor.apiPublicKey,
-    apiKeyIssuedAt: vendor.apiKeyIssuedAt,
-    apiKeyLastUsedAt: vendor.apiKeyLastUsedAt,
-    documentUrls: vendor.documentUrls || [],
-  }))
-
-  const getStatusStyle = (status: VendorUI["status"]) => {
-    switch (status) {
-      case "Active":
-        return { backgroundColor: "#EEF5F0", color: "#589E67" }
-      case "Inactive":
-        return { backgroundColor: "#F3F4F6", color: "#6B7280" }
-      default:
-        return { backgroundColor: "#F3F4F6", color: "#6B7280" }
-    }
-  }
-
-  const dotStyle = (status: VendorUI["status"]) => {
-    return {
-      backgroundColor: status === "Active" ? "#589E67" : "#6B7280",
-    }
-  }
-
   const handleCancelSearch = () => {
     setSearchText("")
     setSearchInput("")
+    setCurrentPage(1)
   }
 
   const handleManualSearch = () => {
@@ -733,70 +717,69 @@ const AllVendors: React.FC = () => {
 
     if (shouldUpdate) {
       setSearchText(trimmed)
+      setCurrentPage(1)
     }
   }
 
-  const handleAddVendorSuccess = async () => {
-    setIsAddVendorModalOpen(false)
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchInput(e.target.value)
   }
 
   const handleViewVendorDetails = (vendor: VendorUI) => {
     router.push(`/vendor-management/vendor-detail/${vendor.id}`)
   }
 
-  // CSV Export functionality
-  const exportToCSV = () => {
-    if (!uiVendors || uiVendors.length === 0) {
-      alert("No vendor data to export")
-      return
+  const handleAddVendorSuccess = () => {
+    setIsAddVendorModalOpen(false)
+    // Refresh the vendors list
+    dispatch(fetchVendors({ pageNumber: currentPage, pageSize }))
+  }
+
+  const changePage = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page)
     }
+  }
+
+  const exportToCSV = () => {
+    if (!vendors || vendors.length === 0) return
 
     const headers = [
-      "ID",
-      "Account ID",
-      "Blumenpay ID",
-      "Vendor Name",
-      "Phone Number",
+      "Name",
       "Email",
-      "Address",
+      "Phone",
       "City",
       "State",
       "Status",
-      "Can Process Postpaid",
-      "Can Process Prepaid",
-      "POS Collection Allowed",
       "Urban Commission %",
       "Rural Commission %",
       "Employee Name",
-      "Document URLs",
+      "Can Process Prepaid",
+      "Can Process Postpaid",
+      "POS Collection Allowed",
     ]
 
-    const csvRows = uiVendors.map((vendor) => [
-      vendor.id.toString(),
-      `"${vendor.accountId}"`,
-      `"${vendor.blumenpayId}"`,
-      `"${vendor.name.replace(/"/g, '""')}"`,
-      `"${vendor.phoneNumber}"`,
-      `"${vendor.email}"`,
-      `"${vendor.address.replace(/"/g, '""')}"`,
-      `"${vendor.city}"`,
-      `"${vendor.state}"`,
+    const csvData = vendors.map((vendor) => [
+      vendor.name,
+      vendor.email,
+      vendor.phoneNumber,
+      vendor.city,
+      vendor.state,
       vendor.status,
-      vendor.canProcessPostpaid.toString(),
-      vendor.canProcessPrepaid.toString(),
-      vendor.posCollectionAllowed.toString(),
       vendor.urbanCommissionPercent.toString(),
       vendor.ruralCommissionPercent.toString(),
-      `"${vendor.employeeName}"`,
-      `"${vendor.documentUrls.join("; ")}"`,
+      vendor.employeeName,
+      vendor.canProcessPrepaid ? "Yes" : "No",
+      vendor.canProcessPostpaid ? "Yes" : "No",
+      vendor.posCollectionAllowed ? "Yes" : "No",
     ])
 
-    const csvContent = [headers, ...csvRows].map((row) => row.join(",")).join("\n")
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-    const link = document.createElement("a")
-    const url = URL.createObjectURL(blob)
+    const csvContent = [headers, ...csvData].map((row) => row.join(",")).join("\n")
 
-    link.setAttribute("href", url)
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
     link.setAttribute("download", `vendors_export_${new Date().toISOString().split("T")[0]}.csv`)
     link.style.visibility = "hidden"
 
@@ -806,684 +789,564 @@ const AllVendors: React.FC = () => {
     URL.revokeObjectURL(url)
   }
 
-  const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const newPageSize = Number(event.target.value)
-    dispatch(
-      fetchVendors({
-        pageNumber: 1,
-        pageSize: newPageSize,
-      })
-    )
-    setCurrentPage(1)
-  }
+  if (isLoading && vendors.length === 0) return <LoadingSkeleton />
 
-  const changePage = (page: number) => {
-    if (page > 0 && page <= totalPages) {
-      setCurrentPage(page)
-    }
-  }
-
-  const VendorCard = ({ vendor }: { vendor: VendorUI }) => (
-    <div className="mt-3 rounded-lg border bg-[#f9f9f9] p-3 shadow-sm transition-all hover:shadow-md sm:p-4">
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-full bg-blue-100 sm:size-12">
-            <UserIcon />
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 sm:text-base">{vendor.name}</h3>
-            <div className="mt-1 flex items-center gap-1 sm:gap-2">
-              <div
-                style={getStatusStyle(vendor.status)}
-                className="flex items-center gap-1 rounded-full px-2 py-1 text-xs"
-              >
-                <span className="size-2 rounded-full" style={dotStyle(vendor.status)}></span>
-                {vendor.status}
-              </div>
-              <div className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700">{vendor.blumenpayId}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-3 space-y-2 text-xs text-gray-600 sm:mt-4 sm:text-sm">
-        <div className="flex justify-between">
-          <span>Email:</span>
-          <span className="max-w-[150px] truncate font-medium">{vendor.email}</span>
-        </div>
-        <div className="flex justify-between">
-          <span>Phone:</span>
-          <span className="font-medium">{vendor.phoneNumber}</span>
-        </div>
-        <div className="flex justify-between">
-          <span>Location:</span>
-          <span className="font-medium">{`${vendor.city}, ${vendor.state}`}</span>
-        </div>
-        <div className="flex justify-between">
-          <span>Urban Commission:</span>
-          <span className="font-medium">{vendor.urbanCommissionPercent}%</span>
-        </div>
-        <div className="flex justify-between">
-          <span>Rural Commission:</span>
-          <span className="font-medium">{vendor.ruralCommissionPercent}%</span>
-        </div>
-        <div className="flex justify-between">
-          <span>Employee:</span>
-          <span className="max-w-[150px] truncate font-medium">{vendor.employeeName}</span>
-        </div>
-      </div>
-
-      <div className="mt-2 border-t pt-2 sm:mt-3 sm:pt-3">
-        <div className="flex justify-between text-xs sm:text-sm">
-          <span className="text-gray-500">Services:</span>
-          <span className="text-xs font-semibold">
-            {vendor.canProcessPrepaid && "Prepaid "}
-            {vendor.canProcessPostpaid && "Postpaid "}
-            {vendor.posCollectionAllowed && "POS"}
-          </span>
-        </div>
-      </div>
-
-      <div className="mt-2 flex gap-2 sm:mt-3">
-        <button
-          onClick={() => handleViewVendorDetails(vendor)}
-          className="button-oulined flex flex-1 items-center justify-center gap-2 bg-white text-xs transition-all duration-300 ease-in-out focus-within:ring-2 focus-within:ring-[#004B23] focus-within:ring-offset-2 hover:border-[#004B23] hover:bg-[#f9f9f9] sm:text-sm"
-        >
-          <VscEye className="size-3 sm:size-4" />
-          <span className="sm:inline">View Details</span>
-        </button>
-        <ActionDropdown vendor={vendor} onViewDetails={handleViewVendorDetails} />
-      </div>
-    </div>
-  )
-
-  const VendorListItem = ({ vendor }: { vendor: VendorUI }) => (
-    <div className="border-b bg-white p-3 transition-all hover:bg-gray-50 sm:p-4">
-      <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center sm:gap-0">
-        <div className="flex items-start gap-3 sm:items-center sm:gap-4">
-          <div className="flex size-8 items-center justify-center rounded-full bg-blue-100 max-sm:hidden sm:size-10">
-            <UserIcon />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3">
-              <h3 className="text-sm font-semibold text-gray-900 sm:text-base">{vendor.name}</h3>
-              <div className="flex flex-wrap gap-1 sm:gap-2">
-                <div
-                  style={getStatusStyle(vendor.status)}
-                  className="flex items-center gap-1 rounded-full px-2 py-1 text-xs"
-                >
-                  <span className="size-2 rounded-full" style={dotStyle(vendor.status)}></span>
-                  {vendor.status}
-                </div>
-                <div className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium">{vendor.blumenpayId}</div>
-                <div className="rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
-                  Urban: {vendor.urbanCommissionPercent}%
-                </div>
-                <div className="rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700">
-                  Rural: {vendor.ruralCommissionPercent}%
-                </div>
-              </div>
-            </div>
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-600 sm:gap-4 sm:text-sm">
-              <span className="flex items-center gap-1">
-                <PhoneIcon />
-                <strong className="sm:hidden">Ph:</strong>
-                <strong className="hidden sm:inline">Phone:</strong> {vendor.phoneNumber}
-              </span>
-              <span className="flex items-center gap-1">
-                <MapIcon />
-                <strong>Location:</strong> {vendor.city}, {vendor.state}
-              </span>
-              <span className="flex items-center gap-1">
-                <strong>Email:</strong> <span className="inline-block max-w-[150px] truncate">{vendor.email}</span>
-              </span>
-            </div>
-            <div className="mt-2 flex flex-wrap gap-2 text-xs text-gray-500 sm:gap-4 sm:text-sm">
-              <span>
-                <strong>Employee:</strong> {vendor.employeeName}
-              </span>
-              <span>
-                <strong>Services:</strong>
-                {vendor.canProcessPrepaid && " Prepaid"}
-                {vendor.canProcessPostpaid && " Postpaid"}
-                {vendor.posCollectionAllowed && " POS"}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:gap-3">
-          <div className="text-right text-xs sm:text-sm">
-            <div className="hidden font-medium text-gray-900 sm:block">Account ID: {vendor.accountId}</div>
-            <div className="mt-1 text-gray-600 sm:hidden">{vendor.blumenpayId}</div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => handleViewVendorDetails(vendor)}
-              className="button-oulined flex items-center gap-2 text-xs sm:text-sm"
-            >
-              <VscEye className="size-3 sm:size-4" />
-              <span className="hidden sm:inline">View</span>
-            </button>
-            <ActionDropdown vendor={vendor} onViewDetails={handleViewVendorDetails} />
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-
-  if (isLoading) {
+  if (error) {
     return (
-      <div className="relative mt-5 flex flex-col items-start gap-6 lg:flex-row">
-        {/* Main Content Skeleton */}
-        <div className="w-full rounded-md border bg-white ">
-          <HeaderSkeleton />
-
-          {/* Vendor Display Area Skeleton */}
-          <div className="w-full">
-            {viewMode === "grid" ? (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {[...Array(6)].map((_, index) => (
-                  <VendorCardSkeleton key={index} />
-                ))}
-              </div>
-            ) : (
-              <div className="divide-y">
-                {[...Array(5)].map((_, index) => (
-                  <VendorListItemSkeleton key={index} />
-                ))}
-              </div>
-            )}
-          </div>
-
-          <PaginationSkeleton />
+      <div className="rounded-lg border border-red-200 bg-red-50 p-4 shadow-sm">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-medium text-red-900">Error Loading Vendors</h3>
+          <button
+            onClick={() => {
+              setAppliedFilters({})
+              setCurrentPage(1)
+              dispatch(fetchVendors({ pageNumber: 1, pageSize }))
+            }}
+            className="rounded-md bg-red-100 px-3 py-1 text-sm font-medium text-red-700 hover:bg-red-200"
+          >
+            Retry
+          </button>
+        </div>
+        <div className="mt-2">
+          <p className="text-sm text-red-600">{error}</p>
         </div>
       </div>
     )
-  }
-
-  const getPageItems = (): (number | string)[] => {
-    const total = totalPages
-    const current = currentPage
-    const items: (number | string)[] = []
-
-    if (total <= 7) {
-      for (let i = 1; i <= total; i += 1) {
-        items.push(i)
-      }
-      return items
-    }
-
-    items.push(1)
-    const showLeftEllipsis = current > 4
-    const showRightEllipsis = current < total - 3
-
-    if (!showLeftEllipsis) {
-      items.push(2, 3, 4, "...")
-    } else if (!showRightEllipsis) {
-      items.push("...", total - 3, total - 2, total - 1)
-    } else {
-      items.push("...", current - 1, current, current + 1, "...")
-    }
-
-    if (!items.includes(total)) {
-      items.push(total)
-    }
-
-    return items
-  }
-
-  const getMobilePageItems = (): (number | string)[] => {
-    const total = totalPages
-    const current = currentPage
-    const items: (number | string)[] = []
-
-    if (total <= 4) {
-      for (let i = 1; i <= total; i += 1) {
-        items.push(i)
-      }
-      return items
-    }
-
-    if (current <= 3) {
-      items.push(1, 2, 3, "...", total)
-      return items
-    }
-
-    if (current > 3 && current < total - 2) {
-      items.push(1, "...", current, "...", total)
-      return items
-    }
-
-    items.push(1, "...", total - 2, total - 1, total)
-    return items
   }
 
   return (
-    <>
-      <div className="m relative mt-5 flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row">
-        {/* Main Content - Vendors List/Grid */}
-        <motion.div
-          className={
-            showDesktopFilters
-              ? "w-full rounded-md border bg-white p-4 sm:p-5 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
-              : "w-full rounded-md border bg-white p-4 sm:p-5 2xl:flex-1"
-          }
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <div className="flex flex-col py-2">
-            <div className="mb-3 flex w-full flex-col items-start justify-between gap-3 sm:flex-row sm:items-center sm:gap-0">
-              <p className="text-lg font-medium sm:text-xl md:text-xl">All Vendors</p>
-
-              <div className="flex items-center gap-2">
-                {/* Mobile Filter Button */}
-                <button
-                  onClick={() => setShowMobileFilters(true)}
-                  className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 2xl:hidden"
-                >
-                  <Filter className="size-4" />
-                  Filters
-                  {getActiveFilterCount() > 0 && (
-                    <span className="flex size-5 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
-                      {getActiveFilterCount()}
-                    </span>
-                  )}
-                </button>
-
-                {/* Desktop Filter Toggle */}
-                <button
-                  onClick={() => setShowDesktopFilters(!showDesktopFilters)}
-                  className="hidden items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 2xl:flex"
-                >
-                  <Filter className="size-4" />
-                  {showDesktopFilters ? "Hide Filters" : "Show Filters"}
-                  {getActiveFilterCount() > 0 && (
-                    <span className="flex size-5 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
-                      {getActiveFilterCount()}
-                    </span>
-                  )}
-                </button>
-
-                {/* Mobile search icon button */}
-                <button
-                  type="button"
-                  className="flex size-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm transition hover:bg-gray-50 sm:hidden"
-                  onClick={() => setShowMobileSearch((prev) => !prev)}
-                  aria-label="Toggle search"
-                >
-                  <Image src="/DashboardImages/Search.svg" width={16} height={16} alt="Search Icon" />
-                </button>
-
-                <button
-                  className="button-oulined flex items-center gap-2 border-[#2563EB] bg-[#DBEAFE] text-xs hover:border-[#2563EB] hover:bg-[#DBEAFE] sm:text-sm"
-                  onClick={exportToCSV}
-                  disabled={!uiVendors || uiVendors.length === 0}
-                >
-                  <ExportCsvIcon color="#2563EB" size={16} className="sm:size-5" />
-                  <p className="text-[#2563EB]">Export CSV</p>
-                </button>
-              </div>
-            </div>
-
-            {/* Mobile search input */}
-            {showMobileSearch && (
-              <div className="mb-3 sm:hidden">
-                <SearchModule
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  onCancel={handleCancelSearch}
-                  onSearch={handleManualSearch}
-                  placeholder="Search by name, phone, or location"
-                  className="w-full"
-                />
-              </div>
-            )}
-
-            <div className="mt-2 flex flex-wrap gap-2 sm:flex-nowrap sm:gap-4">
-              {/* Desktop search input */}
-              <div className="hidden sm:block">
-                <SearchModule
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  onCancel={handleCancelSearch}
-                  onSearch={handleManualSearch}
-                  placeholder="Search by name, phone, or location"
-                  className="w-full sm:max-w-[300px]"
-                />
-              </div>
-
-              <div className="flex gap-2">
-                <button
-                  className={`button-oulined text-xs sm:text-sm ${viewMode === "grid" ? "bg-[#f9f9f9]" : ""}`}
-                  onClick={() => setViewMode("grid")}
-                >
-                  <MdGridView className="size-4 sm:size-5" />
-                  <p className="hidden sm:block">Grid</p>
-                </button>
-                <button
-                  className={`button-oulined text-xs sm:text-sm ${viewMode === "list" ? "bg-[#f9f9f9]" : ""}`}
-                  onClick={() => setViewMode("list")}
-                >
-                  <MdFormatListBulleted className="size-4 sm:size-5" />
-                  <p className="hidden sm:block">List</p>
-                </button>
-              </div>
-            </div>
+    <div className="w-full space-y-5">
+      {/* Header Section */}
+      <div className="rounded-xl border border-gray-200 bg-white p-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">All Vendors</h2>
+            <p className="mt-1 text-xs text-gray-600">Manage and monitor all vendors</p>
           </div>
 
-          {/* Error Message */}
-          {error && (
-            <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700 sm:p-4">
-              <p>Error loading vendors: {error}</p>
-            </div>
-          )}
-
-          {/* Vendor Display Area */}
-          <div className="w-full">
-            {uiVendors.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 sm:py-12">
-                <div className="text-center">
-                  <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-gray-100 sm:size-12">
-                    <VscEye className="size-5 text-gray-400 sm:size-6" />
-                  </div>
-                  <h3 className="mt-3 text-base font-medium text-gray-900 sm:mt-4 sm:text-lg">No vendors found</h3>
-                  <p className="mt-1 text-xs text-gray-500 sm:mt-2 sm:text-sm">
-                    {searchText || getActiveFilterCount() > 0
-                      ? "Try adjusting your search criteria or filters"
-                      : "No vendors available"}
-                  </p>
-                </div>
-              </div>
-            ) : viewMode === "grid" ? (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {uiVendors.map((vendor: VendorUI) => (
-                  <VendorCard key={vendor.id} vendor={vendor} />
-                ))}
-              </div>
-            ) : (
-              <div className="divide-y">
-                {uiVendors.map((vendor: VendorUI) => (
-                  <VendorListItem key={vendor.id} vendor={vendor} />
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Pagination */}
-          {uiVendors.length > 0 && (
-            <div className="mt-4 flex flex-col items-center justify-between gap-4 sm:flex-row">
-              <div className="flex items-center gap-1 max-sm:hidden">
-                <p className="text-sm">Show rows</p>
-                <select value={pageSize} onChange={handleRowsChange} className="bg-[#F2F2F2] p-1 text-sm">
-                  <option value={6}>6</option>
-                  <option value={12}>12</option>
-                  <option value={18}>18</option>
-                  <option value={24}>24</option>
-                  <option value={50}>50</option>
-                </select>
-              </div>
-
-              <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Search */}
+            <div className="relative min-w-[220px]">
+              <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                value={searchInput}
+                onChange={handleSearchChange}
+                onKeyDown={(e) => e.key === "Enter" && handleManualSearch()}
+                placeholder="Search vendors..."
+                className="h-9 w-full rounded-lg border border-gray-300 bg-white pl-8 pr-8 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              {searchInput && (
                 <button
-                  className={`px-2 py-1 sm:px-3 sm:py-2 ${
-                    currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
-                  }`}
-                  onClick={() => changePage(currentPage - 1)}
-                  disabled={currentPage === 1}
+                  onClick={handleCancelSearch}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
-                  <BiSolidLeftArrow className="size-4 sm:size-5" />
+                  <X className="size-3.5" />
                 </button>
-
-                <div className="flex items-center gap-2">
-                  <div className="hidden items-center gap-2 sm:flex">
-                    {getPageItems().map((item, index) =>
-                      typeof item === "number" ? (
-                        <button
-                          key={item}
-                          className={`flex h-7 w-8 items-center justify-center rounded-md text-sm ${
-                            currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
-                          }`}
-                          onClick={() => changePage(item)}
-                        >
-                          {item}
-                        </button>
-                      ) : (
-                        <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
-                          {item}
-                        </span>
-                      )
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-1 sm:hidden">
-                    {getMobilePageItems().map((item, index) =>
-                      typeof item === "number" ? (
-                        <button
-                          key={item}
-                          className={`flex size-6 items-center justify-center rounded-md text-xs ${
-                            currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
-                          }`}
-                          onClick={() => changePage(item)}
-                        >
-                          {item}
-                        </button>
-                      ) : (
-                        <span key={`ellipsis-${index}`} className="px-1 text-xs text-gray-500">
-                          {item}
-                        </span>
-                      )
-                    )}
-                  </div>
-                </div>
-
-                <button
-                  className={`px-2 py-1 sm:px-3 sm:py-2 ${
-                    currentPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
-                  }`}
-                  onClick={() => changePage(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                >
-                  <BiSolidRightArrow className="size-4 sm:size-5" />
-                </button>
-              </div>
-              <p className="text-sm max-sm:hidden">
-                Page {currentPage} of {totalPages} ({totalRecords} total records)
-              </p>
+              )}
             </div>
-          )}
-        </motion.div>
 
-        {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
-        {showDesktopFilters && (
-          <motion.div
-            key="desktop-filters-sidebar"
-            initial={{ opacity: 1 }}
-            animate={{ opacity: 1 }}
-            className="hidden w-full flex-col rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:flex 2xl:w-80 2xl:self-start"
-          >
-            <div className="mb-4 flex shrink-0 items-center justify-between border-b pb-3 md:pb-4">
-              <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
+            {/* Filter Buttons */}
+            <div className="flex items-center gap-1.5">
+              {/* Mobile Filter Button */}
               <button
-                onClick={resetFilters}
-                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
+                onClick={() => setShowMobileFilters(true)}
+                className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 lg:hidden"
               >
-                <X className="size-3 md:size-4" />
-                Clear All
+                <Filter className="size-3.5" />
+                <span>Filters</span>
+                {getActiveFilterCount() > 0 && (
+                  <span className="flex size-4 items-center justify-center rounded-full bg-blue-500 text-[10px] font-semibold text-white">
+                    {getActiveFilterCount()}
+                  </span>
+                )}
+              </button>
+
+              {/* Desktop Filter Toggle */}
+              <button
+                onClick={() => setShowDesktopFilters(!showDesktopFilters)}
+                className="hidden items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 lg:flex"
+              >
+                {showDesktopFilters ? <X className="size-3.5" /> : <Filter className="size-3.5" />}
+                <span>{showDesktopFilters ? "Hide Filters" : "Show Filters"}</span>
+                {getActiveFilterCount() > 0 && (
+                  <span className="ml-0.5 flex size-4 items-center justify-center rounded-full bg-blue-500 text-[10px] font-semibold text-white">
+                    {getActiveFilterCount()}
+                  </span>
+                )}
+              </button>
+
+              {/* Export CSV Button */}
+              <button
+                onClick={exportToCSV}
+                disabled={!vendors || vendors.length === 0}
+                className="flex items-center gap-1.5 rounded-lg border border-blue-300 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <ExportCsvIcon color="#2563EB" size={16} />
+                <span className="hidden sm:inline">Export</span>
+              </button>
+
+              {/* Refresh Button */}
+              <button
+                onClick={() => {
+                  dispatch(fetchVendors({ pageNumber: currentPage, pageSize, ...appliedFilters }))
+                }}
+                className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
+              >
+                <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+                <span className="hidden sm:inline">Refresh</span>
               </button>
             </div>
+          </div>
+        </div>
 
-            <div className="space-y-4">
-              {/* Status Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {["Active", "Inactive"].map((statusValue) => {
-                    const statusLabel = statusOptions.find((opt) => opt.value === statusValue)?.label || statusValue
-                    return (
-                      <button
-                        key={statusValue}
-                        onClick={() =>
-                          handleFilterChange("status", localFilters.status === statusValue ? undefined : statusValue)
-                        }
-                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
-                          localFilters.status === statusValue
-                            ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
-                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        {statusLabel}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* State Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">State</label>
-                <FormSelectModule
-                  name="state"
-                  value={localFilters.state || ""}
-                  onChange={(e) => handleFilterChange("state", e.target.value || undefined)}
-                  options={stateOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Is Suspended Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Is Suspended</label>
-                <FormSelectModule
-                  name="isSuspended"
-                  value={localFilters.isSuspended !== undefined ? localFilters.isSuspended.toString() : ""}
-                  onChange={(e) =>
-                    handleFilterChange("isSuspended", e.target.value === "" ? undefined : e.target.value === "true")
-                  }
-                  options={isSuspendedOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Can Process Prepaid Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Can Process Prepaid</label>
-                <FormSelectModule
-                  name="canProcessPrepaid"
-                  value={localFilters.canProcessPrepaid !== undefined ? localFilters.canProcessPrepaid.toString() : ""}
-                  onChange={(e) =>
-                    handleFilterChange(
-                      "canProcessPrepaid",
-                      e.target.value === "" ? undefined : e.target.value === "true"
-                    )
-                  }
-                  options={canProcessPrepaidOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Can Process Postpaid Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
-                  Can Process Postpaid
-                </label>
-                <FormSelectModule
-                  name="canProcessPostpaid"
-                  value={
-                    localFilters.canProcessPostpaid !== undefined ? localFilters.canProcessPostpaid.toString() : ""
-                  }
-                  onChange={(e) =>
-                    handleFilterChange(
-                      "canProcessPostpaid",
-                      e.target.value === "" ? undefined : e.target.value === "true"
-                    )
-                  }
-                  options={canProcessPostpaidOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Sort Options */}
-              <div>
+        {/* Active Filters Summary */}
+        {getActiveFilterCount() > 0 && (
+          <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-gray-200 pt-3">
+            <span className="text-xs text-gray-600">Active:</span>
+            {appliedFilters.status && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700">
+                Status: {appliedFilters.status}
                 <button
-                  type="button"
-                  onClick={() => setIsSortExpanded((prev) => !prev)}
-                  className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
-                  aria-expanded={isSortExpanded}
+                  onClick={() => {
+                    setLocalFilters((prev) => ({ ...prev, status: undefined }))
+                    setAppliedFilters((prev) => ({ ...prev, status: undefined }))
+                  }}
+                  className="ml-0.5 hover:text-blue-900"
                 >
-                  <span>Sort By</span>
-                  {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                  <X className="size-2.5" />
                 </button>
+              </span>
+            )}
+            {appliedFilters.state && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700">
+                State: {appliedFilters.state}
+                <button
+                  onClick={() => {
+                    setLocalFilters((prev) => ({ ...prev, state: undefined }))
+                    setAppliedFilters((prev) => ({ ...prev, state: undefined }))
+                  }}
+                  className="ml-0.5 hover:text-blue-900"
+                >
+                  <X className="size-2.5" />
+                </button>
+              </span>
+            )}
+          </div>
+        )}
+      </div>
 
-                {isSortExpanded && (
-                  <div className="space-y-2">
+      {/* Main Content with Table on Left, Filters on Right */}
+      <div className="flex flex-col-reverse gap-5 lg:flex-row">
+        {/* Table - Takes remaining width */}
+        <div className="min-w-0 flex-1">
+          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+            {vendors.length === 0 ? (
+              <div className="flex h-72 flex-col items-center justify-center px-4">
+                <div className="rounded-full bg-gray-100 p-3">
+                  <Info className="size-6 text-gray-400" />
+                </div>
+                <p className="mt-3 text-base font-medium text-gray-900">No vendors found</p>
+                <p className="mt-1 text-xs text-gray-600">
+                  {searchText || getActiveFilterCount() > 0
+                    ? "Try adjusting your search or filters"
+                    : "Vendors will appear here"}
+                </p>
+                {(searchText || getActiveFilterCount() > 0) && (
+                  <button
+                    onClick={resetFilters}
+                    className="mt-3 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700"
+                  >
+                    Clear all filters
+                  </button>
+                )}
+              </div>
+            ) : (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[1200px]">
+                    <thead>
+                      <tr className="border-b border-gray-200 bg-gray-50/80">
+                        <th className="p-2 text-left">
+                          <button
+                            onClick={() => {
+                              const option = sortOptions.find((o) => o.value === "name")
+                              if (option) handleSortChange(option)
+                            }}
+                            className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
+                          >
+                            Vendor
+                            <RxCaretSort className="size-3.5" />
+                          </button>
+                        </th>
+                        <th className="p-2 text-left">
+                          <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">
+                            Contact
+                          </span>
+                        </th>
+                        <th className="p-2 text-left">
+                          <button
+                            onClick={() => {
+                              const option = sortOptions.find((o) => o.value === "city")
+                              if (option) handleSortChange(option)
+                            }}
+                            className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
+                          >
+                            Location
+                            <RxCaretSort className="size-3.5" />
+                          </button>
+                        </th>
+                        <th className="p-2 text-left">
+                          <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">
+                            Commission
+                          </span>
+                        </th>
+                        <th className="p-2 text-left">
+                          <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">
+                            Services
+                          </span>
+                        </th>
+                        <th className="p-2 text-left">
+                          <button
+                            onClick={() => {
+                              const option = sortOptions.find((o) => o.value === "status")
+                              if (option) handleSortChange(option)
+                            }}
+                            className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
+                          >
+                            Status
+                            <RxCaretSort className="size-3.5" />
+                          </button>
+                        </th>
+                        <th className="p-2 text-left">
+                          <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">
+                            Employee
+                          </span>
+                        </th>
+                        <th className="p-2 text-left">
+                          <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">
+                            Actions
+                          </span>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <AnimatePresence>
+                        {vendors.map((vendor, index) => (
+                          <motion.tr
+                            key={vendor.id}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2, delay: index * 0.01 }}
+                            className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50"
+                          >
+                            <td className="whitespace-nowrap p-2 text-xs">
+                              <div className="flex items-center gap-2">
+                                <div className="flex size-6 items-center justify-center rounded-full bg-gray-100">
+                                  <Users className="size-3" />
+                                </div>
+                                <div>
+                                  <div className="font-medium text-gray-900">{vendor.name}</div>
+                                  <div className="text-gray-500">{vendor.blumenpayId}</div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="whitespace-nowrap p-2 text-xs text-gray-700">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-1">
+                                  <Phone className="size-3 text-gray-400" />
+                                  <span>{vendor.phoneNumber}</span>
+                                </div>
+                                <div className="text-gray-500">{vendor.email}</div>
+                              </div>
+                            </td>
+                            <td className="whitespace-nowrap p-2 text-xs text-gray-700">
+                              <div className="flex items-center gap-1">
+                                <MapPin className="size-3 text-gray-400" />
+                                <span>
+                                  {vendor.city}, {vendor.state}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="whitespace-nowrap p-2 text-xs font-semibold text-green-600">
+                              <div className="space-y-1">
+                                <div>U: {vendor.urbanCommissionPercent}%</div>
+                                <div>R: {vendor.ruralCommissionPercent}%</div>
+                              </div>
+                            </td>
+                            <td className="whitespace-nowrap p-2 text-xs">
+                              <div className="flex flex-wrap gap-1">
+                                {vendor.canProcessPrepaid && (
+                                  <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700">
+                                    Prepaid
+                                  </span>
+                                )}
+                                {vendor.canProcessPostpaid && (
+                                  <span className="rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-medium text-green-700">
+                                    Postpaid
+                                  </span>
+                                )}
+                                {vendor.posCollectionAllowed && (
+                                  <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-medium text-purple-700">
+                                    POS
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="whitespace-nowrap p-2 text-xs">
+                              <StatusBadge status={vendor.status} isSuspended={vendor.isSuspended} />
+                            </td>
+                            <td className="whitespace-nowrap p-2 text-xs text-gray-700">{vendor.employeeName}</td>
+                            <td className="whitespace-nowrap p-2">
+                              <ActionButtons vendor={vendor as VendorUI} onViewDetails={handleViewVendorDetails} />
+                            </td>
+                          </motion.tr>
+                        ))}
+                      </AnimatePresence>
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Pagination */}
+                <div className="flex items-center justify-between border-t border-gray-200 px-3 py-2.5">
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs text-gray-600">Show rows</p>
+                    <FormSelectModule
+                      value={pageSize.toString()}
+                      onChange={(value) => {
+                        dispatch(setPagination({ page: 1, pageSize: Number(value) }))
+                        setCurrentPage(1)
+                      }}
+                      options={[
+                        { value: "10", label: "10" },
+                        { value: "20", label: "20" },
+                        { value: "50", label: "50" },
+                        { value: "100", label: "100" },
+                      ]}
+                      className="w-16"
+                      name={""}
+                    />
+                    <p className="text-xs text-gray-600">
+                      {currentPage * pageSize - pageSize + 1}-
+                      {Math.min(currentPage * pageSize, pagination.totalCount || 0)} of {pagination.totalCount || 0}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => changePage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="flex size-6 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <MdOutlineArrowBackIosNew className="size-3" />
+                    </button>
+
+                    {Array.from({ length: Math.min(5, totalPages) }).map((_, index) => {
+                      let pageNum
+                      if (totalPages <= 5) {
+                        pageNum = index + 1
+                      } else if (currentPage <= 3) {
+                        pageNum = index + 1
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + index
+                      } else {
+                        pageNum = currentPage - 2 + index
+                      }
+
+                      return (
+                        <button
+                          key={index}
+                          onClick={() => changePage(pageNum)}
+                          className={`flex size-6 items-center justify-center rounded-lg text-xs font-medium transition-colors ${
+                            currentPage === pageNum
+                              ? "bg-blue-600 text-white"
+                              : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      )
+                    })}
+
+                    <button
+                      onClick={() => changePage(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="flex size-6 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <MdOutlineArrowForwardIos className="size-3" />
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Desktop Filter Panel - On the Right */}
+        {showDesktopFilters && (
+          <div className="w-72 shrink-0 rounded-xl border border-gray-200 bg-white">
+            {/* Header */}
+            <div className="border-b border-gray-200 p-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-gray-900">Filters & Sorting</h3>
+                <button onClick={resetFilters} className="text-xs font-medium text-blue-600 hover:text-blue-800">
+                  Clear All
+                </button>
+              </div>
+              {getActiveFilterCount() > 0 && (
+                <p className="mt-1 text-xs text-gray-600">{getActiveFilterCount()} active filter(s)</p>
+              )}
+            </div>
+
+            {/* Content */}
+            <div className="max-h-[calc(100vh-320px)] overflow-y-auto p-3">
+              <div className="space-y-4">
+                {/* Status Filter */}
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-gray-700">Status</label>
+                  <FormSelectModule
+                    value={localFilters.status || ""}
+                    onChange={(e) => handleFilterChange("status", e.target.value)}
+                    options={statusOptions}
+                    className="w-full"
+                    name={"status"}
+                  />
+                </div>
+
+                {/* State Filter */}
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-gray-700">State</label>
+                  <FormSelectModule
+                    value={localFilters.state || ""}
+                    onChange={(e) => handleFilterChange("state", e.target.value)}
+                    options={stateOptions}
+                    className="w-full"
+                    name={"state"}
+                  />
+                </div>
+
+                {/* Is Suspended Filter */}
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-gray-700">Is Suspended</label>
+                  <FormSelectModule
+                    value={localFilters.isSuspended !== undefined ? localFilters.isSuspended.toString() : ""}
+                    onChange={(e) =>
+                      handleFilterChange("isSuspended", e.target.value === "" ? undefined : e.target.value === "true")
+                    }
+                    options={isSuspendedOptions}
+                    className="w-full"
+                    name={"isSuspended"}
+                  />
+                </div>
+
+                {/* Can Process Prepaid Filter */}
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-gray-700">Can Process Prepaid</label>
+                  <FormSelectModule
+                    value={
+                      localFilters.canProcessPrepaid !== undefined ? localFilters.canProcessPrepaid.toString() : ""
+                    }
+                    onChange={(e) =>
+                      handleFilterChange(
+                        "canProcessPrepaid",
+                        e.target.value === "" ? undefined : e.target.value === "true"
+                      )
+                    }
+                    options={canProcessPrepaidOptions}
+                    className="w-full"
+                    name={"canProcessPrepaid"}
+                  />
+                </div>
+
+                {/* Can Process Postpaid Filter */}
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-gray-700">Can Process Postpaid</label>
+                  <FormSelectModule
+                    value={
+                      localFilters.canProcessPostpaid !== undefined ? localFilters.canProcessPostpaid.toString() : ""
+                    }
+                    onChange={(e) =>
+                      handleFilterChange(
+                        "canProcessPostpaid",
+                        e.target.value === "" ? undefined : e.target.value === "true"
+                      )
+                    }
+                    options={canProcessPostpaidOptions}
+                    className="w-full"
+                    name={"canProcessPostpaid"}
+                  />
+                </div>
+
+                {/* Sort Options */}
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-gray-700">Sort By</label>
+                  <div className="space-y-1">
                     {sortOptions.map((option) => (
                       <button
                         key={`${option.value}-${option.order}`}
                         onClick={() => handleSortChange(option)}
-                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                        className={`flex w-full items-center justify-between rounded-lg border px-3 py-2 text-sm transition-colors ${
                           localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                            ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                            ? "border-blue-500 bg-blue-50 text-blue-700"
+                            : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                         }`}
                       >
                         <span>{option.label}</span>
                         {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
-                          <span className="text-purple-600">
-                            {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                          <span>
+                            {option.order === "asc" ? (
+                              <SortAsc className="size-3.5" />
+                            ) : (
+                              <SortDesc className="size-3.5" />
+                            )}
                           </span>
                         )}
                       </button>
                     ))}
                   </div>
-                )}
+                </div>
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="mt-6 shrink-0 space-y-3 border-t pt-4">
+            {/* Footer */}
+            <div className="border-t border-gray-200 p-3">
               <button
                 onClick={applyFilters}
-                className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
+                className="mb-2 w-full rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700"
               >
-                <Filter className="size-4" />
                 Apply Filters
               </button>
-              <button
-                onClick={resetFilters}
-                className="button-oulined flex w-full items-center justify-center gap-2 text-sm md:text-base"
-              >
-                <X className="size-4" />
-                Reset All
-              </button>
-            </div>
 
-            {/* Summary Stats */}
-            <div className="mt-4 shrink-0 rounded-lg bg-gray-50 p-3 md:mt-6">
-              <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
-              <div className="space-y-1 text-xs md:text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Total Records:</span>
-                  <span className="font-medium">{pagination.totalCount?.toLocaleString() || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Current Page:</span>
-                  <span className="font-medium">
-                    {currentPage} / {pagination.totalPages || 1}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Active Filters:</span>
-                  <span className="font-medium">{getActiveFilterCount()}</span>
+              {/* Summary */}
+              <div className="rounded-lg bg-gray-50 p-2">
+                <h4 className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-500">Summary</h4>
+                <div className="space-y-0.5 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Total:</span>
+                    <span className="font-medium text-gray-900">{pagination.totalCount?.toLocaleString() || 0}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Page:</span>
+                    <span className="font-medium text-gray-900">
+                      {currentPage}/{totalPages}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Filters:</span>
+                    <span className="font-medium text-gray-900">{getActiveFilterCount()}</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
       </div>
 
@@ -1510,7 +1373,7 @@ const AllVendors: React.FC = () => {
         onRequestClose={() => setIsAddVendorModalOpen(false)}
         onSuccess={handleAddVendorSuccess}
       />
-    </>
+    </div>
   )
 }
 
