@@ -1,8 +1,40 @@
 "use client"
+
 import React, { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { motion } from "framer-motion"
-import { AlertCircle, CheckCircle, Clock, Edit3, Power } from "lucide-react"
+import { AnimatePresence, motion } from "framer-motion"
+import {
+  Activity,
+  AlertCircle,
+  ArrowLeft,
+  BarChart3,
+  Building2,
+  Calendar,
+  CheckCircle,
+  ChevronDown,
+  Clock,
+  CreditCard,
+  DollarSign,
+  Download,
+  Edit3,
+  Eye,
+  Factory,
+  FileText,
+  Home,
+  Loader2,
+  Mail,
+  MapPin,
+  Phone,
+  PieChart,
+  Power,
+  Receipt,
+  RefreshCw,
+  Settings,
+  TrendingDown,
+  TrendingUp,
+  User,
+  Zap,
+} from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import SendReminderModal from "components/ui/Modal/send-reminder-modal"
 import SuspendCustomerModal from "components/ui/Modal/suspend-customer-modal"
@@ -12,21 +44,6 @@ import ManualBillModal from "components/ui/Modal/manual-bill-modal"
 import RecordPaymentModal from "components/ui/Modal/record-payment-modal"
 import MeterReadingModal from "components/ui/Modal/meter-reading-modal"
 import DashboardNav from "components/Navbar/DashboardNav"
-import {
-  BasicInfoOutlineIcon,
-  ChangeRequestOutlineIcon,
-  EmailOutlineIcon,
-  ExportCsvIcon,
-  ExportOutlineIcon,
-  FinanceOutlineIcon,
-  MapOutlineIcon,
-  MeterOutlineIcon,
-  NotificationOutlineIcon,
-  PaymentDisputeOutlineIcon,
-  PhoneOutlineIcon,
-  PostpaidBillOutlineIcon,
-  SettingOutlineIcon,
-} from "components/Icons/Icons"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
 
 import { clearCurrentCustomer, fetchCustomerById } from "lib/redux/customerSlice"
@@ -56,194 +73,191 @@ interface Asset {
 // Tab types
 type TabType = "basic-info" | "payments" | "change-requests" | "postpaid-billing"
 
-// Skeleton Components
+// Modern Skeleton Components
+const ProfileCardSkeleton = () => (
+  <motion.div
+    className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
+    initial={{ opacity: 0.6 }}
+    animate={{
+      opacity: [0.6, 1, 0.6],
+      transition: {
+        duration: 1.5,
+        repeat: Infinity,
+        ease: "easeInOut",
+      },
+    }}
+  >
+    <div className="text-center">
+      <div className="relative inline-block">
+        <div className="mx-auto mb-4 size-20 rounded-full bg-gray-200"></div>
+        <div className="absolute -right-1 bottom-1 size-6 rounded-full border-2 border-white bg-gray-200"></div>
+      </div>
+      <div className="mx-auto mb-2 h-7 w-48 rounded bg-gray-200"></div>
+      <div className="mx-auto mb-4 h-4 w-32 rounded bg-gray-200"></div>
+      <div className="mb-6 flex justify-center gap-2">
+        <div className="h-7 w-16 rounded-full bg-gray-200"></div>
+        <div className="h-7 w-20 rounded-full bg-gray-200"></div>
+      </div>
+      <div className="space-y-3">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="flex items-center justify-center gap-3">
+            <div className="size-4 rounded bg-gray-200"></div>
+            <div className="h-4 w-32 rounded bg-gray-200"></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </motion.div>
+)
+
+const QuickActionsSkeleton = () => (
+  <motion.div
+    className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
+    initial={{ opacity: 0.6 }}
+    animate={{
+      opacity: [0.6, 1, 0.6],
+      transition: {
+        duration: 1.5,
+        repeat: Infinity,
+        ease: "easeInOut",
+      },
+    }}
+  >
+    <div className="mb-4 flex items-center gap-2">
+      <div className="size-5 rounded bg-gray-200"></div>
+      <div className="h-5 w-24 rounded bg-gray-200"></div>
+    </div>
+    <div className="space-y-3">
+      {[...Array(5)].map((_, i) => (
+        <div key={i} className="h-10 w-full rounded bg-gray-200"></div>
+      ))}
+    </div>
+  </motion.div>
+)
+
+const FinancialOverviewSkeleton = () => (
+  <motion.div
+    className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
+    initial={{ opacity: 0.6 }}
+    animate={{
+      opacity: [0.6, 1, 0.6],
+      transition: {
+        duration: 1.5,
+        repeat: Infinity,
+        ease: "easeInOut",
+      },
+    }}
+  >
+    <div className="mb-4 flex items-center gap-2">
+      <div className="size-5 rounded bg-gray-200"></div>
+      <div className="h-5 w-32 rounded bg-gray-200"></div>
+    </div>
+    <div className="space-y-4">
+      <div className="text-center">
+        <div className="mx-auto mb-2 h-10 w-32 rounded bg-gray-200"></div>
+        <div className="mx-auto h-4 w-24 rounded bg-gray-200"></div>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="text-center">
+          <div className="mx-auto h-7 w-20 rounded bg-gray-200"></div>
+          <div className="mx-auto mt-1 h-3 w-16 rounded bg-gray-200"></div>
+        </div>
+        <div className="text-center">
+          <div className="mx-auto h-7 w-20 rounded bg-gray-200"></div>
+          <div className="mx-auto mt-1 h-3 w-16 rounded bg-gray-200"></div>
+        </div>
+      </div>
+    </div>
+  </motion.div>
+)
+
+const TabsSkeleton = () => (
+  <motion.div
+    className="mb-4"
+    initial={{ opacity: 0.6 }}
+    animate={{
+      opacity: [0.6, 1, 0.6],
+      transition: {
+        duration: 1.5,
+        repeat: Infinity,
+        ease: "easeInOut",
+      },
+    }}
+  >
+    <div className="flex space-x-2">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="h-10 w-32 rounded-md bg-gray-200"></div>
+      ))}
+    </div>
+  </motion.div>
+)
+
+const TabContentSkeleton = () => (
+  <motion.div
+    className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
+    initial={{ opacity: 0.6 }}
+    animate={{
+      opacity: [0.6, 1, 0.6],
+      transition: {
+        duration: 1.5,
+        repeat: Infinity,
+        ease: "easeInOut",
+      },
+    }}
+  >
+    <div className="space-y-6">
+      <div className="h-7 w-48 rounded bg-gray-200"></div>
+      <div className="grid grid-cols-2 gap-4">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="space-y-2">
+            <div className="h-4 w-24 rounded bg-gray-200"></div>
+            <div className="h-10 w-full rounded bg-gray-200"></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </motion.div>
+)
+
 const CustomerDetailsSkeleton = () => {
   return (
-    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+    <section className="min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100 pb-20">
       <div className="flex w-full">
         <div className="flex w-full flex-col">
-          {/* Dashboard Nav Skeleton */}
-          <div className="sticky top-0 z-50 h-16 border-b border-gray-200 bg-white">
-            <div className="flex h-full items-center justify-between px-4 md:px-6">
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-32 rounded bg-gray-200 md:w-40"></div>
-                <div className="hidden h-8 w-48 rounded bg-gray-200 md:block lg:w-64"></div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="size-8 rounded-full bg-gray-200 md:size-10"></div>
-                <div className="hidden h-8 w-24 rounded bg-gray-200 md:block"></div>
-              </div>
-            </div>
-          </div>
-
+          <DashboardNav />
           <div className="mx-auto flex w-full flex-col 2xl:container">
             {/* Header Skeleton */}
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-3 py-4 sm:px-4 md:px-6 2xl:px-16">
-                <div className="flex w-full justify-between max-sm:flex-col lg:items-center">
-                  <div className="flex gap-4 lg:items-center">
+              <div className="mx-auto w-full px-4 py-4 md:px-6 2xl:px-16">
+                <div className="flex w-full justify-between">
+                  <div className="flex items-center gap-4">
                     <div className="size-9 rounded-md bg-gray-200"></div>
                     <div>
-                      <div className="mb-1 h-6 w-32 rounded bg-gray-200 md:w-40"></div>
-                      <div className="size-48 rounded bg-gray-200 md:w-64"></div>
+                      <div className="mb-1 h-6 w-32 rounded bg-gray-200"></div>
+                      <div className="h-4 w-48 rounded bg-gray-200"></div>
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-3 max-sm:mt-3">
-                    <div className="h-9 w-20 rounded bg-gray-200 md:w-24"></div>
-                    <div className="h-9 w-20 rounded bg-gray-200 md:w-24"></div>
+                  <div className="flex gap-3">
+                    <div className="h-9 w-20 rounded bg-gray-200"></div>
+                    <div className="h-9 w-20 rounded bg-gray-200"></div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex w-full px-3 py-8 sm:px-4 md:px-6 2xl:px-16">
-              <div className="w-full gap-6 2xl:flex">
-                {/* Right Sidebar Skeleton */}
-                <div className="flex w-full flex-col space-y-6 2xl:max-w-[30%]">
-                  {/* Profile Card Skeleton */}
-                  <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                    <div className="text-center">
-                      <div className="relative mx-auto mb-4">
-                        <div className="mx-auto size-20 rounded-full bg-gray-200"></div>
-                        <div className="absolute -right-1 bottom-1 size-6 rounded-full bg-gray-200"></div>
-                      </div>
-
-                      <div className="mx-auto mb-2 h-7 w-48 rounded bg-gray-200"></div>
-                      <div className="mx-auto mb-4 h-4 w-32 rounded bg-gray-200"></div>
-
-                      <div className="mb-6 flex flex-wrap justify-center gap-2">
-                        <div className="h-7 w-16 rounded-full bg-gray-200"></div>
-                        <div className="h-7 w-20 rounded-full bg-gray-200"></div>
-                        <div className="h-7 w-24 rounded-full bg-gray-200"></div>
-                      </div>
-
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-center gap-3">
-                          <div className="size-4 rounded-full bg-gray-200"></div>
-                          <div className="h-4 w-32 rounded bg-gray-200"></div>
-                        </div>
-                        <div className="flex items-center justify-center gap-3">
-                          <div className="size-4 rounded-full bg-gray-200"></div>
-                          <div className="size-40 rounded bg-gray-200"></div>
-                        </div>
-                        <div className="flex items-center justify-center gap-3">
-                          <div className="size-4 rounded-full bg-gray-200"></div>
-                          <div className="h-4 w-28 rounded bg-gray-200"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Quick Actions & Financial Overview Skeleton */}
-                  <div className="max-xl:flex max-xl:w-full max-xl:gap-4 max-sm:flex-col max-sm:gap-3">
-                    <div className="flex-1 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                      <div className="mb-4 flex items-center gap-2">
-                        <div className="size-5 rounded bg-gray-200"></div>
-                        <div className="h-5 w-24 rounded bg-gray-200"></div>
-                      </div>
-                      <div className="space-y-3">
-                        {[...Array(4)].map((_, i) => (
-                          <div key={i} className="h-10 w-full rounded bg-gray-200"></div>
-                        ))}
-                        <div className="h-10 w-full rounded bg-gray-200"></div>
-                      </div>
-                    </div>
-
-                    <div className="flex-1 rounded-lg border bg-white p-6">
-                      <div className="mb-4 flex items-center gap-2">
-                        <div className="size-5 rounded bg-gray-200"></div>
-                        <div className="h-5 w-32 rounded bg-gray-200"></div>
-                      </div>
-                      <div className="space-y-4">
-                        <div className="text-center">
-                          <div className="mx-auto mb-2 h-10 w-32 rounded bg-gray-200"></div>
-                          <div className="mx-auto size-40 rounded bg-gray-200"></div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="text-center">
-                            <div className="mx-auto h-7 w-24 rounded bg-gray-200"></div>
-                            <div className="mx-auto mt-1 h-3 w-16 rounded bg-gray-200"></div>
-                          </div>
-                          <div className="text-center">
-                            <div className="mx-auto h-7 w-24 rounded bg-gray-200"></div>
-                            <div className="mx-auto mt-1 h-3 w-16 rounded bg-gray-200"></div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+            <div className="flex w-full px-4 py-8 md:px-6 2xl:px-16">
+              <div className="w-full gap-6 xl:flex">
+                {/* Left Column Skeleton */}
+                <div className="w-full space-y-6 xl:max-w-[30%]">
+                  <ProfileCardSkeleton />
+                  <QuickActionsSkeleton />
+                  <FinancialOverviewSkeleton />
                 </div>
 
-                {/* Main Content Area Skeleton */}
-                <div className="flex w-full flex-col space-y-6 max-xl:mt-4 2xl:w-[70%]">
-                  {/* Tabs Skeleton */}
-                  <div className="sm:mb-4">
-                    <div className="w-full rounded-md bg-white p-2 sm:inline-flex sm:w-auto">
-                      <div className="relative sm:hidden">
-                        <div className="h-10 w-full rounded-md bg-gray-200"></div>
-                      </div>
-                      <div className="hidden sm:block">
-                        <div className="flex space-x-2">
-                          {[...Array(4)].map((_, i) => (
-                            <div key={i} className="h-10 w-32 rounded-md bg-gray-200"></div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Tab Content Skeleton */}
-                  <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                    {/* Basic Info Tab Skeleton */}
-                    <div className="space-y-6">
-                      {/* Section Headers */}
-                      <div className="space-y-4">
-                        <div className="h-7 w-48 rounded bg-gray-200"></div>
-                        <div className="h-4 w-full rounded bg-gray-200 md:w-3/4"></div>
-                      </div>
-
-                      {/* Form Fields */}
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        {[...Array(8)].map((_, i) => (
-                          <div key={i} className="space-y-2">
-                            <div className="h-4 w-24 rounded bg-gray-200"></div>
-                            <div className="h-10 w-full rounded bg-gray-200"></div>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Assets Section */}
-                      <div className="mt-8">
-                        <div className="mb-4 h-7 w-32 rounded bg-gray-200"></div>
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                          {[...Array(2)].map((_, i) => (
-                            <div key={i} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                              <div className="flex items-center justify-between">
-                                <div className="h-5 w-24 rounded bg-gray-200"></div>
-                                <div className="h-6 w-16 rounded-full bg-gray-200"></div>
-                              </div>
-                              <div className="mt-4 space-y-2">
-                                {[...Array(4)].map((_, j) => (
-                                  <div key={j} className="flex justify-between">
-                                    <div className="h-3 w-20 rounded bg-gray-200"></div>
-                                    <div className="h-3 w-24 rounded bg-gray-200"></div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Map Section */}
-                      <div className="mt-8">
-                        <div className="mb-4 h-7 w-32 rounded bg-gray-200"></div>
-                        <div className="h-64 w-full rounded bg-gray-200"></div>
-                      </div>
-                    </div>
-                  </div>
+                {/* Right Column Skeleton */}
+                <div className="mt-6 w-full xl:mt-0 xl:w-[70%]">
+                  <TabsSkeleton />
+                  <TabContentSkeleton />
                 </div>
               </div>
             </div>
@@ -251,6 +265,112 @@ const CustomerDetailsSkeleton = () => {
         </div>
       </div>
     </section>
+  )
+}
+
+// Modern Stat Card Component
+const StatCard = ({
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  color = "blue",
+  trend,
+}: {
+  title: string
+  value: string | number
+  subtitle?: string
+  icon: React.ElementType
+  color?: "blue" | "green" | "purple" | "amber" | "emerald" | "red"
+  trend?: "up" | "down"
+}) => {
+  const colorClasses = {
+    blue: "bg-blue-50 text-blue-700 border-blue-200",
+    green: "bg-green-50 text-green-700 border-green-200",
+    purple: "bg-purple-50 text-purple-700 border-purple-200",
+    amber: "bg-amber-50 text-amber-700 border-amber-200",
+    emerald: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    red: "bg-red-50 text-red-700 border-red-200",
+  }
+
+  const iconColors = {
+    blue: "text-blue-600",
+    green: "text-green-600",
+    purple: "text-purple-600",
+    amber: "text-amber-600",
+    emerald: "text-emerald-600",
+    red: "text-red-600",
+  }
+
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-4">
+      <div className="flex items-start justify-between">
+        <div className={`rounded-lg p-2 ${colorClasses[color].split(" ")[0]}`}>
+          <Icon className={`size-4 ${iconColors[color]}`} />
+        </div>
+        {trend && (
+          <span className={trend === "up" ? "text-emerald-600" : "text-red-600"}>
+            {trend === "up" ? <TrendingUp className="size-4" /> : <TrendingDown className="size-4" />}
+          </span>
+        )}
+      </div>
+      <div className="mt-2">
+        <p className="text-xs text-gray-600">{title}</p>
+        <p className="text-lg font-semibold text-gray-900">{value}</p>
+        {subtitle && <p className="text-xs text-gray-500">{subtitle}</p>}
+      </div>
+    </div>
+  )
+}
+
+// Modern Action Button Component
+const ActionButton = ({
+  icon: Icon,
+  children,
+  onClick,
+  variant = "default",
+}: {
+  icon: React.ElementType
+  children: React.ReactNode
+  onClick?: () => void
+  variant?: "default" | "primary" | "danger" | "success"
+}) => {
+  const variants = {
+    default: "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300",
+    primary: "border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:border-blue-300",
+    danger: "border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 hover:border-red-300",
+    success: "border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300",
+  }
+
+  return (
+    <button
+      onClick={onClick}
+      className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${variants[variant]}`}
+    >
+      <Icon className="size-4" />
+      {children}
+    </button>
+  )
+}
+
+// Modern Status Badge Component
+const StatusBadge = ({ status, icon: Icon }: { status: string; icon?: React.ElementType }) => {
+  const configs = {
+    ACTIVE: { color: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200", icon: CheckCircle },
+    INACTIVE: { color: "text-amber-700", bg: "bg-amber-50", border: "border-amber-200", icon: Clock },
+    SUSPENDED: { color: "text-red-700", bg: "bg-red-50", border: "border-red-200", icon: AlertCircle },
+  }
+
+  const config = configs[status as keyof typeof configs] || configs.INACTIVE
+  const BadgeIcon = Icon || config.icon
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${config.bg} ${config.color} ${config.border}`}
+    >
+      <BadgeIcon className="size-3.5" />
+      {status}
+    </span>
   )
 }
 
@@ -288,7 +408,7 @@ const CustomerDetailsPage = () => {
   const { user } = useAppSelector((state) => state.auth)
   const canUpdate = !!user?.privileges?.some((p) => p.actions?.includes("U"))
 
-  // Permission checks for specific actions
+  // Permission checks
   const canRecordPayment = !!user?.privileges?.some(
     (p) =>
       (p.key === "payments" && p.actions?.includes("W")) ||
@@ -321,7 +441,7 @@ const CustomerDetailsPage = () => {
   const [paymentsPage, setPaymentsPage] = useState(1)
   const [paymentsPageSize, setPaymentsPageSize] = useState(10)
 
-  // Fetch customer data when component mounts
+  // Fetch customer data
   useEffect(() => {
     const fetchData = async () => {
       if (customerId && !isNaN(customerId)) {
@@ -340,7 +460,6 @@ const CustomerDetailsPage = () => {
 
     fetchData()
 
-    // Cleanup when component unmounts
     return () => {
       dispatch(clearCurrentCustomer())
     }
@@ -359,7 +478,7 @@ const CustomerDetailsPage = () => {
     }
   }, [activeTab, customerId, paymentsPage, paymentsPageSize, dispatch])
 
-  // Generate assets based on customer data
+  // Generate assets
   useEffect(() => {
     if (currentCustomer) {
       const customerAssets = generateRandomAssets(2)
@@ -378,8 +497,8 @@ const CustomerDetailsPage = () => {
 
   const getCustomerTypeConfig = (isPPM: boolean) => {
     return isPPM
-      ? { color: "text-blue-600", bg: "bg-blue-50", label: "PREPAID" }
-      : { color: "text-purple-600", bg: "bg-purple-50", label: "POSTPAID" }
+      ? { color: "text-blue-700", bg: "bg-blue-50", label: "PREPAID" }
+      : { color: "text-purple-700", bg: "bg-purple-50", label: "POSTPAID" }
   }
 
   const closeAllModals = () => setActiveModal(null)
@@ -402,12 +521,10 @@ const CustomerDetailsPage = () => {
   }
 
   const handleSuspendSuccess = () => {
-    // Refresh customer data to get updated suspension status
     dispatch(fetchCustomerById(customerId))
     closeAllModals()
   }
 
-  // Payment receipt handlers
   const handleViewPaymentReceipt = (payment: Payment) => {
     setSelectedPayment(payment)
     setIsReceiptModalOpen(true)
@@ -419,12 +536,11 @@ const CustomerDetailsPage = () => {
   }
 
   const handleActivateSuccess = () => {
-    // Refresh customer data to get updated activation status
     dispatch(fetchCustomerById(customerId))
     closeAllModals()
   }
 
-  // Generate random assets (keeping this for now as it's not from API)
+  // Generate random assets
   const generateRandomAssets = (count: number): Asset[] => {
     return Array.from({ length: count }, (_, index) => ({
       serialNo: index + 1,
@@ -436,7 +552,7 @@ const CustomerDetailsPage = () => {
     }))
   }
 
-  // Format currency values
+  // Format currency
   const formatCurrency = (amount: number | string) => {
     return formatCurrencyUtil(amount, "₦")
   }
@@ -468,7 +584,7 @@ const CustomerDetailsPage = () => {
 
   const handlePaymentsPageSizeChange = (size: number) => {
     setPaymentsPageSize(size)
-    setPaymentsPage(1) // Reset to first page when changing page size
+    setPaymentsPage(1)
   }
 
   const getTabLabel = (tab: TabType) => {
@@ -495,13 +611,15 @@ const CustomerDetailsPage = () => {
   if (currentCustomerError || !currentCustomer) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-6">
-        <div className="text-center">
-          <AlertCircle className="mx-auto mb-4 size-16 text-gray-400" />
+        <div className="max-w-md text-center">
+          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-red-100">
+            <AlertCircle className="h-10 w-10 text-red-600" />
+          </div>
           <h1 className="mb-2 text-2xl font-bold text-gray-900">
             {currentCustomerError ? "Error Loading Customer" : "Customer Not Found"}
           </h1>
           <p className="mb-6 text-gray-600">
-            {currentCustomerError || "The customer you're looking for doesn't exist."}
+            {currentCustomerError || "The customer you're looking for doesn't exist or has been removed."}
           </p>
           <ButtonModule variant="primary" onClick={() => router.back()} className="mx-auto">
             Back to Customers
@@ -530,104 +648,6 @@ const CustomerDetailsPage = () => {
       const totalPages = paymentsPagination.totalPages || 1
       const totalRecords = paymentsPagination.totalCount || 0
 
-      // Payment Skeleton Components with Animation
-      const PaymentListItemSkeleton = () => (
-        <motion.div
-          className="border-b bg-white p-3 md:p-4"
-          initial={{ opacity: 0.6 }}
-          animate={{
-            opacity: [0.6, 1, 0.6],
-            transition: {
-              duration: 1.5,
-              repeat: Infinity,
-              ease: "easeInOut",
-            },
-          }}
-        >
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-0">
-            <div className="flex items-start gap-3 md:items-center md:gap-4">
-              <div className="size-8 flex-shrink-0 rounded-full bg-gray-200 md:size-10"></div>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
-                  <div className="h-5 w-32 rounded bg-gray-200 md:w-40"></div>
-                  <div className="flex flex-wrap gap-1 md:gap-2">
-                    <div className="h-6 w-12 rounded-full bg-gray-200 md:w-16"></div>
-                    <div className="h-6 w-16 rounded-full bg-gray-200 md:w-20"></div>
-                    <div className="h-6 w-20 rounded-full bg-gray-200 md:w-24"></div>
-                  </div>
-                </div>
-                <div className="mt-2 flex flex-wrap gap-2 md:gap-4">
-                  {[...Array(4)].map((_, i) => (
-                    <div key={i} className="h-3 w-20 rounded bg-gray-200 md:h-4 md:w-28"></div>
-                  ))}
-                </div>
-                <div className="mt-2 h-3 w-40 rounded bg-gray-200 md:h-4 md:w-64"></div>
-              </div>
-            </div>
-
-            <div className="flex items-start justify-between gap-2 md:items-center md:justify-end md:gap-3">
-              <div className="text-right">
-                <div className="h-6 w-20 rounded bg-gray-200 md:h-8 md:w-24"></div>
-                <div className="mt-1 h-3 w-16 rounded bg-gray-200 md:h-4 md:w-20"></div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-7 w-14 rounded bg-gray-200 md:h-9 md:w-20"></div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      )
-
-      const HeaderSkeleton = () => (
-        <motion.div
-          className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
-          initial={{ opacity: 0.6 }}
-          animate={{
-            opacity: [0.6, 1, 0.6],
-            transition: {
-              duration: 1.5,
-              repeat: Infinity,
-              ease: "easeInOut",
-            },
-          }}
-        >
-          <div className="h-7 w-32 rounded bg-gray-200 md:h-8 md:w-40"></div>
-          <div className="h-9 w-24 rounded bg-gray-200 md:h-10 md:w-32"></div>
-        </motion.div>
-      )
-
-      const PaginationSkeleton = () => (
-        <motion.div
-          className="mt-4 flex flex-col items-center justify-between gap-3 md:flex-row md:gap-0"
-          initial={{ opacity: 0.6 }}
-          animate={{
-            opacity: [0.6, 1, 0.6],
-            transition: {
-              duration: 1.5,
-              repeat: Infinity,
-              ease: "easeInOut",
-            },
-          }}
-        >
-          <div className="order-2 flex items-center gap-2 md:order-1">
-            <div className="hidden h-4 w-12 rounded bg-gray-200 md:block md:w-16"></div>
-            <div className="h-7 w-12 rounded bg-gray-200 md:h-8 md:w-16"></div>
-          </div>
-
-          <div className="order-1 flex items-center gap-2 md:order-2 md:gap-3">
-            <div className="size-7 rounded bg-gray-200 md:size-8"></div>
-            <div className="flex gap-1 md:gap-2">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="size-6 rounded bg-gray-200 md:size-7"></div>
-              ))}
-            </div>
-            <div className="size-7 rounded bg-gray-200 md:size-8"></div>
-          </div>
-
-          <div className="order-3 hidden h-4 w-20 rounded bg-gray-200 md:block md:w-24"></div>
-        </motion.div>
-      )
-
       const getPageItems = (): (number | string)[] => {
         const total = totalPages
         const current = paymentsPage
@@ -640,24 +660,18 @@ const CustomerDetailsPage = () => {
           return items
         }
 
-        // Always show first page
         items.push(1)
-
         const showLeftEllipsis = current > 4
         const showRightEllipsis = current < total - 3
 
         if (!showLeftEllipsis) {
-          // Close to the start: show first few pages
           items.push(2, 3, 4, "...")
         } else if (!showRightEllipsis) {
-          // Close to the end: show ellipsis then last few pages
           items.push("...", total - 3, total - 2, total - 1)
         } else {
-          // In the middle: show ellipsis, surrounding pages, then ellipsis
           items.push("...", current - 1, current, current + 1, "...")
         }
 
-        // Always show last page
         if (!items.includes(total)) {
           items.push(total)
         }
@@ -677,170 +691,143 @@ const CustomerDetailsPage = () => {
           return items
         }
 
-        // Example for early pages on mobile: 1,2,3,...,last
         if (current <= 3) {
           items.push(1, 2, 3, "...", total)
           return items
         }
 
-        // Middle pages: 1, ..., current, ..., last
         if (current > 3 && current < total - 2) {
           items.push(1, "...", current, "...", total)
           return items
         }
 
-        // Near the end: 1, ..., last-2, last-1, last
         items.push(1, "...", total - 2, total - 1, total)
         return items
       }
 
-      const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat("en-NG", {
-          style: "currency",
-          currency: "NGN",
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 2,
-        }).format(amount)
-      }
-
-      const formatDateTime = (dateString: string) => {
-        return new Date(dateString).toLocaleString(undefined, {
-          year: "numeric",
-          month: "short",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-      }
-
       const PaymentListItem = ({ payment }: { payment: any }) => (
-        <div className="border-b bg-white p-3 transition-all hover:bg-gray-50 md:p-4">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-0">
-            <div className="flex items-start gap-3 md:items-center md:gap-4">
-              <div className="flex size-8 items-center justify-center rounded-full bg-blue-100 max-sm:hidden md:size-10">
-                <span className="text-xs font-semibold text-blue-600 md:text-sm">
+        <div className="border-b border-gray-100 bg-white p-4 transition-all hover:bg-gray-50">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="flex size-10 items-center justify-center rounded-full bg-blue-100">
+                <span className="text-xs font-semibold text-blue-700">
                   {payment.customerName
                     .split(" ")
                     .map((n: string) => n[0])
-                    .join("")}
+                    .join("")
+                    .slice(0, 2)}
                 </span>
               </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
-                  <h3 className="text-sm font-semibold text-gray-900 md:text-base">{payment.customerName}</h3>
-                  <div className="flex flex-wrap gap-1 md:gap-2">
-                    <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
-                      Ref: {payment.reference}
-                    </span>
-                    <span className="rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
-                      {payment.channel}
-                    </span>
-                    <span className="rounded-full bg-gray-50 px-2 py-1 text-xs font-medium text-gray-700">
-                      {payment.status}
-                    </span>
-                  </div>
-                </div>
-                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-600 md:gap-4 md:text-sm">
-                  <span>
-                    <strong>Amount:</strong> {formatCurrency(payment.amount)}
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-sm font-semibold text-gray-900">{payment.customerName}</h3>
+                  <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
+                    Ref: {payment.reference}
                   </span>
-                  <span>
-                    <strong className="md:hidden">Acc:</strong>
-                    <strong className="hidden md:inline">Account:</strong> {payment.customerAccountNumber}
-                  </span>
-                  <span>
-                    <strong>Paid At:</strong> {formatDateTime(payment.paidAtUtc)}
-                  </span>
-                  <span>
-                    <strong>Bill Period:</strong> {payment.postpaidBillPeriod || "N/A"}
+                  <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+                    {payment.channel}
                   </span>
                 </div>
-                {payment.externalReference && (
-                  <p className="mt-2 hidden text-sm text-gray-500 md:block">{payment.externalReference}</p>
-                )}
+                <div className="mt-1 flex flex-wrap gap-3 text-xs text-gray-600">
+                  <span className="font-medium text-gray-900">{formatCurrency(payment.amount)}</span>
+                  <span>•</span>
+                  <span>{formatDateTime(payment.paidAtUtc)}</span>
+                  {payment.postpaidBillPeriod && (
+                    <>
+                      <span>•</span>
+                      <span>Bill: {payment.postpaidBillPeriod}</span>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
-
-            <div className="flex items-start justify-between gap-2 md:items-center md:gap-3">
-              <div className="text-right text-xs md:text-sm">
-                <div className="text-base font-bold text-gray-900 md:text-lg">{formatCurrency(payment.amount)}</div>
-              </div>
+            <div className="ml-13 flex items-center gap-2 md:ml-0">
               <button
                 onClick={() => handleViewPaymentReceipt(payment)}
-                className="button-oulined flex items-center gap-2 text-xs md:text-sm"
+                className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
               >
-                <span className="hidden md:inline">View</span>
-                <span className="md:hidden">View</span>
+                <Eye className="size-3.5" />
+                View Receipt
               </button>
             </div>
           </div>
-          {payment.externalReference && (
-            <p className="mt-2 text-xs text-gray-500 md:hidden">{payment.externalReference}</p>
-          )}
         </div>
       )
 
       return (
-        <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm md:p-6">
-          {paymentsLoading ? (
-            <>
-              <HeaderSkeleton />
-              <div className="divide-y">
-                {[...Array(3)].map((_, index) => (
-                  <PaymentListItemSkeleton key={index} />
-                ))}
+        <div className="rounded-xl border border-gray-200 bg-white">
+          {/* Header */}
+          <div className="border-b border-gray-200 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h3 className="text-base font-semibold text-gray-900">Payment History</h3>
+                <p className="text-sm text-gray-600">
+                  {payments.length} of {totalRecords} payments
+                </p>
               </div>
-              <PaginationSkeleton />
-            </>
-          ) : paymentsError ? (
-            <div className="flex flex-col items-center justify-center py-8 md:py-12">
-              <div className="text-center">
-                <AlertCircle className="mx-auto mb-4 size-10 text-red-400 md:size-12" />
-                <h3 className="mb-2 text-base font-medium text-gray-900 md:text-lg">Error loading payments</h3>
-                <p className="text-sm text-red-600 md:text-base">{paymentsError}</p>
-              </div>
+              <button
+                className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100 disabled:opacity-50"
+                onClick={() => {}}
+                disabled={!payments || payments.length === 0}
+              >
+                <Download className="size-3.5" />
+                Export CSV
+              </button>
             </div>
-          ) : payments.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 md:py-12">
-              <div className="text-center">
-                <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-gray-100 md:size-12">
-                  <VscEye className="size-5 text-gray-400 md:size-6" />
-                </div>
-                <h3 className="mt-3 text-base font-medium text-gray-900 md:mt-4 md:text-lg">No payments found</h3>
-                <p className="mt-1 text-xs text-gray-500 md:mt-2 md:text-sm">No payments available for this customer</p>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <h3 className="text-lg font-semibold text-gray-900 md:text-xl">Payments</h3>
-                <button
-                  className="button-oulined flex items-center gap-2 border-[#2563EB] bg-[#DBEAFE] text-sm hover:border-[#2563EB] hover:bg-[#DBEAFE] md:text-base"
-                  onClick={() => {
-                    /* TODO: Implement CSV export for payments */
-                  }}
-                  disabled={!payments || payments.length === 0}
-                >
-                  <ExportCsvIcon color="#2563EB" size={18} className="md:size-5" />
-                  <p className="text-xs text-[#2563EB] md:text-sm">Export CSV</p>
-                </button>
-              </div>
+          </div>
 
-              <div className="divide-y">
+          {/* Loading State */}
+          {paymentsLoading && (
+            <div className="flex items-center justify-center py-12">
+              <div className="flex flex-col items-center gap-2">
+                <Loader2 className="size-8 animate-spin text-blue-600" />
+                <p className="text-sm text-gray-500">Loading payments...</p>
+              </div>
+            </div>
+          )}
+
+          {/* Error State */}
+          {paymentsError && !paymentsLoading && (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="text-center">
+                <AlertCircle className="mx-auto mb-3 size-8 text-red-400" />
+                <h3 className="text-sm font-medium text-gray-900">Failed to load payments</h3>
+                <p className="mt-1 text-xs text-red-600">{paymentsError}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!paymentsLoading && !paymentsError && payments.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="text-center">
+                <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-gray-100">
+                  <CreditCard className="size-6 text-gray-400" />
+                </div>
+                <h3 className="text-sm font-medium text-gray-900">No payments found</h3>
+                <p className="mt-1 text-xs text-gray-500">No payment records available for this customer</p>
+              </div>
+            </div>
+          )}
+
+          {/* Payment List */}
+          {!paymentsLoading && !paymentsError && payments.length > 0 && (
+            <>
+              <div className="divide-y divide-gray-100">
                 {payments.map((payment) => (
                   <PaymentListItem key={payment.id} payment={payment} />
                 ))}
               </div>
 
               {/* Pagination */}
-              {payments.length > 0 && (
-                <div className="mt-4 flex w-full flex-row items-center justify-between gap-3 md:flex-row">
-                  <div className="flex items-center gap-1 max-sm:hidden">
-                    <p className="text-sm md:text-base">Show rows</p>
+              <div className="border-t border-gray-200 p-4">
+                <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500">Rows per page:</span>
                     <select
                       value={paymentsPageSize}
                       onChange={(e) => handlePaymentsPageSizeChange(Number(e.target.value))}
-                      className="bg-[#F2F2F2] p-1 text-sm md:text-base"
+                      className="rounded-md border border-gray-300 bg-white px-2 py-1 text-xs text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     >
                       <option value={6}>6</option>
                       <option value={12}>12</option>
@@ -850,74 +837,59 @@ const CustomerDetailsPage = () => {
                     </select>
                   </div>
 
-                  <div className="flex flex-wrap items-center justify-center md:justify-start md:gap-3">
+                  <div className="flex items-center gap-2">
                     <button
-                      className={`px-2 py-1 md:px-3 md:py-2 ${
-                        paymentsPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
+                      className={`flex size-7 items-center justify-center rounded-md border ${
+                        paymentsPage === 1
+                          ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400"
+                          : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                       }`}
                       onClick={() => handlePaymentsPageChange(paymentsPage - 1)}
                       disabled={paymentsPage === 1}
                     >
-                      <BiSolidLeftArrow className="size-4 md:size-5" />
+                      <BiSolidLeftArrow className="size-3" />
                     </button>
 
-                    <div className="flex items-center gap-1 md:gap-2">
-                      <div className="hidden items-center gap-1 md:flex md:gap-2">
-                        {getPageItems().map((item, index) =>
-                          typeof item === "number" ? (
-                            <button
-                              key={item}
-                              className={`flex size-6 items-center justify-center rounded-md text-xs md:h-7 md:w-8 md:text-sm ${
-                                paymentsPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
-                              }`}
-                              onClick={() => handlePaymentsPageChange(item)}
-                            >
-                              {item}
-                            </button>
-                          ) : (
-                            <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
-                              {item}
-                            </span>
-                          )
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-1 md:hidden">
-                        {getMobilePageItems().map((item, index) =>
-                          typeof item === "number" ? (
-                            <button
-                              key={item}
-                              className={`flex size-6 items-center justify-center rounded-md text-xs md:w-8 ${
-                                paymentsPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
-                              }`}
-                              onClick={() => handlePaymentsPageChange(item)}
-                            >
-                              {item}
-                            </button>
-                          ) : (
-                            <span key={`ellipsis-${index}`} className="px-1 text-xs text-gray-500">
-                              {item}
-                            </span>
-                          )
-                        )}
-                      </div>
+                    <div className="flex items-center gap-1">
+                      {getPageItems().map((item, index) =>
+                        typeof item === "number" ? (
+                          <button
+                            key={item}
+                            className={`flex size-7 items-center justify-center rounded-md text-xs ${
+                              paymentsPage === item
+                                ? "bg-blue-600 font-medium text-white"
+                                : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                            }`}
+                            onClick={() => handlePaymentsPageChange(item)}
+                          >
+                            {item}
+                          </button>
+                        ) : (
+                          <span key={`ellipsis-${index}`} className="px-1 text-xs text-gray-500">
+                            {item}
+                          </span>
+                        )
+                      )}
                     </div>
 
                     <button
-                      className={`px-2 py-1 md:px-3 md:py-2 ${
-                        paymentsPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
+                      className={`flex size-7 items-center justify-center rounded-md border ${
+                        paymentsPage === totalPages
+                          ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400"
+                          : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                       }`}
                       onClick={() => handlePaymentsPageChange(paymentsPage + 1)}
                       disabled={paymentsPage === totalPages}
                     >
-                      <BiSolidRightArrow className="size-4 md:size-5" />
+                      <BiSolidRightArrow className="size-3" />
                     </button>
                   </div>
-                  <p className="text-sm max-sm:hidden md:text-base">
-                    Page {paymentsPage} of {totalPages} ({totalRecords} total records)
-                  </p>
+
+                  <div className="text-xs text-gray-500">
+                    Page {paymentsPage} of {totalPages}
+                  </div>
                 </div>
-              )}
+              </div>
             </>
           )}
         </div>
@@ -930,49 +902,40 @@ const CustomerDetailsPage = () => {
   }
 
   return (
-    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+    <section className="min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100 pb-20">
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
           <div className="mx-auto flex w-full flex-col 2xl:container">
-            <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-3 py-4 sm:px-4 md:px-6 2xl:px-16">
-                <div className="flex w-full justify-between max-sm:flex-col lg:items-center">
-                  <div className="flex gap-4 lg:items-center">
+            {/* Sticky Header */}
+            <div className="sticky top-16 z-40 border-b border-gray-200 bg-white/80 backdrop-blur-sm">
+              <div className="mx-auto w-full px-4 py-4 md:px-6 2xl:px-16">
+                <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-3">
                     <motion.button
                       type="button"
                       onClick={() => router.back()}
-                      className="flex size-9 items-center justify-center rounded-md border border-gray-200 bg-[#f9f9f9] text-gray-700 hover:bg-gray-50"
+                      className="flex size-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700 transition-colors hover:bg-gray-50"
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.2 }}
-                      aria-label="Go back"
-                      title="Go back"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                     >
-                      <svg
-                        width="1em"
-                        height="1em"
-                        viewBox="0 0 17 17"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="new-arrow-right rotate-180 transform"
-                      >
-                        <path
-                          d="M9.1497 0.80204C9.26529 3.95101 13.2299 6.51557 16.1451 8.0308L16.1447 9.43036C13.2285 10.7142 9.37889 13.1647 9.37789 16.1971L7.27855 16.1978C7.16304 12.8156 10.6627 10.4818 13.1122 9.66462L0.049716 9.43565L0.0504065 7.33631L13.1129 7.56528C10.5473 6.86634 6.93261 4.18504 7.05036 0.80273L9.1497 0.80204Z"
-                          fill="currentColor"
-                        ></path>
-                      </svg>
+                      <ArrowLeft className="size-4" />
                     </motion.button>
-
                     <div>
-                      <h1 className="font-bold text-gray-900 xl:text-2xl">Customer Details</h1>
-                      <p className="text-gray-600 max-sm:text-sm">Complete overview and management</p>
+                      <h1 className="text-xl font-bold text-gray-900 md:text-2xl">Customer Details</h1>
+                      <p className="text-sm text-gray-600">View and manage customer information</p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 max-sm:mt-3">
-                    <ButtonModule variant="secondary" size="sm" className="flex items-center gap-2">
-                      <ExportOutlineIcon className="size-4" />
+                  <div className="flex items-center gap-2">
+                    <ButtonModule
+                      variant="outline"
+                      size="sm"
+                      className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                      icon={<Download className="size-4" />}
+                    >
                       Export
                     </ButtonModule>
 
@@ -980,20 +943,20 @@ const CustomerDetailsPage = () => {
                       <ButtonModule
                         variant="primary"
                         size="sm"
-                        className="flex items-center gap-2"
+                        className="bg-[#004B23] text-white hover:bg-[#003618]"
+                        icon={<Edit3 className="size-4" />}
                         onClick={() => router.push(`/customers/update-customer/${customerId}`)}
                       >
-                        <Edit3 className="size-4" />
                         Edit
                       </ButtonModule>
                     ) : (
                       <ButtonModule
                         variant="primary"
                         size="sm"
-                        className="flex items-center gap-2"
+                        className="bg-[#004B23] text-white hover:bg-[#003618]"
+                        icon={<Edit3 className="size-4" />}
                         onClick={() => openModal("changeRequest")}
                       >
-                        <Edit3 className="size-4" />
                         Change Request
                       </ButtonModule>
                     )}
@@ -1002,342 +965,244 @@ const CustomerDetailsPage = () => {
               </div>
             </div>
 
-            <div className="flex w-full px-3 py-8 sm:px-4 md:px-6 2xl:px-16">
-              <div className=" w-full gap-6  xl:flex">
-                {/* Right Sidebar - Always Visible */}
-                <div className="flex w-full  space-y-6 max-sm:flex-col sm:flex-col xl:max-w-[30%]">
+            {/* Main Content */}
+            <div className="flex w-full px-4 py-6 md:px-6 2xl:px-16">
+              <div className="w-full gap-6 xl:flex">
+                {/* Left Column - Profile & Actions */}
+                <div className="w-full space-y-6 xl:max-w-[30%]">
                   {/* Profile Card */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                    className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
                   >
                     <div className="text-center">
                       <div className="relative inline-block">
-                        <div className="mx-auto mb-4 flex size-20 items-center justify-center rounded-full bg-[#f9f9f9] text-3xl font-bold text-[#004B23]">
+                        <div className="mx-auto mb-4 flex size-20 items-center justify-center rounded-full bg-gradient-to-br from-[#004B23] to-[#006635] text-2xl font-bold text-white">
                           {currentCustomer.fullName
                             .split(" ")
                             .map((n) => n[0])
-                            .join("")}
+                            .join("")
+                            .slice(0, 2)}
                         </div>
                         <div
-                          className={`absolute -right-1 bottom-1 ${statusConfig.bg} ${statusConfig.border} rounded-full border-2 p-1.5`}
+                          className={`absolute -right-1 bottom-1 rounded-full border-2 border-white p-1.5 ${statusConfig.bg}`}
                         >
                           <StatusIcon className={`size-4 ${statusConfig.color}`} />
                         </div>
                       </div>
 
-                      <h2 className="mb-2 text-xl font-bold text-gray-900">{currentCustomer.fullName}</h2>
-                      <p className="mb-4 text-gray-600">Account #{currentCustomer.accountNumber}</p>
+                      <h2 className="mb-1 text-xl font-bold text-gray-900">{currentCustomer.fullName}</h2>
+                      <p className="mb-3 text-sm text-gray-600">Account #{currentCustomer.accountNumber}</p>
 
-                      <div className="mb-6 flex flex-wrap justify-center gap-2">
-                        <div
-                          className={`rounded-full px-3 py-1.5 text-sm font-medium ${statusConfig.bg} ${statusConfig.color}`}
-                        >
-                          {currentCustomer.status}
-                        </div>
-                        <div
-                          className={`rounded-full px-3 py-1.5 text-sm font-medium ${typeConfig.bg} ${typeConfig.color}`}
+                      <div className="mb-4 flex flex-wrap justify-center gap-2">
+                        <StatusBadge status={currentCustomer.status} />
+                        <span
+                          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${typeConfig.bg} ${typeConfig.color}`}
                         >
                           {typeConfig.label}
-                        </div>
+                        </span>
                         {currentCustomer.isMD && (
-                          <div className="rounded-full bg-orange-50 px-3 py-1.5 text-sm font-medium text-orange-600">
-                            MD CUSTOMER
-                          </div>
+                          <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 text-xs font-medium text-orange-700">
+                            <Building2 className="size-3.5" />
+                            MD
+                          </span>
                         )}
                       </div>
 
-                      <div className="space-y-3 text-sm">
-                        <div className="flex items-center gap-3 text-gray-600">
-                          <PhoneOutlineIcon />
-                          {currentCustomer.phoneNumber}
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center justify-center gap-2 text-gray-600">
+                          <Phone className="size-4 text-gray-400" />
+                          <span>{currentCustomer.phoneNumber}</span>
                         </div>
-                        <div className="flex items-center gap-3 text-gray-600">
-                          <EmailOutlineIcon />
-                          {currentCustomer.email}
+                        <div className="flex items-center justify-center gap-2 text-gray-600">
+                          <Mail className="size-4 text-gray-400" />
+                          <span>{currentCustomer.email}</span>
                         </div>
-                        <div className="flex items-center gap-3 text-gray-600">
-                          <MapOutlineIcon className="size-4" />
-                          {currentCustomer.provinceName}
+                        <div className="flex items-center justify-center gap-2 text-gray-600">
+                          <MapPin className="size-4 text-gray-400" />
+                          <span>{currentCustomer.provinceName}</span>
                         </div>
                       </div>
                     </div>
                   </motion.div>
 
                   {/* Quick Actions */}
-                  <div className=" max-xl:flex max-xl:w-full max-xl:gap-4 max-sm:flex-col max-sm:gap-3">
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 }}
-                      className="flex-1 rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
-                    >
-                      <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
-                        <SettingOutlineIcon />
-                        Quick Actions
-                      </h3>
-                      <div className="space-y-3">
-                        {canRecordPayment && (
-                          <ButtonModule
-                            variant="outlineBlue"
-                            className="w-full justify-start gap-3"
-                            onClick={() => openModal("recordPayment")}
-                          >
-                            <PaymentDisputeOutlineIcon />
-                            Record Payment
-                          </ButtonModule>
-                        )}
-                        {canGenerateBill && (
-                          <ButtonModule
-                            variant="outlinePurple"
-                            className="w-full justify-start gap-3"
-                            onClick={() => openModal("manualBill")}
-                          >
-                            <PostpaidBillOutlineIcon className="size-4" />
-                            Generate Bill
-                          </ButtonModule>
-                        )}
-                        {canRecordMeterReading && (
-                          <ButtonModule
-                            variant="outlineTeal"
-                            className="w-full justify-start gap-3"
-                            onClick={() => openModal("meterReading")}
-                          >
-                            <MeterOutlineIcon className="size-4" />
-                            Record Meter Reading
-                          </ButtonModule>
-                        )}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
+                  >
+                    <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-900">
+                      <Settings className="size-4" />
+                      Quick Actions
+                    </h3>
+                    <div className="space-y-2">
+                      {canRecordPayment && (
+                        <ActionButton icon={CreditCard} onClick={() => openModal("recordPayment")} variant="primary">
+                          Record Payment
+                        </ActionButton>
+                      )}
+                      {canGenerateBill && (
+                        <ActionButton icon={Receipt} onClick={() => openModal("manualBill")} variant="success">
+                          Generate Bill
+                        </ActionButton>
+                      )}
+                      {canRecordMeterReading && (
+                        <ActionButton icon={Activity} onClick={() => openModal("meterReading")} variant="default">
+                          Record Meter Reading
+                        </ActionButton>
+                      )}
+                      {canChangeAccountNumber && (
+                        <ActionButton icon={Edit3} onClick={() => openModal("changeAccountNumber")} variant="default">
+                          Change Account Number
+                        </ActionButton>
+                      )}
+                      {canAddNewMeter && (
+                        <ActionButton
+                          icon={Zap}
+                          onClick={() => router.push(`/metering/install-new-meter?customerId=${currentCustomer.id}`)}
+                          variant="primary"
+                        >
+                          Add New Meter
+                        </ActionButton>
+                      )}
+                      {canAddNewMeter && currentCustomer.meters && currentCustomer.meters.length > 0 && (
+                        <ActionButton
+                          icon={RefreshCw}
+                          onClick={() => router.push(`/metering/replace-meter?customerId=${currentCustomer.id}`)}
+                          variant="default"
+                        >
+                          Replace Meter
+                        </ActionButton>
+                      )}
+                      {canUpdate && (
+                        <ActionButton
+                          icon={Power}
+                          onClick={() => (currentCustomer.isSuspended ? openModal("activate") : openModal("suspend"))}
+                          variant={currentCustomer.isSuspended ? "success" : "danger"}
+                        >
+                          {currentCustomer.isSuspended ? "Reactivate Account" : "Suspend Account"}
+                        </ActionButton>
+                      )}
+                    </div>
+                  </motion.div>
 
-                        {canChangeAccountNumber && (
-                          <ButtonModule
-                            variant="outline"
-                            className="w-full justify-start gap-3"
-                            onClick={() => openModal("changeAccountNumber")}
-                          >
-                            <Edit3 className="size-4" />
-                            Change Account Number
-                          </ButtonModule>
-                        )}
-                        {canAddNewMeter && (
-                          <ButtonModule
-                            variant="outlineBlue"
-                            className="w-full justify-start gap-3"
-                            onClick={() => router.push(`/metering/install-new-meter?customerId=${currentCustomer.id}`)}
-                          >
-                            <MeterOutlineIcon className="size-4" />
-                            Add New Meter
-                          </ButtonModule>
-                        )}
-                        {canAddNewMeter && currentCustomer.meters && currentCustomer.meters.length > 0 && (
-                          <ButtonModule
-                            variant="outlineDanger"
-                            className="w-full justify-start gap-3"
-                            onClick={() => router.push(`/metering/replace-meter?customerId=${currentCustomer.id}`)}
-                          >
-                            <MeterOutlineIcon className="size-4" />
-                            Replace Meter
-                          </ButtonModule>
-                        )}
-                        {canUpdate && (
-                          <ButtonModule
-                            variant={currentCustomer.isSuspended ? "primary" : "danger"}
-                            className="w-full justify-start gap-3"
-                            onClick={() => (currentCustomer.isSuspended ? openModal("activate") : openModal("suspend"))}
-                          >
-                            <Power className="size-4" />
-                            {currentCustomer.isSuspended ? "Reactivate Account" : "Suspend Account"}
-                          </ButtonModule>
-                        )}
-                      </div>
-                    </motion.div>
+                  {/* Financial Overview */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
+                  >
+                    <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-900">
+                      <DollarSign className="size-4" />
+                      Financial Overview
+                    </h3>
 
-                    {/* Financial Overview */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2 }}
-                      className="flex-1 rounded-lg border bg-white p-6 xl:mt-4"
-                    >
-                      <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
-                        <FinanceOutlineIcon />
-                        Financial Overview
-                      </h3>
-                      <div className="space-y-4">
-                        <div className="text-center">
-                          <div className="mb-2 text-3xl font-bold text-gray-900">
-                            {formatCurrency(currentCustomer.customerOutstandingDebtBalance)}
-                          </div>
-                          <div className="text-sm text-gray-600">Outstanding Balance</div>
-                        </div>
+                    <div className="mb-4 text-center">
+                      <p className="text-xs text-gray-600">Outstanding Balance</p>
+                      <p className="text-3xl font-bold text-gray-900">
+                        {formatCurrency(currentCustomer.customerOutstandingDebtBalance)}
+                      </p>
+                    </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="text-center">
-                            <div className="text-lg font-semibold text-emerald-600">
-                              {formatCurrency(currentCustomer.totalMonthlyVend)}
-                            </div>
-                            <div className="text-xs text-gray-600">Monthly Vend</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-lg font-semibold text-amber-600">
-                              {formatCurrency(currentCustomer.totalMonthlyDebt)}
-                            </div>
-                            <div className="text-xs text-gray-600">Monthly Debt</div>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <StatCard
+                        title="Monthly Vend"
+                        value={formatCurrency(currentCustomer.totalMonthlyVend)}
+                        icon={TrendingUp}
+                        color="emerald"
+                      />
+                      <StatCard
+                        title="Monthly Debt"
+                        value={formatCurrency(currentCustomer.totalMonthlyDebt)}
+                        icon={TrendingDown}
+                        color="amber"
+                      />
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-2 gap-3">
+                      <StatCard title="Tariff Rate" value={`₦${currentCustomer.tariffRate}`} icon={Zap} color="blue" />
+                      <StatCard
+                        title="VAT Rate"
+                        value={`${currentCustomer.currentVatOverride?.vatRateOverride || 0}%`}
+                        icon={FileText}
+                        color="purple"
+                      />
+                    </div>
+                  </motion.div>
                 </div>
 
-                {/* Main Content Area - Tab Content */}
-                <div className="flex w-full flex-col space-y-6 max-xl:mt-4 xl:w-[70%]">
-                  <div className="sm:mb-4">
-                    <div className="w-full rounded-md bg-white p-2 sm:inline-flex sm:w-auto">
-                      <div className="relative sm:hidden">
+                {/* Right Column - Tabs & Content */}
+                <div className="mt-6 w-full xl:mt-0 xl:w-[70%]">
+                  {/* Tabs */}
+                  <div className="mb-4">
+                    <div className="w-full overflow-x-auto rounded-xl border border-gray-200 bg-white p-1">
+                      <div className="flex min-w-max space-x-1">
                         <button
-                          type="button"
-                          className="flex w-full items-center justify-between rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm"
-                          onClick={() => setIsMobileTabMenuOpen((prev) => !prev)}
+                          onClick={() => setActiveTab("basic-info")}
+                          className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
+                            activeTab === "basic-info"
+                              ? "bg-[#004B23] text-white"
+                              : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                          }`}
                         >
-                          <span>{getTabLabel(activeTab)}</span>
-                          <svg
-                            className={`size-4 transform transition-transform ${
-                              isMobileTabMenuOpen ? "rotate-180" : "rotate-0"
-                            }`}
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                            aria-hidden="true"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
+                          <User className="size-4" />
+                          Basic Information
                         </button>
-                        {isMobileTabMenuOpen && (
-                          <div className="absolute z-10 mt-2 w-full rounded-md border border-gray-200 bg-white shadow-lg">
-                            <button
-                              onClick={() => {
-                                setActiveTab("basic-info")
-                                setIsMobileTabMenuOpen(false)
-                              }}
-                              className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
-                                activeTab === "basic-info"
-                                  ? "bg-[#004B23] text-white"
-                                  : "text-gray-700 hover:bg-gray-50"
-                              }`}
-                            >
-                              <BasicInfoOutlineIcon className="size-5" />
-                              <span>Basic Information</span>
-                            </button>
-                            <button
-                              onClick={() => {
-                                setActiveTab("postpaid-billing")
-                                setIsMobileTabMenuOpen(false)
-                              }}
-                              className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
-                                activeTab === "postpaid-billing"
-                                  ? "bg-[#004B23] text-white"
-                                  : "text-gray-700 hover:bg-gray-50"
-                              }`}
-                            >
-                              <PostpaidBillOutlineIcon className="size-5" />
-                              <span>Postpaid Billing</span>
-                            </button>
-                            <button
-                              onClick={() => {
-                                setActiveTab("payments")
-                                setIsMobileTabMenuOpen(false)
-                              }}
-                              className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
-                                activeTab === "payments" ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-50"
-                              }`}
-                            >
-                              <PaymentDisputeOutlineIcon className="size-5" />
-                              <span>Payments</span>
-                              {paymentsPagination.totalCount > 0 && (
-                                <span className="ml-1 inline-flex items-center justify-center rounded-full bg-emerald-500 px-2 py-1 text-xs font-medium leading-none text-white">
-                                  {paymentsPagination.totalCount}
-                                </span>
-                              )}
-                            </button>
-                            <button
-                              onClick={() => {
-                                setActiveTab("change-requests")
-                                setIsMobileTabMenuOpen(false)
-                              }}
-                              className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
-                                activeTab === "change-requests"
-                                  ? "bg-[#004B23] text-white"
-                                  : "text-gray-700 hover:bg-gray-50"
-                              }`}
-                            >
-                              <ChangeRequestOutlineIcon className="size-5" />
-                              <span>Change Requests</span>
-                            </button>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="hidden sm:block">
-                        <nav className="-mb-px flex space-x-2">
-                          <button
-                            onClick={() => setActiveTab("basic-info")}
-                            className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
-                              activeTab === "basic-info"
-                                ? "bg-[#004B23] text-white"
-                                : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
-                            }`}
-                          >
-                            <BasicInfoOutlineIcon className="size-5" />
-                            <span>Basic Information</span>
-                          </button>
-                          <button
-                            onClick={() => setActiveTab("postpaid-billing")}
-                            className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
-                              activeTab === "postpaid-billing"
-                                ? "bg-[#004B23] text-white"
-                                : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
-                            }`}
-                          >
-                            <PostpaidBillOutlineIcon className="size-5" />
-                            <span>Postpaid Billing</span>
-                          </button>
-                          <button
-                            onClick={() => setActiveTab("payments")}
-                            className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
-                              activeTab === "payments"
-                                ? "bg-[#004B23] text-white"
-                                : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
-                            }`}
-                          >
-                            <PaymentDisputeOutlineIcon className="size-5" />
-                            <span>Payments</span>
-                            {paymentsPagination.totalCount > 0 && (
-                              <span className="ml-1 inline-flex items-center justify-center rounded-full bg-emerald-500 px-2 py-1 text-xs font-medium leading-none text-white">
-                                {paymentsPagination.totalCount}
-                              </span>
-                            )}
-                          </button>
-                          <button
-                            onClick={() => setActiveTab("change-requests")}
-                            className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
-                              activeTab === "change-requests"
-                                ? "bg-[#004B23] text-white"
-                                : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
-                            }`}
-                          >
-                            <ChangeRequestOutlineIcon className="size-5" />
-                            <span>Change Requests</span>
-                          </button>
-                        </nav>
+                        <button
+                          onClick={() => setActiveTab("postpaid-billing")}
+                          className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
+                            activeTab === "postpaid-billing"
+                              ? "bg-[#004B23] text-white"
+                              : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                          }`}
+                        >
+                          <Receipt className="size-4" />
+                          Postpaid Billing
+                        </button>
+                        <button
+                          onClick={() => setActiveTab("payments")}
+                          className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
+                            activeTab === "payments"
+                              ? "bg-[#004B23] text-white"
+                              : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                          }`}
+                        >
+                          <CreditCard className="size-4" />
+                          Payments
+                          {paymentsPagination.totalCount > 0 && (
+                            <span className="ml-1 inline-flex items-center justify-center rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium">
+                              {paymentsPagination.totalCount}
+                            </span>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => setActiveTab("change-requests")}
+                          className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
+                            activeTab === "change-requests"
+                              ? "bg-[#004B23] text-white"
+                              : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                          }`}
+                        >
+                          <Edit3 className="size-4" />
+                          Change Requests
+                        </button>
                       </div>
                     </div>
                   </div>
-                  {renderTabContent()}
+
+                  {/* Tab Content */}
+                  <motion.div
+                    key={activeTab}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {renderTabContent()}
+                  </motion.div>
                 </div>
               </div>
             </div>
@@ -1346,83 +1211,96 @@ const CustomerDetailsPage = () => {
       </div>
 
       {/* Modals */}
-      <SendReminderModal
-        isOpen={activeModal === "reminder"}
-        onRequestClose={closeAllModals}
-        onConfirm={handleConfirmReminder}
-      />
+      <AnimatePresence>
+        {activeModal === "reminder" && (
+          <SendReminderModal isOpen={true} onRequestClose={closeAllModals} onConfirm={handleConfirmReminder} />
+        )}
 
-      <CustomerChangeRequestModal
-        isOpen={activeModal === "changeRequest"}
-        onRequestClose={closeAllModals}
-        customerId={customerId}
-        customerName={currentCustomer.fullName}
-        customerAccountNumber={currentCustomer.accountNumber}
-        onSuccess={() => {
-          closeAllModals()
-        }}
-      />
+        {activeModal === "changeRequest" && (
+          <CustomerChangeRequestModal
+            isOpen={true}
+            onRequestClose={closeAllModals}
+            customerId={customerId}
+            customerName={currentCustomer.fullName}
+            customerAccountNumber={currentCustomer.accountNumber}
+            onSuccess={closeAllModals}
+          />
+        )}
 
-      <SuspendCustomerModal
-        isOpen={activeModal === "suspend"}
-        onRequestClose={closeAllModals}
-        customerId={customerId}
-        customerName={currentCustomer.fullName}
-        accountNumber={currentCustomer.accountNumber}
-        onSuccess={handleSuspendSuccess}
-      />
+        {activeModal === "suspend" && (
+          <SuspendCustomerModal
+            isOpen={true}
+            onRequestClose={closeAllModals}
+            customerId={customerId}
+            customerName={currentCustomer.fullName}
+            accountNumber={currentCustomer.accountNumber}
+            onSuccess={handleSuspendSuccess}
+          />
+        )}
 
-      <ActivateCustomerModal
-        isOpen={activeModal === "activate"}
-        onRequestClose={closeAllModals}
-        customerId={customerId}
-        customerName={currentCustomer.fullName}
-        accountNumber={currentCustomer.accountNumber}
-        onSuccess={handleActivateSuccess}
-      />
+        {activeModal === "activate" && (
+          <ActivateCustomerModal
+            isOpen={true}
+            onRequestClose={closeAllModals}
+            customerId={customerId}
+            customerName={currentCustomer.fullName}
+            accountNumber={currentCustomer.accountNumber}
+            onSuccess={handleActivateSuccess}
+          />
+        )}
 
-      <ManualBillModal
-        isOpen={activeModal === "manualBill"}
-        onRequestClose={closeAllModals}
-        customerId={customerId}
-        customerName={currentCustomer.fullName}
-        accountNumber={currentCustomer.accountNumber}
-        distributionSubstationId={currentCustomer.distributionSubstationId}
-        feederId={currentCustomer.feederId}
-        tariffPerKwh={currentCustomer.tariff?.tariffRate || 0}
-        vatRate={currentCustomer.currentVatOverride?.vatRateOverride || 0}
-      />
+        {activeModal === "manualBill" && (
+          <ManualBillModal
+            isOpen={true}
+            onRequestClose={closeAllModals}
+            customerId={customerId}
+            customerName={currentCustomer.fullName}
+            accountNumber={currentCustomer.accountNumber}
+            distributionSubstationId={currentCustomer.distributionSubstationId}
+            feederId={currentCustomer.feederId}
+            tariffPerKwh={currentCustomer.tariff?.tariffRate || 0}
+            vatRate={currentCustomer.currentVatOverride?.vatRateOverride || 0}
+          />
+        )}
 
-      <RecordPaymentModal
-        isOpen={activeModal === "recordPayment"}
-        onRequestClose={closeAllModals}
-        customerId={customerId}
-        customerName={currentCustomer.fullName}
-        accountNumber={currentCustomer.accountNumber}
-      />
+        {activeModal === "recordPayment" && (
+          <RecordPaymentModal
+            isOpen={true}
+            onRequestClose={closeAllModals}
+            customerId={customerId}
+            customerName={currentCustomer.fullName}
+            accountNumber={currentCustomer.accountNumber}
+          />
+        )}
 
-      <MeterReadingModal
-        isOpen={activeModal === "meterReading"}
-        onRequestClose={closeAllModals}
-        customerId={customerId}
-        customerName={currentCustomer.fullName}
-        accountNumber={currentCustomer.accountNumber}
-      />
+        {activeModal === "meterReading" && (
+          <MeterReadingModal
+            isOpen={true}
+            onRequestClose={closeAllModals}
+            customerId={customerId}
+            customerName={currentCustomer.fullName}
+            accountNumber={currentCustomer.accountNumber}
+          />
+        )}
 
-      <ChangeAccountNumberModal
-        isOpen={activeModal === "changeAccountNumber"}
-        onRequestClose={closeAllModals}
-        customerId={customerId}
-        customerName={currentCustomer.fullName}
-        accountNumber={currentCustomer.accountNumber}
-        currentCustomer={currentCustomer}
-      />
+        {activeModal === "changeAccountNumber" && (
+          <ChangeAccountNumberModal
+            isOpen={true}
+            onRequestClose={closeAllModals}
+            customerId={customerId}
+            customerName={currentCustomer.fullName}
+            accountNumber={currentCustomer.accountNumber}
+            currentCustomer={currentCustomer}
+          />
+        )}
+      </AnimatePresence>
 
-      <PaymentReceiptModal
-        isOpen={isReceiptModalOpen}
-        onRequestClose={handleCloseReceiptModal}
-        payment={selectedPayment}
-      />
+      {/* Payment Receipt Modal */}
+      <AnimatePresence>
+        {isReceiptModalOpen && selectedPayment && (
+          <PaymentReceiptModal isOpen={true} onRequestClose={handleCloseReceiptModal} payment={selectedPayment} />
+        )}
+      </AnimatePresence>
     </section>
   )
 }

@@ -421,13 +421,18 @@ const JobStatusIndicator = ({ job, isLoading }: { job: CsvJob | null; isLoading:
           <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${statusTone.chipClass}`}>
             {getStatusLabel(job.status)}
           </span>
-          {isLoading || job.status === 1 || job.status === 2 ? <RefreshCw className="size-3 animate-spin text-blue-500" /> : null}
+          {isLoading || job.status === 1 || job.status === 2 ? (
+            <RefreshCw className="size-3 animate-spin text-blue-500" />
+          ) : null}
         </div>
         <span className="text-[11px] font-medium text-gray-600">{safeProgress}%</span>
       </div>
 
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
-        <div className={`h-full transition-all duration-300 ease-in-out ${statusTone.barClass}`} style={{ width: `${safeProgress}%` }} />
+        <div
+          className={`h-full transition-all duration-300 ease-in-out ${statusTone.barClass}`}
+          style={{ width: `${safeProgress}%` }}
+        />
       </div>
 
       <div className="grid grid-cols-4 gap-1.5 text-[11px]">
@@ -454,7 +459,9 @@ const JobStatusIndicator = ({ job, isLoading }: { job: CsvJob | null; isLoading:
           <Calendar className="size-3 text-gray-400" />
           <span>{formattedRequestDate}</span>
         </div>
-        {job.requestedByUser?.fullName ? <div className="max-w-[60%] truncate">By {job.requestedByUser.fullName}</div> : null}
+        {job.requestedByUser?.fullName ? (
+          <div className="max-w-[60%] truncate">By {job.requestedByUser.fullName}</div>
+        ) : null}
       </div>
     </div>
   )
@@ -496,17 +503,8 @@ const UploadTypeCard = ({
 
 // Job Type Uploads Table Component
 const JobTypeUploadsTable = ({ jobType }: { jobType: number | null }) => {
-  const {
-    jobs,
-    loading,
-    error,
-    pagination,
-    currentPage,
-    statusFilter,
-    handlePageChange,
-    handleStatusFilter,
-    refetch,
-  } = useJobTypeUploads(jobType)
+  const { jobs, loading, error, pagination, currentPage, statusFilter, handlePageChange, handleStatusFilter, refetch } =
+    useJobTypeUploads(jobType)
 
   const [selectedJob, setSelectedJob] = useState<any>(null)
   const [isFailuresModalOpen, setIsFailuresModalOpen] = useState(false)
@@ -648,7 +646,10 @@ const JobTypeUploadsTable = ({ jobType }: { jobType: number | null }) => {
                           <p className="truncate font-medium text-gray-900" title={job.fileName}>
                             {job.fileName}
                           </p>
-                          <p className="mt-0.5 text-xs text-gray-500" title={job.requestedByUser?.fullName || "Unknown"}>
+                          <p
+                            className="mt-0.5 text-xs text-gray-500"
+                            title={job.requestedByUser?.fullName || "Unknown"}
+                          >
                             By {job.requestedByUser?.fullName || "Unknown"}
                           </p>
                         </div>
@@ -1720,8 +1721,12 @@ const FileManagementPage = () => {
                           <FileSpreadsheet className="size-5 text-blue-700" />
                         </div>
                         <div>
-                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-blue-700">Schedule Flow</p>
-                          <h3 className="mt-1 text-lg font-semibold text-gray-900">{selectedUploadTypeDetails.name} Upload</h3>
+                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-blue-700">
+                            Schedule Flow
+                          </p>
+                          <h3 className="mt-1 text-lg font-semibold text-gray-900">
+                            {selectedUploadTypeDetails.name} Upload
+                          </h3>
                           <p className="mt-1 text-sm text-gray-600">{selectedUploadTypeDetails.description}</p>
                         </div>
                       </div>
@@ -1911,8 +1916,6 @@ const FileManagementPage = () => {
                       </div>
                     )}
                   </div>
-
-
 
                   {selectedFile && !uploadSuccess && (
                     <div className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-3">

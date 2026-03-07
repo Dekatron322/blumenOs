@@ -176,7 +176,9 @@ const BillingScheduleRunsTab: React.FC<BillingScheduleRunsTabProps> = ({ schedul
     )
   }
 
-  const runningRunsCount = billingScheduleRuns.filter((run: BillingScheduleRunItem) => run.status === 0 || run.status === 1).length
+  const runningRunsCount = billingScheduleRuns.filter(
+    (run: BillingScheduleRunItem) => run.status === 0 || run.status === 1
+  ).length
 
   return (
     <div className="space-y-4">
@@ -205,12 +207,24 @@ const BillingScheduleRunsTab: React.FC<BillingScheduleRunsTabProps> = ({ schedul
           <thead className="bg-gray-50">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Run</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Status</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Period</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Timeline</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Progress</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Created By</th>
-              <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Actions</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Status
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Period
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Timeline
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Progress
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Created By
+              </th>
+              <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Actions
+              </th>
             </tr>
           </thead>
 
@@ -225,7 +239,7 @@ const BillingScheduleRunsTab: React.FC<BillingScheduleRunsTabProps> = ({ schedul
               return (
                 <tr key={run.id} className="transition-colors hover:bg-gray-50">
                   <td className="px-4 py-3">
-                    <div className="max-w-[360px] min-w-[220px]">
+                    <div className="min-w-[220px] max-w-[360px]">
                       <p className="truncate text-sm font-medium text-gray-900">{run.title || `Run #${run.id}`}</p>
                       <p className="text-xs text-gray-500">Run #{run.id}</p>
                     </div>

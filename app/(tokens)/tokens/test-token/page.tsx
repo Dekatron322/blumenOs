@@ -587,7 +587,7 @@ const TestToken = () => {
       <DashboardNav />
       <div className="min-h-screen bg-gray-50">
         <div className="py-6">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 2xl:px-16">
             <div className="mb-8">
               <h1 className="text-2xl font-bold text-gray-900">Test Token</h1>
               <p className="mt-2 text-gray-600">Generate test tokens for individual meters or bulk operations</p>
@@ -1142,133 +1142,150 @@ const TestToken = () => {
                       </div>
 
                       {/* Table */}
-                      <div className="max-h-[70vh] w-full overflow-x-auto overflow-y-hidden ">
-                        <div className="min-w-[1200px]">
+                      <div className="max-h-[60vh] w-full overflow-x-auto overflow-y-hidden">
+                        <div className="min-w-[980px]">
                           <table className="w-full border-separate border-spacing-0">
                             <thead>
-                              <tr className="border-b bg-gray-50">
-                                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">File Name</th>
-                                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Job Type</th>
-                                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Status</th>
-                                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Requested</th>
-                                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Progress</th>
-                                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Processed</th>
-                                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Succeeded</th>
-                                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Failed</th>
-                                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Total</th>
-                                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Actions</th>
+                              <tr className="bg-gray-50">
+                                <th className="border-b border-gray-200 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                                  File
+                                </th>
+                                <th className="border-b border-gray-200 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                                  Status
+                                </th>
+                                <th className="border-b border-gray-200 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                                  Requested
+                                </th>
+                                <th className="border-b border-gray-200 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                                  Progress
+                                </th>
+                                <th className="border-b border-gray-200 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                                  Results
+                                </th>
+                                <th className="border-b border-gray-200 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                                  Actions
+                                </th>
                               </tr>
                             </thead>
                             <tbody>
-                              {filteredCsvJobs.length === 0 ? (
+                              {csvJobsLoading && filteredCsvJobs.length === 0 ? (
                                 <tr>
-                                  <td colSpan={10} className="border-b p-8 text-center">
+                                  <td colSpan={6} className="border-b border-gray-200 p-8 text-center">
+                                    <div className="flex items-center justify-center gap-2">
+                                      <RefreshCw className="size-4 animate-spin text-gray-500" />
+                                      <span className="text-sm text-gray-500">Loading jobs...</span>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ) : filteredCsvJobs.length === 0 ? (
+                                <tr>
+                                  <td colSpan={6} className="border-b border-gray-200 p-8 text-center">
                                     <div className="text-gray-500">
-                                      <FileIcon className="mx-auto mb-2 size-12 text-gray-300" />
-                                      <p>No test token jobs found</p>
-                                      <p className="text-sm">Try adjusting your filters or create a new bulk upload</p>
+                                      <FileIcon className="mx-auto mb-2 size-10 text-gray-300" />
+                                      <p className="text-sm">No test token jobs found</p>
+                                      <p className="mt-1 text-xs text-gray-400">
+                                        Try adjusting your filters or create a new bulk upload
+                                      </p>
                                     </div>
                                   </td>
                                 </tr>
                               ) : (
-                                filteredCsvJobs.map((job) => (
-                                  <tr key={job.id} className="border-b hover:bg-gray-50">
-                                    <td className="border-b p-3 text-sm">
-                                      <div className="max-w-xs truncate whitespace-nowrap" title={job.fileName}>
-                                        {job.fileName}
-                                      </div>
-                                    </td>
-                                    <td className="whitespace-nowrap border-b p-3 text-sm">
-                                      {getJobTypeLabel(job.jobType)}
-                                    </td>
-                                    <td className="border-b p-3 text-sm">
-                                      <span
-                                        className={`whitespace-nowrap rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(
-                                          job.status
-                                        )}`}
-                                      >
-                                        {getStatusLabel(job.status)}
-                                      </span>
-                                    </td>
-                                    <td className="whitespace-nowrap border-b p-3 text-sm">
-                                      {new Date(job.requestedAtUtc).toLocaleString()}
-                                    </td>
-                                    <td className="border-b p-3 text-sm">
-                                      <div className="flex items-center gap-2">
-                                        <div className="size-24 rounded-full bg-gray-200">
-                                          <div
-                                            className="h-2 rounded-full bg-blue-600"
-                                            style={{
-                                              width: `${
-                                                job.totalRows !== null && job.totalRows > 0
-                                                  ? (job.processedRows / job.totalRows) * 100
-                                                  : 0
-                                              }%`,
-                                            }}
-                                          ></div>
+                                filteredCsvJobs.map((job) => {
+                                  const totalRows = typeof job.totalRows === "number" ? job.totalRows : 0
+                                  const succeededRows = typeof job.succeededRows === "number" ? job.succeededRows : 0
+                                  const processedRows = typeof job.processedRows === "number" ? job.processedRows : 0
+                                  const failedRows = typeof job.failedRows === "number" ? job.failedRows : 0
+                                  const progressPercentage =
+                                    totalRows > 0 ? Math.round((processedRows / totalRows) * 100) : 0
+                                  const safeProgress = Math.max(0, Math.min(100, progressPercentage))
+
+                                  return (
+                                    <tr key={job.id} className="border-b border-gray-100 align-top hover:bg-gray-50/80">
+                                      <td className="border-b border-gray-100 p-3 text-sm">
+                                        <div className="max-w-80">
+                                          <p className="truncate font-medium text-gray-900" title={job.fileName}>
+                                            {job.fileName}
+                                          </p>
+                                          <p
+                                            className="mt-0.5 text-xs text-gray-500"
+                                            title={job.requestedByUser?.fullName || "Unknown"}
+                                          >
+                                            By {job.requestedByUser?.fullName || "Unknown"}
+                                          </p>
                                         </div>
-                                        <span className="text-xs text-gray-600">
-                                          {job.totalRows !== null && job.totalRows > 0
-                                            ? Math.round((job.processedRows / job.totalRows) * 100)
-                                            : "Processing"}
+                                      </td>
+                                      <td className="border-b border-gray-100 p-3 text-sm">
+                                        <span
+                                          className={`inline-flex whitespace-nowrap rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(
+                                            job.status
+                                          )}`}
+                                        >
+                                          {getStatusLabel(job.status)}
                                         </span>
-                                      </div>
-                                    </td>
-                                    <td className="border-b p-3 text-sm">
-                                      <div className="font-medium text-blue-600">
-                                        {job.processedRows !== null && job.processedRows !== undefined
-                                          ? job.processedRows
-                                          : "N/A"}
-                                      </div>
-                                    </td>
-                                    <td className="border-b p-3 text-sm">
-                                      <div className="font-medium text-green-600">
-                                        {job.succeededRows !== null && job.succeededRows !== undefined
-                                          ? job.succeededRows
-                                          : "N/A"}
-                                      </div>
-                                    </td>
-                                    <td className="border-b p-3 text-sm">
-                                      <div className="font-medium text-red-600">
-                                        {job.failedRows !== null && job.failedRows !== undefined
-                                          ? job.failedRows
-                                          : "N/A"}
-                                      </div>
-                                    </td>
-                                    <td className="border-b p-3 text-sm">
-                                      <div className="font-medium text-gray-600">
-                                        {job.totalRows !== null && job.totalRows !== undefined ? job.totalRows : "N/A"}
-                                      </div>
-                                    </td>
-                                    <td className="border-b p-3 text-sm">
-                                      <div className="flex gap-2">
-                                        {job.failedRows > 0 && (
-                                          <ButtonModule
-                                            variant="outline"
-                                            size="sm"
-                                            icon={<VscEye />}
-                                            onClick={() => handleViewFailures(job)}
-                                            className="whitespace-nowrap"
-                                          >
-                                            View Failures
-                                          </ButtonModule>
-                                        )}
-                                        {(job.status === 3 || job.status === 5) && (
-                                          <ButtonModule
-                                            variant="outline"
-                                            size="sm"
-                                            icon={<Download className="size-4" />}
-                                            onClick={() => handleDownloadCsv(job)}
-                                            className="whitespace-nowrap"
-                                            disabled={downloadCsvLoading}
-                                          >
-                                            {downloadCsvLoading ? "Downloading..." : "Download"}
-                                          </ButtonModule>
-                                        )}
-                                      </div>
-                                    </td>
-                                  </tr>
-                                ))
+                                      </td>
+                                      <td className="whitespace-nowrap border-b border-gray-100 p-3 text-sm text-gray-700">
+                                        {new Date(job.requestedAtUtc).toLocaleString()}
+                                      </td>
+                                      <td className="border-b border-gray-100 p-3 text-sm">
+                                        <div className="min-w-40">
+                                          <div className="mb-1 flex items-center justify-between">
+                                            <span className="text-xs text-gray-500">Processed</span>
+                                            <span className="text-xs font-medium text-gray-700">{safeProgress}%</span>
+                                          </div>
+                                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                                            <div
+                                              className="h-full rounded-full bg-blue-500"
+                                              style={{ width: `${safeProgress}%` }}
+                                            />
+                                          </div>
+                                        </div>
+                                      </td>
+                                      <td className="border-b border-gray-100 p-3 text-sm">
+                                        <div className="flex flex-wrap gap-1.5 text-xs">
+                                          <span className="rounded bg-blue-50 px-2 py-0.5 font-medium text-blue-700">
+                                            Processed: {processedRows.toLocaleString()}
+                                          </span>
+                                          <span className="rounded bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700">
+                                            Succeeded: {succeededRows.toLocaleString()}
+                                          </span>
+                                          <span className="rounded bg-red-50 px-2 py-0.5 font-medium text-red-700">
+                                            Failed: {failedRows.toLocaleString()}
+                                          </span>
+                                          <span className="rounded bg-gray-100 px-2 py-0.5 font-medium text-gray-700">
+                                            Total: {totalRows.toLocaleString()}
+                                          </span>
+                                        </div>
+                                      </td>
+                                      <td className="border-b border-gray-100 p-3 text-sm">
+                                        <div className="flex flex-wrap gap-2">
+                                          {job.failedRows > 0 && (
+                                            <ButtonModule
+                                              variant="outline"
+                                              size="sm"
+                                              icon={<VscEye />}
+                                              onClick={() => handleViewFailures(job)}
+                                              className="whitespace-nowrap border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                                            >
+                                              View Failures
+                                            </ButtonModule>
+                                          )}
+                                          {(job.status === 3 || job.status === 5) && (
+                                            <ButtonModule
+                                              variant="outline"
+                                              size="sm"
+                                              icon={<Download className="size-4" />}
+                                              onClick={() => handleDownloadCsv(job)}
+                                              className="whitespace-nowrap border-[#004B23] bg-white text-[#004B23] hover:bg-[#e9f5ef]"
+                                              disabled={downloadTestTokenLoading}
+                                            >
+                                              {downloadTestTokenLoading ? "Downloading..." : "Download"}
+                                            </ButtonModule>
+                                          )}
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  )
+                                })
                               )}
                             </tbody>
                           </table>
@@ -1277,8 +1294,8 @@ const TestToken = () => {
 
                       {/* Pagination */}
                       {csvJobsPagination && csvJobsPagination.totalPages > 1 && (
-                        <div className="border-t p-4">
-                          <div className="flex items-center justify-between">
+                        <div className="border-t border-gray-200 bg-white p-4">
+                          <div className="flex flex-wrap items-center justify-between gap-3">
                             <div className="text-sm text-gray-600">
                               Page {csvJobsPagination.currentPage} of {csvJobsPagination.totalPages}
                             </div>
@@ -1286,7 +1303,7 @@ const TestToken = () => {
                               <button
                                 onClick={() => handlePageChange(currentPage - 1)}
                                 disabled={!csvJobsPagination.hasPrevious}
-                                className="rounded-lg border p-2 disabled:opacity-50"
+                                className="rounded-lg border border-gray-300 p-2 text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
                               >
                                 <VscChevronLeft className="size-4" />
                               </button>
@@ -1298,8 +1315,8 @@ const TestToken = () => {
                                     onClick={() => handlePageChange(pageNumber)}
                                     className={`rounded-lg border px-3 py-2 text-sm ${
                                       currentPage === pageNumber
-                                        ? "border-blue-500 bg-blue-50 text-blue-700"
-                                        : "border-gray-300 hover:bg-gray-50"
+                                        ? "border-[#004B23] bg-[#e9f5ef] text-[#004B23]"
+                                        : "border-gray-300 text-gray-700 hover:bg-gray-50"
                                     }`}
                                   >
                                     {pageNumber}
@@ -1309,7 +1326,7 @@ const TestToken = () => {
                               <button
                                 onClick={() => handlePageChange(currentPage + 1)}
                                 disabled={!csvJobsPagination.hasNext}
-                                className="rounded-lg border p-2 disabled:opacity-50"
+                                className="rounded-lg border border-gray-300 p-2 text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
                               >
                                 <VscChevronRight className="size-4" />
                               </button>

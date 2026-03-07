@@ -52,6 +52,18 @@ import {
 import Footer from "components/Footer/Footer"
 import { formatCurrencyWithAbbreviation } from "utils/helpers"
 import { DateFilter, getDateRangeUtc } from "utils/dateRange"
+import { motion } from "framer-motion"
+import {
+  Activity,
+  AlertCircle,
+  Calendar,
+  CheckCircle,
+  Clock,
+  FileText,
+  PieChart as PieChartIcon,
+  XCircle,
+  Zap,
+} from "lucide-react"
 
 // Dropdown Popover Component
 const DropdownPopover = ({
@@ -176,20 +188,29 @@ const PaymentHealthCard = ({
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">Payment Health</h3>
+    <div className="mt-6 rounded-xl border border-gray-200 bg-white p-5">
+      {/* Header */}
+      <div className="mb-4 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
+        <div className="flex items-center gap-2">
+          <div className="rounded-lg bg-blue-100 p-2">
+            <PieChartIcon className="size-5 text-blue-700" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">Payment Health</h2>
+            <p className="text-sm text-gray-600">System performance and failure rates</p>
+          </div>
+        </div>
         <DropdownPopover options={windowMinutesOptions} selectedValue={windowMinutes} onSelect={onWindowMinutesChange}>
-          <span className="text-sm text-gray-600">
+          <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700">
             {windowMinutesOptions.find((opt) => opt.value === windowMinutes)?.label || "Select range"}
           </span>
         </DropdownPopover>
       </div>
 
       {loading && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <div className="animate-pulse">
-            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+            <div className="rounded-lg border border-gray-100 bg-white p-4">
               <div className="mb-3 h-4 w-3/4 rounded bg-gray-200"></div>
               <div className="space-y-2">
                 <div className="h-3 w-1/2 rounded bg-gray-200"></div>
@@ -199,7 +220,7 @@ const PaymentHealthCard = ({
             </div>
           </div>
           <div className="animate-pulse">
-            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+            <div className="rounded-lg border border-gray-100 bg-white p-4">
               <div className="mb-3 h-4 w-3/4 rounded bg-gray-200"></div>
               <div className="space-y-2">
                 <div className="h-3 w-1/2 rounded bg-gray-200"></div>
@@ -213,148 +234,311 @@ const PaymentHealthCard = ({
 
       {error && (
         <div className="py-8 text-center">
-          <p className="text-sm text-red-500">Unable to load payment health data</p>
+          <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-red-100">
+            <AlertCircle className="size-6 text-red-600" />
+          </div>
+          <p className="text-sm font-medium text-red-600">Unable to load payment health data</p>
           <p className="mt-1 text-xs text-gray-400">{error}</p>
         </div>
       )}
 
       {!loading && !error && !paymentHealth && (
         <div className="py-8 text-center">
-          <p className="text-sm text-gray-500">No payment health data available</p>
+          <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-gray-100">
+            <PieChartIcon className="size-6 text-gray-400" />
+          </div>
+          <p className="text-sm font-medium text-gray-900">No payment health data available</p>
+          <p className="mt-1 text-xs text-gray-500">Check back later for system performance metrics</p>
         </div>
       )}
 
       {!loading && !error && paymentHealth && (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {/* Prepaid Card */}
-            <div className={`rounded-lg border p-4 ${getHealthBg(paymentHealth.prepaid?.severity)}`}>
-              <div className="mb-3 flex items-center justify-between">
-                <h4 className="text-base font-semibold text-gray-900">
-                  {paymentHealth.prepaid?.category || "Prepaid Payments"}
-                </h4>
-                {paymentHealth.prepaid?.colorCode && (
-                  <div className="size-6 rounded-full" style={{ backgroundColor: paymentHealth.prepaid.colorCode }} />
-                )}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="group rounded-lg border border-gray-100 bg-white p-4 transition-all hover:border-gray-200 hover:shadow-sm"
+            >
+              {/* Header */}
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2">
+                  <div className={`rounded-lg p-2 ${getHealthBg(paymentHealth.prepaid?.severity)}`}>
+                    <Zap className={`size-4 ${getHealthColor(paymentHealth.prepaid?.severity)}`} />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900">
+                      {paymentHealth.prepaid?.category || "Prepaid Payments"}
+                    </h3>
+                    <p className="text-xs text-gray-500">Real-time payment processing</p>
+                  </div>
+                </div>
+                <span className={`text-sm font-semibold ${getHealthColor(paymentHealth.prepaid?.severity)}`}>
+                  {paymentHealth.prepaid?.totalRequests?.toLocaleString() || "0"}
+                </span>
               </div>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                <div>
-                  <p className="mb-1 text-xs text-gray-500">Total Requests</p>
-                  <p className="text-lg font-bold text-gray-900">
-                    {paymentHealth.prepaid?.totalRequests?.toLocaleString() || "0"}
+
+              {/* Progress Bar */}
+              <div className="mt-3">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-600">Health Status</span>
+                  <span className="font-medium text-gray-900">
+                    {paymentHealth.prepaid?.failureRatePercent?.toFixed(1) || "0"}% failure rate
+                  </span>
+                </div>
+                <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{
+                      width: `${Math.max(0, 100 - (paymentHealth.prepaid?.failureRatePercent || 0))}%`,
+                    }}
+                    transition={{ duration: 0.5, delay: 0.3 }}
+                    className="h-full rounded-full"
+                    style={{
+                      background: paymentHealth.prepaid?.colorCode
+                        ? `linear-gradient(to right, ${paymentHealth.prepaid.colorCode}, ${paymentHealth.prepaid.colorCode}dd)`
+                        : "linear-gradient(to right, #6b7280, #6b7280dd)",
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Status Breakdown */}
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                <div className="rounded-lg bg-emerald-50 p-2 text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <CheckCircle className="size-3 text-emerald-600" />
+                    <span className="text-xs font-medium text-emerald-700">Successful</span>
+                  </div>
+                  <p className="mt-1 text-sm font-semibold text-emerald-900">
+                    {(
+                      (paymentHealth.prepaid?.totalRequests || 0) - (paymentHealth.prepaid?.failedRequests || 0)
+                    ).toLocaleString()}
                   </p>
                 </div>
-                <div>
-                  <p className="mb-1 text-xs text-gray-500">Failed Requests</p>
-                  <p className={`text-lg font-bold ${getHealthColor(paymentHealth.prepaid?.severity)}`}>
+                <div className="rounded-lg bg-red-50 p-2 text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <XCircle className="size-3 text-red-600" />
+                    <span className="text-xs font-medium text-red-700">Failed</span>
+                  </div>
+                  <p className="mt-1 text-sm font-semibold text-red-900">
                     {paymentHealth.prepaid?.failedRequests?.toLocaleString() || "0"}
                   </p>
                 </div>
-                <div>
-                  <p className="mb-1 text-xs text-gray-500">Stalled Pending</p>
-                  <p className={`text-lg font-bold ${getHealthColor(paymentHealth.prepaid?.severity)}`}>
+                <div className="rounded-lg bg-gray-50 p-2 text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <AlertCircle className="size-3 text-gray-400" />
+                    <span className="text-xs font-medium text-gray-500">Stalled Pending</span>
+                  </div>
+                  <p className="mt-1 text-sm font-semibold text-gray-600">
                     {paymentHealth.prepaid?.stalledPendingRequests?.toLocaleString() || "0"}
                   </p>
                 </div>
-                <div>
-                  <p className="mb-1 text-xs text-gray-500">Failure Rate</p>
-                  <p className={`text-lg font-bold ${getHealthColor(paymentHealth.prepaid?.severity)}`}>
-                    {paymentHealth.prepaid?.failureRatePercent?.toFixed(1) || "0"}%
-                  </p>
-                </div>
               </div>
+
+              {/* Additional Info */}
               {paymentHealth.prepaid?.failedRequests > 0 && (
-                <div className="mt-3 border-t border-gray-200 pt-3">
-                  <p className="text-xs text-gray-500">
-                    Failed: {paymentHealth.prepaid.failedRequests.toLocaleString()} of{" "}
-                    {paymentHealth.prepaid.totalRequests.toLocaleString()} requests
-                  </p>
+                <div className="mt-3 border-t border-gray-100 pt-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-500">Stalled Pending</span>
+                    <span className="font-medium text-amber-700">
+                      {paymentHealth.prepaid?.stalledPendingRequests?.toLocaleString() || "0"}
+                    </span>
+                  </div>
                   {paymentHealth.prepaid.lastFailureAtUtc && (
-                    <p className="mt-1 text-xs text-gray-400">
-                      Last failure: {formatDateTime(paymentHealth.prepaid.lastFailureAtUtc)}
-                    </p>
+                    <div className="mt-1 flex items-center justify-between text-xs">
+                      <span className="text-gray-500">Last Failure</span>
+                      <span className="font-medium text-gray-700">
+                        {formatDateTime(paymentHealth.prepaid.lastFailureAtUtc)}
+                      </span>
+                    </div>
                   )}
                 </div>
               )}
-              {paymentHealth.prepaid?.colorCode && (
-                <div className="mt-2 flex items-center gap-1">
-                  <div className="size-3 rounded-full" style={{ backgroundColor: paymentHealth.prepaid.colorCode }} />
-                  <span className="text-xs text-gray-500">Status indicator</span>
-                </div>
-              )}
-            </div>
+            </motion.div>
 
             {/* Postpaid Card */}
-            <div className={`rounded-lg border p-4 ${getHealthBg(paymentHealth.nonPrepaid?.severity)}`}>
-              <div className="mb-3 flex items-center justify-between">
-                <h4 className="text-base font-semibold text-gray-900">
-                  {paymentHealth.nonPrepaid?.category || "Postpaid Payments"}
-                </h4>
-                {paymentHealth.nonPrepaid?.colorCode && (
-                  <div
-                    className="size-6 rounded-full"
-                    style={{ backgroundColor: paymentHealth.nonPrepaid.colorCode }}
-                  />
-                )}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="group rounded-lg border border-gray-100 bg-white p-4 transition-all hover:border-gray-200 hover:shadow-sm"
+            >
+              {/* Header */}
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2">
+                  <div className={`rounded-lg p-2 ${getHealthBg(paymentHealth.nonPrepaid?.severity)}`}>
+                    <FileText className={`size-4 ${getHealthColor(paymentHealth.nonPrepaid?.severity)}`} />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900">
+                      {paymentHealth.nonPrepaid?.category || "Postpaid Payments"}
+                    </h3>
+                    <p className="text-xs text-gray-500">Bill payment processing</p>
+                  </div>
+                </div>
+                <span className={`text-sm font-semibold ${getHealthColor(paymentHealth.nonPrepaid?.severity)}`}>
+                  {paymentHealth.nonPrepaid?.totalRequests?.toLocaleString() || "0"}
+                </span>
               </div>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                <div>
-                  <p className="mb-1 text-xs text-gray-500">Total Requests</p>
-                  <p className="text-lg font-bold text-gray-900">
-                    {paymentHealth.nonPrepaid?.totalRequests?.toLocaleString() || "0"}
+
+              {/* Progress Bar */}
+              <div className="mt-3">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-600">Health Status</span>
+                  <span className="font-medium text-gray-900">
+                    {paymentHealth.nonPrepaid?.failureRatePercent?.toFixed(1) || "0"}% failure rate
+                  </span>
+                </div>
+                <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{
+                      width: `${Math.max(0, 100 - (paymentHealth.nonPrepaid?.failureRatePercent || 0))}%`,
+                    }}
+                    transition={{ duration: 0.5, delay: 0.4 }}
+                    className="h-full rounded-full"
+                    style={{
+                      background: paymentHealth.nonPrepaid?.colorCode
+                        ? `linear-gradient(to right, ${paymentHealth.nonPrepaid.colorCode}, ${paymentHealth.nonPrepaid.colorCode}dd)`
+                        : "linear-gradient(to right, #6b7280, #6b7280dd)",
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Status Breakdown */}
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                <div className="rounded-lg bg-emerald-50 p-2 text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <CheckCircle className="size-3 text-emerald-600" />
+                    <span className="text-xs font-medium text-emerald-700">Successful</span>
+                  </div>
+                  <p className="mt-1 text-sm font-semibold text-emerald-900">
+                    {(
+                      (paymentHealth.nonPrepaid?.totalRequests || 0) - (paymentHealth.nonPrepaid?.failedRequests || 0)
+                    ).toLocaleString()}
                   </p>
                 </div>
-                <div>
-                  <p className="mb-1 text-xs text-gray-500">Failed Requests</p>
-                  <p className={`text-lg font-bold ${getHealthColor(paymentHealth.nonPrepaid?.severity)}`}>
+                <div className="rounded-lg bg-red-50 p-2 text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <XCircle className="size-3 text-red-600" />
+                    <span className="text-xs font-medium text-red-700">Failed</span>
+                  </div>
+                  <p className="mt-1 text-sm font-semibold text-red-900">
                     {paymentHealth.nonPrepaid?.failedRequests?.toLocaleString() || "0"}
                   </p>
                 </div>
-                <div>
-                  <p className="mb-1 text-xs text-gray-500">Stalled Pending</p>
-                  <p className={`text-lg font-bold ${getHealthColor(paymentHealth.nonPrepaid?.severity)}`}>
+                <div className="rounded-lg bg-gray-50 p-2 text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <AlertCircle className="size-3 text-gray-400" />
+                    <span className="text-xs font-medium text-gray-500">Stalled Pending</span>
+                  </div>
+                  <p className="mt-1 text-sm font-semibold text-gray-600">
                     {paymentHealth.nonPrepaid?.stalledPendingRequests?.toLocaleString() || "0"}
                   </p>
                 </div>
-                <div>
-                  <p className="mb-1 text-xs text-gray-500">Failure Rate</p>
-                  <p className={`text-lg font-bold ${getHealthColor(paymentHealth.nonPrepaid?.severity)}`}>
-                    {paymentHealth.nonPrepaid?.failureRatePercent?.toFixed(1) || "0"}%
-                  </p>
-                </div>
               </div>
+
+              {/* Additional Info */}
               {paymentHealth.nonPrepaid?.failedRequests > 0 && (
-                <div className="mt-3 border-t border-gray-200 pt-3">
-                  <p className="text-xs text-gray-500">
-                    Failed: {paymentHealth.nonPrepaid.failedRequests.toLocaleString()} of{" "}
-                    {paymentHealth.nonPrepaid.totalRequests.toLocaleString()} requests
-                  </p>
+                <div className="mt-3 border-t border-gray-100 pt-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-500">Stalled Pending</span>
+                    <span className="font-medium text-amber-700">
+                      {paymentHealth.nonPrepaid?.stalledPendingRequests?.toLocaleString() || "0"}
+                    </span>
+                  </div>
                   {paymentHealth.nonPrepaid.lastFailureAtUtc && (
-                    <p className="mt-1 text-xs text-gray-400">
-                      Last failure: {formatDateTime(paymentHealth.nonPrepaid.lastFailureAtUtc)}
-                    </p>
+                    <div className="mt-1 flex items-center justify-between text-xs">
+                      <span className="text-gray-500">Last Failure</span>
+                      <span className="font-medium text-gray-700">
+                        {formatDateTime(paymentHealth.nonPrepaid.lastFailureAtUtc)}
+                      </span>
+                    </div>
                   )}
                 </div>
               )}
-              {paymentHealth.nonPrepaid?.colorCode && (
-                <div className="mt-2 flex items-center gap-1">
-                  <div
-                    className="size-3 rounded-full"
-                    style={{ backgroundColor: paymentHealth.nonPrepaid.colorCode }}
-                  />
-                  <span className="text-xs text-gray-500">Status indicator</span>
-                </div>
-              )}
-            </div>
+            </motion.div>
           </div>
 
-          {/* Period Information */}
-          <div className="border-t border-gray-200 pt-3">
-            <div className="flex flex-col gap-1 text-xs text-gray-400 sm:flex-row sm:items-center sm:justify-between">
-              <span>Window: Last {paymentHealth.windowMinutes || windowMinutes} minutes</span>
-              <div className="flex flex-col sm:flex-row sm:gap-4">
-                {paymentHealth.fromUtc && <span>From: {formatDateTime(paymentHealth.fromUtc)}</span>}
-                {paymentHealth.toUtc && <span>To: {formatDateTime(paymentHealth.toUtc)}</span>}
+          {/* Summary Stats Row */}
+          <div className="mt-4 grid grid-cols-1 gap-4 rounded-lg bg-gray-50 p-4 md:grid-cols-2">
+            {/* Left Column - Window Info */}
+            <div>
+              <h4 className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-600">Monitoring Window</h4>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between rounded-lg bg-white p-2">
+                  <div className="flex items-center gap-2">
+                    <div className="rounded-full bg-blue-100 p-1">
+                      <Clock className="size-3 text-blue-700" />
+                    </div>
+                    <span className="text-sm text-gray-700">Time Range</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-gray-900">
+                      {paymentHealth.windowMinutes || windowMinutes} minutes
+                    </span>
+                  </div>
+                </div>
+                {paymentHealth.fromUtc && (
+                  <div className="flex items-center justify-between rounded-lg bg-white p-2">
+                    <div className="flex items-center gap-2">
+                      <div className="rounded-full bg-emerald-100 p-1">
+                        <Calendar className="size-3 text-emerald-700" />
+                      </div>
+                      <span className="text-sm text-gray-700">From</span>
+                    </div>
+                    <span className="text-sm font-semibold text-gray-900">{formatDateTime(paymentHealth.fromUtc)}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right Column - Status Indicators */}
+            <div>
+              <h4 className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-600">System Status</h4>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between rounded-lg bg-white p-2">
+                  <div className="flex items-center gap-2">
+                    <div className="rounded-full bg-purple-100 p-1">
+                      <Activity className="size-3 text-purple-700" />
+                    </div>
+                    <span className="text-sm text-gray-700">Prepaid Status</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {paymentHealth.prepaid?.colorCode && (
+                      <div
+                        className="size-3 rounded-full"
+                        style={{ backgroundColor: paymentHealth.prepaid.colorCode }}
+                      />
+                    )}
+                    <span className="text-sm font-semibold capitalize text-gray-900">
+                      {paymentHealth.prepaid?.severity || "Unknown"}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-white p-2">
+                  <div className="flex items-center gap-2">
+                    <div className="rounded-full bg-amber-100 p-1">
+                      <FileText className="size-3 text-amber-700" />
+                    </div>
+                    <span className="text-sm text-gray-700">Postpaid Status</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {paymentHealth.nonPrepaid?.colorCode && (
+                      <div
+                        className="size-3 rounded-full"
+                        style={{ backgroundColor: paymentHealth.nonPrepaid.colorCode }}
+                      />
+                    )}
+                    <span className="text-sm font-semibold capitalize text-gray-900">
+                      {paymentHealth.nonPrepaid?.severity || "Unknown"}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

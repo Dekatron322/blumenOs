@@ -1,272 +1,350 @@
 "use client"
 
 import DashboardNav from "components/Navbar/DashboardNav"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import AddCustomerModal from "components/ui/Modal/add-customer-modal"
-import { motion } from "framer-motion"
-import { RefreshCircleIcon } from "components/Icons/Icons"
+import { AnimatePresence, motion } from "framer-motion"
 import { useSelector } from "react-redux"
 import { useAppDispatch } from "lib/hooks/useRedux"
 import { RootState } from "lib/redux/store"
 import { fetchPrepaidStats, fetchPrepaidSummaryAnalytics, PrepaidSummaryParams } from "lib/redux/analyticsSlice"
 import PrepaidTransactionTable from "components/MeteringInfo/PrepaidTransaction"
+import { ButtonModule } from "components/ui/Button/Button"
+import {
+  AlertCircle,
+  BarChart3,
+  Bolt,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  CreditCard,
+  Database,
+  DollarSign,
+  Home,
+  Loader2,
+  Mail,
+  PieChart,
+  RefreshCw,
+  Shield,
+  ShoppingCart,
+  TrendingDown,
+  TrendingUp,
+  Users,
+  XCircle,
+  Zap,
+} from "lucide-react"
 
-// Enhanced Skeleton Loader Component for Cards
-const SkeletonLoader = () => {
+// Compact Dropdown Popover
+const DropdownPopover = ({
+  options,
+  selectedValue,
+  onSelect,
+  children,
+}: {
+  options: { value: number; label: string }[]
+  selectedValue: number
+  onSelect: (value: number) => void
+  children: React.ReactNode
+}) => {
+  const [isOpen, setIsOpen] = useState(false)
+
   return (
-    <div className="flex w-full gap-3 max-lg:grid max-lg:grid-cols-2 max-sm:grid-cols-1">
-      {[...Array(4)].map((_, index) => (
-        <motion.div
-          key={index}
-          className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
-          initial={{ opacity: 0.6 }}
-          animate={{
-            opacity: [0.6, 1, 0.6],
-            transition: {
-              duration: 1.5,
-              repeat: Infinity,
-              ease: "easeInOut",
-            },
-          }}
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-2 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
+      >
+        {children}
+        <svg
+          className={`size-3.5 text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`}
+          fill="currentColor"
+          viewBox="0 0 20 20"
         >
-          <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-            <div className="size-6 rounded-full bg-gray-200"></div>
-            <div className="h-4 w-32 rounded bg-gray-200"></div>
-          </div>
-          <div className="flex flex-col gap-3 pt-4">
-            {[...Array(2)].map((_, i) => (
-              <div key={i} className="flex w-full justify-between">
-                <div className="h-4 w-24 rounded bg-gray-200"></div>
-                <div className="h-4 w-16 rounded bg-gray-200"></div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      ))}
-    </div>
-  )
-}
+          <path
+            fillRule="evenodd"
+            d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z"
+            clipRule="evenodd"
+          />
+        </svg>
+      </button>
 
-// Enhanced Skeleton for Customer Categories
-const CategoriesSkeleton = () => {
-  return (
-    <div className="w-80 rounded-md border bg-white p-5">
-      <div className="border-b pb-4">
-        <div className="h-6 w-40 rounded bg-gray-200"></div>
-      </div>
-
-      <div className="mt-4 space-y-3">
-        {[...Array(6)].map((_, index) => (
-          <div key={index} className="rounded-lg border bg-white p-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="h-5 w-12 rounded bg-gray-200"></div>
-                <div className="h-5 w-20 rounded bg-gray-200"></div>
-              </div>
-              <div className="h-4 w-16 rounded bg-gray-200"></div>
-            </div>
-            <div className="mt-3 space-y-1">
-              <div className="flex justify-between">
-                <div className="h-4 w-20 rounded bg-gray-200"></div>
-                <div className="h-4 w-16 rounded bg-gray-200"></div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Summary Skeleton */}
-      <div className="mt-6 rounded-lg bg-gray-50 p-3">
-        <div className="mb-2 h-5 w-20 rounded bg-gray-200"></div>
-        <div className="space-y-1">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="flex justify-between">
-              <div className="h-4 w-24 rounded bg-gray-200"></div>
-              <div className="h-4 w-12 rounded bg-gray-200"></div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// Enhanced Skeleton for the table and grid view
-const TableSkeleton = () => {
-  return (
-    <div className="flex-1 rounded-md border bg-white p-5">
-      {/* Header Skeleton */}
-      <div className="flex items-center justify-between border-b pb-4">
-        <div className="h-8 w-40 rounded bg-gray-200"></div>
-        <div className="flex gap-4">
-          <div className="h-10 w-80 rounded bg-gray-200"></div>
-          <div className="flex gap-2">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-10 w-24 rounded bg-gray-200"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Grid View Skeleton */}
-      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {[...Array(6)].map((_, index) => (
-          <div key={index} className="rounded-lg border bg-white p-4 shadow-sm">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div className="size-12 rounded-full bg-gray-200"></div>
-                <div>
-                  <div className="h-5 w-32 rounded bg-gray-200"></div>
-                  <div className="mt-1 flex gap-2">
-                    <div className="h-6 w-16 rounded-full bg-gray-200"></div>
-                    <div className="h-6 w-20 rounded-full bg-gray-200"></div>
-                  </div>
-                </div>
-              </div>
-              <div className="size-6 rounded bg-gray-200"></div>
-            </div>
-
-            <div className="mt-4 space-y-2">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex justify-between">
-                  <div className="h-4 w-20 rounded bg-gray-200"></div>
-                  <div className="h-4 w-16 rounded bg-gray-200"></div>
-                </div>
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="absolute right-0 z-20 mt-1 min-w-[100px] overflow-hidden rounded-md border border-gray-200 bg-white py-1 text-xs shadow-lg"
+            >
+              {options.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => {
+                    onSelect(option.value)
+                    setIsOpen(false)
+                  }}
+                  className={`block w-full px-2 py-1.5 text-left transition-colors ${
+                    option.value === selectedValue
+                      ? "bg-blue-50 font-medium text-blue-700"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  {option.label}
+                </button>
               ))}
-            </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
 
-            <div className="mt-3 border-t pt-3">
-              <div className="h-4 w-full rounded bg-gray-200"></div>
-            </div>
+// Compact Analytics Card
+const CompactAnalyticsCard = ({
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  color = "blue",
+  trend,
+  trendValue,
+}: {
+  title: string
+  value: string | number
+  subtitle?: string
+  icon: React.ElementType
+  color?: "blue" | "green" | "purple" | "amber" | "emerald" | "red"
+  trend?: "up" | "down"
+  trendValue?: string
+}) => {
+  const colorClasses = {
+    blue: "bg-blue-50 text-blue-700",
+    green: "bg-green-50 text-green-700",
+    purple: "bg-purple-50 text-purple-700",
+    amber: "bg-amber-50 text-amber-700",
+    emerald: "bg-emerald-50 text-emerald-700",
+    red: "bg-red-50 text-red-700",
+  }
 
-            <div className="mt-3 flex gap-2">
-              <div className="h-9 flex-1 rounded bg-gray-200"></div>
-            </div>
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-3">
+      <div className="flex items-start justify-between">
+        <div className={`rounded-md p-1.5 ${colorClasses[color]}`}>
+          <Icon className="size-4" />
+        </div>
+        {trend && (
+          <span
+            className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
+              trend === "up" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+            }`}
+          >
+            {trend === "up" ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
+            {trendValue}
+          </span>
+        )}
+      </div>
+      <div className="mt-2">
+        <p className="text-xs text-gray-600">{title}</p>
+        <p className="text-lg font-semibold text-gray-900">{value.toLocaleString()}</p>
+        {subtitle && <p className="mt-0.5 text-[10px] text-gray-500">{subtitle}</p>}
+      </div>
+    </div>
+  )
+}
+
+// Compact Skeleton Card
+const CompactSkeletonCard = () => (
+  <motion.div
+    className="rounded-lg border border-gray-200 bg-white p-3"
+    initial={{ opacity: 0.6 }}
+    animate={{
+      opacity: [0.6, 1, 0.6],
+      transition: { duration: 1.5, repeat: Infinity, ease: "easeInOut" },
+    }}
+  >
+    <div className="flex items-start justify-between">
+      <div className="h-7 w-7 rounded-md bg-gray-200"></div>
+      <div className="h-4 w-12 rounded-full bg-gray-200"></div>
+    </div>
+    <div className="mt-2 space-y-1.5">
+      <div className="h-3 w-16 rounded bg-gray-200"></div>
+      <div className="h-5 w-20 rounded bg-gray-200"></div>
+      <div className="h-2 w-14 rounded bg-gray-200"></div>
+    </div>
+  </motion.div>
+)
+
+// Compact Queue Status
+const CompactQueueStatus = ({ stats }: { stats: any }) => {
+  const items = [
+    { label: "Pending", value: stats?.pendingPayments || 0, color: "amber", icon: Clock },
+    { label: "Processing", value: stats?.processingPayments || 0, color: "blue", icon: Loader2 },
+    { label: "Retry", value: stats?.retryPending || 0, color: "purple", icon: RefreshCw },
+    { label: "Queue", value: stats?.retryRedisLength || 0, color: "indigo", icon: Database },
+  ]
+
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <Database className="size-4 text-gray-600" />
+          <span className="text-xs font-medium text-gray-700">Queue Status</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className={`size-2 rounded-full ${stats ? "bg-green-500" : "bg-gray-400"}`} />
+          <span className="text-[10px] text-gray-500">Live</span>
+        </div>
+      </div>
+      <div className="grid grid-cols-4 gap-1">
+        {items.map((item, i) => (
+          <div key={i} className="rounded bg-gray-50 p-1.5 text-center">
+            <item.icon
+              className={`mx-auto mb-1 size-3.5 ${
+                item.color === "amber"
+                  ? "text-amber-600"
+                  : item.color === "blue"
+                  ? "text-blue-600"
+                  : item.color === "purple"
+                  ? "text-purple-600"
+                  : "text-indigo-600"
+              } ${item.label === "Processing" ? "animate-spin" : ""}`}
+            />
+            <p className="text-xs font-semibold text-gray-900">{item.value}</p>
+            <p className="text-[8px] text-gray-500">{item.label}</p>
           </div>
         ))}
       </div>
+    </div>
+  )
+}
 
-      {/* Pagination Skeleton */}
-      <div className="mt-4 flex items-center justify-between">
+// Compact Channel Row
+const CompactChannelRow = ({
+  channel,
+  formatCurrency,
+}: {
+  channel: any
+  formatCurrency: (amount: number) => string
+}) => {
+  const successRate = channel.totalVends > 0 ? ((channel.successfulVends / channel.totalVends) * 100).toFixed(1) : 0
+
+  return (
+    <div className="flex items-center justify-between border-b border-gray-100 py-2 last:border-0">
+      <div className="flex-1">
         <div className="flex items-center gap-2">
-          <div className="h-4 w-16 rounded bg-gray-200"></div>
-          <div className="h-8 w-16 rounded bg-gray-200"></div>
+          <CreditCard className="size-3.5 text-gray-500" />
+          <span className="text-xs font-medium text-gray-900">{channel.channel}</span>
         </div>
-
-        <div className="flex items-center gap-3">
-          <div className="size-8 rounded bg-gray-200"></div>
-          <div className="flex gap-2">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="size-7 rounded bg-gray-200"></div>
-            ))}
-          </div>
-          <div className="size-8 rounded bg-gray-200"></div>
+        <div className="mt-1 flex items-center gap-3">
+          <span className="text-[10px] text-gray-500">{channel.totalVends} vends</span>
+          <span className="text-[10px] text-gray-500">{successRate}% success</span>
         </div>
-
-        <div className="h-4 w-24 rounded bg-gray-200"></div>
+      </div>
+      <div className="text-right">
+        <p className="text-xs font-semibold text-gray-900">{formatCurrency(channel.totalPaymentAmount)}</p>
+        <p className="text-[10px] text-gray-500">{channel.totalKwh.toLocaleString()} kWh</p>
       </div>
     </div>
   )
 }
 
-// Main Loading Component
-const LoadingState = ({ showCategories = true }) => {
+// Compact Agent Row
+const CompactAgentRow = ({
+  agent,
+  formatCurrency,
+  index,
+}: {
+  agent: any
+  formatCurrency: (amount: number) => string
+  index: number
+}) => {
   return (
-    <div className="flex-3 relative mt-5 flex items-start gap-6">
-      {showCategories ? (
-        <>
-          <TableSkeleton />
-          <CategoriesSkeleton />
-        </>
-      ) : (
-        <div className="w-full">
-          <TableSkeleton />
+    <div className="flex items-center justify-between border-b border-gray-100 py-2 last:border-0">
+      <div className="flex-1">
+        <div className="flex items-center gap-2">
+          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gray-100 text-[10px] font-medium text-gray-600">
+            {index + 1}
+          </span>
+          <span className="text-xs font-medium text-gray-900">{agent.agentName || `Agent ${index + 1}`}</span>
         </div>
-      )}
+        <div className="mt-1 flex items-center gap-3">
+          <span className="text-[10px] text-gray-500">{agent.totalVends} vends</span>
+        </div>
+      </div>
+      <div className="text-right">
+        <p className="text-xs font-semibold text-gray-900">{formatCurrency(agent.totalPaymentAmount)}</p>
+        <p className="text-[10px] text-gray-500">{agent.totalKwh.toLocaleString()} kWh</p>
+      </div>
     </div>
   )
 }
 
-// Prepaid Summary Analytics Component
-const PrepaidSummaryAnalytics = () => {
+// Compact Daily Trend Item
+const CompactDailyItem = ({
+  day,
+  formatCurrency,
+  formatDate,
+}: {
+  day: any
+  formatCurrency: (amount: number) => string
+  formatDate: (date: string) => string
+}) => {
+  const successRate = day.totalVends > 0 ? ((day.successfulVends / day.totalVends) * 100).toFixed(1) : "0"
+
+  return (
+    <div className="rounded border border-gray-100 bg-gray-50 p-2">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-medium text-gray-900">{formatDate(day.bucketDate)}</span>
+        <span
+          className={`text-[10px] font-medium ${parseFloat(successRate) >= 95 ? "text-emerald-600" : "text-amber-600"}`}
+        >
+          {successRate}%
+        </span>
+      </div>
+      <div className="mt-1 flex items-center justify-between">
+        <span className="text-[10px] text-gray-500">Revenue</span>
+        <span className="text-xs font-semibold text-gray-900">{formatCurrency(day.totalPaymentAmount)}</span>
+      </div>
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] text-gray-500">kWh</span>
+        <span className="text-[10px] font-medium text-gray-900">{day.totalKwh.toLocaleString()}</span>
+      </div>
+    </div>
+  )
+}
+
+// Compact Analytics Section
+const CompactPrepaidAnalytics = () => {
   const dispatch = useAppDispatch()
-  const {
-    prepaidSummaryData,
-    prepaidSummaryLoading,
-    prepaidSummaryError,
-    prepaidSummarySuccess,
-    prepaidStatsData,
-    prepaidStatsLoading,
-    prepaidStatsError,
-    prepaidStatsSuccess,
-  } = useSelector((state: RootState) => state.analytics)
+  const { prepaidSummaryData, prepaidSummaryLoading, prepaidSummaryError, prepaidStatsData, prepaidStatsLoading } =
+    useSelector((state: RootState) => state.analytics)
+
+  const [isPolling, setIsPolling] = useState(false)
+  const [pollingInterval, setPollingInterval] = useState(300000)
 
   useEffect(() => {
-    // Fetch data for the last 30 days by default
     const endDate = new Date().toISOString()
     const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
-
-    const params: PrepaidSummaryParams = {
-      StartDateUtc: startDate,
-      EndDateUtc: endDate,
-    }
-
-    dispatch(fetchPrepaidSummaryAnalytics(params))
+    dispatch(fetchPrepaidSummaryAnalytics({ StartDateUtc: startDate, EndDateUtc: endDate }))
     dispatch(fetchPrepaidStats())
   }, [dispatch])
 
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     const endDate = new Date().toISOString()
     const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
-
-    const params: PrepaidSummaryParams = {
-      StartDateUtc: startDate,
-      EndDateUtc: endDate,
-    }
-
-    dispatch(fetchPrepaidSummaryAnalytics(params))
+    dispatch(fetchPrepaidSummaryAnalytics({ StartDateUtc: startDate, EndDateUtc: endDate }))
     dispatch(fetchPrepaidStats())
-  }
+  }, [dispatch])
 
-  if (prepaidSummaryLoading || prepaidStatsLoading) {
-    return (
-      <div className="w-full rounded-lg border bg-white p-6 shadow-sm">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Prepaid Analytics</h3>
-          <div className="h-6 w-20 animate-pulse rounded bg-gray-200"></div>
-        </div>
-        <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="space-y-2">
-              <div className="h-4 w-24 animate-pulse rounded bg-gray-200"></div>
-              <div className="h-6 w-32 animate-pulse rounded bg-gray-200"></div>
-            </div>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  if (prepaidSummaryError || prepaidStatsError) {
-    return (
-      <div className="w-full rounded-lg border border-red-200 bg-red-50 p-6">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-red-900">Prepaid Analytics</h3>
-          <button
-            onClick={handleRefresh}
-            className="rounded-lg bg-red-100 px-3 py-1 text-sm font-medium text-red-700 hover:bg-red-200"
-          >
-            Retry
-          </button>
-        </div>
-        <p className="mt-2 text-red-700">Error loading analytics data</p>
-      </div>
-    )
-  }
-
-  if (!prepaidSummaryData || !prepaidStatsData) {
-    return null
-  }
+  useEffect(() => {
+    if (!isPolling) return
+    const interval = setInterval(handleRefresh, pollingInterval)
+    return () => clearInterval(interval)
+  }, [isPolling, pollingInterval, handleRefresh])
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-NG", {
@@ -279,463 +357,149 @@ const PrepaidSummaryAnalytics = () => {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-NG", {
-      year: "numeric",
       month: "short",
       day: "numeric",
     })
   }
 
+  if (prepaidSummaryLoading || prepaidStatsLoading) {
+    return (
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
+          <CompactSkeletonCard key={i} />
+        ))}
+      </div>
+    )
+  }
+
+  if (prepaidSummaryError || !prepaidSummaryData) {
+    return (
+      <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+        <p className="text-xs text-red-700">Failed to load analytics</p>
+      </div>
+    )
+  }
+
+  const totals = prepaidSummaryData.totals
+  const successRate = totals.successRatePercent || 0
+
   return (
-    <div className="w-full space-y-6">
-      {/* Summary Cards */}
-      <div className="rounded-lg border bg-white p-6 shadow-sm">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Prepaid Analytics Summary</h3>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <span>
-              {formatDate(prepaidSummaryData.windowStartUtc)} - {formatDate(prepaidSummaryData.windowEndUtc)}
-            </span>
-            <button
-              onClick={handleRefresh}
-              className="rounded-lg bg-gray-100 p-1 hover:bg-gray-200"
-              title="Refresh data"
+    <div className="space-y-3">
+      {/* Compact Controls */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-600">
+            {formatDate(prepaidSummaryData.windowStartUtc)} - {formatDate(prepaidSummaryData.windowEndUtc)}
+          </span>
+        </div>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setIsPolling(!isPolling)}
+            className={`rounded-md px-2 py-1 text-[10px] font-medium ${
+              isPolling ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600"
+            }`}
+          >
+            <RefreshCw className={`mr-1 inline-block size-3 ${isPolling ? "animate-spin" : ""}`} />
+            {isPolling ? "ON" : "OFF"}
+          </button>
+          {isPolling && (
+            <DropdownPopover
+              options={[
+                { value: 300000, label: "5m" },
+                { value: 600000, label: "10m" },
+                { value: 900000, label: "15m" },
+              ]}
+              selectedValue={pollingInterval}
+              onSelect={setPollingInterval}
             >
-              <RefreshCircleIcon />
-            </button>
-          </div>
-        </div>
-
-        <div className="mt-6">
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {/* Total Vends */}
-            <div className="border-r border-gray-200 pr-6 last:border-r-0">
-              <div className="flex items-center justify-between">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
-                  <svg className="size-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                    />
-                  </svg>
-                </div>
-                <div className="flex items-center gap-1 text-green-600">
-                  <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
-                  </svg>
-                  <span className="text-sm font-medium">
-                    {prepaidSummaryData.totals.totalVends > 0 ? "+8.3%" : "0%"}
-                  </span>
-                </div>
-              </div>
-              <div className="mt-4">
-                <h3 className="text-sm font-medium text-gray-500">Total Vends</h3>
-                <p className="mt-2 text-2xl font-semibold text-gray-900">
-                  {prepaidSummaryData.totals.totalVends.toLocaleString()}
-                </p>
-                <div className="mt-3 text-sm text-gray-600">
-                  <div className="flex justify-between">
-                    <span>Successful:</span>
-                    <span>{prepaidSummaryData.totals.successfulVends.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Failed:</span>
-                    <span>{prepaidSummaryData.totals.failedVends.toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Success Rate */}
-            <div className="border-r border-gray-200 pr-6 last:border-r-0">
-              <div className="flex items-center justify-between">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
-                  <svg className="size-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-                <div className="flex items-center gap-1 text-green-600">
-                  <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
-                  </svg>
-                  <span className="text-sm font-medium">
-                    {prepaidSummaryData.totals.successRatePercent >= 95 ? "+2.1%" : "+0.8%"}
-                  </span>
-                </div>
-              </div>
-              <div className="mt-4">
-                <h3 className="text-sm font-medium text-gray-500">Success Rate</h3>
-                <p className="mt-2 text-2xl font-semibold text-gray-900">
-                  {(prepaidSummaryData.totals.successRatePercent || 0).toFixed(1)}%
-                </p>
-                <div className="mt-3 text-sm text-gray-600">
-                  <div className="flex justify-between">
-                    <span>Target:</span>
-                    <span>98.5%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Status:</span>
-                    <span
-                      className={
-                        prepaidSummaryData.totals.successRatePercent >= 95 ? "text-green-600" : "text-amber-600"
-                      }
-                    >
-                      {prepaidSummaryData.totals.successRatePercent >= 95 ? "Good" : "Needs Attention"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Total Revenue */}
-            <div className="border-r border-gray-200 pr-6 last:border-r-0">
-              <div className="flex items-center justify-between">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100">
-                  <svg className="size-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-                <div className="flex items-center gap-1 text-green-600">
-                  <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
-                  </svg>
-                  <span className="text-sm font-medium">
-                    {prepaidSummaryData.totals.totalPaymentAmount > 0 ? "+15.2%" : "0%"}
-                  </span>
-                </div>
-              </div>
-              <div className="mt-4">
-                <h3 className="text-sm font-medium text-gray-500">Total Revenue</h3>
-                <p className="mt-2 text-2xl font-semibold text-gray-900">
-                  {formatCurrency(prepaidSummaryData.totals.totalPaymentAmount)}
-                </p>
-                <div className="mt-3 text-sm text-gray-600">
-                  <div className="flex justify-between">
-                    <span>Average/Vend:</span>
-                    <span>{formatCurrency(prepaidSummaryData.totals.averagePaymentAmount)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Period:</span>
-                    <span>30 days</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Total kWh */}
-            <div className="last:border-r-0">
-              <div className="flex items-center justify-between">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100">
-                  <svg className="size-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <div className="flex items-center gap-1 text-green-600">
-                  <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
-                  </svg>
-                  <span className="text-sm font-medium">
-                    {prepaidSummaryData.totals.totalKwh > 0 ? "+11.7%" : "0%"}
-                  </span>
-                </div>
-              </div>
-              <div className="mt-4">
-                <h3 className="text-sm font-medium text-gray-500">Total kWh</h3>
-                <p className="mt-2 text-2xl font-semibold text-gray-900">
-                  {prepaidSummaryData.totals.totalKwh.toLocaleString()}
-                </p>
-                <div className="mt-3 text-sm text-gray-600">
-                  <div className="flex justify-between">
-                    <span>Average/Vend:</span>
-                    <span>{prepaidSummaryData.totals.averageKwhPerVend.toFixed(1)} kWh</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Tokens:</span>
-                    <span>{prepaidSummaryData.totals.totalTokens.toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+              {pollingInterval / 60000}m
+            </DropdownPopover>
+          )}
+          <button onClick={handleRefresh} className="rounded-md bg-gray-100 p-1.5 text-gray-600 hover:bg-gray-200">
+            <RefreshCw className="size-3.5" />
+          </button>
         </div>
       </div>
 
-      {/* Prepaid Queue Stats */}
-      <div className="rounded-lg border bg-white p-6 shadow-sm">
-        <div className="flex items-center justify-between">
-          <h4 className="text-md font-semibold text-gray-900">Payment Queue Status</h4>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <span>Live Status</span>
-            <div className={`size-2 rounded-full ${prepaidStatsSuccess ? "bg-green-500" : "bg-gray-400"}`}></div>
-          </div>
-        </div>
-        <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">
-          {/* Pending Payments */}
-          <div className="text-center">
-            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100">
-              <svg className="size-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <p className="mt-2 text-2xl font-semibold text-gray-900">{prepaidStatsData.pendingPayments}</p>
-            <p className="text-sm text-gray-500">Pending</p>
-          </div>
-
-          {/* Processing Payments */}
-          <div className="text-center">
-            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
-              <svg className="size-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
-            </div>
-            <p className="mt-2 text-2xl font-semibold text-gray-900">{prepaidStatsData.processingPayments}</p>
-            <p className="text-sm text-gray-500">Processing</p>
-          </div>
-
-          {/* Retry Pending */}
-          <div className="text-center">
-            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100">
-              <svg className="size-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
-            </div>
-            <p className="mt-2 text-2xl font-semibold text-gray-900">{prepaidStatsData.retryPending}</p>
-            <p className="text-sm text-gray-500">Retry Pending</p>
-          </div>
-
-          {/* Redis Queue Length */}
-          <div className="text-center">
-            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100">
-              <svg className="size-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                />
-              </svg>
-            </div>
-            <p className="mt-2 text-2xl font-semibold text-gray-900">{prepaidStatsData.retryRedisLength}</p>
-            <p className="text-sm text-gray-500">Retry Queue</p>
-          </div>
-        </div>
-
-        {/* Retry Status Breakdown */}
-        <div className="mt-6 border-t pt-4">
-          <h5 className="mb-3 text-sm font-medium text-gray-900">Retry Status</h5>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Processing:</span>
-              <span className="text-sm font-medium">{prepaidStatsData.retryProcessing}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Completed:</span>
-              <span className="text-sm font-medium text-green-600">{prepaidStatsData.retryCompleted}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Failed:</span>
-              <span className="text-sm font-medium text-red-600">{prepaidStatsData.retryFailed}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Disputed:</span>
-              <span className="text-sm font-medium text-amber-600">{prepaidStatsData.retryDisputed}</span>
-            </div>
-          </div>
-        </div>
+      {/* Compact Cards Grid */}
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <CompactAnalyticsCard
+          title="Total Vends"
+          value={totals.totalVends}
+          subtitle={`${totals.successfulVends} OK · ${totals.failedVends} Failed`}
+          icon={ShoppingCart}
+          color="blue"
+          trend="up"
+          trendValue="+8%"
+        />
+        <CompactAnalyticsCard
+          title="Success Rate"
+          value={`${successRate.toFixed(1)}%`}
+          subtitle={successRate >= 95 ? "Good" : "Needs attention"}
+          icon={CheckCircle2}
+          color={successRate >= 95 ? "green" : "amber"}
+        />
+        <CompactAnalyticsCard
+          title="Revenue"
+          value={formatCurrency(totals.totalPaymentAmount)}
+          subtitle={`Avg ${formatCurrency(totals.averagePaymentAmount)}`}
+          icon={DollarSign}
+          color="purple"
+          trend="up"
+          trendValue="+15%"
+        />
+        <CompactAnalyticsCard
+          title="kWh Sold"
+          value={totals.totalKwh.toLocaleString()}
+          subtitle={`Avg ${totals.averageKwhPerVend.toFixed(1)} kWh`}
+          icon={Zap}
+          color="amber"
+          trend="up"
+          trendValue="+12%"
+        />
       </div>
 
-      {/* Detailed Breakdowns */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* By Channel */}
-        <div className="rounded-lg border bg-white p-6 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h4 className="text-md font-semibold text-gray-900">By Channel</h4>
-            {/* <div className="flex items-center gap-1 text-green-600">
-              <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
-              </svg>
-              <span className="text-sm font-medium">+12.5%</span>
-            </div> */}
-          </div>
-          <div className="space-y-3">
-            {prepaidSummaryData.byChannel.slice(0, 5).map((channel, index) => (
-              <div key={index} className="rounded-r-lg border-l-4 border-blue-500 bg-blue-50 p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-gray-900">{channel.channel}</p>
-                    <p className="text-sm text-gray-600">{channel.totalVends} vends</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-gray-900">{formatCurrency(channel.totalPaymentAmount)}</p>
-                    <p className="text-sm text-gray-600">{channel.totalKwh.toLocaleString()} kWh</p>
-                  </div>
-                </div>
-                <div className="mt-3 grid grid-cols-3 gap-4 text-xs">
-                  <div>
-                    <span className="text-gray-500">Success Rate:</span>
-                    <span className="font-medium text-gray-900">
-                      {channel.totalVends > 0
-                        ? (((channel.successfulVends || channel.totalVends) / channel.totalVends) * 100).toFixed(1)
-                        : 0}
-                      %
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Avg Amount:</span>
-                    <span className="font-medium text-gray-900">
-                      {channel.totalVends > 0
-                        ? formatCurrency(channel.totalPaymentAmount / channel.totalVends)
-                        : formatCurrency(0)}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Avg kWh:</span>
-                    <span className="font-medium text-gray-900">
-                      {channel.totalVends > 0 ? (channel.totalKwh / channel.totalVends).toFixed(1) : 0} kWh
-                    </span>
-                  </div>
-                </div>
-              </div>
+      {/* Compact Queue Status */}
+      {prepaidStatsData && <CompactQueueStatus stats={prepaidStatsData} />}
+
+      {/* Compact Breakdown Grid */}
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+        {/* Channels */}
+        <div className="rounded-lg border border-gray-200 bg-white p-3">
+          <h3 className="mb-2 flex items-center gap-1 text-xs font-medium text-gray-700">
+            <BarChart3 className="size-3.5" />
+            Top Channels
+          </h3>
+          <div className="space-y-1">
+            {prepaidSummaryData.byChannel.slice(0, 3).map((channel, i) => (
+              <CompactChannelRow key={i} channel={channel} formatCurrency={formatCurrency} />
             ))}
           </div>
         </div>
 
-        {/* Top Agents */}
-        <div className="rounded-lg border bg-white p-6 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h4 className="text-md font-semibold text-gray-900">Top Agents</h4>
-            {/* <div className="flex items-center gap-1 text-green-600">
-              <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
-              </svg>
-              <span className="text-sm font-medium">+18.2%</span>
-            </div> */}
-          </div>
-          <div className="space-y-3">
-            {prepaidSummaryData.byAgent.slice(0, 5).map((agent, index) => (
-              <div key={index} className="rounded-r-lg border-l-4 border-green-500 bg-green-50 p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-gray-900">{agent.agentName}</p>
-                    <p className="text-sm text-gray-600">{agent.totalVends} vends</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-gray-900">{formatCurrency(agent.totalPaymentAmount)}</p>
-                    <p className="text-sm text-gray-600">{agent.totalKwh.toLocaleString()} kWh</p>
-                  </div>
-                </div>
-                <div className="mt-3 grid grid-cols-3 gap-4 text-xs">
-                  <div>
-                    <span className="text-gray-500">Success Rate:</span>
-                    <span className="font-medium text-gray-900">
-                      {agent.totalVends > 0
-                        ? (((agent.successfulVends || agent.totalVends) / agent.totalVends) * 100).toFixed(1)
-                        : 0}
-                      %
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Avg Amount:</span>
-                    <span className="font-medium text-gray-900">
-                      {agent.totalVends > 0
-                        ? formatCurrency(agent.totalPaymentAmount / agent.totalVends)
-                        : formatCurrency(0)}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Avg kWh:</span>
-                    <span className="font-medium text-gray-900">
-                      {agent.totalVends > 0 ? (agent.totalKwh / agent.totalVends).toFixed(1) : 0} kWh
-                    </span>
-                  </div>
-                </div>
-              </div>
+        {/* Agents */}
+        <div className="rounded-lg border border-gray-200 bg-white p-3">
+          <h3 className="mb-2 flex items-center gap-1 text-xs font-medium text-gray-700">
+            <Users className="size-3.5" />
+            Top Agents
+          </h3>
+          <div className="space-y-1">
+            {prepaidSummaryData.byAgent.slice(0, 3).map((agent, i) => (
+              <CompactAgentRow key={i} agent={agent} formatCurrency={formatCurrency} index={i} />
             ))}
           </div>
         </div>
       </div>
 
-      {/* Daily Trend - Grid Layout */}
-      <div className="rounded-lg border bg-white p-6 shadow-sm">
-        <div className="mb-4 flex items-center justify-between">
-          <h4 className="text-md font-semibold text-gray-900">Daily Trend (Last 7 Days)</h4>
-          <div className="flex items-center gap-1 text-green-600">
-            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
-            </svg>
-            <span className="text-sm font-medium">+6.8%</span>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {prepaidSummaryData.daily.slice(-7).map((day, index) => (
-            <div
-              key={index}
-              className={`rounded-lg border p-3 ${
-                index === 6
-                  ? "border-purple-200 bg-purple-50"
-                  : index === 5
-                  ? "border-blue-200 bg-blue-50"
-                  : index === 4
-                  ? "border-green-200 bg-green-50"
-                  : "border-gray-200 bg-gray-50"
-              }`}
-            >
-              <div className="mb-2">
-                <p className="text-sm font-semibold text-gray-900">{formatDate(day.bucketDate)}</p>
-                <p className="text-xs text-gray-600">{day.totalVends} vends</p>
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Revenue:</span>
-                  <span className="text-sm font-bold text-gray-900">{formatCurrency(day.totalPaymentAmount)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">kWh:</span>
-                  <span className="text-sm font-medium text-gray-900">{day.totalKwh.toLocaleString()}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Success:</span>
-                  <span className="text-xs font-medium text-gray-900">
-                    {day.totalVends > 0
-                      ? (((day.successfulVends || day.totalVends) / day.totalVends) * 100).toFixed(1)
-                      : 0}
-                    %
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Avg:</span>
-                  <span className="text-xs font-medium text-gray-900">
-                    {day.totalVends > 0 ? formatCurrency(day.totalPaymentAmount / day.totalVends) : formatCurrency(0)}
-                  </span>
-                </div>
-              </div>
-            </div>
+      {/* Compact Daily Trend */}
+      <div className="rounded-lg border border-gray-200 bg-white p-3">
+        <h3 className="mb-2 flex items-center gap-1 text-xs font-medium text-gray-700">
+          <Calendar className="size-3.5" />
+          Last 7 Days
+        </h3>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-7">
+          {prepaidSummaryData.daily.slice(-7).map((day, i) => (
+            <CompactDailyItem key={i} day={day} formatCurrency={formatCurrency} formatDate={formatDate} />
           ))}
         </div>
       </div>
@@ -743,115 +507,82 @@ const PrepaidSummaryAnalytics = () => {
   )
 }
 
-// Generate mock utility customer data
-const generateUtilityCustomerData = () => {
-  return {
-    totalCustomers: Math.floor(125000 + Math.random() * 5000),
-    activeCustomers: Math.floor(115000 + Math.random() * 4000),
-    frozenCustomers: Math.floor(1500 + Math.random() * 500),
-    inactiveCustomers: Math.floor(8500 + Math.random() * 2000),
-    prepaidCustomers: Math.floor(85000 + Math.random() * 3000),
-    postpaidCustomers: Math.floor(35000 + Math.random() * 2000),
-    estimatedBillingCustomers: Math.floor(5000 + Math.random() * 1000),
-  }
+// Compact Table Section
+const CompactTableSection = () => {
+  return (
+    <div className="mt-4 rounded-lg border border-gray-200 bg-white">
+      <div className="border-b border-gray-200 bg-gray-50 px-3 py-2">
+        <h3 className="text-xs font-medium text-gray-700">Recent Transactions</h3>
+      </div>
+      <div className="p-2">
+        <PrepaidTransactionTable pageSize={10} />
+      </div>
+    </div>
+  )
 }
 
 export default function AllTransactions() {
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [customerData, setCustomerData] = useState(generateUtilityCustomerData())
   const [showAnalytics, setShowAnalytics] = useState(true)
 
-  const handleAddCustomerSuccess = async () => {
-    setIsAddCustomerModalOpen(false)
-    // Refresh data after adding customer
-    setCustomerData(generateUtilityCustomerData())
-  }
-
-  const handleRefreshData = () => {
-    setIsLoading(true)
-    setTimeout(() => {
-      setCustomerData(generateUtilityCustomerData())
-      setIsLoading(false)
-    }, 1000)
-  }
-
   return (
-    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+    <section className="min-h-screen w-full bg-gray-50">
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col px-3 2xl:container md:px-4 lg:px-6 2xl:px-6">
-            {/* Page Header - Always Visible */}
-            <div className="flex w-full items-start justify-between gap-6 max-md:flex-col  md:my-4 ">
+
+          <div className="w-full px-3 py-4">
+            {/* Ultra Compact Header */}
+            <div className="mb-4 flex items-center justify-between">
               <div>
-                <h4 className="text-lg font-semibold sm:text-xl md:text-2xl">Prepaid & Token Vending</h4>
-                <p className="text-sm sm:text-base">STS token generation and prepaid meter management</p>
+                <h1 className="text-base font-semibold text-gray-900 sm:text-lg">Prepaid Vending</h1>
+                <p className="text-xs text-gray-600">STS token management</p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => setShowAnalytics(!showAnalytics)}
-                  className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                  className={`rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors ${
                     showAnalytics
-                      ? "bg-blue-600 text-white hover:bg-blue-700"
+                      ? "bg-blue-600 text-white"
                       : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                   }`}
                 >
-                  {showAnalytics ? "Hide Analytics" : "Show Analytics"}
+                  {showAnalytics ? "Hide Stats" : "Show Stats"}
                 </button>
                 <button
-                  onClick={handleRefreshData}
-                  disabled={isLoading}
-                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                  onClick={() => setIsAddCustomerModalOpen(true)}
+                  className="rounded-md bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
                 >
-                  Refresh Data
+                  Add Customer
                 </button>
               </div>
             </div>
 
-            {/* Main Content Area */}
-            <div className="flex w-full gap-6 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 ">
-              <div className="w-full">
-                {isLoading ? (
-                  // Loading State
-                  <>
-                    <SkeletonLoader />
-                    <LoadingState showCategories={true} />
-                  </>
-                ) : (
-                  // Loaded State
-                  <>
-                    {/* Analytics Section - Conditional */}
-                    {showAnalytics && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{ duration: 0.5 }}
-                        className="mb-6"
-                      >
-                        <PrepaidSummaryAnalytics />
-                      </motion.div>
-                    )}
+            {/* Compact Analytics - Collapsible */}
+            <AnimatePresence>
+              {showAnalytics && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="mb-4 overflow-hidden"
+                >
+                  <CompactPrepaidAnalytics />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.2 }}
-                    >
-                      <PrepaidTransactionTable pageSize={30} />
-                    </motion.div>
-                  </>
-                )}
-              </div>
-            </div>
+            {/* Compact Table */}
+            <CompactTableSection />
           </div>
         </div>
       </div>
+
       <AddCustomerModal
         isOpen={isAddCustomerModalOpen}
         onRequestClose={() => setIsAddCustomerModalOpen(false)}
-        onSuccess={handleAddCustomerSuccess}
+        onSuccess={() => setIsAddCustomerModalOpen(false)}
       />
     </section>
   )
