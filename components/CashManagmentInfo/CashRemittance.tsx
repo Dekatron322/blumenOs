@@ -8,9 +8,9 @@ import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
 import { RxCaretSort } from "react-icons/rx"
 import { AppDispatch, RootState } from "lib/redux/store"
 import {
-  fetchCashRemittanceRecords,
   CashRemittanceRecord,
   CashRemittanceStatus,
+  fetchCashRemittanceRecords,
   setPagination,
 } from "lib/redux/cashRemittanceSlice"
 import { ButtonModule } from "components/ui/Button/Button"
