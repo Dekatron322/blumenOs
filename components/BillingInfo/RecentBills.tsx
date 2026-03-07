@@ -15,9 +15,9 @@ import { clearFeeders, fetchFeeders } from "lib/redux/feedersSlice"
 import { ArrowLeft, ChevronDown, ChevronUp, Filter, Loader2, RefreshCw, SortAsc, SortDesc, X } from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import {
-  getCustomerCategoryOptions,
-  getCustomerCategoryLabel,
   getCustomerCategoryColors,
+  getCustomerCategoryLabel,
+  getCustomerCategoryOptions,
 } from "lib/constants/customerCategories"
 
 interface SortOption {

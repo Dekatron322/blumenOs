@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useCallback, useEffect, useState, useRef } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
 import {
@@ -16,10 +16,10 @@ import {
   Loader2,
   RefreshCw,
   Search,
-  X,
-  XCircle,
   SortAsc,
   SortDesc,
+  X,
+  XCircle,
 } from "lucide-react"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { DataQualityItem, DataQualityParams, fetchDataQuality } from "lib/redux/customerSlice"
