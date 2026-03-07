@@ -308,7 +308,7 @@ const MarkAsReadyToPrintModal: React.FC<{
               {selectedFilterCount > 0 && !hasCustomersSelected && (
                 <div className="mb-4 rounded-md bg-yellow-50 p-3">
                   <div className="flex">
-                    <div className="flex-shrink-0">
+                    <div className="shrink-0">
                       <AlertCircle className="size-4 text-yellow-400" />
                     </div>
                     <div className="ml-3">

@@ -199,7 +199,7 @@ const FilterSidebar = ({
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header - Fixed at top */}
-            <div className="flex-shrink-0 border-b bg-white p-4">
+            <div className="shrink-0 border-b bg-white p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <button
@@ -351,7 +351,7 @@ const FilterSidebar = ({
             </div>
 
             {/* Footer Actions - Fixed at bottom */}
-            <div className="flex-shrink-0 border-t bg-white p-4">
+            <div className="shrink-0 border-t bg-white p-4">
               <div className="flex gap-3">
                 <button
                   onClick={() => {

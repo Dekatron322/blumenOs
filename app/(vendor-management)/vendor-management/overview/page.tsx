@@ -518,7 +518,7 @@ export default function VendorManagementDashboard() {
               <div className="mb-4 rounded-md bg-red-50 p-4">
                 <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
                   <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0">
+                    <div className="shrink-0">
                       <TamperIcon />
                     </div>
                     <div>

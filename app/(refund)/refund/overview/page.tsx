@@ -331,7 +331,7 @@ const RefundSummarySection = ({ data, isLoading, error }: { data: any; isLoading
     return (
       <div className="rounded-lg border border-red-200 bg-red-50 p-4">
         <div className="flex items-start gap-3">
-          <AlertCircle className="mt-0.5 size-5 flex-shrink-0 text-red-600" />
+          <AlertCircle className="mt-0.5 size-5 shrink-0 text-red-600" />
           <div>
             <p className="font-medium text-red-900">Failed to load refund summary</p>
             <p className="text-sm text-red-700">{error}</p>

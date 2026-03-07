@@ -202,7 +202,7 @@ const MobileFilterSidebar = ({
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex-shrink-0 border-b bg-white p-4">
+            <div className="shrink-0 border-b bg-white p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <button
@@ -337,7 +337,7 @@ const MobileFilterSidebar = ({
             </div>
 
             {/* Bottom Action Buttons */}
-            <div className="flex-shrink-0 border-t bg-white p-4 2xl:hidden">
+            <div className="shrink-0 border-t bg-white p-4 2xl:hidden">
               <div className="flex gap-3">
                 <button
                   onClick={() => {

@@ -175,7 +175,7 @@ const CustomerListItemSkeleton = () => (
   >
     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-0">
       <div className="flex items-start gap-3 md:items-center md:gap-4">
-        <div className="size-8 flex-shrink-0 rounded-full bg-gray-200 md:size-10"></div>
+        <div className="size-8 shrink-0 rounded-full bg-gray-200 md:size-10"></div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
             <div className="h-5 w-32 rounded bg-gray-200 md:w-40"></div>

@@ -642,7 +642,7 @@ const CardPaymentModal: React.FC<CardPaymentModalProps> = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col gap-3 border-t border-gray-200 bg-white px-4 py-4 max-sm:flex-shrink-0 max-sm:gap-2 max-sm:px-3 max-sm:py-3 sm:flex-row sm:justify-end sm:px-6">
+          <div className="flex flex-col gap-3 border-t border-gray-200 bg-white px-4 py-4 max-sm:shrink-0 max-sm:gap-2 max-sm:px-3 max-sm:py-3 sm:flex-row sm:justify-end sm:px-6">
             <ButtonModule
               variant="outline"
               onClick={() => setShowReceipt(false)}
@@ -691,7 +691,7 @@ const CardPaymentModal: React.FC<CardPaymentModalProps> = ({
         className="relative w-[90vw] max-w-2xl rounded-lg bg-white shadow-2xl max-sm:flex max-sm:h-[90vh] max-sm:max-w-full max-sm:flex-col max-sm:rounded-t-3xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b bg-[#F9F9F9] px-6 py-4 max-sm:flex-shrink-0 max-sm:px-3 max-sm:py-3">
+        <div className="flex items-center justify-between border-b bg-[#F9F9F9] px-6 py-4 max-sm:shrink-0 max-sm:px-3 max-sm:py-3">
           <h2 className="text-lg font-semibold text-gray-900 max-sm:text-base">Card Payment Processing</h2>
           <button
             onClick={onRequestClose}
@@ -854,7 +854,7 @@ const CardPaymentModal: React.FC<CardPaymentModalProps> = ({
 
                   <div className="mt-4 rounded-md border border-blue-200 bg-blue-50 p-3">
                     <div className="flex">
-                      <div className="flex-shrink-0">
+                      <div className="shrink-0">
                         <svg className="size-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                           <path
                             fillRule="evenodd"
@@ -921,7 +921,7 @@ const CardPaymentModal: React.FC<CardPaymentModalProps> = ({
           {/* Warning Message */}
           <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3">
             <div className="flex">
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 <svg className="size-4 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
                   <path
                     fillRule="evenodd"
@@ -940,7 +940,7 @@ const CardPaymentModal: React.FC<CardPaymentModalProps> = ({
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 border-t bg-white px-6 py-4 max-sm:flex-shrink-0 max-sm:gap-2 max-sm:px-4 max-sm:py-3 sm:flex-row sm:gap-4">
+        <div className="flex flex-col gap-3 border-t bg-white px-6 py-4 max-sm:shrink-0 max-sm:gap-2 max-sm:px-4 max-sm:py-3 sm:flex-row sm:gap-4">
           {/* <ButtonModule variant="secondary" className="flex-1" size="md" onClick={onRequestClose}>
             Close
           </ButtonModule> */}

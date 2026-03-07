@@ -137,7 +137,7 @@ const GenerateApiKeyModal: React.FC<GenerateApiKeyModalProps> = ({
 
                 <div className="rounded-lg bg-yellow-50 p-4">
                   <div className="flex">
-                    <div className="flex-shrink-0">
+                    <div className="shrink-0">
                       <svg className="size-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
                         <path
                           fillRule="evenodd"
@@ -234,7 +234,7 @@ const GenerateApiKeyModal: React.FC<GenerateApiKeyModalProps> = ({
                 {/* Security Warning */}
                 <div className="rounded-lg bg-red-50 p-4">
                   <div className="flex">
-                    <div className="flex-shrink-0">
+                    <div className="shrink-0">
                       <svg className="size-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
                         <path
                           fillRule="evenodd"

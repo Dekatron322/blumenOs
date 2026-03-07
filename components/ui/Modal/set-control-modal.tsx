@@ -194,7 +194,7 @@ const SetControlModal: React.FC<SetControlModalProps> = ({
 
             <div className="rounded-md bg-amber-50 p-3">
               <div className="flex items-start gap-2">
-                <AlertTriangle className="mt-0.5 size-4 flex-shrink-0 text-amber-600" />
+                <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600" />
                 <p className="text-xs text-amber-800">
                   <strong>Warning:</strong> This action will modify the control settings of the meter and cannot be
                   undone. Please ensure this action is authorized and necessary.

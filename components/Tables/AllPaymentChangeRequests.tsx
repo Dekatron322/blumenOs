@@ -106,7 +106,7 @@ const ChangeRequestListItemSkeleton = () => (
   >
     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-0">
       <div className="flex items-start gap-3 md:items-center md:gap-4">
-        <div className="size-8 flex-shrink-0 rounded-full bg-gray-200 md:size-10"></div>
+        <div className="size-8 shrink-0 rounded-full bg-gray-200 md:size-10"></div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
             <div className="h-5 w-32 rounded bg-gray-200 md:w-40"></div>
@@ -265,7 +265,7 @@ const MobileFilterSidebar = ({
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header - Fixed */}
-            <div className="flex-shrink-0 border-b bg-white p-4">
+            <div className="shrink-0 border-b bg-white p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <button
@@ -390,7 +390,7 @@ const MobileFilterSidebar = ({
             </div>
 
             {/* Bottom Action Buttons - Fixed */}
-            <div className="flex-shrink-0 border-t bg-white p-4 2xl:hidden">
+            <div className="shrink-0 border-t bg-white p-4 2xl:hidden">
               <div className="flex gap-3">
                 <button
                   onClick={() => {
@@ -1134,7 +1134,7 @@ const AllPaymentChangeRequests = () => {
             animate={{ opacity: 1 }}
             className="hidden w-full flex-col rounded-md border bg-white 2xl:flex 2xl:w-80 2xl:self-start"
           >
-            <div className="flex-shrink-0 border-b bg-white p-3 md:p-5">
+            <div className="shrink-0 border-b bg-white p-3 md:p-5">
               <div className="flex items-center justify-between">
                 <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
                 <button
@@ -1249,7 +1249,7 @@ const AllPaymentChangeRequests = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex-shrink-0 space-y-3 border-t bg-white p-3 md:p-5">
+            <div className="shrink-0 space-y-3 border-t bg-white p-3 md:p-5">
               <button
                 onClick={applyFilters}
                 className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
@@ -1267,7 +1267,7 @@ const AllPaymentChangeRequests = () => {
             </div>
 
             {/* Summary Stats */}
-            <div className="flex-shrink-0 rounded-lg bg-gray-50 p-3 md:p-4">
+            <div className="shrink-0 rounded-lg bg-gray-50 p-3 md:p-4">
               <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
               <div className="space-y-1 text-xs md:text-sm">
                 <div className="flex justify-between">

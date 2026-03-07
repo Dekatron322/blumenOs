@@ -256,7 +256,7 @@ const MobileFilterSidebar = ({
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header - Fixed at top */}
-            <div className="flex-shrink-0 border-b border-gray-200 bg-white p-4">
+            <div className="shrink-0 border-b border-gray-200 bg-white p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <button
@@ -426,7 +426,7 @@ const MobileFilterSidebar = ({
             </div>
 
             {/* Bottom Action Buttons - Fixed at bottom */}
-            <div className="flex-shrink-0 border-t border-gray-200 bg-white p-4">
+            <div className="shrink-0 border-t border-gray-200 bg-white p-4">
               <div className="flex gap-3">
                 <ButtonModule
                   onClick={() => {

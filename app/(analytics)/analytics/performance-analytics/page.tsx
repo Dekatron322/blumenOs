@@ -485,7 +485,7 @@ export default function PerformanceAnalyticsDashboard() {
                               </button>
                             ))}
 
-                            <div className="mb-2 mt-2 border-b border-gray-100"></div>
+                            <div className="my-2 border-b border-gray-100"></div>
                             <div className="px-3 py-2">
                               <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                                 Auto-refresh
@@ -1073,7 +1073,7 @@ export default function PerformanceAnalyticsDashboard() {
                                 <tr key={slice.label} className="hover:bg-gray-50">
                                   <td className="whitespace-nowrap px-6 py-4">
                                     <div className="flex items-center">
-                                      <div className="flex-shrink-0">
+                                      <div className="shrink-0">
                                         <div
                                           className="flex size-8 items-center justify-center rounded-full font-bold text-white"
                                           style={{ backgroundColor: COLORS[index % COLORS.length] }}

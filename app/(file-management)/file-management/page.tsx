@@ -489,7 +489,7 @@ const FileManagementPage = () => {
             {(fileIntentError || uploadError || finalizeFileError || bulkUploadError) && (
               <div className="mt-2 rounded-lg border border-red-200 bg-red-50 p-4">
                 <div className="flex items-start">
-                  <div className="mr-3 flex size-8 flex-shrink-0 items-center justify-center rounded-full bg-red-100">
+                  <div className="mr-3 flex size-8 shrink-0 items-center justify-center rounded-full bg-red-100">
                     <AlertCircle className="size-4 text-red-600" />
                   </div>
                   <div className="flex-1">
@@ -506,7 +506,7 @@ const FileManagementPage = () => {
             {uploadSuccess && finalizedFile && (
               <div className="rounded-lg border border-green-200 bg-green-50 p-4">
                 <div className="flex items-start">
-                  <div className="mr-3 flex size-8 flex-shrink-0 items-center justify-center rounded-full bg-green-100">
+                  <div className="mr-3 flex size-8 shrink-0 items-center justify-center rounded-full bg-green-100">
                     <CheckCircle className="size-4 text-green-600" />
                   </div>
                   <div className="flex-1">

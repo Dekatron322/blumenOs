@@ -165,7 +165,7 @@ const BankTransferDetailsModal: React.FC<BankTransferDetailsModalProps> = ({
         className="relative flex max-h-[90vh] w-[90vw] max-w-2xl flex-col rounded-lg bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex flex-shrink-0 items-center justify-between border-b bg-[#F9F9F9] px-6 py-4 max-sm:px-3">
+        <div className="flex shrink-0 items-center justify-between border-b bg-[#F9F9F9] px-6 py-4 max-sm:px-3">
           <h2 className="text-lg font-semibold text-gray-900 max-sm:text-base">Bank Transfer Payment</h2>
           <button
             onClick={onRequestClose}
@@ -364,7 +364,7 @@ const BankTransferDetailsModal: React.FC<BankTransferDetailsModalProps> = ({
           </div> */}
         </div>
 
-        <div className="flex flex-shrink-0  gap-3 border-t bg-white px-6 py-4 max-sm:px-3 sm:flex-row sm:gap-4">
+        <div className="flex shrink-0  gap-3 border-t bg-white px-6 py-4 max-sm:px-3 sm:flex-row sm:gap-4">
           <ButtonModule variant="secondary" className="flex w-full" size="sm" onClick={handleCopy}>
             {isCopying ? "Copied!" : "Copy Details"}
           </ButtonModule>

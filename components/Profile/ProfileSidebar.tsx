@@ -30,7 +30,7 @@ export default function ProfileSidebar() {
   const activeTab = getActiveTab()
 
   return (
-    <div className="w-full md:w-64 md:flex-shrink-0">
+    <div className="w-full md:w-64 md:shrink-0">
       <div className="rounded-lg bg-white p-4 shadow-sm">
         <nav className="space-y-1">
           {tabs.map((tab) => {
@@ -45,7 +45,7 @@ export default function ProfileSidebar() {
                     : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                 }`}
               >
-                <Icon className="size-5  flex-shrink-0" />
+                <Icon className="size-5  shrink-0" />
                 <span className="truncate">{tab.label}</span>
               </button>
             )

@@ -81,7 +81,7 @@ const MobileFilterSidebar = ({
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header - Fixed */}
-            <div className="flex-shrink-0 border-b bg-white p-4">
+            <div className="shrink-0 border-b bg-white p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <button
@@ -198,7 +198,7 @@ const MobileFilterSidebar = ({
             </div>
 
             {/* Bottom Action Buttons - Fixed */}
-            <div className="flex-shrink-0 border-t bg-white p-4 2xl:hidden">
+            <div className="shrink-0 border-t bg-white p-4 2xl:hidden">
               <div className="flex gap-3">
                 <button
                   onClick={() => {
@@ -485,7 +485,7 @@ export default function CashClearancesPage() {
                     key="desktop-filters-sidebar"
                     initial={{ opacity: 1 }}
                     animate={{ opacity: 1 }}
-                    className="hidden w-80 flex-shrink-0 rounded-xl border border-gray-200 bg-white 2xl:block"
+                    className="hidden w-80 shrink-0 rounded-xl border border-gray-200 bg-white 2xl:block"
                   >
                     {/* Header */}
                     <div className="border-b border-gray-200 p-4">

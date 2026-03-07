@@ -191,7 +191,7 @@ const CreateBillingJobModal: React.FC<CreateBillingJobModalProps> = ({ isOpen, o
           </div>
           <button
             onClick={onRequestClose}
-            className="ml-3 flex size-8 flex-shrink-0 items-center justify-center rounded-full bg-white text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600"
+            className="ml-3 flex size-8 shrink-0 items-center justify-center rounded-full bg-white text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600"
             aria-label="Close modal"
           >
             <X className="size-4" />
@@ -209,7 +209,7 @@ const CreateBillingJobModal: React.FC<CreateBillingJobModalProps> = ({ isOpen, o
                 className="rounded-lg border border-red-200 bg-red-50 p-3 sm:p-4"
               >
                 <div className="flex items-start">
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     <AlertCircle className="size-5 text-red-400" />
                   </div>
                   <div className="ml-3">
@@ -228,7 +228,7 @@ const CreateBillingJobModal: React.FC<CreateBillingJobModalProps> = ({ isOpen, o
                 className="rounded-lg border border-green-200 bg-green-50 p-3 sm:p-4"
               >
                 <div className="flex items-start">
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     <CheckCircle className="size-5 text-green-400" />
                   </div>
                   <div className="ml-3">
@@ -304,7 +304,7 @@ const CreateBillingJobModal: React.FC<CreateBillingJobModalProps> = ({ isOpen, o
               ) : (
                 <div className="rounded-lg border border-blue-100 bg-blue-50 p-3">
                   <div className="flex items-start">
-                    <Info className="mr-2 mt-0.5 size-4 flex-shrink-0 text-blue-400" />
+                    <Info className="mr-2 mt-0.5 size-4 shrink-0 text-blue-400" />
                     <p className="text-xs text-blue-700">
                       No area office selected. Billing jobs will be generated for{" "}
                       <span className="font-semibold">all area offices</span> for the selected period.
@@ -360,7 +360,7 @@ const CreateBillingJobModal: React.FC<CreateBillingJobModalProps> = ({ isOpen, o
             {!formData.billingPeriodId && (
               <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 sm:hidden">
                 <div className="flex items-start">
-                  <Info className="mr-2 mt-0.5 size-4 flex-shrink-0 text-gray-400" />
+                  <Info className="mr-2 mt-0.5 size-4 shrink-0 text-gray-400" />
                   <p className="text-xs text-gray-600">
                     <span className="font-medium">Tip:</span> Select both month and year to create a billing job
                   </p>

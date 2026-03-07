@@ -1328,7 +1328,7 @@ export default function Dashboard() {
                                 All Time
                               </button>
 
-                              <div className="mb-2 mt-2 border-b border-gray-100"></div>
+                              <div className="my-2 border-b border-gray-100"></div>
                               <div className="px-3 py-2">
                                 <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                                   Auto-refresh

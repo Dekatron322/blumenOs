@@ -497,7 +497,7 @@ const AddFeederEnergyCapPage = () => {
                 }`}
               >
                 <div
-                  className={`flex size-7 flex-shrink-0 items-center justify-center rounded-full ${
+                  className={`flex size-7 shrink-0 items-center justify-center rounded-full ${
                     activeTab === "single" ? "bg-blue-100 text-blue-600" : "bg-gray-200 text-gray-600"
                   }`}
                 >
@@ -507,7 +507,7 @@ const AddFeederEnergyCapPage = () => {
                   <div className="text-sm font-medium">Single Application</div>
                   <div className="mt-1 text-xs text-gray-600">Apply cap to individual feeder</div>
                 </div>
-                {activeTab === "single" && <ChevronRight className="size-4 flex-shrink-0" />}
+                {activeTab === "single" && <ChevronRight className="size-4 shrink-0" />}
               </button>
 
               <button
@@ -521,7 +521,7 @@ const AddFeederEnergyCapPage = () => {
                 }`}
               >
                 <div
-                  className={`flex size-7 flex-shrink-0 items-center justify-center rounded-full ${
+                  className={`flex size-7 shrink-0 items-center justify-center rounded-full ${
                     activeTab === "multiple" ? "bg-blue-100 text-blue-600" : "bg-gray-200 text-gray-600"
                   }`}
                 >
@@ -531,7 +531,7 @@ const AddFeederEnergyCapPage = () => {
                   <div className="text-sm font-medium">Multiple Application</div>
                   <div className="mt-1 text-xs text-gray-600">Apply caps to multiple feeders</div>
                 </div>
-                {activeTab === "multiple" && <ChevronRight className="size-4 flex-shrink-0" />}
+                {activeTab === "multiple" && <ChevronRight className="size-4 shrink-0" />}
               </button>
             </nav>
           </div>
@@ -726,7 +726,7 @@ const AddFeederEnergyCapPage = () => {
                         className="rounded-lg border border-green-200 bg-green-50 p-4"
                       >
                         <div className="flex">
-                          <div className="flex-shrink-0">
+                          <div className="shrink-0">
                             <CheckCircle className="size-5 text-green-400" />
                           </div>
                           <div className="ml-3">
@@ -747,7 +747,7 @@ const AddFeederEnergyCapPage = () => {
                         className="rounded-lg border border-red-200 bg-red-50 p-4"
                       >
                         <div className="flex">
-                          <div className="flex-shrink-0">
+                          <div className="shrink-0">
                             <AlertCircle className="size-5 text-red-400" />
                           </div>
                           <div className="ml-3">

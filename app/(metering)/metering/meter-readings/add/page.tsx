@@ -636,7 +636,7 @@ const AddMeterReadingPage = () => {
                 }`}
               >
                 <div
-                  className={`flex size-7 flex-shrink-0 items-center justify-center rounded-full ${
+                  className={`flex size-7 shrink-0 items-center justify-center rounded-full ${
                     activeTab === "single" ? "bg-blue-100 text-blue-600" : "bg-gray-200 text-gray-600"
                   }`}
                 >
@@ -646,7 +646,7 @@ const AddMeterReadingPage = () => {
                   <div className="text-sm font-medium">Single Reading</div>
                   <div className="mt-1 text-xs text-gray-600">Record reading for individual customer</div>
                 </div>
-                {activeTab === "single" && <ChevronRight className="size-4 flex-shrink-0" />}
+                {activeTab === "single" && <ChevronRight className="size-4 shrink-0" />}
               </button>
 
               <button
@@ -660,7 +660,7 @@ const AddMeterReadingPage = () => {
                 }`}
               >
                 <div
-                  className={`flex size-7 flex-shrink-0 items-center justify-center rounded-full ${
+                  className={`flex size-7 shrink-0 items-center justify-center rounded-full ${
                     activeTab === "bulk" ? "bg-blue-100 text-blue-600" : "bg-gray-200 text-gray-600"
                   }`}
                 >
@@ -670,7 +670,7 @@ const AddMeterReadingPage = () => {
                   <div className="text-sm font-medium">Bulk Upload (CSV)</div>
                   <div className="mt-1 text-xs text-gray-600">Upload CSV file for multiple customers</div>
                 </div>
-                {activeTab === "bulk" && <ChevronRight className="size-4 flex-shrink-0" />}
+                {activeTab === "bulk" && <ChevronRight className="size-4 shrink-0" />}
               </button>
             </nav>
           </div>
