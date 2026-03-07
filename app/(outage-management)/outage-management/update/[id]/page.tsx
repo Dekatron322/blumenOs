@@ -283,7 +283,7 @@ const UpdateOutage = () => {
         <div className="flex w-full flex-col px-3  max-sm:px-3 xl:px-16">
           {/* Page Header */}
           <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-            <div className="mx-auto w-full px-3 py-4 2xl:px-16">
+            <div className="mx-auto w-full px-3 py-4 ">
               <div className="flex w-full items-center justify-between max-sm:flex-col lg:items-center">
                 <div className="flex items-center gap-4">
                   <motion.button

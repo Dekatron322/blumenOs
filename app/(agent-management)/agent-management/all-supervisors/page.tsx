@@ -1051,7 +1051,7 @@ const AllSupervisors: React.FC = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto w-full px-3 py-8  sm:px-4 lg:px-6 2xl:px-16">
+          <div className="mx-auto w-full px-3 py-8  sm:px-4 lg:px-6 ">
             <div className="mb-4 flex w-full justify-between max-md:flex-col max-sm:my-4 ">
               <div>
                 <h4 className="text-2xl font-semibold">Supervisors Management</h4>

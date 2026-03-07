@@ -341,7 +341,7 @@ export default function EmployeeManagement() {
           <DashboardNav />
           <div className="mx-auto flex w-full flex-col ">
             {/* Page Header - Always Visible */}
-            <div className="my-4 flex w-full justify-between gap-6 px-3 max-md:flex-col max-md:px-3 max-sm:my-4 max-sm:px-3 sm:px-4 md:my-4 md:px-6 2xl:px-16">
+            <div className="my-4 flex w-full justify-between gap-6 px-3 max-md:flex-col max-md:px-3 max-sm:my-4 max-sm:px-3 sm:px-4 md:my-4 md:px-6 ">
               <div>
                 <h4 className="text-xl font-semibold sm:text-2xl">Employee Management</h4>
                 <p className="text-sm text-gray-600 sm:text-base">
@@ -430,7 +430,7 @@ export default function EmployeeManagement() {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex w-full flex-col-reverse gap-6 px-3 max-md:px-0 max-sm:my-4 sm:px-4 md:px-6 xl:flex-row 2xl:px-16 ">
+            <div className="flex w-full flex-col-reverse gap-6 px-3 max-md:px-0 max-sm:my-4 sm:px-4 md:px-6 xl:flex-row  ">
               <div className="w-full">
                 <motion.div
                   initial={{ opacity: 0 }}

@@ -842,7 +842,7 @@ const AllDebtRecoveryContent: React.FC = () => {
 
   if (loading)
     return (
-      <div className="flex items-center justify-center px-3  sm:px-4 md:px-6 2xl:px-16">
+      <div className="flex items-center justify-center px-3  sm:px-4 md:px-6 ">
         <LoadingSkeleton />
       </div>
     )

@@ -364,7 +364,7 @@ export default function CashClearancesPage() {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto w-full px-3 py-8 sm:px-4 lg:px-6 2xl:px-16">
+          <div className="mx-auto w-full px-3 py-8 sm:px-4 lg:px-6 ">
             <div className="space-y-5">
               {/* Header Section */}
               <div className="rounded-xl border border-gray-200 bg-white p-4">

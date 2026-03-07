@@ -542,7 +542,7 @@ const UpdateAgentPage = () => {
         <DashboardNav />
         <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200">
           <div className="flex w-full flex-col">
-            <div className="mx-auto flex w-full flex-col px-3 py-4  sm:px-4 md:px-6 2xl:px-16">
+            <div className="mx-auto flex w-full flex-col px-3 py-4  sm:px-4 md:px-6 ">
               <div className="flex items-center justify-center py-20">
                 <div className="text-center">
                   <div className="mx-auto size-12 animate-spin rounded-full border-4 border-solid border-[#004B23] border-t-transparent"></div>
@@ -562,7 +562,7 @@ const UpdateAgentPage = () => {
         <DashboardNav />
         <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200">
           <div className="flex w-full flex-col">
-            <div className="mx-auto flex w-full flex-col px-3 py-4  sm:px-4 md:px-6 2xl:px-16">
+            <div className="mx-auto flex w-full flex-col px-3 py-4  sm:px-4 md:px-6 ">
               <div className="flex items-center justify-center py-20">
                 <div className="text-center">
                   <h2 className="text-2xl font-bold text-gray-900">Agent Not Found</h2>
@@ -584,7 +584,7 @@ const UpdateAgentPage = () => {
       <DashboardNav />
       <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200">
         <div className="flex w-full flex-col">
-          <div className="mx-auto flex w-full flex-col px-3 py-4  sm:px-4 md:px-6 2xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3 py-4  sm:px-4 md:px-6 ">
             {/* Page Header */}
             <div className="mb-6">
               <div className="flex items-center justify-between gap-3">

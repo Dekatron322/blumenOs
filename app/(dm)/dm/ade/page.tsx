@@ -1024,7 +1024,7 @@ export default function AllDebtEntriesPage() {
       <DashboardNav />
       <div className="flex min-h-screen w-full pb-10">
         <div className="flex w-full flex-col">
-          <div className="mx-auto flex w-full flex-col px-3  sm:px-3 xl:px-6 2xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3  sm:px-3 xl:px-6 ">
             {/* Page Header */}
             <div className="flex w-full flex-col items-start justify-between gap-4 py-4 sm:py-6 md:gap-6 md:py-4 xl:flex-row xl:items-start">
               <div className="flex-1">

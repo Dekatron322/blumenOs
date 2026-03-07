@@ -432,7 +432,7 @@ export default function VendorManagementDashboard() {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col px-3  sm:px-4 lg:px-6 2xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3  sm:px-4 lg:px-6 ">
             {/* Page Header - Always Visible */}
             <div className="my-4 flex w-full flex-col justify-between gap-4 md:flex-row md:gap-6">
               <div className="flex-1">

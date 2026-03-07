@@ -308,7 +308,7 @@ export default function CustomerChangeRequestManagement() {
           <DashboardNav />
           <div className="mx-auto flex w-full flex-col ">
             {/* Page Header - Always Visible */}
-            <div className="flex w-full justify-between gap-6 px-3 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:mt-8 2xl:px-16">
+            <div className="flex w-full justify-between gap-6 px-3 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:mt-8 ">
               <div>
                 <h4 className="text-2xl font-semibold">Customer Change Requests</h4>
                 <p>Manage and review customer information change requests</p>
@@ -333,7 +333,7 @@ export default function CustomerChangeRequestManagement() {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex w-full gap-6 max-md:flex-col max-md:px-0 max-sm:my-4  sm:p-3 2xl:px-16">
+            <div className="flex w-full gap-6 max-md:flex-col max-md:px-0 max-sm:my-4  sm:p-3 ">
               <div className="w-full">
                 {isLoading ? (
                   // Loading State

@@ -410,7 +410,7 @@ export default function EmployeeManagement() {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col px-3  sm:px-4 md:px-6 2xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3  sm:px-4 md:px-6 ">
             {/* Page Header - Always Visible */}
             <div className="flex w-full justify-between gap-6  max-md:flex-col max-md:px-0 max-sm:my-4  md:my-4">
               <div>

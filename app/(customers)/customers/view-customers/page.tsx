@@ -415,7 +415,7 @@ export default function AllTransactions() {
           <DashboardNav />
           <div className="mx-auto flex w-full flex-col ">
             {/* Page Header - Always Visible */}
-            <div className="my-4 flex w-full justify-between gap-6 px-3 max-md:flex-col max-md:px-3 max-sm:my-4 max-sm:px-3 md:px-4 lg:px-6 2xl:px-16">
+            <div className="my-4 flex w-full justify-between gap-6 px-3 max-md:flex-col max-md:px-3 max-sm:my-4 max-sm:px-3 md:px-4 lg:px-6 ">
               <div>
                 <h4 className="text-2xl font-semibold">Customer Management</h4>
                 <p>Manage customer accounts, KYC, and service connections</p>
@@ -489,7 +489,7 @@ export default function AllTransactions() {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex w-full gap-6 px-3 max-md:flex-col max-md:px-0 max-sm:my-4 sm:px-4 md:px-6 2xl:px-16">
+            <div className="flex w-full gap-6 px-3 max-md:flex-col max-md:px-0 max-sm:my-4 sm:px-4 md:px-6 ">
               <div className="w-full">
                 <motion.div
                   initial={{ opacity: 0 }}

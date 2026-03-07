@@ -228,7 +228,7 @@ const CustomerDetailsSkeleton = () => {
           <div className="mx-auto flex w-full flex-col ">
             {/* Header Skeleton */}
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-4 py-4 md:px-6 2xl:px-16">
+              <div className="mx-auto w-full px-4 py-4 md:px-6 ">
                 <div className="flex w-full justify-between">
                   <div className="flex items-center gap-4">
                     <div className="size-9 rounded-md bg-gray-200"></div>
@@ -245,7 +245,7 @@ const CustomerDetailsSkeleton = () => {
               </div>
             </div>
 
-            <div className="flex w-full px-4 py-8 md:px-6 2xl:px-16">
+            <div className="flex w-full px-4 py-8 md:px-6 ">
               <div className="w-full gap-6 xl:flex">
                 {/* Left Column Skeleton */}
                 <div className="w-full space-y-6 xl:max-w-[30%]">
@@ -909,7 +909,7 @@ const CustomerDetailsPage = () => {
           <div className="mx-auto flex w-full flex-col ">
             {/* Sticky Header */}
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white/80 backdrop-blur-sm">
-              <div className="mx-auto w-full px-4 py-4 md:px-6 2xl:px-16">
+              <div className="mx-auto w-full px-4 py-4 md:px-6 ">
                 <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3">
                     <motion.button
@@ -966,7 +966,7 @@ const CustomerDetailsPage = () => {
             </div>
 
             {/* Main Content */}
-            <div className="flex w-full px-4 py-6 md:px-6 2xl:px-16">
+            <div className="flex w-full px-4 py-6 md:px-6 ">
               <div className="w-full gap-6 xl:flex">
                 {/* Left Column - Profile & Actions */}
                 <div className="w-full space-y-6 xl:max-w-[30%]">

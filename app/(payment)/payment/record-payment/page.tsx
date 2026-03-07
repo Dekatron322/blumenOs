@@ -969,7 +969,7 @@ const AddPaymentPage = () => {
         <div className="flex w-full flex-col">
           <DashboardNav />
 
-          <div className="mx-auto flex w-full flex-col px-3 py-4 lg:container md:px-4 lg:px-6 2xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3 py-4 lg:container md:px-4 lg:px-6 ">
             {/* Page Header - Mobile Optimized */}
             <div className="mb-6">
               <div className="flex items-center justify-between gap-3">

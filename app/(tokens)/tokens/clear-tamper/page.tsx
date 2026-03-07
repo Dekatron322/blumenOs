@@ -580,7 +580,7 @@ const ClearTamper = () => {
           <div className="flex w-full flex-col">
             <DashboardNav />
 
-            <div className="mx-auto flex w-full flex-col px-3 py-4  sm:px-4 md:px-6 md:py-4 2xl:px-16">
+            <div className="mx-auto flex w-full flex-col px-3 py-4  sm:px-4 md:px-6 md:py-4 ">
               {/* Page Header */}
               <div className="mb-6">
                 <div className="flex items-center justify-between gap-3">

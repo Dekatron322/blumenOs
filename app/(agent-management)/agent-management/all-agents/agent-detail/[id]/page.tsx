@@ -632,7 +632,7 @@ const AgentDetailsPage = () => {
           <DashboardNav />
           <div className="mx-auto flex w-full flex-col ">
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-3 py-4 2xl:px-16">
+              <div className="mx-auto w-full px-3 py-4 ">
                 <div className="flex w-full items-start justify-between gap-4 max-sm:flex-col sm:items-center lg:items-center">
                   <div className="flex items-start gap-3 sm:gap-4 lg:items-center">
                     <motion.button
@@ -732,7 +732,7 @@ const AgentDetailsPage = () => {
               </div>
             </div>
 
-            <div className="flex w-full px-3 py-8 2xl:px-16">
+            <div className="flex w-full px-3 py-8 ">
               <div className="w-full gap-6 xl:flex">
                 {/* Left Column - Profile & Quick Actions */}
                 <div className="flex w-full flex-col space-y-6 xl:max-w-[30%]">

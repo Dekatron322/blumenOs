@@ -587,7 +587,7 @@ const TestToken = () => {
       <DashboardNav />
       <div className="min-h-screen bg-gray-50">
         <div className="py-6">
-          <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 2xl:px-16">
+          <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 ">
             <div className="mb-8">
               <h1 className="text-2xl font-bold text-gray-900">Test Token</h1>
               <p className="mt-2 text-gray-600">Generate test tokens for individual meters or bulk operations</p>

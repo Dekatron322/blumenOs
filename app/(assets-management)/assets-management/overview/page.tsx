@@ -393,7 +393,7 @@ export default function MeteringDashboard() {
           <DashboardNav />
           <div className="mx-auto flex w-full flex-col ">
             {/* Page Header - Always Visible */}
-            <div className="flex w-full items-start justify-between gap-6 px-3 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8 md:px-4 lg:px-6 2xl:px-16">
+            <div className="flex w-full items-start justify-between gap-6 px-3 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8 md:px-4 lg:px-6 ">
               <div>
                 <h4 className="text-lg font-semibold sm:text-xl md:text-xl">Asset Management</h4>
                 <p className="text-sm sm:text-base">Network infrastructure and equipment tracking</p>
@@ -505,7 +505,7 @@ export default function MeteringDashboard() {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex w-full gap-6 px-3 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:px-4 lg:px-6 2xl:px-16">
+            <div className="flex w-full gap-6 px-3 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:px-4 lg:px-6 ">
               <div className="w-full">
                 {showLoading ? (
                   // Loading State

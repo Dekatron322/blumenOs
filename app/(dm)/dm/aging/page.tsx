@@ -732,7 +732,7 @@ export default function DebtAgingDashboard() {
     <section className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200">
       <div className="flex min-h-screen w-full pb-20">
         <div className="flex w-full flex-col">
-          <div className="mx-auto flex w-full flex-col px-3  sm:px-3 xl:px-6 2xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3  sm:px-3 xl:px-6 ">
             {/* Page Header - Always Visible */}
             <div className="flex w-full flex-col items-start justify-between gap-4 py-4 sm:py-6 md:gap-6 md:py-8 xl:flex-row xl:items-start">
               <div className="flex-1">

@@ -1128,7 +1128,7 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
   // Loading state
   if (loading && bills.length === 0) {
     return (
-      <div className="flex items-center justify-center px-3  sm:px-4 md:px-6 2xl:px-16">
+      <div className="flex items-center justify-center px-3  sm:px-4 md:px-6 ">
         <TableSkeleton />
       </div>
     )
@@ -1137,7 +1137,7 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
   // Error state
   if (error) {
     return (
-      <div className="flex items-center justify-center px-3 py-16  sm:px-4 md:px-6 2xl:px-16">
+      <div className="flex items-center justify-center px-3 py-16  sm:px-4 md:px-6 ">
         <div className="flex flex-col items-center gap-4 text-center">
           <div className="flex size-12 items-center justify-center rounded-full bg-red-100">
             <X className="size-6 text-red-600" />
@@ -1157,7 +1157,7 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
 
   return (
     <>
-      <div className="flex-3 relative flex flex-col-reverse items-start gap-6 px-3 sm:px-4 md:px-6 2xl:mt-5 2xl:flex-row 2xl:px-16">
+      <div className="flex-3 relative flex flex-col-reverse items-start gap-6 px-3 sm:px-4 md:px-6 2xl:mt-5 2xl:flex-row ">
         {/* Main Content - Bills Table */}
         <motion.div
           className={

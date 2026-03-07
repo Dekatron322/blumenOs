@@ -372,7 +372,7 @@ const CreateRolePage = () => {
         <div className="flex w-full flex-col">
           <DashboardNav />
           <div className="sticky top-16 z-40 border-b border-gray-200 bg-white ">
-            <div className="mx-auto w-full px-3 py-4  sm:px-4  md:px-6 2xl:px-16">
+            <div className="mx-auto w-full px-3 py-4  sm:px-4  md:px-6 ">
               <div className="flex w-full items-center justify-between">
                 <div className="flex items-center gap-4">
                   <motion.button
@@ -445,7 +445,7 @@ const CreateRolePage = () => {
               </div>
             </div>
           </div>
-          <div className="mx-auto flex w-full flex-col px-3   md:px-6 2xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3   md:px-6 ">
             {/* Header */}
 
             <div className="flex w-full py-8">
