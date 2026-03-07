@@ -535,7 +535,7 @@ const AuditTrailTab: React.FC = () => {
         transition={{ duration: 0.3 }}
       >
         <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Audit Trails</p>
+          <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Audit Trails</p>
           <p className="text-sm text-gray-600">Complete record of all system activities and user actions</p>
         </div>
         <div className="mt-3 flex items-center gap-3 md:mt-0">

@@ -917,7 +917,7 @@ const VendorChangeRequests = () => {
         >
           <div className="flex w-full flex-col py-2">
             <div className="mb-3 flex w-full items-center justify-between gap-3">
-              <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">Vendor Change Requests</p>
+              <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-xl">Vendor Change Requests</p>
 
               <div className="flex items-center gap-2">
                 {/* Mobile Filter Button */}

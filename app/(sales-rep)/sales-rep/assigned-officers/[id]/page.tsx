@@ -54,7 +54,7 @@ import autoTable from "jspdf-autotable"
 const LoadingSkeleton = () => (
   <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200">
     <DashboardNav />
-    <div className="mx-auto flex w-full flex-col p-6 2xl:container">
+    <div className="mx-auto flex w-full flex-col p-6 ">
       {/* Header Skeleton */}
       <div className="mb-8 flex w-full justify-between max-sm:flex-col lg:items-center">
         <div className="flex gap-4 lg:items-center">
@@ -630,7 +630,7 @@ const AgentDetailsPage = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col 2xl:container">
+          <div className="mx-auto flex w-full flex-col ">
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
               <div className="mx-auto w-full px-3 py-4 2xl:px-16">
                 <div className="flex w-full items-start justify-between gap-4 max-sm:flex-col sm:items-center lg:items-center">
@@ -661,7 +661,7 @@ const AgentDetailsPage = () => {
                     </motion.button>
 
                     <div className="flex flex-col">
-                      <h1 className="text-lg font-bold text-gray-900 sm:text-xl md:text-2xl">Officer Details</h1>
+                      <h1 className="text-lg font-bold text-gray-900 sm:text-xl md:text-xl">Officer Details</h1>
                       <p className="text-sm text-gray-600 sm:text-base">Complete agent profile and management</p>
                     </div>
                   </div>

@@ -557,7 +557,7 @@ const AddFeederEnergyCapPage = () => {
         <div className="flex w-full flex-col">
           <DashboardNav />
 
-          <div className="mx-auto flex w-full flex-col px-3 py-4 2xl:container sm:px-3 xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3 py-4  sm:px-3 xl:px-16">
             {/* Page Header - Mobile Optimized */}
             <div className="mb-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

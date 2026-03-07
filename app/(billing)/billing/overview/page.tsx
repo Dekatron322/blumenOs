@@ -800,7 +800,7 @@ export default function BillingDashboard() {
             <div className="mb-8">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Billing Engine</h1>
+                  <h1 className="text-2xl font-bold text-gray-900 sm:text-2xl">Billing Engine</h1>
                   <p className="mt-1 text-sm text-gray-600">Tariff management, bill generation, and billing cycles</p>
                 </div>
 

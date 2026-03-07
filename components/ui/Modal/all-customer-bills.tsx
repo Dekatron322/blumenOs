@@ -698,7 +698,7 @@ const AllBills: React.FC<AllBillsProps> = ({
         transition={{ duration: 0.3 }}
       >
         <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Bills</p>
+          <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Bills</p>
           <p className="text-sm text-gray-600">View and manage all customer bills</p>
         </div>
       </motion.div>

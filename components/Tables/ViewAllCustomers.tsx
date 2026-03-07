@@ -928,7 +928,7 @@ const AllCustomers = () => {
         <div className={`w-full rounded-md border bg-white p-3 md:p-5 ${showCategories ? "lg:flex-1" : ""}`}>
           <div className="flex flex-col py-2">
             <div className="mb-3 flex w-full items-center justify-between gap-3">
-              <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">All Customers</p>
+              <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-xl">All Customers</p>
 
               <div className="flex items-center gap-2">
                 {/* Mobile search icon button */}

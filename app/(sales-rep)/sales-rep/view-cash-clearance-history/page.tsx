@@ -48,7 +48,7 @@ const ViewCashClearanceHistoryPage: React.FC = () => {
     <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
       <DashboardNav />
       <div className="flex w-full">
-        <div className="mx-auto flex w-full flex-col px-3 2xl:container sm:px-4 lg:px-6 2xl:px-16">
+        <div className="mx-auto flex w-full flex-col px-3  sm:px-4 lg:px-6 2xl:px-16">
           {/* Hero Header Section */}
           <motion.div
             className="relative mb-6 mt-4 overflow-hidden rounded-xl bg-gradient-to-r from-[#004B23] to-[#006B33] p-4 shadow-lg md:p-6 lg:p-8"

@@ -159,59 +159,62 @@ const useLatestJobs = () => {
   const [isLoading, setIsLoading] = useState(false)
   const hasLoadedOnceRef = useRef(false)
 
-  const fetchLatestJobs = useCallback(async (options?: { silent?: boolean }) => {
-    const shouldShowLoader = options?.silent !== true && !hasLoadedOnceRef.current
-    if (shouldShowLoader) {
-      setIsLoading(true)
-    }
-
-    try {
-      const jobTypes = [
-        METER_READING_JOB_TYPE,
-        FEEDER_ENERGY_CAP_JOB_TYPE,
-        CUSTOMER_TARIFF_CHANGE_JOB_TYPE,
-        CUSTOMER_STATUS_CHANGE_JOB_TYPE,
-        CUSTOMER_STORED_AVERAGE_JOB_TYPE,
-        CUSTOMER_SRDT_JOB_TYPE,
-        BILL_ADJUSTMENT_JOB_TYPE,
-        ESTIMATED_CONSUMPTION_JOB_TYPE,
-        METER_CHANGE_OUT_JOB_TYPE,
-      ] // Specific job types for billing generate details
-      const jobsData: Record<number, CsvJob | null> = {}
-
-      // Fetch all job types in parallel to reduce sequential API calls
-      const results = await Promise.allSettled(
-        jobTypes.map((jobType) =>
-          dispatch(
-            fetchCsvJobs({
-              PageNumber: 1,
-              PageSize: 1,
-              JobType: jobType,
-              Status: undefined,
-            })
-          ).unwrap()
-        )
-      )
-
-      jobTypes.forEach((jobType, index) => {
-        const result = results[index]
-        if (result && result.status === "fulfilled" && result.value.isSuccess && result.value.data.length > 0) {
-          jobsData[jobType] = result.value.data[0] ?? null
-        } else {
-          jobsData[jobType] = null
-        }
-      })
-
-      setLatestJobs(jobsData)
-      hasLoadedOnceRef.current = true
-    } catch (error) {
-      console.error("Failed to fetch latest jobs:", error)
-    } finally {
+  const fetchLatestJobs = useCallback(
+    async (options?: { silent?: boolean }) => {
+      const shouldShowLoader = options?.silent !== true && !hasLoadedOnceRef.current
       if (shouldShowLoader) {
-        setIsLoading(false)
+        setIsLoading(true)
       }
-    }
-  }, [dispatch])
+
+      try {
+        const jobTypes = [
+          METER_READING_JOB_TYPE,
+          FEEDER_ENERGY_CAP_JOB_TYPE,
+          CUSTOMER_TARIFF_CHANGE_JOB_TYPE,
+          CUSTOMER_STATUS_CHANGE_JOB_TYPE,
+          CUSTOMER_STORED_AVERAGE_JOB_TYPE,
+          CUSTOMER_SRDT_JOB_TYPE,
+          BILL_ADJUSTMENT_JOB_TYPE,
+          ESTIMATED_CONSUMPTION_JOB_TYPE,
+          METER_CHANGE_OUT_JOB_TYPE,
+        ] // Specific job types for billing generate details
+        const jobsData: Record<number, CsvJob | null> = {}
+
+        // Fetch all job types in parallel to reduce sequential API calls
+        const results = await Promise.allSettled(
+          jobTypes.map((jobType) =>
+            dispatch(
+              fetchCsvJobs({
+                PageNumber: 1,
+                PageSize: 1,
+                JobType: jobType,
+                Status: undefined,
+              })
+            ).unwrap()
+          )
+        )
+
+        jobTypes.forEach((jobType, index) => {
+          const result = results[index]
+          if (result && result.status === "fulfilled" && result.value.isSuccess && result.value.data.length > 0) {
+            jobsData[jobType] = result.value.data[0] ?? null
+          } else {
+            jobsData[jobType] = null
+          }
+        })
+
+        setLatestJobs(jobsData)
+        hasLoadedOnceRef.current = true
+      } catch (error) {
+        console.error("Failed to fetch latest jobs:", error)
+      } finally {
+        if (shouldShowLoader) {
+          setIsLoading(false)
+        }
+      }
+    },
+    [dispatch]
+  )
 
   useEffect(() => {
     fetchLatestJobs({ silent: false })
@@ -650,13 +653,18 @@ const JobStatusIndicator = ({ job, isLoading }: { job: CsvJob | null; isLoading:
           <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${statusTone.chipClass}`}>
             {getStatusLabel(job.status)}
           </span>
-          {isLoading || job.status === 1 || job.status === 2 ? <RefreshCw className="size-3 animate-spin text-blue-500" /> : null}
+          {isLoading || job.status === 1 || job.status === 2 ? (
+            <RefreshCw className="size-3 animate-spin text-blue-500" />
+          ) : null}
         </div>
         <span className="text-[11px] font-medium text-gray-600">{safeProgress}%</span>
       </div>
 
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
-        <div className={`h-full transition-all duration-300 ease-in-out ${statusTone.barClass}`} style={{ width: `${safeProgress}%` }} />
+        <div
+          className={`h-full transition-all duration-300 ease-in-out ${statusTone.barClass}`}
+          style={{ width: `${safeProgress}%` }}
+        />
       </div>
 
       <div className="grid grid-cols-4 gap-1.5 text-[11px]">
@@ -683,7 +691,9 @@ const JobStatusIndicator = ({ job, isLoading }: { job: CsvJob | null; isLoading:
           <Calendar className="size-3 text-gray-400" />
           <span>{formattedRequestDate}</span>
         </div>
-        {job.requestedByUser?.fullName ? <div className="max-w-[60%] truncate">By {job.requestedByUser.fullName}</div> : null}
+        {job.requestedByUser?.fullName ? (
+          <div className="max-w-[60%] truncate">By {job.requestedByUser.fullName}</div>
+        ) : null}
       </div>
     </div>
   )
@@ -691,17 +701,8 @@ const JobStatusIndicator = ({ job, isLoading }: { job: CsvJob | null; isLoading:
 
 // Job Type Uploads Table Component
 const JobTypeUploadsTable = ({ jobType }: { jobType: number | null }) => {
-  const {
-    jobs,
-    loading,
-    error,
-    pagination,
-    currentPage,
-    statusFilter,
-    handlePageChange,
-    handleStatusFilter,
-    refetch,
-  } = useJobTypeUploads(jobType)
+  const { jobs, loading, error, pagination, currentPage, statusFilter, handlePageChange, handleStatusFilter, refetch } =
+    useJobTypeUploads(jobType)
 
   const [selectedJob, setSelectedJob] = useState<any>(null)
   const [isFailuresModalOpen, setIsFailuresModalOpen] = useState(false)
@@ -843,7 +844,10 @@ const JobTypeUploadsTable = ({ jobType }: { jobType: number | null }) => {
                           <p className="truncate font-medium text-gray-900" title={job.fileName}>
                             {job.fileName}
                           </p>
-                          <p className="mt-0.5 text-xs text-gray-500" title={job.requestedByUser?.fullName || "Unknown"}>
+                          <p
+                            className="mt-0.5 text-xs text-gray-500"
+                            title={job.requestedByUser?.fullName || "Unknown"}
+                          >
                             By {job.requestedByUser?.fullName || "Unknown"}
                           </p>
                         </div>
@@ -1050,8 +1054,7 @@ const FileManagementPage = () => {
   // Get latest jobs for all upload types
   const { latestJobs, isLoading: jobsLoading, refetch: refetchLatestJobs } = useLatestJobs()
   const isLatestRunStageRunning =
-    billingScheduleRun?.latestRunProgress?.stages?.some((stage: BillingScheduleRunStage) => stage.state === 1) ===
-    true
+    billingScheduleRun?.latestRunProgress?.stages?.some((stage: BillingScheduleRunStage) => stage.state === 1) === true
 
   // Upload type options with enhanced metadata
   const uploadTypeOptions: UploadTypeOption[] = [
@@ -1426,14 +1429,7 @@ const FileManagementPage = () => {
         description: error.message || error || "An error occurred while creating the PDF generation job",
       })
     }
-  }, [
-    dispatch,
-    billingScheduleRun,
-    pdfGroupBy,
-    pdfMaxBillsPerFile,
-    scheduleId,
-    refetchLatestJobs,
-  ])
+  }, [dispatch, billingScheduleRun, pdfGroupBy, pdfMaxBillsPerFile, scheduleId, refetchLatestJobs])
 
   const handleCloseGeneratePdfModal = () => {
     setIsGeneratePdfModalOpen(false)
@@ -2062,12 +2058,15 @@ const FileManagementPage = () => {
     setIsManualTrackFailuresVisible(false)
   }, [])
 
-  const handleManualTrackFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = event.target.files?.[0] ?? null
-    setManualTrackFile(selectedFile)
-    setManualTrackError(null)
-    resetManualTrackFailuresView()
-  }, [resetManualTrackFailuresView])
+  const handleManualTrackFileChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const selectedFile = event.target.files?.[0] ?? null
+      setManualTrackFile(selectedFile)
+      setManualTrackError(null)
+      resetManualTrackFailuresView()
+    },
+    [resetManualTrackFailuresView]
+  )
 
   const fetchCsvJobById = useCallback(async (jobId: number): Promise<CsvJob> => {
     const endpoint = API_ENDPOINTS.FILE_MANAGEMENT.CSV_JOB_BY_ID.replace("{id}", jobId.toString())
@@ -2109,15 +2108,15 @@ const FileManagementPage = () => {
       rows: Array.isArray(response.data.data) ? response.data.data : [],
       totalCount: typeof response.data.totalCount === "number" ? response.data.totalCount : 0,
       totalPages:
-        typeof response.data.totalPages === "number" && response.data.totalPages > 0
-          ? response.data.totalPages
-          : 1,
+        typeof response.data.totalPages === "number" && response.data.totalPages > 0 ? response.data.totalPages : 1,
       currentPage: typeof response.data.currentPage === "number" ? response.data.currentPage : pageNumber,
       hasNext:
         typeof response.data.hasNext === "boolean"
           ? response.data.hasNext
           : (typeof response.data.currentPage === "number" ? response.data.currentPage : pageNumber) <
-            (typeof response.data.totalPages === "number" && response.data.totalPages > 0 ? response.data.totalPages : 1),
+            (typeof response.data.totalPages === "number" && response.data.totalPages > 0
+              ? response.data.totalPages
+              : 1),
       hasPrevious:
         typeof response.data.hasPrevious === "boolean"
           ? response.data.hasPrevious
@@ -2844,8 +2843,7 @@ const FileManagementPage = () => {
   // Poll schedule run while an active stage is running so UI unblocks immediately on completion
   useEffect(() => {
     const latestRunId = billingScheduleRun?.latestRunProgress?.runId
-    const hasRunningStage =
-      billingScheduleRun?.latestRunProgress?.hasRunningStage === true || isLatestRunStageRunning
+    const hasRunningStage = billingScheduleRun?.latestRunProgress?.hasRunningStage === true || isLatestRunStageRunning
 
     if (!latestRunId || !hasRunningStage) return
 
@@ -2924,7 +2922,10 @@ const FileManagementPage = () => {
         try {
           const persistedJob = await fetchCsvJobById(persistedJobId)
           const persistedJobRunId = extractRunIdFromCsvJobPayload(persistedJob.payloadJson)
-          if (isScheduleCustomerTrackingJob(persistedJob) && (persistedJobRunId === null || persistedJobRunId === latestRunId)) {
+          if (
+            isScheduleCustomerTrackingJob(persistedJob) &&
+            (persistedJobRunId === null || persistedJobRunId === latestRunId)
+          ) {
             if (persistedJob.status === 1 || persistedJob.status === 2) {
               recoveredJob = persistedJob
             } else if (TRACKING_TERMINAL_STATUSES.has(persistedJob.status)) {
@@ -3080,7 +3081,9 @@ const FileManagementPage = () => {
 
     const hydrateTerminalState = async () => {
       const resolvedRunId =
-        extractRunIdFromCsvJobPayload(manualTrackJob.payloadJson) ?? billingScheduleRun?.latestRunProgress?.runId ?? null
+        extractRunIdFromCsvJobPayload(manualTrackJob.payloadJson) ??
+        billingScheduleRun?.latestRunProgress?.runId ??
+        null
       if (resolvedRunId) {
         clearPersistedManualTrackingJobId(resolvedRunId)
       }
@@ -3222,13 +3225,11 @@ const FileManagementPage = () => {
   const isCustomSchedule = billingScheduleRun?.name?.trim().toLowerCase().includes("custom") === true
   const latestRunProgress = billingScheduleRun?.latestRunProgress ?? null
   const latestRunFromHistory =
-    billingScheduleRuns
-      ?.slice()
-      ?.sort((a: BillingScheduleRunItem, b: BillingScheduleRunItem) => {
-        const timeA = new Date(a.lastUpdated || a.completedAtUtc || a.createdAt || 0).getTime()
-        const timeB = new Date(b.lastUpdated || b.completedAtUtc || b.createdAt || 0).getTime()
-        return timeB - timeA
-      })?.[0] ?? null
+    billingScheduleRuns?.slice()?.sort((a: BillingScheduleRunItem, b: BillingScheduleRunItem) => {
+      const timeA = new Date(a.lastUpdated || a.completedAtUtc || a.createdAt || 0).getTime()
+      const timeB = new Date(b.lastUpdated || b.completedAtUtc || b.createdAt || 0).getTime()
+      return timeB - timeA
+    })?.[0] ?? null
   const latestCompletedRunFromHistory = latestRunFromHistory?.status === 2 ? latestRunFromHistory : null
   const rawRunStages = latestRunProgress?.stages ?? []
   const runStages = isCustomSchedule
@@ -3343,11 +3344,17 @@ const FileManagementPage = () => {
 
   // Single source of truth for blocking UX during active run operations
   const isRunInProgress = hasActiveRunTask || isRunActionBusy
-  const isUploadTypeSelectionBlocked = isRunStateRefreshing || isRunHistoryRefreshing || !hasLatestRun || isRunInProgress
+  const isUploadTypeSelectionBlocked =
+    isRunStateRefreshing || isRunHistoryRefreshing || !hasLatestRun || isRunInProgress
   const showCompletedRunPanel = !isRunStateRefreshing && !hasLatestRun && hasCompletedRunHistory
   const showNoRunWarning = !isRunStateRefreshing && !isRunHistoryRefreshing && !hasLatestRun && !hasCompletedRunHistory
   const showCustomScopeWarning =
-    isCustomSchedule && hasLatestRun && !isRunStateRefreshing && !hasActiveRunTask && isRunDraft && !runCanCarryOutBillActions
+    isCustomSchedule &&
+    hasLatestRun &&
+    !isRunStateRefreshing &&
+    !hasActiveRunTask &&
+    isRunDraft &&
+    !runCanCarryOutBillActions
 
   useEffect(() => {
     if (!isRunDetailsDrawerOpen) {
@@ -3390,7 +3397,7 @@ const FileManagementPage = () => {
                       <ArrowLeft className="size-5" />
                     </button>
                     <div>
-                      <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">{currentScheduleName}</h1>
+                      <h1 className="text-2xl font-bold text-gray-900 sm:text-2xl">{currentScheduleName}</h1>
                       <p className="mt-1 text-sm text-gray-600">
                         Bulk upload billing records for this schedule using CSV or Excel files
                       </p>
@@ -3543,7 +3550,9 @@ const FileManagementPage = () => {
                                 <CheckCircle className="size-4 text-emerald-700" />
                               </div>
                               <div>
-                                <p className="text-sm font-semibold text-emerald-900">Latest run completed successfully</p>
+                                <p className="text-sm font-semibold text-emerald-900">
+                                  Latest run completed successfully
+                                </p>
                                 <p className="text-sm text-emerald-800">
                                   {latestCompletedRunFromHistory?.title || `Run #${latestCompletedRunFromHistory?.id}`}
                                   {latestCompletedRunAt ? ` • Completed ${latestCompletedRunAt}` : ""}
@@ -3648,7 +3657,9 @@ const FileManagementPage = () => {
 
                           <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
                             <p className="text-[11px] text-indigo-700">
-                              Supported formats: <span className="font-medium">.csv</span> or <span className="font-medium">.xlsx</span>. File is sent directly without client-side CSV parsing.
+                              Supported formats: <span className="font-medium">.csv</span> or{" "}
+                              <span className="font-medium">.xlsx</span>. File is sent directly without client-side CSV
+                              parsing.
                             </p>
                             <div className="flex items-center gap-2">
                               <button
@@ -3662,7 +3673,10 @@ const FileManagementPage = () => {
                                   }
                                 }}
                                 disabled={
-                                  manualTrackRecoveryChecking || manualTrackLoading || isManualTrackInFlight || !hasManualTrackFile
+                                  manualTrackRecoveryChecking ||
+                                  manualTrackLoading ||
+                                  isManualTrackInFlight ||
+                                  !hasManualTrackFile
                                 }
                                 className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
                               >
@@ -3709,7 +3723,9 @@ const FileManagementPage = () => {
                                 <div className="space-y-2">
                                   <div className="flex items-center justify-between gap-2">
                                     <div className="flex items-center gap-1.5">
-                                      <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${manualTrackStatusTone}`}>
+                                      <span
+                                        className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${manualTrackStatusTone}`}
+                                      >
                                         {manualTrackStatusLabel}
                                       </span>
                                       {(manualTrackJob.status === 1 || manualTrackJob.status === 2) && (
@@ -3718,11 +3734,16 @@ const FileManagementPage = () => {
                                     </div>
                                     <span className="text-[11px] text-gray-500">
                                       Job #{manualTrackJob.id}
-                                      {manualTrackLastUpdatedAt ? ` • Updated ${formatUtcDateTime(manualTrackLastUpdatedAt)}` : ""}
+                                      {manualTrackLastUpdatedAt
+                                        ? ` • Updated ${formatUtcDateTime(manualTrackLastUpdatedAt)}`
+                                        : ""}
                                     </span>
                                   </div>
 
-                                  <JobStatusIndicator job={manualTrackJob} isLoading={manualTrackLoading && !isManualTrackTerminal} />
+                                  <JobStatusIndicator
+                                    job={manualTrackJob}
+                                    isLoading={manualTrackLoading && !isManualTrackTerminal}
+                                  />
 
                                   {isManualTrackFailureStatus && (
                                     <div className="space-y-2 rounded border border-amber-200 bg-amber-50 px-2.5 py-2">
@@ -3850,7 +3871,10 @@ const FileManagementPage = () => {
                                                 type="button"
                                                 onClick={() => {
                                                   if (manualTrackFailuresHasPrevious) {
-                                                    void loadManualTrackFailures(manualTrackJob.id, manualTrackFailuresPage - 1)
+                                                    void loadManualTrackFailures(
+                                                      manualTrackJob.id,
+                                                      manualTrackFailuresPage - 1
+                                                    )
                                                   }
                                                 }}
                                                 disabled={!manualTrackFailuresHasPrevious || manualTrackFailuresLoading}
@@ -3863,7 +3887,10 @@ const FileManagementPage = () => {
                                                 type="button"
                                                 onClick={() => {
                                                   if (manualTrackFailuresHasNext) {
-                                                    void loadManualTrackFailures(manualTrackJob.id, manualTrackFailuresPage + 1)
+                                                    void loadManualTrackFailures(
+                                                      manualTrackJob.id,
+                                                      manualTrackFailuresPage + 1
+                                                    )
                                                   }
                                                 }}
                                                 disabled={!manualTrackFailuresHasNext || manualTrackFailuresLoading}
@@ -4004,13 +4031,18 @@ const FileManagementPage = () => {
                                 Active Run
                               </p>
                               <p className="mt-1 text-sm font-semibold text-gray-900">
-                                {latestRunProgress?.runTitle || (latestRunProgress?.runId ? `Run #${latestRunProgress.runId}` : "No run")}
+                                {latestRunProgress?.runTitle ||
+                                  (latestRunProgress?.runId ? `Run #${latestRunProgress.runId}` : "No run")}
                               </p>
                               <div className="mt-1 flex items-center gap-2">
-                                <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${runStatusTone.badgeClass}`}>
+                                <span
+                                  className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${runStatusTone.badgeClass}`}
+                                >
                                   {runStatusTone.label}
                                 </span>
-                                {runningStageLabel ? <span className="text-[11px] text-gray-600">{runningStageLabel}</span> : null}
+                                {runningStageLabel ? (
+                                  <span className="text-[11px] text-gray-600">{runningStageLabel}</span>
+                                ) : null}
                               </div>
                             </div>
 
@@ -4077,7 +4109,8 @@ const FileManagementPage = () => {
                             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-blue-700">Step 2</p>
                             <h4 className="mt-1 text-base font-semibold text-gray-900">Upload File</h4>
                             <p className="text-sm text-gray-600">
-                              Upload your CSV/XLSX file for <span className="font-medium">{selectedUploadTypeDetails.name}</span>.
+                              Upload your CSV/XLSX file for{" "}
+                              <span className="font-medium">{selectedUploadTypeDetails.name}</span>.
                             </p>
                           </div>
                           <span className="inline-flex w-fit rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-medium text-gray-600">
@@ -4216,7 +4249,8 @@ const FileManagementPage = () => {
                             <div className="flex items-center gap-2">
                               <Info className="size-4 text-gray-500" />
                               <p className="text-xs text-gray-600">
-                                This upload feeds the active run and will appear in Step 3 (Recent Uploads) for monitoring.
+                                This upload feeds the active run and will appear in Step 3 (Recent Uploads) for
+                                monitoring.
                               </p>
                             </div>
                           </div>
@@ -4359,7 +4393,6 @@ const FileManagementPage = () => {
                           </motion.div>
                         )}
                       </AnimatePresence>
-
                     </div>
                   )}
 
@@ -4371,7 +4404,8 @@ const FileManagementPage = () => {
                           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">Step 3</p>
                           <h4 className="mt-1 text-base font-semibold text-gray-900">Track Upload Processing</h4>
                           <p className="text-sm text-gray-600">
-                            Monitor job progress, inspect failures, and confirm this upload is ready for downstream run actions.
+                            Monitor job progress, inspect failures, and confirm this upload is ready for downstream run
+                            actions.
                           </p>
                         </div>
                         <JobTypeUploadsTable jobType={selectedUploadType} />
@@ -4729,13 +4763,17 @@ const FileManagementPage = () => {
                                                   <span className="text-[10px] uppercase tracking-wide text-red-600">
                                                     Failed
                                                   </span>
-                                                  <p className="font-medium text-red-700">{stage.failed.toLocaleString()}</p>
+                                                  <p className="font-medium text-red-700">
+                                                    {stage.failed.toLocaleString()}
+                                                  </p>
                                                 </div>
                                                 <div className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1.5">
                                                   <span className="text-[10px] uppercase tracking-wide text-amber-600">
                                                     Pending
                                                   </span>
-                                                  <p className="font-medium text-amber-700">{stage.pending.toLocaleString()}</p>
+                                                  <p className="font-medium text-amber-700">
+                                                    {stage.pending.toLocaleString()}
+                                                  </p>
                                                 </div>
                                               </div>
 
@@ -4779,7 +4817,11 @@ const FileManagementPage = () => {
                                                     type="button"
                                                     onClick={handleStartBillingScheduleRun}
                                                     disabled={startBillingScheduleRunLoading || !canStartDraftRun}
-                                                    title={!canStartDraftRun && isCustomSchedule ? customRecomputeBlockReason || undefined : undefined}
+                                                    title={
+                                                      !canStartDraftRun && isCustomSchedule
+                                                        ? customRecomputeBlockReason || undefined
+                                                        : undefined
+                                                    }
                                                     className="inline-flex items-center gap-1.5 rounded-md border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 transition-colors hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-50"
                                                   >
                                                     {startBillingScheduleRunLoading ? (
@@ -4787,23 +4829,17 @@ const FileManagementPage = () => {
                                                     ) : (
                                                       <Play className="size-3.5" />
                                                     )}
-                                                    {canStartDraftRun ? (
-                                                      isCustomSchedule ? (
-                                                        "Start Recompute"
-                                                      ) : (
-                                                        "Start Bill Generation"
-                                                      )
-                                                    ) : isCustomSchedule ? (
-                                                      hasActiveRunTask ? (
-                                                        "Recompute Running"
-                                                      ) : !isRunDraft ? (
-                                                        "Recompute Unavailable"
-                                                      ) : (
-                                                        "Tracking Required"
-                                                      )
-                                                    ) : (
-                                                      "Bill Generation Running"
-                                                    )}
+                                                    {canStartDraftRun
+                                                      ? isCustomSchedule
+                                                        ? "Start Recompute"
+                                                        : "Start Bill Generation"
+                                                      : isCustomSchedule
+                                                      ? hasActiveRunTask
+                                                        ? "Recompute Running"
+                                                        : !isRunDraft
+                                                        ? "Recompute Unavailable"
+                                                        : "Tracking Required"
+                                                      : "Bill Generation Running"}
                                                   </button>
                                                 ) : null}
 
@@ -4819,7 +4855,9 @@ const FileManagementPage = () => {
                                                     ) : (
                                                       <CheckCircle className="size-3.5" />
                                                     )}
-                                                    {publishBillingScheduleRunLoading ? "Publishing..." : "Publish Draft Bill"}
+                                                    {publishBillingScheduleRunLoading
+                                                      ? "Publishing..."
+                                                      : "Publish Draft Bill"}
                                                   </button>
                                                 ) : null}
 
@@ -5020,7 +5058,9 @@ const FileManagementPage = () => {
                     />
                   </div>
 
-                  {pdfGroupByError && <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{pdfGroupByError}</div>}
+                  {pdfGroupByError && (
+                    <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{pdfGroupByError}</div>
+                  )}
 
                   {/* Error Message */}
                   {runPdfGenerationError && (

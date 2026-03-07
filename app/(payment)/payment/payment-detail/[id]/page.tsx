@@ -1049,7 +1049,7 @@ const PaymentDetailsPage = () => {
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#f9f9f9] to-gray-100 p-4 md:p-6">
         <div className="flex flex-col justify-center text-center">
           <AlertCircle className="mx-auto mb-4 size-12 text-gray-400 md:size-16" />
-          <h1 className="mb-2 text-xl font-bold text-gray-900 md:text-2xl">
+          <h1 className="mb-2 text-xl font-bold text-gray-900 md:text-xl">
             {currentPaymentError ? "Error Loading Payment" : "Payment Not Found"}
           </h1>
           <p className="mb-4 text-gray-600 md:mb-6">
@@ -1068,7 +1068,7 @@ const PaymentDetailsPage = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col 2xl:container ">
+          <div className="mx-auto flex w-full flex-col  ">
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
               <div className="mx-auto w-full px-3 py-4 md:px-4 lg:px-6 2xl:px-16">
                 <div className="flex w-full flex-col justify-between gap-3 sm:flex-row sm:items-center sm:gap-0">

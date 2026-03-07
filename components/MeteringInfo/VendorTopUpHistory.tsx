@@ -724,7 +724,7 @@ const VendorTopUpHistory: React.FC<VendorTopUpHistoryProps> = ({ pageSize: propP
             <div className="border-b pb-4">
               <div className="mb-3 flex w-full items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">Vendor Top-up History</p>
+                  <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-xl">Vendor Top-up History</p>
                 </div>
 
                 <div className="flex items-center gap-2">

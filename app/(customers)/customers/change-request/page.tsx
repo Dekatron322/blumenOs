@@ -399,7 +399,7 @@ export default function CustomerChangeRequestManagement() {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col 2xl:container">
+          <div className="mx-auto flex w-full flex-col ">
             {/* Page Header - Always Visible */}
             <div className="flex w-full justify-between gap-6 px-3 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 sm:px-4 md:mt-4 md:px-6 2xl:px-16">
               <div>

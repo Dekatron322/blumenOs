@@ -225,7 +225,7 @@ const CustomerDetailsSkeleton = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col 2xl:container">
+          <div className="mx-auto flex w-full flex-col ">
             {/* Header Skeleton */}
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
               <div className="mx-auto w-full px-4 py-4 md:px-6 2xl:px-16">
@@ -906,7 +906,7 @@ const CustomerDetailsPage = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col 2xl:container">
+          <div className="mx-auto flex w-full flex-col ">
             {/* Sticky Header */}
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white/80 backdrop-blur-sm">
               <div className="mx-auto w-full px-4 py-4 md:px-6 2xl:px-16">
@@ -924,7 +924,7 @@ const CustomerDetailsPage = () => {
                       <ArrowLeft className="size-4" />
                     </motion.button>
                     <div>
-                      <h1 className="text-xl font-bold text-gray-900 md:text-2xl">Customer Details</h1>
+                      <h1 className="text-xl font-bold text-gray-900 md:text-xl">Customer Details</h1>
                       <p className="text-sm text-gray-600">View and manage customer information</p>
                     </div>
                   </div>

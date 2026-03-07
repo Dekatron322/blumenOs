@@ -852,7 +852,7 @@ const ReportsTab: React.FC = () => {
         >
           <div className="items-center justify-between border-b py-2 md:flex md:py-4">
             <div>
-              <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Reports Management</p>
+              <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Reports Management</p>
               <p className="text-sm text-gray-500">Generate and manage system reports</p>
             </div>
             <div className="mt-3 flex w-full flex-col gap-2 sm:mt-4 sm:flex-row sm:items-center sm:justify-end md:mt-0 md:w-auto md:gap-4">

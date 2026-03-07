@@ -1646,7 +1646,7 @@ const FileManagementPage = () => {
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-4">
                   <div>
-                    <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Bulk Upload Customers</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 sm:text-2xl">Bulk Upload Customers</h1>
                     <p className="mt-1 text-sm text-gray-600">
                       Upload customer records in bulk using CSV or Excel files
                     </p>

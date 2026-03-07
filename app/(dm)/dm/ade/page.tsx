@@ -531,7 +531,7 @@ const AllDebtEntriesTable = ({
         transition={{ duration: 0.3 }}
       >
         <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">All Debt Entries</p>
+          <p className="text-lg font-medium max-sm:pb-3 md:text-xl">All Debt Entries</p>
           <p className="text-sm text-gray-600">View and manage all debt entries</p>
         </div>
         <div className="flex items-center gap-3">
@@ -1024,11 +1024,11 @@ export default function AllDebtEntriesPage() {
       <DashboardNav />
       <div className="flex min-h-screen w-full pb-10">
         <div className="flex w-full flex-col">
-          <div className="mx-auto flex w-full flex-col px-3 2xl:container sm:px-3 xl:px-6 2xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3  sm:px-3 xl:px-6 2xl:px-16">
             {/* Page Header */}
             <div className="flex w-full flex-col items-start justify-between gap-4 py-4 sm:py-6 md:gap-6 md:py-4 xl:flex-row xl:items-start">
               <div className="flex-1">
-                <h4 className="text-lg font-semibold sm:text-xl md:text-2xl">All Manually Entered Debts</h4>
+                <h4 className="text-lg font-semibold sm:text-xl md:text-xl">All Manually Entered Debts</h4>
                 <p className="text-sm text-gray-600 sm:text-base">View and manage all debt entries</p>
               </div>
 

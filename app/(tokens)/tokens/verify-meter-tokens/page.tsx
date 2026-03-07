@@ -316,7 +316,7 @@ export default function AllTransactions() {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col px-3 2xl:container md:px-4 lg:px-6">
+          <div className="mx-auto flex w-full flex-col px-3  md:px-4 lg:px-6">
             {/* Page Header - Always Visible */}
 
             {/* Main Content Area */}

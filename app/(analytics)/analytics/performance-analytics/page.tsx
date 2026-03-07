@@ -366,7 +366,7 @@ export default function PerformanceAnalyticsDashboard() {
             <div className="mb-6 flex w-full flex-col gap-4">
               <div className="flex w-full items-start justify-between">
                 <div>
-                  <h1 className="text-lg font-bold text-gray-900 sm:text-xl md:text-2xl lg:text-3xl">
+                  <h1 className="text-lg font-bold text-gray-900 sm:text-xl md:text-xl lg:text-3xl">
                     Performance Analytics
                   </h1>
                   <p className="text-sm font-medium text-gray-500 sm:text-base">Real Time performance analytics</p>

@@ -408,17 +408,8 @@ const JobStatusIndicator = ({ job, isLoading }: { job: CsvJob | null; isLoading:
 
 // Job Type Uploads Table Component
 const JobTypeUploadsTable = ({ jobType }: { jobType: number | null }) => {
-  const {
-    jobs,
-    loading,
-    error,
-    pagination,
-    currentPage,
-    statusFilter,
-    handlePageChange,
-    handleStatusFilter,
-    refetch,
-  } = useJobTypeUploads(jobType)
+  const { jobs, loading, error, pagination, currentPage, statusFilter, handlePageChange, handleStatusFilter, refetch } =
+    useJobTypeUploads(jobType)
 
   const [selectedJob, setSelectedJob] = useState<any>(null)
   const [isFailuresModalOpen, setIsFailuresModalOpen] = useState(false)
@@ -560,7 +551,10 @@ const JobTypeUploadsTable = ({ jobType }: { jobType: number | null }) => {
                           <p className="truncate font-medium text-gray-900" title={job.fileName}>
                             {job.fileName}
                           </p>
-                          <p className="mt-0.5 text-xs text-gray-500" title={job.requestedByUser?.fullName || "Unknown"}>
+                          <p
+                            className="mt-0.5 text-xs text-gray-500"
+                            title={job.requestedByUser?.fullName || "Unknown"}
+                          >
                             By {job.requestedByUser?.fullName || "Unknown"}
                           </p>
                         </div>
@@ -1481,7 +1475,7 @@ const FileManagementPage = () => {
                     <ArrowLeft className="size-5" />
                   </button>
                   <div>
-                    <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Bulk Upload Billing</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 sm:text-2xl">Bulk Upload Billing</h1>
                     <p className="mt-1 text-sm text-gray-600">
                       Upload billing records in bulk using CSV or Excel files
                     </p>
@@ -1546,7 +1540,9 @@ const FileManagementPage = () => {
                           }}
                           className="group relative rounded-lg border border-gray-200 bg-white p-3 text-left transition-all hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                         >
-                          <h3 className="mb-1.5 text-base font-semibold text-gray-900 group-hover:text-blue-600">{type.name}</h3>
+                          <h3 className="mb-1.5 text-base font-semibold text-gray-900 group-hover:text-blue-600">
+                            {type.name}
+                          </h3>
                           <p className="mb-3 line-clamp-2 text-xs leading-5 text-gray-600">{type.description}</p>
 
                           {/* Job Status Section */}
@@ -1563,7 +1559,7 @@ const FileManagementPage = () => {
               {/* File Upload Section */}
               {hasCompletedUploadTypeSelection && selectedUploadTypeDetails && (
                 <div className="p-6">
-                                    {/* Selected Type Header */}
+                  {/* Selected Type Header */}
                   <div className="mb-6 rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-white p-4 sm:p-5">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                       <div className="flex items-start gap-3">
@@ -1571,8 +1567,12 @@ const FileManagementPage = () => {
                           <FileSpreadsheet className="size-5 text-blue-700" />
                         </div>
                         <div>
-                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-blue-700">Schedule Flow</p>
-                          <h3 className="mt-1 text-lg font-semibold text-gray-900">{selectedUploadTypeDetails.name} Upload</h3>
+                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-blue-700">
+                            Schedule Flow
+                          </p>
+                          <h3 className="mt-1 text-lg font-semibold text-gray-900">
+                            {selectedUploadTypeDetails.name} Upload
+                          </h3>
                           <p className="mt-1 text-sm text-gray-600">{selectedUploadTypeDetails.description}</p>
                         </div>
                       </div>
@@ -1608,7 +1608,7 @@ const FileManagementPage = () => {
                     </div>
                   </div>
 
-                                    {/* Upload Setup */}
+                  {/* Upload Setup */}
                   <div className="mb-6">
                     <div className="rounded-xl border border-gray-200 bg-white p-4">
                       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">

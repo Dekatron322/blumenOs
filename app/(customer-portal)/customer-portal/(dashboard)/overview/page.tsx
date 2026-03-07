@@ -927,7 +927,7 @@ export default function AgentManagementDashboard() {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <CustomerDashboardNav />
-          <div className="mx-auto flex w-full flex-col px-3 2xl:container sm:px-4 lg:px-6 2xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3  sm:px-4 lg:px-6 2xl:px-16">
             {/* Page Header - Always Visible */}
             <div className="flex w-full flex-col justify-between gap-4 py-4 sm:py-6 md:flex-row md:gap-6">
               <div className="flex-1">
@@ -1111,7 +1111,7 @@ export default function AgentManagementDashboard() {
               <div className="mb-4 rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50 p-4">
                 <div className="text-center">
                   <p className="mb-1 text-xs font-medium text-gray-500 sm:text-sm">Available Balance</p>
-                  <p className="text-2xl font-bold text-gray-900 sm:text-3xl">₦12,500.00</p>
+                  <p className="text-2xl font-bold text-gray-900 sm:text-2xl">₦12,500.00</p>
                   <div className="mt-2 flex items-center justify-center gap-2">
                     <div className="size-2 rounded-full bg-green-500"></div>
                     <p className="text-xs text-green-600 sm:text-sm">+2.5% from last month</p>

@@ -706,7 +706,7 @@ export default function EmployeeManagement() {
             <div className="mb-8">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Employee Management</h1>
+                  <h1 className="text-2xl font-bold text-gray-900 sm:text-2xl">Employee Management</h1>
                   <p className="mt-1 text-sm text-gray-600">Manage employee records, departments, and HR operations</p>
                 </div>
 

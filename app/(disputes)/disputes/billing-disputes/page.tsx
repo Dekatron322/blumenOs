@@ -542,7 +542,7 @@ const PostpaidBillDisputes: React.FC = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto mt-6 flex w-full flex-col px-3 2xl:container xl:px-16">
+          <div className="mx-auto mt-6 flex w-full flex-col px-3  xl:px-16">
             <motion.div
               className="items-center justify-between border-b py-2 md:flex md:py-4"
               initial={{ y: -10, opacity: 0 }}
@@ -550,7 +550,7 @@ const PostpaidBillDisputes: React.FC = () => {
               transition={{ duration: 0.3 }}
             >
               <div>
-                <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Postpaid Bill Disputes</p>
+                <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Postpaid Bill Disputes</p>
                 <p className="text-sm text-gray-600">Manage and resolve customer billing disputes and adjustments</p>
               </div>
               <div className="flex gap-4">

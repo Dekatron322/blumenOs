@@ -479,7 +479,7 @@ export default function PaymentsPage() {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto w-full px-3 py-4 2xl:container sm:px-4 lg:px-6 2xl:px-16">
+          <div className="mx-auto w-full px-3 py-4  sm:px-4 lg:px-6 2xl:px-16">
             {/* Hero Header Section */}
             <motion.div
               className="relative mb-6 overflow-hidden rounded-xl bg-gradient-to-r from-[#004B23] to-[#006B33] p-4 shadow-lg md:p-6 lg:p-8"

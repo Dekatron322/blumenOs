@@ -215,7 +215,7 @@ export default function CashManagementDashboard() {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col px-3 2xl:container md:px-4 lg:px-6 2xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3  md:px-4 lg:px-6 2xl:px-16">
             {/* Page Header - Always Visible */}
             <div className="md:m4-8 my-4 flex w-full items-start justify-between  gap-6  max-md:flex-col ">
               <div>

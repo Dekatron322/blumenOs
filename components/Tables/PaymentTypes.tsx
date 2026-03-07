@@ -365,7 +365,7 @@ const PaymentTypes: React.FC = () => {
         transition={{ duration: 0.3 }}
       >
         <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Payment Types</p>
+          <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Payment Types</p>
           <p className="text-sm text-gray-600">View and manage available payment types</p>
         </div>
         <div className="flex items-center gap-4">

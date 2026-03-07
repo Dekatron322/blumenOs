@@ -589,7 +589,7 @@ const AllSupportTicket: React.FC<AllSupportTicketProps> = ({
         transition={{ duration: 0.3 }}
       >
         <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Support Tickets</p>
+          <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Support Tickets</p>
           <p className="text-sm text-gray-600">View and manage all support tickets</p>
         </div>
       </motion.div>

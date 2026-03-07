@@ -850,7 +850,7 @@ const OutagesTab: React.FC = () => {
             transition={{ duration: 0.3 }}
           >
             <div>
-              <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Outage Management</p>
+              <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Outage Management</p>
               <p className="text-sm text-gray-500">Track and manage power outages</p>
             </div>
             <div className="mt-3 flex w-full flex-col gap-2 sm:mt-4 sm:flex-row sm:items-center sm:justify-end md:mt-0 md:w-auto md:gap-4">

@@ -17,7 +17,7 @@ import autoTable from "jspdf-autotable"
 const LoadingSkeleton = () => (
   <div className="min-h-screen bg-gradient-to-br from-[#f9f9f9] to-gray-100">
     <DashboardNav />
-    <div className="mx-auto flex w-full flex-col px-3 py-6 2xl:container">
+    <div className="mx-auto flex w-full flex-col px-3 py-6 ">
       {/* Header Skeleton */}
       <div className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -627,7 +627,7 @@ const OutageDetailsPage = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col 2xl:container">
+          <div className="mx-auto flex w-full flex-col ">
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
               <div className="mx-auto w-full px-3 py-4 2xl:px-16">
                 <div className="flex w-full items-center justify-between max-sm:flex-col lg:items-center">

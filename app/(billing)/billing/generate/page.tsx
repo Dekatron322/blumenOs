@@ -295,7 +295,7 @@ const GenerateBillPage = () => {
                     <ArrowLeft className="size-5" />
                   </button>
                   <div>
-                    <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Billing Schedules</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 sm:text-2xl">Billing Schedules</h1>
                     <p className="mt-1 text-sm text-gray-600">Manage and monitor billing schedule blueprints</p>
                   </div>
                 </div>
@@ -384,7 +384,9 @@ const GenerateBillPage = () => {
                                   <ScheduleTypeIcon className={`size-5 ${scheduleTypeInfo.textColor}`} />
 
                                   <div className="ml-2.5">
-                                    <h3 className="line-clamp-1 text-base font-semibold text-gray-900">{schedule.name}</h3>
+                                    <h3 className="line-clamp-1 text-base font-semibold text-gray-900">
+                                      {schedule.name}
+                                    </h3>
                                   </div>
                                 </div>
                               </div>
@@ -450,24 +452,26 @@ const GenerateBillPage = () => {
                               )}
                             </div>
 
-                          {/* Card Footer */}
-                          <div className="flex flex-col gap-2 border-t border-gray-100 bg-white p-3">
-                            {formattedLastRun && <div className="text-xs text-gray-500">Last run {formattedLastRun}</div>}
-                            <ButtonModule
-                              className={`w-full ${isViewDetailsDisabled ? "cursor-not-allowed opacity-60" : ""}`}
-                              variant="outlineGray"
-                              size="sm"
-                              icon={<ChevronRight className="size-3.5" />}
-                              iconPosition="end"
-                              disabled={isViewDetailsDisabled}
-                              onClick={() => router.push(`/billing/generate/${schedule.id}`)}
-                            >
-                              View details
-                            </ButtonModule>
-                            {isViewDetailsDisabled && (
-                              <p className="text-[11px] text-amber-700">Locked until the active run is completed.</p>
-                            )}
-                          </div>
+                            {/* Card Footer */}
+                            <div className="flex flex-col gap-2 border-t border-gray-100 bg-white p-3">
+                              {formattedLastRun && (
+                                <div className="text-xs text-gray-500">Last run {formattedLastRun}</div>
+                              )}
+                              <ButtonModule
+                                className={`w-full ${isViewDetailsDisabled ? "cursor-not-allowed opacity-60" : ""}`}
+                                variant="outlineGray"
+                                size="sm"
+                                icon={<ChevronRight className="size-3.5" />}
+                                iconPosition="end"
+                                disabled={isViewDetailsDisabled}
+                                onClick={() => router.push(`/billing/generate/${schedule.id}`)}
+                              >
+                                View details
+                              </ButtonModule>
+                              {isViewDetailsDisabled && (
+                                <p className="text-[11px] text-amber-700">Locked until the active run is completed.</p>
+                              )}
+                            </div>
                           </motion.div>
                         )
                       })}

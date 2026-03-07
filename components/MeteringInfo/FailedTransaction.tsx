@@ -807,7 +807,7 @@ const FailedTransactionTable: React.FC<FailedTransactionTableProps> = ({ pageSiz
                       )}
                     </button>
 
-                    <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">Failed Payments</p>
+                    <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-xl">Failed Payments</p>
                   </div>
 
                   <div className="flex items-center gap-2">

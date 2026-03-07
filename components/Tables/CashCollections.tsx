@@ -410,7 +410,7 @@ const CashCollectionsTable: React.FC<{ agentId?: number }> = ({ agentId }) => {
           transition={{ duration: 0.3 }}
         >
           <div>
-            <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Cash Collection History</p>
+            <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Cash Collection History</p>
           </div>
           <div className="flex gap-4">
             <SearchModule

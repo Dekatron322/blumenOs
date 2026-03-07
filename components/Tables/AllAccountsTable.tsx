@@ -426,7 +426,7 @@
 //         animate={{ y: 0, opacity: 1 }}
 //         transition={{ duration: 0.3 }}
 //       >
-//         <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">All Customers</p>
+//         <p className="text-lg font-medium max-sm:pb-3 md:text-xl">All Customers</p>
 //         <div className="flex gap-4">
 //           <SearchModule
 //             value={searchText}

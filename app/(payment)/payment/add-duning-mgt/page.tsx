@@ -578,7 +578,7 @@ const AddDunningCasePage = () => {
         <div className="flex w-full flex-col">
           <DashboardNav />
 
-          <div className="mx-auto flex w-full flex-col px-3 2xl:container md:px-4 lg:px-6 2xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3  md:px-4 lg:px-6 2xl:px-16">
             {/* Page Header */}
             <div className="flex w-full flex-col justify-between gap-4  sm:flex-row sm:items-center  md:my-4">
               <div className="flex flex-col">

@@ -486,7 +486,7 @@ const RevenueTab: React.FC = () => {
         transition={{ duration: 0.3 }}
       >
         <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Revenue Analytics</p>
+          <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Revenue Analytics</p>
           <p className="text-sm text-gray-500">Detailed revenue breakdown by period</p>
         </div>
         <div className="flex gap-4">

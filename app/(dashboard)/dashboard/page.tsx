@@ -1020,12 +1020,12 @@ export default function Dashboard() {
           <div className="flex w-full flex-col">
             <DashboardNav />
 
-            <div className="mx-auto w-full px-3 py-8 2xl:container sm:px-4 md:px-6 2xl:px-16">
+            <div className="mx-auto w-full px-3 py-8 sm:px-4 md:px-6 2xl:px-16">
               <div className="mb-6 flex w-full flex-col gap-4">
                 <div className="flex w-full flex-col items-start justify-between gap-4">
                   <div className="flex w-full items-center justify-between gap-4">
                     <div>
-                      <h1 className="text-lg font-bold text-gray-900 sm:text-xl md:text-2xl lg:text-3xl">
+                      <h1 className="text-lg font-bold text-gray-900 sm:text-xl md:text-xl lg:text-3xl">
                         Dashboard Overview
                       </h1>
                       <p className="text-sm font-medium text-gray-500 sm:text-base">

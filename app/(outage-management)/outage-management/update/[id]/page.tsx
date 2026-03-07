@@ -280,7 +280,7 @@ const UpdateOutage = () => {
     <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
       <DashboardNav />
       <div className="flex w-full">
-        <div className="flex w-full flex-col px-3 2xl:container max-sm:px-3 xl:px-16">
+        <div className="flex w-full flex-col px-3  max-sm:px-3 xl:px-16">
           {/* Page Header */}
           <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
             <div className="mx-auto w-full px-3 py-4 2xl:px-16">

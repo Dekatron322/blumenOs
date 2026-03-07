@@ -1128,7 +1128,7 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
   // Loading state
   if (loading && bills.length === 0) {
     return (
-      <div className="flex items-center justify-center px-3 2xl:container sm:px-4 md:px-6 2xl:px-16">
+      <div className="flex items-center justify-center px-3  sm:px-4 md:px-6 2xl:px-16">
         <TableSkeleton />
       </div>
     )
@@ -1137,7 +1137,7 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
   // Error state
   if (error) {
     return (
-      <div className="flex items-center justify-center px-3 py-16 2xl:container sm:px-4 md:px-6 2xl:px-16">
+      <div className="flex items-center justify-center px-3 py-16  sm:px-4 md:px-6 2xl:px-16">
         <div className="flex flex-col items-center gap-4 text-center">
           <div className="flex size-12 items-center justify-center rounded-full bg-red-100">
             <X className="size-6 text-red-600" />
@@ -1191,7 +1191,7 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
               </button>
 
               <div>
-                <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">All Bills</p>
+                <p className="text-lg font-medium max-sm:pb-3 md:text-xl">All Bills</p>
                 <p className="text-sm text-gray-600">
                   {totalRecords.toLocaleString()} total bills • Page {pagination.currentPage} of {totalPages || 1}
                 </p>

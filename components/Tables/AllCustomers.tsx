@@ -854,7 +854,7 @@ const AllCustomers = () => {
           {/* Header Section */}
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-semibold text-gray-900 md:text-2xl">All Customers</h1>
+              <h1 className="text-xl font-semibold text-gray-900 md:text-xl">All Customers</h1>
               <p className="text-sm text-gray-500">
                 {pagination.totalCount.toLocaleString()} total customer(s)
                 {getActiveFilterCount() > 0 && ` • ${getActiveFilterCount()} active filter(s)`}

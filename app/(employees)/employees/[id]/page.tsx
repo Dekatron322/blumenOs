@@ -1201,7 +1201,7 @@ const EmployeeDetailsPage = () => {
                   </motion.button>
 
                   <div>
-                    <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Employee Details</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 sm:text-2xl">Employee Details</h1>
                     <p className="mt-1 text-sm text-gray-600">Complete overview and management</p>
                   </div>
                 </div>

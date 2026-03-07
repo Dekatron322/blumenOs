@@ -645,7 +645,7 @@ const LoadingSkeleton = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto w-full px-4 py-8 2xl:container max-sm:px-2 xl:px-16">
+          <div className="mx-auto w-full px-4 py-8  max-sm:px-2 xl:px-16">
             <div className="mb-6 flex w-full flex-col justify-between gap-4 lg:flex-row lg:items-center">
               <div className="flex-1">
                 <h4 className="text-2xl font-semibold">Bulk Upload Management</h4>
@@ -1093,7 +1093,7 @@ const PrintJobs = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto w-full  px-3 py-8 2xl:container max-sm:px-2 md:px-4 lg:px-6 2xl:px-16">
+          <div className="mx-auto w-full  px-3 py-8  max-sm:px-2 md:px-4 lg:px-6 2xl:px-16">
             <div className="mb-6 flex w-full flex-col justify-between gap-4 lg:flex-row lg:items-center">
               <div className="flex-1">
                 <h4 className="text-2xl font-semibold">Print Jobs Management</h4>
@@ -1336,64 +1336,64 @@ const PrintJobs = () => {
                               : "bg-blue-500"
 
                           return (
-                          <tr key={job.id} className="border-b hover:bg-gray-50">
-                            <td className="border-b p-3 text-sm">
-                              <div className="font-medium">{job.period}</div>
-                            </td>
-                            <td className="whitespace-nowrap border-b p-3 text-sm">{getGroupByLabel(job.groupBy)}</td>
-                            <td className="border-b p-3 text-sm">
-                              <span
-                                className={`whitespace-nowrap rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(
-                                  job.status
-                                )}`}
-                              >
-                                {getStatusLabel(job.status)}
-                              </span>
-                            </td>
-                            <td className="border-b p-3 text-sm">
-                              <div className="max-w-xs truncate whitespace-nowrap" title={job.areaOfficeName}>
-                                {job.areaOfficeName || "N/A"}
-                              </div>
-                            </td>
-                            <td className="border-b p-3 text-sm">
-                              <div className="max-w-xs truncate whitespace-nowrap" title={job.feederName}>
-                                {job.feederName || "N/A"}
-                              </div>
-                            </td>
-                            <td className="border-b p-3 text-sm">
-                              <div className="min-w-40">
-                                <div className="mb-1 flex items-center justify-between">
-                                  <span className="text-xs text-gray-500">Processed</span>
-                                  <span className="text-xs font-medium text-gray-700">{safeProgress}%</span>
+                            <tr key={job.id} className="border-b hover:bg-gray-50">
+                              <td className="border-b p-3 text-sm">
+                                <div className="font-medium">{job.period}</div>
+                              </td>
+                              <td className="whitespace-nowrap border-b p-3 text-sm">{getGroupByLabel(job.groupBy)}</td>
+                              <td className="border-b p-3 text-sm">
+                                <span
+                                  className={`whitespace-nowrap rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(
+                                    job.status
+                                  )}`}
+                                >
+                                  {getStatusLabel(job.status)}
+                                </span>
+                              </td>
+                              <td className="border-b p-3 text-sm">
+                                <div className="max-w-xs truncate whitespace-nowrap" title={job.areaOfficeName}>
+                                  {job.areaOfficeName || "N/A"}
                                 </div>
-                                <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
-                                  <div
-                                    className={`h-full rounded-full transition-all duration-300 ${progressBarColorClass}`}
-                                    style={{ width: `${safeProgress}%` }}
-                                  />
+                              </td>
+                              <td className="border-b p-3 text-sm">
+                                <div className="max-w-xs truncate whitespace-nowrap" title={job.feederName}>
+                                  {job.feederName || "N/A"}
                                 </div>
-                              </div>
-                            </td>
-                            <td className="whitespace-nowrap border-b p-3 text-sm">
-                              {new Date(job.requestedAtUtc).toLocaleString()}
-                            </td>
-                            <td className="border-b p-3 text-sm">
-                              <div className="flex gap-2">
-                                {(job.status === 2 || job.status === 3) && (
-                                  <ButtonModule
-                                    variant="outline"
-                                    size="sm"
-                                    icon={<Download className="size-4" />}
-                                    onClick={() => handleDownloadZip(job)}
-                                    loading={downloadPrintJobLoading}
-                                    className="whitespace-nowrap"
-                                  >
-                                    {downloadPrintJobLoading ? "Generating..." : "Download ZIP"}
-                                  </ButtonModule>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
+                              </td>
+                              <td className="border-b p-3 text-sm">
+                                <div className="min-w-40">
+                                  <div className="mb-1 flex items-center justify-between">
+                                    <span className="text-xs text-gray-500">Processed</span>
+                                    <span className="text-xs font-medium text-gray-700">{safeProgress}%</span>
+                                  </div>
+                                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                                    <div
+                                      className={`h-full rounded-full transition-all duration-300 ${progressBarColorClass}`}
+                                      style={{ width: `${safeProgress}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="whitespace-nowrap border-b p-3 text-sm">
+                                {new Date(job.requestedAtUtc).toLocaleString()}
+                              </td>
+                              <td className="border-b p-3 text-sm">
+                                <div className="flex gap-2">
+                                  {(job.status === 2 || job.status === 3) && (
+                                    <ButtonModule
+                                      variant="outline"
+                                      size="sm"
+                                      icon={<Download className="size-4" />}
+                                      onClick={() => handleDownloadZip(job)}
+                                      loading={downloadPrintJobLoading}
+                                      className="whitespace-nowrap"
+                                    >
+                                      {downloadPrintJobLoading ? "Generating..." : "Download ZIP"}
+                                    </ButtonModule>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
                           )
                         })
                       )}

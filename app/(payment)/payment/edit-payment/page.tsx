@@ -466,7 +466,7 @@ const EditPaymentPage = () => {
         <div className="flex w-full">
           <div className="flex w-full flex-col">
             <DashboardNav />
-            <div className="mx-auto flex w-full items-center justify-center px-4 py-8 2xl:container 2xl:px-16">
+            <div className="mx-auto flex w-full items-center justify-center px-4 py-8  2xl:px-16">
               <div className="w-full rounded-lg bg-white shadow-sm">
                 {/* Header */}
                 <div className="border-b border-gray-200 bg-white px-6 py-4">

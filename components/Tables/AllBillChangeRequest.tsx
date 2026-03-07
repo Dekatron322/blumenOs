@@ -942,7 +942,7 @@ const BillingChangeRequestsTable = () => {
                   )}
                 </button>
 
-                <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">Billing Change Requests</p>
+                <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-xl">Billing Change Requests</p>
               </div>
 
               <div className="flex items-center gap-2">

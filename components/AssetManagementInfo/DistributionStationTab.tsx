@@ -800,7 +800,7 @@ const DistributionStationTab: React.FC = () => {
                 )}
               </button>
               <div>
-                <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Distribution Stations</p>
+                <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Distribution Stations</p>
                 <p className="text-sm text-gray-600">Monitor and manage distribution station infrastructure</p>
               </div>
             </div>

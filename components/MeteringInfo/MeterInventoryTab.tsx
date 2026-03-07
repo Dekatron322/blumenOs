@@ -946,7 +946,7 @@ const MeterInventoryTable: React.FC<MeterInventoryTableProps> = ({ pageSize: pro
                 <div className="flex items-center gap-3">
                   {/* Filter Button for ALL screens up to 2xl */}
 
-                  <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">Meter Directory</p>
+                  <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-xl">Meter Directory</p>
                 </div>
 
                 <div className="flex items-center gap-2">

@@ -1030,7 +1030,7 @@ const MeterReadings: React.FC = () => {
               </button>
 
               <div>
-                <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Meter Readings</p>
+                <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Meter Readings</p>
                 <p className="text-sm text-gray-600">Manage and validate customer meter readings</p>
               </div>
             </div>

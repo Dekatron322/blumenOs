@@ -728,7 +728,7 @@ const FeedersTab: React.FC = () => {
                 )}
               </button>
               <div>
-                <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Feeders</p>
+                <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Feeders</p>
                 <p className="text-sm text-gray-600">Manage and monitor feeder operations</p>
               </div>
             </div>
