@@ -446,7 +446,7 @@ const GenerateBillPage = () => {
                                 </div>
                               ) : (
                                 <div className="pt-8 text-center">
-                                  <Clock className="mx-auto mb-1 h-6 w-6 text-gray-400" />
+                                  <Clock className="mx-auto mb-1 size-6 text-gray-400" />
                                   <p className="text-xs text-gray-500">No runs yet</p>
                                 </div>
                               )}

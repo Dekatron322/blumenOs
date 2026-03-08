@@ -1627,9 +1627,7 @@ const FileManagementPage = () => {
 
                     {!selectedFile ? (
                       <div>
-                        <CloudUpload
-                          className={`mx-auto h-16 w-16 ${isDragOver ? "text-blue-500" : "text-gray-400"}`}
-                        />
+                        <CloudUpload className={`mx-auto size-16 ${isDragOver ? "text-blue-500" : "text-gray-400"}`} />
                         <p className="mt-4 text-base text-gray-700">
                           <button
                             onClick={() => fileInputRef.current?.click()}
@@ -1653,7 +1651,7 @@ const FileManagementPage = () => {
                           <X className="size-4" />
                         </button>
 
-                        <FileText className="mx-auto h-16 w-16 text-emerald-500" />
+                        <FileText className="mx-auto size-16 text-emerald-500" />
                         <p className="mt-2 font-medium text-gray-900">{selectedFile.name}</p>
                         <p className="text-sm text-gray-500">{formatFileSize(selectedFile.size)}</p>
 

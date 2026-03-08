@@ -120,7 +120,7 @@ const FilterModal = ({
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
       >
         {/* Modal Header */}
-        <div className="border-b border-gray-100 bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-6">
+        <div className="border-b border-gray-100 bg-gradient-to-r from-green-600 to-emerald-600 p-6">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-3">
@@ -1153,7 +1153,7 @@ export default function VendorTopUpHistoryPage() {
                 className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white p-12"
               >
                 <div className="text-center">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+                  <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-gray-100">
                     <DollarSign className="size-8 text-gray-400" />
                   </div>
                   <h3 className="text-lg font-medium text-gray-900">No Vendor Top-up Data</h3>

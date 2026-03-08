@@ -117,7 +117,7 @@ const ConfirmPaymentForm: React.FC<ConfirmPaymentFormProps> = ({
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto px-6 py-6">
+          <div className="flex-1 overflow-y-auto p-6">
             {/* Payment Details */}
             <div className="mb-6 space-y-4">
               <div className="rounded-lg bg-gray-50 p-4">

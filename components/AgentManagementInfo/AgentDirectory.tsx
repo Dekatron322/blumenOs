@@ -655,7 +655,7 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
                 onChange={handleSearchChange}
                 onKeyDown={(e) => e.key === "Enter" && handleManualSearch()}
                 placeholder="Search agents..."
-                className="h-9 w-full rounded-lg border border-gray-300 bg-white pl-8 pr-8 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="h-9 w-full rounded-lg border border-gray-300 bg-white px-8 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
               {searchInput && (
                 <button

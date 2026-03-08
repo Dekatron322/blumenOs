@@ -47,6 +47,7 @@ export const allLinks: LinkItem[] = [
     requiredActions: ["R"],
     children: [
       { name: "Overview", href: "/customers/overview", privilegeKey: "customers", requiredActions: ["R"] },
+      { name: "Search Customer", href: "/customers/search" },
       { name: "View Customers", href: "/customers/view-customers", privilegeKey: "customers", requiredActions: ["R"] },
       { name: "Data Quality", href: "/customers/data-quality", privilegeKey: "customers", requiredActions: ["R"] },
       { name: "Add Customers", href: "/customers/add-customers", privilegeKey: "customers", requiredActions: ["W"] },
@@ -74,6 +75,7 @@ export const allLinks: LinkItem[] = [
         privilegeKey: "identity-users",
         requiredActions: ["R"],
       },
+      { name: "Search Employee", href: "/employees/search" },
       {
         name: "View Employees",
         href: "/employees/view-employees",
@@ -102,6 +104,7 @@ export const allLinks: LinkItem[] = [
     requiredActions: ["R"],
     children: [
       { name: "Overview", href: "/billing/overview", privilegeKey: "billing-postpaid", requiredActions: ["R"] },
+      { name: "Search Postpaid Bill", href: "/billing/search" },
       { name: "Postpaid Bills", href: "/billing/bills", privilegeKey: "billing-postpaid", requiredActions: ["R"] },
       // {
       //   name: "Postpaid Meter Readings",

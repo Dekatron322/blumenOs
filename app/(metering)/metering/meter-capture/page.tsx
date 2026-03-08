@@ -144,7 +144,7 @@ const FilterModal = ({
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
       >
         {/* Modal Header */}
-        <div className="border-b border-gray-100 bg-gradient-to-r from-green-600 to-green-800 px-6 py-6">
+        <div className="border-b border-gray-100 bg-gradient-to-r from-green-600 to-green-800 p-6">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-3">

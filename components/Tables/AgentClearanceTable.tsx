@@ -835,7 +835,7 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({ agentId, appl
 
                       {expandedClearanceId === clearance.id && (
                         <tr>
-                          <td colSpan={10} className="border-b bg-[#F9FAFB] px-4 py-4 text-sm text-gray-700">
+                          <td colSpan={10} className="border-b bg-[#F9FAFB] p-4 text-sm text-gray-700">
                             <div className="grid gap-4 md:grid-cols-4">
                               <div>
                                 <p className="text-xs font-semibold text-gray-500">Notes</p>
@@ -1076,7 +1076,7 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({ agentId, appl
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto px-6 py-6">
+                <div className="flex-1 overflow-y-auto p-6">
                   {/* Instructions */}
                   <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
                     <h4 className="mb-2 text-sm font-semibold text-blue-900">Instructions</h4>

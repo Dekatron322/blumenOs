@@ -134,7 +134,7 @@ const DashboardMain: React.FC = () => {
                     </h5>
                   </div>
                 </div>
-                <div className="my-5 h-[1px] w-full bg-black opacity-5 max-sm:my-2"></div>
+                <div className="my-5 h-px w-full bg-black opacity-5 max-sm:my-2"></div>
                 <div className="flex items-center gap-4">
                   <div
                     className={`flex w-[72px] items-center justify-center rounded-md p-1 ${getBgColor(account.status)}`}
@@ -191,7 +191,7 @@ const DashboardMain: React.FC = () => {
                     </h5>
                   </div>
                 </div>
-                <div className="my-5 h-[1px] w-full bg-black opacity-5 max-sm:my-2"></div>
+                <div className="my-5 h-px w-full bg-black opacity-5 max-sm:my-2"></div>
                 <div className="flex items-center gap-4">
                   <div
                     className={`flex w-[72px] items-center justify-center rounded-md p-1 ${getBgColor(account.status)}`}
@@ -248,7 +248,7 @@ const DashboardMain: React.FC = () => {
                     </h5>
                   </div>
                 </div>
-                <div className="my-5 h-[1px] w-full bg-black opacity-5 max-sm:my-2"></div>
+                <div className="my-5 h-px w-full bg-black opacity-5 max-sm:my-2"></div>
                 <div className="flex items-center gap-4">
                   <div
                     className={`flex w-[72px] items-center justify-center rounded-md p-1 ${getBgColor(account.status)}`}

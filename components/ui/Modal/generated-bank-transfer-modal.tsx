@@ -772,7 +772,7 @@ const BankTransferDetailsModal: React.FC<BankTransferDetailsModalProps> = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col gap-3 border-t border-gray-200 bg-white px-4 py-4 max-sm:gap-2 max-sm:px-3 max-sm:py-3 sm:flex-row sm:justify-end sm:px-6">
+          <div className="flex flex-col gap-3 border-t border-gray-200 bg-white p-4 max-sm:gap-2 max-sm:px-3 max-sm:py-3 sm:flex-row sm:justify-end sm:px-6">
             <ButtonModule
               variant="outline"
               onClick={() => setShowReceipt(false)}

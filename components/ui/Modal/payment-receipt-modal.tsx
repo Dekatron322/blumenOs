@@ -696,7 +696,7 @@ const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({ isOpen, onReq
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col gap-3 border-t border-gray-200 bg-white px-4 py-4 sm:flex-row sm:justify-end sm:px-6">
+            <div className="flex flex-col gap-3 border-t border-gray-200 bg-white p-4 sm:flex-row sm:justify-end sm:px-6">
               <ButtonModule variant="outline" onClick={handlePrint} className="w-full sm:w-auto">
                 Print
               </ButtonModule>

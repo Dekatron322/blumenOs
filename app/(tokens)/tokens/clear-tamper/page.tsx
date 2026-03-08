@@ -635,7 +635,7 @@ const ClearTamper = () => {
                       </div>
                     </div>
                     {activeTab === "single" && (
-                      <div className="absolute -right-2 -top-2 h-16 w-16 rounded-full bg-[#004B23]/10" />
+                      <div className="absolute -right-2 -top-2 size-16 rounded-full bg-[#004B23]/10" />
                     )}
                   </button>
 
@@ -670,7 +670,7 @@ const ClearTamper = () => {
                       </div>
                     </div>
                     {activeTab === "bulk" && (
-                      <div className="absolute -right-2 -top-2 h-16 w-16 rounded-full bg-[#004B23]/10" />
+                      <div className="absolute -right-2 -top-2 size-16 rounded-full bg-[#004B23]/10" />
                     )}
                   </button>
                 </div>

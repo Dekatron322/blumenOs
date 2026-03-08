@@ -114,34 +114,34 @@ const TableRowSkeleton = () => (
       },
     }}
   >
-    <td className="px-4 py-4">
+    <td className="p-4">
       <div className="space-y-2">
         <div className="h-4 w-32 rounded bg-gray-200"></div>
         <div className="h-3 w-24 rounded bg-gray-200"></div>
       </div>
     </td>
-    <td className="px-4 py-4">
+    <td className="p-4">
       <div className="h-6 w-20 rounded-full bg-gray-200"></div>
     </td>
-    <td className="px-4 py-4">
+    <td className="p-4">
       <div className="h-6 w-24 rounded-full bg-gray-200"></div>
     </td>
-    <td className="px-4 py-4">
+    <td className="p-4">
       <div className="space-y-1">
         <div className="h-3 w-28 rounded bg-gray-200"></div>
         <div className="h-3 w-20 rounded bg-gray-200"></div>
       </div>
     </td>
-    <td className="px-4 py-4">
+    <td className="p-4">
       <div className="h-6 w-24 rounded bg-gray-200"></div>
     </td>
-    <td className="px-4 py-4">
+    <td className="p-4">
       <div className="h-6 w-20 rounded bg-gray-200"></div>
     </td>
-    <td className="px-4 py-4">
+    <td className="p-4">
       <div className="h-6 w-16 rounded bg-gray-200"></div>
     </td>
-    <td className="px-4 py-4">
+    <td className="p-4">
       <div className="flex justify-end gap-2">
         <div className="h-8 w-16 rounded bg-gray-200"></div>
       </div>
@@ -508,7 +508,7 @@ const PostpaidBillingTab: React.FC<PostpaidBillingTabProps> = ({ customerId }) =
 
                   return (
                     <tr key={bill.id} className="transition-colors hover:bg-gray-50">
-                      <td className="px-4 py-4">
+                      <td className="p-4">
                         <div className="max-w-xs">
                           <p className="truncate text-sm font-medium text-gray-900">{bill.name}</p>
                           <p className="text-xs text-gray-500">Acc: {bill.customerAccountNumber}</p>
@@ -521,7 +521,7 @@ const PostpaidBillingTab: React.FC<PostpaidBillingTabProps> = ({ customerId }) =
                         </div>
                       </td>
 
-                      <td className="whitespace-nowrap px-4 py-4">
+                      <td className="whitespace-nowrap p-4">
                         <span
                           className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium ${statusConfig.color}`}
                         >
@@ -530,7 +530,7 @@ const PostpaidBillingTab: React.FC<PostpaidBillingTabProps> = ({ customerId }) =
                         </span>
                       </td>
 
-                      <td className="whitespace-nowrap px-4 py-4">
+                      <td className="whitespace-nowrap p-4">
                         <span
                           className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${categoryConfig.badge}`}
                         >
@@ -538,24 +538,22 @@ const PostpaidBillingTab: React.FC<PostpaidBillingTabProps> = ({ customerId }) =
                         </span>
                       </td>
 
-                      <td className="whitespace-nowrap px-4 py-4 text-sm text-gray-700">{bill.period}</td>
+                      <td className="whitespace-nowrap p-4 text-sm text-gray-700">{bill.period}</td>
 
-                      <td className="whitespace-nowrap px-4 py-4">
+                      <td className="whitespace-nowrap p-4">
                         <div>
                           <p className="text-sm font-medium text-gray-900">{formatCurrency(bill.totalDue)}</p>
                           <p className="text-xs text-gray-500">Bill: {formatCurrency(bill.currentBillAmount)}</p>
                         </div>
                       </td>
 
-                      <td className="whitespace-nowrap px-4 py-4 text-sm text-gray-700">
+                      <td className="whitespace-nowrap p-4 text-sm text-gray-700">
                         {formatNumber(bill.consumptionKwh)} kWh
                       </td>
 
-                      <td className="whitespace-nowrap px-4 py-4 text-sm text-gray-500">
-                        {formatDate(bill.createdAt)}
-                      </td>
+                      <td className="whitespace-nowrap p-4 text-sm text-gray-500">{formatDate(bill.createdAt)}</td>
 
-                      <td className="px-4 py-4">
+                      <td className="p-4">
                         <div className="flex justify-end">
                           <button
                             onClick={() => handleViewDetails(bill)}

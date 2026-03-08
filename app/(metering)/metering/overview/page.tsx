@@ -1150,7 +1150,7 @@ export default function MeteringDashboard() {
                 className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white p-12"
               >
                 <div className="text-center">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+                  <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-gray-100">
                     <Layers className="size-8 text-gray-400" />
                   </div>
                   <h3 className="text-lg font-medium text-gray-900">No Meter Data</h3>

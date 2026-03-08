@@ -1102,7 +1102,7 @@ const AddEmployeePage = () => {
                   </button>
                   <button
                     onClick={() => setActiveTab("bulk")}
-                    className={`flex-1 rounded-tr-lg px-4 py-3 text-sm font-medium transition-colors sm:px-6 sm:py-4 ${
+                    className={`flex-1 rounded-r-lg px-4 py-3 text-sm font-medium transition-colors sm:px-6 sm:py-4 ${
                       activeTab === "bulk"
                         ? "border-b-2 border-blue-500 text-blue-600"
                         : "text-gray-500 hover:text-gray-700"

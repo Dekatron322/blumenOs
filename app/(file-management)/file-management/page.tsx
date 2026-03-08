@@ -418,7 +418,7 @@ const FileManagementPage = () => {
 
               {!selectedFile ? (
                 <div className="space-y-4">
-                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
+                  <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-blue-100">
                     <CloudUpload className="size-8 text-blue-600" />
                   </div>
                   <div>
@@ -434,7 +434,7 @@ const FileManagementPage = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+                  <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-green-100">
                     <FileText className="size-8 text-green-600" />
                   </div>
                   <div>

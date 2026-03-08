@@ -1080,7 +1080,7 @@ const Pagination: React.FC<PaginationProps> = ({
           return (
             <button
               key={pageNum}
-              className={`flex h-7 w-7 items-center justify-center rounded-md text-xs sm:h-[27px] sm:w-[30px] sm:text-sm ${
+              className={`flex size-7 items-center justify-center rounded-md text-xs sm:h-[27px] sm:w-[30px] sm:text-sm ${
                 currentPage === pageNum ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800 hover:bg-gray-300"
               }`}
               onClick={() => onPageChange(pageNum)}

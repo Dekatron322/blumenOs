@@ -167,7 +167,7 @@ const CompactSkeletonCard = () => (
     }}
   >
     <div className="flex items-start justify-between">
-      <div className="h-7 w-7 rounded-md bg-gray-200"></div>
+      <div className="size-7 rounded-md bg-gray-200"></div>
       <div className="h-4 w-12 rounded-full bg-gray-200"></div>
     </div>
     <div className="mt-2 space-y-1.5">
