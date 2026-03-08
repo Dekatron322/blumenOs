@@ -539,7 +539,7 @@ const AllCustomerCategoriesTable: React.FC = () => {
   return (
     <motion.div className="relative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.35 }}>
       <motion.div
-        className="items-center justify-between py-2 md:flex"
+        className="flex flex-col gap-4 py-2"
         initial={{ y: -10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.3 }}
@@ -548,13 +548,17 @@ const AllCustomerCategoriesTable: React.FC = () => {
           <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Customer Categories</p>
           <p className="text-sm text-gray-600">Manage customer categories and sub-categories</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:gap-4">
           <SearchModule
+            prominent
+            prominentTitle="Search Customer Categories"
+            prominentDescription="Find customer categories quickly by name or structure."
             value={searchText}
             onChange={handleSearch}
             onCancel={handleCancelSearch}
             placeholder="Search categories..."
-            className="w-[380px]"
+            height="h-14"
+            className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
             bgClassName="bg-white"
           />
           <ButtonModule variant="outline" size="sm" onClick={handleRefreshCategories} disabled={loading}>
@@ -1002,6 +1006,7 @@ const AllCustomerCategoriesTable: React.FC = () => {
 
                   <div className="mt-3">
                     <SearchModule
+                      prominent
                       value={subCategorySearch}
                       onChange={handleSubCategorySearch}
                       onCancel={handleCancelSubCategorySearch}

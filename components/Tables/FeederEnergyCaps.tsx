@@ -494,7 +494,7 @@ const FeederEnergyCaps: React.FC = () => {
   const [searchTrigger, setSearchTrigger] = useState(0)
   const [selectedEnergyCap, setSelectedEnergyCap] = useState<FeederEnergyCap | null>(null)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [isSortExpanded, setIsSortExpanded] = useState(false)
 
   // Search states for dropdowns
@@ -932,7 +932,7 @@ const FeederEnergyCaps: React.FC = () => {
           }
         >
           <div className="flex flex-col py-2">
-            <div className="mb-3 flex w-full items-center justify-between gap-3">
+            <div className="mb-3 flex w-full flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 {/* Filter Button for ALL screens up to 2xl */}
                 <button
@@ -984,27 +984,33 @@ const FeederEnergyCaps: React.FC = () => {
             <p className="text-sm text-gray-600">Manage and monitor feeder energy consumption caps and tariffs</p>
           </div>
 
-          <div className="mb-4 mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="w-full sm:w-96">
+          <div className="my-4 flex flex-col gap-3">
+            <div className="w-full">
               <SearchModule
+                prominent
+                prominentTitle="Search Feeder Energy Caps"
+                prominentDescription="Find feeder cap records quickly by period, feeder, area, or status."
                 value={searchText}
                 onChange={handleSearch}
                 onCancel={handleCancelSearch}
                 onSearch={handleManualSearch}
                 placeholder="Search by period (e.g., 2024-01)..."
-                className="w-full"
+                height="h-14"
+                className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
                 bgClassName="bg-white"
               />
             </div>
             {canAddFeederCap && (
-              <button
-                type="button"
-                onClick={() => router.push("/billing/feeder-energy-caps/add")}
-                className="whitespace-nowrap rounded-md bg-[#004B23] px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-black focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 sm:px-4"
-              >
-                <PlusCircle className="size-4 sm:hidden" />
-                <p className="max-sm:hidden">Add Feeder Cap</p>
-              </button>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => router.push("/billing/feeder-energy-caps/add")}
+                  className="whitespace-nowrap rounded-md bg-[#004B23] px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-black focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 sm:px-4"
+                >
+                  <PlusCircle className="size-4 sm:hidden" />
+                  <p className="max-sm:hidden">Add Feeder Cap</p>
+                </button>
+              </div>
             )}
           </div>
 

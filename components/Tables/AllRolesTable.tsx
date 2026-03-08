@@ -601,7 +601,7 @@ const AllRoleTable: React.FC = () => {
   return (
     <motion.div className="relative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.35 }}>
       <motion.div
-        className="items-center justify-between py-2 md:flex"
+        className="flex flex-col gap-4 py-2"
         initial={{ y: -10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.3 }}
@@ -610,13 +610,17 @@ const AllRoleTable: React.FC = () => {
           <p className="text-lg font-medium max-sm:pb-3 md:text-xl">All Roles</p>
           <p className="text-sm text-gray-600">Manage system and custom roles with their permissions</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:gap-4">
           <SearchModule
+            prominent
+            prominentTitle="Search Roles"
+            prominentDescription="Find roles quickly by name, scope, or assigned permissions."
             value={searchText}
             onChange={handleSearch}
             onCancel={handleCancelSearch}
             placeholder="Search roles..."
-            className="w-[380px]"
+            height="h-14"
+            className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
             bgClassName="bg-white"
           />
           <ButtonModule variant="primary" size="sm" onClick={() => router.push("/roles/create")}>
@@ -980,6 +984,7 @@ const AllRoleTable: React.FC = () => {
 
                   <div className="mt-3">
                     <SearchModule
+                      prominent
                       value={privilegeSearch}
                       onChange={handlePrivilegeSearch}
                       onCancel={handleCancelPrivilegeSearch}

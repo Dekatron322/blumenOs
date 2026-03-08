@@ -4,7 +4,6 @@ import React, { useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos } from "react-icons/md"
-import { SearchModule } from "components/ui/Search/search-module"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { fetchPrepaidTransactions, PrepaidTransaction, PrepaidTransactionParams } from "lib/redux/metersSlice"
 import { ButtonModule } from "components/ui/Button/Button"
@@ -539,8 +538,6 @@ const CompactLoadingSkeleton = () => {
 
 // Main Component
 const PrepaidTransactionTable: React.FC<{ pageSize?: number }> = ({ pageSize: propPageSize = 10 }) => {
-  const [searchInput, setSearchInput] = useState("")
-  const [searchText, setSearchText] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize] = useState(propPageSize)
   const [showFilters, setShowFilters] = useState(false)
@@ -581,8 +578,6 @@ const PrepaidTransactionTable: React.FC<{ pageSize?: number }> = ({ pageSize: pr
       pageSize: pageSize,
     }
 
-    if (searchText) params.search = searchText
-
     // Add all filters to params
     if (localFilters.status) params.status = localFilters.status as any
     if (localFilters.channel) params.channel = localFilters.channel as any
@@ -603,7 +598,7 @@ const PrepaidTransactionTable: React.FC<{ pageSize?: number }> = ({ pageSize: pr
     }
 
     dispatch(fetchPrepaidTransactions(params))
-  }, [dispatch, currentPage, pageSize, searchText, localFilters])
+  }, [dispatch, currentPage, pageSize, localFilters])
 
   useEffect(() => {
     if (!serviceStations.length) {
@@ -613,14 +608,6 @@ const PrepaidTransactionTable: React.FC<{ pageSize?: number }> = ({ pageSize: pr
       dispatch(fetchDistributionSubstations({ pageNumber: 1, pageSize: 100 }))
     }
   }, [dispatch, serviceStations.length, distributionSubstations.length])
-
-  const handleSearch = () => {
-    const trimmed = searchInput.trim()
-    if (trimmed.length === 0 || trimmed.length >= 3) {
-      setSearchText(trimmed)
-      setCurrentPage(1)
-    }
-  }
 
   const handleFilterChange = (key: string, value: string) => {
     setLocalFilters((prev) => ({ ...prev, [key]: value }))
@@ -650,8 +637,6 @@ const PrepaidTransactionTable: React.FC<{ pageSize?: number }> = ({ pageSize: pr
       sortBy: "",
       sortOrder: "asc",
     })
-    setSearchText("")
-    setSearchInput("")
     setCurrentPage(1)
   }
 
@@ -716,27 +701,16 @@ const PrepaidTransactionTable: React.FC<{ pageSize?: number }> = ({ pageSize: pr
             <h2 className="text-sm font-medium text-gray-700">Prepaid Transactions</h2>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <input
-                type="text"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                placeholder="Search..."
-                className="w-40 rounded-md border border-gray-300 px-2 py-1.5 text-xs placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:w-48"
-              />
-            </div>
-            {getActiveFilterCount() > 0 && (
-              <button
-                onClick={resetFilters}
-                className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                title="Clear all filters"
-              >
-                <X className="size-4" />
-              </button>
-            )}
-          </div>
+          {getActiveFilterCount() > 0 && (
+            <button
+              onClick={resetFilters}
+              className="flex items-center gap-1 rounded-md border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-600 hover:bg-gray-50"
+              title="Clear all filters"
+            >
+              <X className="size-3.5" />
+              Clear filters
+            </button>
+          )}
         </div>
 
         {/* Active Filters Bar */}
@@ -868,44 +842,60 @@ const PrepaidTransactionTable: React.FC<{ pageSize?: number }> = ({ pageSize: pr
 
               {/* Desktop Table View (hidden on mobile) */}
               <div className="hidden lg:block">
-                <table className="w-full min-w-full table-auto">
-                  <thead className="bg-gray-50 text-left text-[10px] font-medium text-gray-500">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-3 py-2">Reference</th>
-                      <th className="px-3 py-2">Customer</th>
-                      <th className="px-3 py-2">Amount</th>
-                      <th className="px-3 py-2">Channel</th>
-                      <th className="px-3 py-2">Status</th>
-                      <th className="px-3 py-2">Date</th>
-                      <th className="px-3 py-2">Collector</th>
-                      <th className="px-3 py-2">Clearance</th>
-                      <th className="px-3 py-2"></th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Reference
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Customer
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Amount
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Channel
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Status
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Date
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Collector
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Clearance
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500"></th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100 text-xs">
+                  <tbody className="divide-y divide-gray-200 bg-white text-sm">
                     {prepaidTransactions.map((transaction) => (
                       <React.Fragment key={transaction.id}>
                         <tr className="hover:bg-gray-50">
-                          <td className="px-3 py-2 font-medium">{transaction.reference}</td>
-                          <td className="px-3 py-2">{transaction.customerName}</td>
-                          <td className="px-3 py-2 font-medium">₦{formatCurrency(transaction.amount)}</td>
-                          <td className="px-3 py-2">
+                          <td className="px-4 py-3 font-medium">{transaction.reference}</td>
+                          <td className="px-4 py-3">{transaction.customerName}</td>
+                          <td className="px-4 py-3 font-medium">₦{formatCurrency(transaction.amount)}</td>
+                          <td className="px-4 py-3">
                             <CompactBadge color={getChannelColor(transaction.channel)}>
                               {transaction.channel}
                             </CompactBadge>
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="px-4 py-3">
                             <CompactBadge color={getStatusColor(transaction.status)}>{transaction.status}</CompactBadge>
                           </td>
-                          <td className="px-3 py-2 text-gray-600">
+                          <td className="px-4 py-3 text-gray-600">
                             {new Date(transaction.paidAtUtc).toLocaleDateString()}
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="px-4 py-3">
                             <CompactBadge color={getCollectorColor(transaction.collectorType)}>
                               {transaction.collectorType}
                             </CompactBadge>
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="px-4 py-3">
                             {transaction.clearanceStatus ? (
                               <CompactBadge color={transaction.clearanceStatus === "Cleared" ? "green" : "yellow"}>
                                 {transaction.clearanceStatus}
@@ -914,7 +904,7 @@ const PrepaidTransactionTable: React.FC<{ pageSize?: number }> = ({ pageSize: pr
                               <span className="text-gray-400">—</span>
                             )}
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="px-4 py-3">
                             <button
                               onClick={() => {
                                 setExpandedRow(expandedRow === transaction.id ? null : transaction.id)
@@ -935,18 +925,18 @@ const PrepaidTransactionTable: React.FC<{ pageSize?: number }> = ({ pageSize: pr
                         <AnimatePresence>
                           {expandedRow === transaction.id && (
                             <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                              <td colSpan={9} className="bg-gray-50 p-3">
-                                <div className="grid grid-cols-4 gap-4 text-xs">
+                              <td colSpan={9} className="bg-gray-50 p-4">
+                                <div className="grid grid-cols-4 gap-4 text-sm">
                                   <div>
-                                    <p className="text-[10px] text-gray-500">Amount Applied</p>
+                                    <p className="text-xs text-gray-500">Amount Applied</p>
                                     <p className="font-medium">₦{formatCurrency(transaction.amountApplied)}</p>
                                   </div>
                                   <div>
-                                    <p className="text-[10px] text-gray-500">VAT Amount</p>
+                                    <p className="text-xs text-gray-500">VAT Amount</p>
                                     <p className="font-medium">₦{formatCurrency(transaction.vatAmount)}</p>
                                   </div>
                                   <div>
-                                    <p className="text-[10px] text-gray-500">Confirmed At</p>
+                                    <p className="text-xs text-gray-500">Confirmed At</p>
                                     <p className="font-medium">
                                       {transaction.confirmedAtUtc
                                         ? new Date(transaction.confirmedAtUtc).toLocaleString()
@@ -954,22 +944,22 @@ const PrepaidTransactionTable: React.FC<{ pageSize?: number }> = ({ pageSize: pr
                                     </p>
                                   </div>
                                   <div>
-                                    <p className="text-[10px] text-gray-500">Manual Entry</p>
+                                    <p className="text-xs text-gray-500">Manual Entry</p>
                                     <p className="font-medium">{transaction.isManualEntry ? "Yes" : "No"}</p>
                                   </div>
                                   <div>
-                                    <p className="text-[10px] text-gray-500">Currency</p>
+                                    <p className="text-xs text-gray-500">Currency</p>
                                     <p className="font-medium">{transaction.currency}</p>
                                   </div>
                                   <div>
-                                    <p className="text-[10px] text-gray-500">System Generated</p>
+                                    <p className="text-xs text-gray-500">System Generated</p>
                                     <p className="font-medium">{transaction.isSystemGenerated ? "Yes" : "No"}</p>
                                   </div>
                                 </div>
                                 <div className="mt-3 flex justify-end">
                                   <button
                                     onClick={() => setShowReceiptModal(true)}
-                                    className="rounded-md bg-blue-50 px-3 py-1.5 text-[10px] font-medium text-blue-700 hover:bg-blue-100"
+                                    className="rounded-md bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
                                   >
                                     View Receipt
                                   </button>

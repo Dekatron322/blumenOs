@@ -316,7 +316,7 @@ const BackgroundJobs: React.FC = () => {
   return (
     <motion.div className="relative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
       <motion.div
-        className="items-center justify-between border-b py-2 md:flex md:py-4"
+        className="flex flex-col gap-4 border-b py-2 md:py-4"
         initial={{ y: -10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.3 }}
@@ -325,13 +325,17 @@ const BackgroundJobs: React.FC = () => {
           <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Background Jobs</p>
           <p className="text-sm text-gray-600">Monitor and control background scheduler jobs</p>
         </div>
-        <div className="flex gap-4">
+        <div className="w-full">
           <SearchModule
+            prominent
+            prominentTitle="Search Background Jobs"
+            prominentDescription="Find scheduler jobs quickly by name, status, queue, or timing."
             value={searchTerm}
             onChange={handleSearch}
             onCancel={handleCancelSearch}
             placeholder="Search jobs..."
-            className="w-[380px]"
+            height="h-14"
+            className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
             bgClassName="bg-white"
           />
         </div>

@@ -10,7 +10,6 @@ import SendReminderModal from "components/ui/Modal/send-reminder-modal"
 import { useRouter } from "next/navigation"
 import { Customer, fetchCustomers, setFilters, setPagination } from "lib/redux/customerSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import Image from "next/image"
 import EmptySearchState from "components/ui/EmptySearchState"
 
 type SortOrder = "asc" | "desc" | null
@@ -318,7 +317,6 @@ const AllCustomers = () => {
   const [sortOrder, setSortOrder] = useState<SortOrder>(null)
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
   const [showCategories, setShowCategories] = useState(true)
-  const [showMobileSearch, setShowMobileSearch] = useState(false)
   const [selectedRegion, setSelectedRegion] = useState("")
 
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
@@ -928,45 +926,24 @@ const AllCustomers = () => {
         {/* Main Content - Customers List/Grid */}
         <div className={`w-full rounded-md border bg-white p-3 md:p-5 ${showCategories ? "lg:flex-1" : ""}`}>
           <div className="flex flex-col py-2">
-            <div className="mb-3 flex w-full items-center justify-between gap-3">
+            <div className="mb-3 flex w-full flex-wrap items-center justify-between gap-3">
               <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-xl">All Customers</p>
 
-              <div className="flex items-center gap-2">
-                {/* Mobile search icon button */}
-                <button
-                  type="button"
-                  className="flex size-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm transition hover:bg-gray-50 sm:hidden md:size-9"
-                  onClick={() => setShowMobileSearch((prev) => !prev)}
-                  aria-label="Toggle search"
-                >
-                  <Image src="/DashboardImages/Search.svg" width={16} height={16} alt="Search Icon" />
-                </button>
-
-                {/* Desktop/Tablet search input */}
-                <div className="hidden sm:block">
-                  <SearchModule
-                    value={filters.search}
-                    onChange={(e) => handleSearchChange(e.target.value)}
-                    onCancel={handleCancelSearch}
-                    placeholder="Search by name or account number"
-                    className="w-full max-w-full md:max-w-[300px]"
-                  />
-                </div>
-              </div>
             </div>
 
-            {/* Mobile search input revealed when icon is tapped */}
-            {showMobileSearch && (
-              <div className="mb-3 sm:hidden">
-                <SearchModule
-                  value={filters.search}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  onCancel={handleCancelSearch}
-                  placeholder="Search by name or account number"
-                  className="w-full"
-                />
-              </div>
-            )}
+            <div className="mb-3 w-full">
+              <SearchModule
+                prominent
+                prominentTitle="Search Customers"
+                prominentDescription="Find customers quickly by name, account number, phone number, or email."
+                value={filters.search}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                onCancel={handleCancelSearch}
+                placeholder="Type customer name, account number, phone number, or email..."
+                height="h-14"
+                className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+              />
+            </div>
             <div className="mt-2 flex flex-wrap gap-2 md:flex-nowrap md:gap-4">
               <div className="flex flex-wrap gap-2">
                 <button

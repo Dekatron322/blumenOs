@@ -520,7 +520,7 @@ const MeterReadings: React.FC = () => {
   const [searchInput, setSearchInput] = useState("")
   const [selectedReading, setSelectedReading] = useState<MeterReading | null>(null)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [isSortExpanded, setIsSortExpanded] = useState(false)
 
   // Local state for filters (UI state - what user is selecting)
@@ -1038,6 +1038,7 @@ const MeterReadings: React.FC = () => {
             <div className="flex items-center gap-3 sm:gap-4">
               <div className="w-full sm:w-64 md:w-[380px]">
                 <SearchModule
+                  prominent
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   onCancel={handleCancelSearch}

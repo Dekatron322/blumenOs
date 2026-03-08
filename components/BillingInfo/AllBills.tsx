@@ -1171,72 +1171,78 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
           transition={{ duration: 0.4 }}
         >
           <motion.div
-            className="items-center justify-between border-b py-2 md:flex md:py-4"
+            className="border-b py-2 md:py-4"
             initial={{ y: -10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="flex items-center gap-3">
-              {/* Filter Button for ALL screens up to 2xl */}
-              <button
-                onClick={() => setShowMobileFilters(true)}
-                className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
-              >
-                <Filter className="size-4" />
-                Filters
-                {getActiveFilterCount() > 0 && (
-                  <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
-                    {getActiveFilterCount()}
-                  </span>
-                )}
-              </button>
+            <div className="mb-3 flex w-full flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                {/* Filter Button for ALL screens up to 2xl */}
+                <button
+                  onClick={() => setShowMobileFilters(true)}
+                  className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
+                >
+                  <Filter className="size-4" />
+                  Filters
+                  {getActiveFilterCount() > 0 && (
+                    <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
+                      {getActiveFilterCount()}
+                    </span>
+                  )}
+                </button>
 
-              <div>
-                <p className="text-lg font-medium max-sm:pb-3 md:text-xl">All Bills</p>
-                <p className="text-sm text-gray-600">
-                  {totalRecords.toLocaleString()} total bills • Page {pagination.currentPage} of {totalPages || 1}
-                </p>
+                <div>
+                  <p className="text-lg font-medium max-sm:pb-3 md:text-xl">All Bills</p>
+                  <p className="text-sm text-gray-600">
+                    {totalRecords.toLocaleString()} total bills • Page {pagination.currentPage} of {totalPages || 1}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 sm:gap-4">
+                {/* Hide/Show Filters button - Desktop only (2xl and above) */}
+                <button
+                  type="button"
+                  onClick={() => setShowDesktopFilters((prev) => !prev)}
+                  className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+                >
+                  {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
+                  {showDesktopFilters ? "Hide filters" : "Show filters"}
+                  {getActiveFilterCount() > 0 && (
+                    <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                      {getActiveFilterCount()}
+                    </span>
+                  )}
+                </button>
+
+                {/* Refresh button */}
+                <button
+                  type="button"
+                  onClick={handleRefresh}
+                  disabled={loading}
+                  className="flex items-center gap-2 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4"
+                >
+                  <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+                  Refresh
+                </button>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="w-full sm:w-64 md:w-[380px]">
-                <SearchModule
-                  value={searchText}
-                  onChange={handleSearch}
-                  onCancel={handleCancelSearch}
-                  onSearch={handleManualSearch}
-                  placeholder="enter account number to search."
-                  className="w-full"
-                  bgClassName="bg-white"
-                />
-              </div>
-
-              {/* Hide/Show Filters button - Desktop only (2xl and above) */}
-              <button
-                type="button"
-                onClick={() => setShowDesktopFilters((prev) => !prev)}
-                className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
-              >
-                {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
-                {showDesktopFilters ? "Hide filters" : "Show filters"}
-                {getActiveFilterCount() > 0 && (
-                  <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
-                    {getActiveFilterCount()}
-                  </span>
-                )}
-              </button>
-
-              {/* Refresh button */}
-              <button
-                type="button"
-                onClick={handleRefresh}
-                disabled={loading}
-                className="flex items-center gap-2 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4"
-              >
-                <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
-                Refresh
-              </button>
+            <div className="w-full">
+              <SearchModule
+                prominent
+                prominentTitle="Search Bills"
+                prominentDescription="Find bills quickly by account number, customer, billing cycle, or status."
+                value={searchText}
+                onChange={handleSearch}
+                onCancel={handleCancelSearch}
+                onSearch={handleManualSearch}
+                placeholder="Enter account number to search."
+                height="h-14"
+                className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+                bgClassName="bg-white"
+              />
             </div>
           </motion.div>
 

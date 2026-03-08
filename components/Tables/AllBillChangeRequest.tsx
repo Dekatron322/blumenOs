@@ -440,7 +440,7 @@ const BillingChangeRequestsTable = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [showMobileSearch, setShowMobileSearch] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [isSortExpanded, setIsSortExpanded] = useState(false)
 
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
@@ -927,7 +927,7 @@ const BillingChangeRequestsTable = () => {
           transition={{ duration: 0.4 }}
         >
           <div className="flex w-full flex-col py-2">
-            <div className="mb-3 flex w-full items-center justify-between gap-3">
+            <div className="mb-3 flex w-full flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 {/* Filter Button for ALL screens up to 2xl */}
                 <button
@@ -946,7 +946,7 @@ const BillingChangeRequestsTable = () => {
                 <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-xl">Billing Change Requests</p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex w-full flex-wrap items-center gap-2">
                 {/* Mobile search icon button */}
                 <button
                   type="button"
@@ -958,14 +958,15 @@ const BillingChangeRequestsTable = () => {
                 </button>
 
                 {/* Desktop/Tablet search input */}
-                <div className="hidden sm:block">
+                <div className="hidden w-full sm:block">
                   <SearchModule
+                    prominent
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
                     onCancel={handleCancelSearch}
                     onSearch={handleManualSearch}
                     placeholder="Search by reference or requester"
-                    className="w-full max-w-full md:max-w-[300px]"
+                    className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
                   />
                 </div>
 
@@ -1007,6 +1008,7 @@ const BillingChangeRequestsTable = () => {
             {showMobileSearch && (
               <div className="mb-3 sm:hidden">
                 <SearchModule
+                  prominent
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   onCancel={handleCancelSearch}

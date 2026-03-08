@@ -360,7 +360,7 @@ const PaymentTypes: React.FC = () => {
       />
 
       <motion.div
-        className="w-full items-center justify-between py-2 md:flex"
+        className="flex w-full flex-col gap-4 py-2"
         initial={{ y: -10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.3 }}
@@ -369,13 +369,17 @@ const PaymentTypes: React.FC = () => {
           <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Payment Types</p>
           <p className="text-sm text-gray-600">View and manage available payment types</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:gap-4">
           <SearchModule
+            prominent
+            prominentTitle="Search Payment Types"
+            prominentDescription="Find payment type definitions quickly by name or status."
             value={searchText}
             onChange={handleSearch}
             onCancel={handleCancelSearch}
             placeholder="Search payment types..."
-            className="w-[380px]"
+            height="h-14"
+            className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
             bgClassName="bg-white"
           />
           <ButtonModule variant="primary" size="sm" onClick={handleCreateNew}>

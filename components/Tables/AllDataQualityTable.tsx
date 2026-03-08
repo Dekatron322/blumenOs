@@ -14,7 +14,6 @@ import {
   Filter,
   Loader2,
   RefreshCw,
-  Search,
   SortAsc,
   SortDesc,
   X,
@@ -30,6 +29,7 @@ import { ButtonModule } from "components/ui/Button/Button"
 import ResolveDataQualityModal from "components/Modals/ResolveDataQualityModal"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import EmptySearchState from "components/ui/EmptySearchState"
+import { SearchModule } from "components/ui/Search/search-module"
 
 // Types
 interface SortOption {
@@ -851,7 +851,7 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
   const [showExportModal, setShowExportModal] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [isSortExpanded, setIsSortExpanded] = useState(false)
 
   // Search states for dropdowns
@@ -1280,7 +1280,7 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
     <div className="w-full">
       {/* Header Section */}
       <div className="mb-4 space-y-4">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-4">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">Data Quality Issues</h2>
             <p className="text-sm text-gray-500">
@@ -1288,19 +1288,22 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                value={searchInput}
-                onChange={handleSearch}
-                onKeyDown={(e) => e.key === "Enter" && handleManualSearch()}
-                placeholder="Search by rule key..."
-                className="h-10 w-64 rounded-lg border border-gray-300 pl-10 pr-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
+            <div className="flex w-full flex-wrap items-center gap-2">
+              <div className="w-full">
+                <SearchModule
+                  prominent
+                  prominentTitle="Search Data Quality Issues"
+                  prominentDescription="Find issues quickly by rule key, customer, or payment details."
+                  value={searchInput}
+                  onChange={handleSearch}
+                  onCancel={handleCancelSearch}
+                  onSearch={handleManualSearch}
+                  placeholder="Search by rule key..."
+                  height="h-14"
+                  className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+                  bgClassName="bg-white"
+                />
+              </div>
 
             {/* Mobile Filter Button */}
             <button

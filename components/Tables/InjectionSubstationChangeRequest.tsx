@@ -234,7 +234,7 @@ const InjectionSubstationChangeRequests = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [searchInput, setSearchInput] = useState("")
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [isSortExpanded, setIsSortExpanded] = useState(true)
 
   // Local filter state (not applied yet)
@@ -619,49 +619,56 @@ const InjectionSubstationChangeRequests = () => {
             </div>
 
             {/* Search and Controls */}
-            <div className="mt-2 flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4">
-              <SearchModule
-                value={searchInput}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                onCancel={handleCancelSearch}
-                placeholder="Search by reference or requester"
-                className="w-full sm:max-w-[250px] md:max-w-[300px]"
-                bgClassName="bg-white"
-              />
+            <div className="mt-2 rounded-xl border border-gray-200 bg-gray-50/60 p-3">
+              <div className="mb-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[#004B23]">Primary action</p>
+                <p className="text-sm font-medium text-gray-800">Search Change Requests</p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4">
+                <SearchModule
+                  value={searchInput}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  onCancel={handleCancelSearch}
+                  onSearch={applyFilters}
+                  placeholder="Search by reference or requester"
+                  className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+                  bgClassName="bg-white"
+                />
 
-              {/* View Mode Toggle */}
-              <div className="flex gap-1.5 sm:gap-2">
+                {/* View Mode Toggle */}
+                <div className="flex gap-1.5 sm:gap-2">
+                  <button
+                    className={`button-oulined p-2sm:gap-2 flex items-center justify-center gap-1 sm:px-3 ${
+                      viewMode === "grid" ? "bg-[#f9f9f9]" : ""
+                    }`}
+                    onClick={() => setViewMode("grid")}
+                    title="Grid View"
+                  >
+                    <MdGridView className="size-4 sm:size-5" />
+                    <p className="hidden text-xs sm:block sm:text-sm">Grid</p>
+                  </button>
+                  <button
+                    className={`button-oulined p-2sm:gap-2 flex items-center justify-center gap-1 sm:px-3 ${
+                      viewMode === "list" ? "bg-[#f9f9f9]" : ""
+                    }`}
+                    onClick={() => setViewMode("list")}
+                    title="List View"
+                  >
+                    <MdFormatListBulleted className="size-4 sm:size-5" />
+                    <p className="hidden text-xs sm:block sm:text-sm">List</p>
+                  </button>
+                </div>
+
+                {/* Hide/Show Filters button - Desktop only (2xl and above) */}
                 <button
-                  className={`button-oulined p-2sm:gap-2 flex items-center justify-center gap-1 sm:px-3 ${
-                    viewMode === "grid" ? "bg-[#f9f9f9]" : ""
-                  }`}
-                  onClick={() => setViewMode("grid")}
-                  title="Grid View"
+                  type="button"
+                  onClick={() => setShowDesktopFilters((prev) => !prev)}
+                  className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
                 >
-                  <MdGridView className="size-4 sm:size-5" />
-                  <p className="hidden text-xs sm:block sm:text-sm">Grid</p>
-                </button>
-                <button
-                  className={`button-oulined p-2sm:gap-2 flex items-center justify-center gap-1 sm:px-3 ${
-                    viewMode === "list" ? "bg-[#f9f9f9]" : ""
-                  }`}
-                  onClick={() => setViewMode("list")}
-                  title="List View"
-                >
-                  <MdFormatListBulleted className="size-4 sm:size-5" />
-                  <p className="hidden text-xs sm:block sm:text-sm">List</p>
+                  {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
+                  {showDesktopFilters ? "Hide filters" : "Show filters"}
                 </button>
               </div>
-
-              {/* Hide/Show Filters button - Desktop only (2xl and above) */}
-              <button
-                type="button"
-                onClick={() => setShowDesktopFilters((prev) => !prev)}
-                className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
-              >
-                {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
-                {showDesktopFilters ? "Hide filters" : "Show filters"}
-              </button>
             </div>
           </div>
 

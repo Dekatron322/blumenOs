@@ -10,7 +10,6 @@ import {
   Download,
   Filter,
   Info,
-  Search,
   SortAsc,
   SortDesc,
   X,
@@ -1366,34 +1365,27 @@ const AllPayments: React.FC = () => {
             <div className="w-full space-y-5">
               {/* Header Section */}
               <div className="rounded-xl border border-gray-200 bg-white p-4">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-4">
                   <div>
                     <h2 className="text-lg font-semibold text-gray-900">Vendor Collections</h2>
                     <p className="mt-1 text-xs text-gray-600">Track and manage vendor payment collections</p>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2">
-                    {/* Polling Controls */}
-
-                    {/* Search */}
-                    <div className="relative min-w-[220px]">
-                      <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-gray-400" />
-                      <input
-                        type="text"
+                  <div className="flex w-full flex-wrap items-center gap-2">
+                    <div className="w-full">
+                      <SearchModule
+                        prominent
+                        prominentTitle="Search Vendor Collections"
+                        prominentDescription="Find collection records quickly by customer, reference, account, or amount."
                         value={searchInput}
                         onChange={(e) => handleSearchChange(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                        onCancel={handleCancelSearch}
+                        onSearch={handleSearch}
                         placeholder="Search customers or references..."
-                        className="h-9 w-full rounded-lg border border-gray-300 bg-white px-8 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        height="h-14"
+                        className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+                        bgClassName="bg-white"
                       />
-                      {searchInput && (
-                        <button
-                          onClick={handleCancelSearch}
-                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                        >
-                          <X className="size-3.5" />
-                        </button>
-                      )}
                     </div>
 
                     {/* Filter Buttons */}

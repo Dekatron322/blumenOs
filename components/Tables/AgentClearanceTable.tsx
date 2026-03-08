@@ -574,14 +574,18 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({ agentId, appl
   return (
     <div className="w-full">
       {/* Search Section */}
-      <div className="mb-4 flex items-center justify-end">
+      <div className="mb-4 w-full">
         <SearchModule
+          prominent
+          prominentTitle="Search Clearance Records"
+          prominentDescription="Find clearances by agent, amount, notes, or approval details."
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           onCancel={handleCancelSearch}
           onSearch={handleManualSearch}
           placeholder="Search clearances..."
-          className="w-full max-w-[380px]"
+          height="h-14"
+          className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
           bgClassName="bg-white"
         />
       </div>

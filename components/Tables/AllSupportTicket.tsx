@@ -260,7 +260,6 @@ const AllSupportTicket: React.FC<AllSupportTicketProps> = ({
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
-  const [showMobileSearch, setShowMobileSearch] = useState(false)
 
   // Filter dropdown states
   const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false)
@@ -460,7 +459,6 @@ const AllSupportTicket: React.FC<AllSupportTicketProps> = ({
 
   const handleCancelSearch = () => {
     setSearchText("")
-    setShowMobileSearch(false)
   }
 
   const handleStatusFilterChange = (status: string) => {
@@ -488,7 +486,6 @@ const AllSupportTicket: React.FC<AllSupportTicketProps> = ({
       categoryId: "",
     })
     setSearchText("")
-    setShowMobileSearch(false)
     setPagination((prev) => ({ ...prev, currentPage: 1 }))
   }
 
@@ -602,18 +599,19 @@ const AllSupportTicket: React.FC<AllSupportTicketProps> = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        {/* Mobile search input revealed when icon is tapped */}
-        {showMobileSearch && (
-          <div className="mb-3 sm:hidden">
-            <SearchModule
-              value={searchText}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              onCancel={handleCancelSearch}
-              placeholder="Search by reference, title or customer name"
-              className="w-full"
-            />
-          </div>
-        )}
+        <div className="mb-3 w-full">
+          <SearchModule
+            prominent
+            prominentTitle="Search Support Tickets"
+            prominentDescription="Find tickets quickly by reference, title, customer, or issue details."
+            value={searchText}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            onCancel={handleCancelSearch}
+            placeholder="Search by reference, title or customer name"
+            height="h-14"
+            className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+          />
+        </div>
 
         {/* Filters Section */}
         <motion.div

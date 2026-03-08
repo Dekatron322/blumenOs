@@ -15,7 +15,6 @@ import EditMeterModal from "components/ui/Modal/edit-meter-modal"
 import MeterHistoryModal from "components/ui/Modal/meter-history-modal"
 import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
-import Image from "next/image"
 import { fetchServiceStations } from "lib/redux/serviceStationsSlice"
 import { fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
 
@@ -943,7 +942,7 @@ const MeterInventoryTable: React.FC<MeterInventoryTableProps> = ({ pageSize: pro
             transition={{ duration: 0.3 }}
           >
             <div className="border-b pb-4">
-              <div className="mb-3 flex w-full items-center justify-between gap-3">
+              <div className="mb-3 flex w-full flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   {/* Filter Button for ALL screens up to 2xl */}
 
@@ -951,31 +950,6 @@ const MeterInventoryTable: React.FC<MeterInventoryTableProps> = ({ pageSize: pro
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {/* Mobile search icon button */}
-                  <button
-                    type="button"
-                    className="flex size-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm transition hover:bg-gray-50 sm:hidden md:size-9"
-                    onClick={() => {
-                      /* Handle mobile search toggle if needed */
-                    }}
-                    aria-label="Toggle search"
-                  >
-                    <Image src="/DashboardImages/Search.svg" width={16} height={16} alt="Search Icon" />
-                  </button>
-
-                  {/* Desktop/Tablet search input */}
-                  <div className="hidden sm:block">
-                    <SearchModule
-                      value={searchInput}
-                      onChange={(e) => handleSearchChange(e.target.value)}
-                      onCancel={handleCancelSearch}
-                      onSearch={handleSearch}
-                      placeholder="Search by Meter Number and Customer"
-                      className="w-full max-w-full sm:max-w-[320px]"
-                      bgClassName="bg-white"
-                    />
-                  </div>
-
                   {/* Active filters badge - Desktop only (2xl and above) */}
                   {getActiveFilterCount() > 0 && (
                     <div className="hidden items-center gap-2 2xl:flex">
@@ -1018,15 +992,18 @@ const MeterInventoryTable: React.FC<MeterInventoryTableProps> = ({ pageSize: pro
                 </div>
               </div>
 
-              {/* Mobile search input revealed when icon is tapped */}
-              <div className="mb-3 sm:hidden">
+              <div className="mb-3 w-full">
                 <SearchModule
+                  prominent
+                  prominentTitle="Search Meters"
+                  prominentDescription="Find meters quickly by meter number, customer, account, or location details."
                   value={searchInput}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   onCancel={handleCancelSearch}
                   onSearch={handleSearch}
                   placeholder="Search by Meter Number and Customer"
-                  className="w-full"
+                  height="h-14"
+                  className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
                   bgClassName="bg-white"
                 />
               </div>

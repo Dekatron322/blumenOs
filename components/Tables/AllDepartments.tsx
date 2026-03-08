@@ -486,7 +486,7 @@ const DepartmentsTable: React.FC = () => {
   return (
     <motion.div className="relative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.35 }}>
       <motion.div
-        className="items-center justify-between py-2 md:flex"
+        className="flex flex-col gap-4 py-2"
         initial={{ y: -10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.3 }}
@@ -495,13 +495,17 @@ const DepartmentsTable: React.FC = () => {
           <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Departments</p>
           <p className="text-sm text-gray-600">Manage company departments and their information</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:gap-4">
           <SearchModule
+            prominent
+            prominentTitle="Search Departments"
+            prominentDescription="Find departments quickly by name, code, or ownership details."
             value={searchText}
             onChange={handleSearch}
             onCancel={handleCancelSearch}
             placeholder="Search departments..."
-            className="w-[380px]"
+            height="h-14"
+            className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
             bgClassName="bg-white"
           />
           <ButtonModule variant="outline" size="sm" onClick={handleRefreshDepartments} disabled={loading}>

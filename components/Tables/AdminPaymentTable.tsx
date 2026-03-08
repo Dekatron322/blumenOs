@@ -1227,18 +1227,22 @@ const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({
       {/* Header Section with Title, Search and Filters */}
       <div className="mb-4 space-y-4">
         {/* Title Row */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4">
           <h4 className="text-xl font-semibold text-gray-900 md:text-xl">Payments</h4>
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center border-b">
+          <div className="flex w-full flex-wrap items-center gap-2">
+            <div className="w-full">
               <SearchModule
+                prominent
+                prominentTitle="Search Payments"
+                prominentDescription="Find payment transactions by reference, account, customer, or channel."
                 value={searchInput}
                 onChange={handleSearch}
                 onCancel={handleCancelSearch}
                 onSearch={handleManualSearch}
                 placeholder="Search payments..."
-                className="w-full max-w-md"
-                bgClassName="bg-gray-50"
+                height="h-14"
+                className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+                bgClassName="bg-white"
               />
             </div>
             {/* Mobile Filter Button */}

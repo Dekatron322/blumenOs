@@ -14,7 +14,6 @@ import {
   Filter,
   Loader2,
   RefreshCw,
-  Search,
   SortAsc,
   SortDesc,
   X,
@@ -232,7 +231,7 @@ const LoadingSkeleton = () => {
     <div className="rounded-xl border border-gray-200 bg-white">
       {/* Header Skeleton */}
       <div className="border-b border-gray-200 p-4">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4">
           <div>
             <div className="h-6 w-40 rounded-lg bg-gray-200"></div>
             <div className="mt-1 h-4 w-56 rounded-lg bg-gray-200"></div>
@@ -1138,7 +1137,7 @@ const AllRefundsTable: React.FC<AllRefundsTableProps> = ({
   const [searchInput, setSearchInput] = useState("")
   const [selectedRefund, setSelectedRefund] = useState<RefundHistoryItem | null>(null)
   const [showMobileFiltersLocal, setShowMobileFiltersLocal] = useState(false)
-  const [showDesktopFiltersLocal, setShowDesktopFiltersLocal] = useState(true)
+  const [showDesktopFiltersLocal, setShowDesktopFiltersLocal] = useState(false)
   const [isSortExpanded, setIsSortExpanded] = useState(false)
 
   // Export CSV state
@@ -1543,32 +1542,27 @@ const AllRefundsTable: React.FC<AllRefundsTableProps> = ({
     <div className="space-y-5">
       {/* Header Section */}
       <div className="rounded-xl border border-gray-200 bg-white p-4">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">Refunds</h2>
             <p className="mt-1 text-xs text-gray-600">View and manage all refund transactions</p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Search */}
-            <div className="relative min-w-[220px]">
-              <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
+          <div className="flex w-full flex-wrap items-center gap-2">
+            <div className="w-full">
+              <SearchModule
+                prominent
+                prominentTitle="Search Refunds"
+                prominentDescription="Find refund records by customer, reference, channel, or status."
                 value={searchInput}
                 onChange={handleSearch}
-                onKeyDown={(e) => e.key === "Enter" && handleManualSearch()}
+                onCancel={handleCancelSearch}
+                onSearch={handleManualSearch}
                 placeholder="Search refunds..."
-                className="h-9 w-full rounded-lg border border-gray-300 bg-white px-8 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                height="h-14"
+                className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+                bgClassName="bg-white"
               />
-              {searchInput && (
-                <button
-                  onClick={handleCancelSearch}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  <X className="size-3.5" />
-                </button>
-              )}
             </div>
 
             {/* Filter Buttons */}

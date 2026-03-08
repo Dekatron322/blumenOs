@@ -32,7 +32,6 @@ import {
 } from "lucide-react"
 import { ExportCsvIcon } from "components/Icons/Icons"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
-import Image from "next/image"
 import { ButtonModule } from "components/ui/Button/Button"
 import EmptySearchState from "components/ui/EmptySearchState"
 
@@ -472,9 +471,8 @@ const AllEmployees = () => {
   const [sortOrder, setSortOrder] = useState<SortOrder>(null)
   const [isSortExpanded, setIsSortExpanded] = useState(true)
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
-  const [showMobileSearch, setShowMobileSearch] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
 
   // Local state for filters to avoid too many Redux dispatches
@@ -838,7 +836,7 @@ const AllEmployees = () => {
         <div className="w-full rounded-md border border-gray-200 bg-white p-3 md:p-5 2xl:flex-1">
           {/* Header Skeleton */}
           <div className="flex flex-col py-2">
-            <div className="mb-3 flex w-full items-center justify-between gap-3">
+            <div className="mb-3 flex w-full flex-wrap items-center justify-between gap-3">
               <div className="h-8 w-32 rounded bg-gray-200"></div>
               <div className="flex items-center gap-2">
                 <div className="h-9 w-60 rounded bg-gray-200"></div>
@@ -903,7 +901,7 @@ const AllEmployees = () => {
           }
         >
           <div className="flex flex-col py-2">
-            <div className="mb-3 flex w-full items-center justify-between gap-3">
+            <div className="mb-3 flex w-full flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 {/* Filter Button for ALL screens up to 2xl */}
                 <button
@@ -925,28 +923,6 @@ const AllEmployees = () => {
               </div>
 
               <div className="flex items-center gap-2">
-                {/* Mobile search icon button */}
-                <button
-                  type="button"
-                  className="flex size-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm transition hover:bg-gray-50 sm:hidden md:size-9"
-                  onClick={() => setShowMobileSearch((prev) => !prev)}
-                  aria-label="Toggle search"
-                >
-                  <Image src="/DashboardImages/Search.svg" width={16} height={16} alt="Search Icon" />
-                </button>
-
-                {/* Desktop/Tablet search input */}
-                <div className="hidden sm:block">
-                  <SearchModule
-                    value={searchInput}
-                    onChange={(e) => handleSearchChange(e.target.value)}
-                    onCancel={handleCancelSearch}
-                    onSearch={applyFilters}
-                    placeholder="Search by name, email, or department"
-                    className="w-full max-w-full sm:max-w-[320px]"
-                  />
-                </div>
-
                 {/* Active filters badge - Desktop only (2xl and above) */}
                 {getActiveFilterCount() > 0 && (
                   <div className="hidden items-center gap-2 2xl:flex">
@@ -981,19 +957,20 @@ const AllEmployees = () => {
               </div>
             </div>
 
-            {/* Mobile search input revealed when icon is tapped */}
-            {showMobileSearch && (
-              <div className="mb-3 sm:hidden">
-                <SearchModule
-                  value={searchInput}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  onCancel={handleCancelSearch}
-                  onSearch={applyFilters}
-                  placeholder="Search by name, email, or department"
-                  className="w-full"
-                />
-              </div>
-            )}
+            <div className="mb-3 w-full">
+              <SearchModule
+                prominent
+                prominentTitle="Search Employees"
+                prominentDescription="Find employees quickly using names, IDs, account IDs, email, or department."
+                value={searchInput}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                onCancel={handleCancelSearch}
+                onSearch={applyFilters}
+                placeholder="Type employee name, employee ID, account ID, email, or department..."
+                height="h-14"
+                className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+              />
+            </div>
           </div>
 
           {/* Employee Display Area - Table Format */}

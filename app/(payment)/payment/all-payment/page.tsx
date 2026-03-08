@@ -2142,17 +2142,6 @@ const AllPayments: React.FC = () => {
                     <h3 className="text-lg font-semibold sm:text-xl">Payment Directory</h3>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="">
-                      <div className="max-w-md">
-                        <SearchModule
-                          placeholder="Search customers or references..."
-                          value={searchInput}
-                          onChange={(e) => handleSearchChange(e.target.value)}
-                          onCancel={handleCancelSearch}
-                          onSearch={handleSearch}
-                        />
-                      </div>
-                    </div>
                     {/* Hide/Show Filters button - Desktop only (2xl and above) */}
                     <button
                       type="button"
@@ -2179,6 +2168,21 @@ const AllPayments: React.FC = () => {
                 </div>
 
                 {/* Search */}
+                <div className="mb-4 w-full sm:mb-6">
+                  <SearchModule
+                    prominent
+                    prominentTitle="Search Payments"
+                    prominentDescription="Find payment records quickly by customer, account, reference, or collector."
+                    placeholder="Search customers or references..."
+                    value={searchInput}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                    onCancel={handleCancelSearch}
+                    onSearch={handleSearch}
+                    height="h-14"
+                    className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+                    bgClassName="bg-white"
+                  />
+                </div>
 
                 {payments.length === 0 ? (
                   <motion.div
