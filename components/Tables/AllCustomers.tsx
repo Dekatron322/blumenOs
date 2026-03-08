@@ -817,29 +817,6 @@ const AllCustomers = () => {
     )
   }
 
-  // Empty State
-  if (customers.length === 0 && !loading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <div className="flex flex-col items-center gap-2 text-center">
-          <EmptySearchState
-            title={filters.search ? "No customers found" : "No customers available"}
-            description={
-              filters.search
-                ? "Try adjusting your search criteria"
-                : "Start by searching with customer name, account number, phone number, or email."
-            }
-          />
-          {filters.search && (
-            <ButtonModule variant="outline" size="sm" onClick={resetFilters}>
-              Clear filters
-            </ButtonModule>
-          )}
-        </div>
-      </div>
-    )
-  }
-
   return (
     <>
       <div className="flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row">
@@ -932,11 +909,31 @@ const AllCustomers = () => {
           {/* Customer Display */}
           {viewMode === "grid" ? (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {customers.map((customer: Customer) => (
-                <div
-                  key={customer.id}
-                  className="rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-gray-300 hover:shadow-sm"
-                >
+              {customers.length === 0 ? (
+                <div className="col-span-full rounded-lg border border-dashed border-gray-200 bg-gray-50 p-6">
+                  <div className="flex flex-col items-center gap-2 text-center">
+                    <EmptySearchState
+                      title={filters.search ? "No customers found" : "No customers available"}
+                      description={
+                        filters.search
+                          ? "Try adjusting your search criteria"
+                          : "Start by searching with customer name, account number, phone number, or email."
+                      }
+                      className="py-6"
+                    />
+                    {filters.search && (
+                      <ButtonModule variant="outline" size="sm" onClick={resetFilters}>
+                        Clear filters
+                      </ButtonModule>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                customers.map((customer: Customer) => (
+                  <div
+                    key={customer.id}
+                    className="rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-gray-300 hover:shadow-sm"
+                  >
                   {/* Header */}
                   <div className="mb-3 flex items-start justify-between">
                     <div className="flex items-center gap-3">
@@ -1016,8 +1013,9 @@ const AllCustomers = () => {
                       View Details
                     </button>
                   </div>
-                </div>
-              ))}
+                  </div>
+                ))
+              )}
             </div>
           ) : (
             <div className="overflow-x-auto rounded-lg border border-gray-200">
@@ -1051,8 +1049,30 @@ const AllCustomers = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
-                  {customers.map((customer: Customer) => (
-                    <tr key={customer.id} className="transition-colors hover:bg-gray-50">
+                  {customers.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="px-4 py-8">
+                        <div className="flex flex-col items-center gap-2 text-center">
+                          <EmptySearchState
+                            title={filters.search ? "No customers found" : "No customers available"}
+                            description={
+                              filters.search
+                                ? "Try adjusting your search criteria"
+                                : "Start by searching with customer name, account number, phone number, or email."
+                            }
+                            className="py-6"
+                          />
+                          {filters.search && (
+                            <ButtonModule variant="outline" size="sm" onClick={resetFilters}>
+                              Clear filters
+                            </ButtonModule>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    customers.map((customer: Customer) => (
+                      <tr key={customer.id} className="transition-colors hover:bg-gray-50">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="flex size-8 items-center justify-center rounded-full bg-blue-100">
@@ -1110,8 +1130,9 @@ const AllCustomers = () => {
                           View
                         </button>
                       </td>
-                    </tr>
-                  ))}
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
