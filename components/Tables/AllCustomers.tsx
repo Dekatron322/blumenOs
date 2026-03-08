@@ -214,7 +214,7 @@ const MobileFilterSidebar = ({
                     )}
                   </div>
                 </div>
-                <button onClick={resetFilters} className="text-sm font-medium text-blue-600 hover:text-blue-800">
+                <button onClick={resetFilters} className="text-sm font-medium text-[#004B23] hover:text-[#00361a]">
                   Clear All
                 </button>
               </div>
@@ -271,7 +271,7 @@ const MobileFilterSidebar = ({
                         onClick={() => handleFilterChange("status", localFilters.status === status ? "" : status)}
                         className={`rounded-md px-3 py-2 text-xs transition-colors ${
                           localFilters.status === status
-                            ? "border border-blue-200 bg-blue-50 font-medium text-blue-700"
+                            ? "border border-emerald-200 bg-emerald-50 font-medium text-emerald-700"
                             : "border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100"
                         }`}
                       >
@@ -354,7 +354,7 @@ const MobileFilterSidebar = ({
                           onClick={() => handleSortChange(option)}
                           className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors ${
                             localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                              ? "border border-purple-200 bg-purple-50 font-medium text-purple-700"
+                              ? "border border-emerald-200 bg-emerald-50 font-medium text-emerald-700"
                               : "border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100"
                           }`}
                         >
@@ -384,7 +384,7 @@ const MobileFilterSidebar = ({
                     applyFilters()
                     onClose()
                   }}
-                  className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  className="flex-1 rounded-md bg-[#004B23] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#00361a] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
                 >
                   Apply Filters
                 </button>
@@ -414,7 +414,7 @@ const AllCustomers = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("list")
   const [showMobileSearch, setShowMobileSearch] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
 
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false)
@@ -733,48 +733,35 @@ const AllCustomers = () => {
   const getStatusStyle = (status: string) => {
     switch (status) {
       case "Active":
-        return "border border-emerald-200 bg-emerald-50 text-emerald-700"
+        return "border border-emerald-200 bg-emerald-100 text-emerald-700"
       case "Inactive":
-        return "border border-amber-200 bg-amber-50 text-amber-700"
+        return "border border-amber-200 bg-amber-100 text-amber-700"
       case "Suspended":
-        return "border border-red-200 bg-red-50 text-red-700"
+        return "border border-red-200 bg-red-100 text-red-700"
       default:
-        return "border border-gray-200 bg-gray-50 text-gray-700"
+        return "border border-gray-200 bg-gray-100 text-gray-700"
     }
   }
 
   const getCustomerTypeStyle = (type: string) => {
     switch (type) {
       case "PREPAID":
-        return "border border-blue-200 bg-blue-50 text-blue-700"
+        return "border border-blue-200 bg-blue-100 text-blue-700"
       case "POSTPAID":
-        return "border border-purple-200 bg-purple-50 text-purple-700"
+        return "border border-purple-200 bg-purple-100 text-purple-700"
       default:
-        return "border border-gray-200 bg-gray-50 text-gray-700"
+        return "border border-gray-200 bg-gray-100 text-gray-700"
     }
   }
 
   const getArrearsStyle = (arrears: string) => {
     const amount = parseFloat(arrears)
     if (amount === 0) {
-      return "border border-emerald-200 bg-emerald-50 text-emerald-700"
+      return "border border-emerald-200 bg-emerald-100 text-emerald-700"
     } else if (amount <= 5000) {
-      return "border border-amber-200 bg-amber-50 text-amber-700"
+      return "border border-amber-200 bg-amber-100 text-amber-700"
     } else {
-      return "border border-red-200 bg-red-50 text-red-700"
-    }
-  }
-
-  const dotStyle = (status: string) => {
-    switch (status) {
-      case "Active":
-        return "bg-emerald-600"
-      case "Inactive":
-        return "bg-amber-600"
-      case "Suspended":
-        return "bg-red-600"
-      default:
-        return "bg-gray-600"
+      return "border border-red-200 bg-red-100 text-red-700"
     }
   }
 
@@ -789,7 +776,7 @@ const AllCustomers = () => {
     return (
       <div className="flex items-center justify-center py-16">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="size-8 animate-spin text-blue-600" />
+          <Loader2 className="size-8 animate-spin text-[#004B23]" />
           <p className="text-sm text-gray-500">Loading customers...</p>
         </div>
       </div>
@@ -824,8 +811,8 @@ const AllCustomers = () => {
         <div
           className={
             showDesktopFilters
-              ? "w-full rounded-lg border border-gray-200 bg-white p-4 md:p-5 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
-              : "w-full rounded-lg border border-gray-200 bg-white p-4 md:p-5 2xl:flex-1"
+              ? "w-full rounded-lg border border-gray-200 bg-white p-4 shadow-sm md:p-5 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
+              : "w-full rounded-lg border border-gray-200 bg-white p-4 shadow-sm md:p-5 2xl:flex-1"
           }
         >
           {/* Header Section */}
@@ -847,7 +834,7 @@ const AllCustomers = () => {
                 <Filter className="size-4" />
                 Filters
                 {getActiveFilterCount() > 0 && (
-                  <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
+                  <span className="rounded-full bg-[#004B23] px-1.5 py-0.5 text-xs text-white">
                     {getActiveFilterCount()}
                   </span>
                 )}
@@ -857,7 +844,7 @@ const AllCustomers = () => {
               <button
                 type="button"
                 onClick={() => setShowDesktopFilters((prev) => !prev)}
-                className="hidden items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 2xl:flex"
+                className="hidden items-center gap-2 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm font-medium text-[#004B23] transition-colors hover:bg-emerald-50 2xl:flex"
               >
                 {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
                 {showDesktopFilters ? "Hide filters" : "Show filters"}
@@ -865,45 +852,51 @@ const AllCustomers = () => {
             </div>
           </div>
 
-          {/* Search and View Toggle */}
-          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            {/* Search */}
-            <div className="w-full sm:max-w-md">
-              <SearchModule
-                value={searchInput}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                onCancel={handleCancelSearch}
-                onSearch={handleManualSearch}
-                placeholder="Search by name or account number"
-                className="w-full"
-              />
+          {/* Search Priority Section */}
+          <div className="mb-4 rounded-xl border border-gray-200 bg-gradient-to-r from-green-50/60 to-white p-4 shadow-sm">
+            <div className="mb-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#004B23]">Primary action</p>
+              <h2 className="text-base font-semibold text-gray-900 sm:text-lg">Search Customers</h2>
+              <p className="text-xs text-gray-600 sm:text-sm">
+                Find records quickly by customer name, account number, phone number, or email.
+              </p>
             </div>
 
-            {/* View Toggle */}
-            <div className="flex items-center gap-2">
-              <button
-                className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
-                  viewMode === "list"
-                    ? "border-blue-200 bg-blue-50 text-blue-700"
-                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                }`}
-                onClick={() => setViewMode("list")}
-              >
-                <LayoutList className="size-4" />
-                <span className="hidden sm:inline">List</span>
-              </button>
-              <button
-                className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
-                  viewMode === "grid"
-                    ? "border-blue-200 bg-blue-50 text-blue-700"
-                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                }`}
-                onClick={() => setViewMode("grid")}
-              >
-                <Grid className="size-4" />
-                <span className="hidden sm:inline">Grid</span>
-              </button>
-            </div>
+            <SearchModule
+              value={searchInput}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              onCancel={handleCancelSearch}
+              onSearch={handleManualSearch}
+              placeholder="Type customer name, account number, phone number, or email..."
+              height="h-14"
+              className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+            />
+          </div>
+
+          {/* View Toggle */}
+          <div className="mb-4 flex items-center gap-2">
+            <button
+              className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+                viewMode === "list"
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+              }`}
+              onClick={() => setViewMode("list")}
+            >
+              <LayoutList className="size-4" />
+              <span className="hidden sm:inline">List</span>
+            </button>
+            <button
+              className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+                viewMode === "grid"
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+              }`}
+              onClick={() => setViewMode("grid")}
+            >
+              <Grid className="size-4" />
+              <span className="hidden sm:inline">Grid</span>
+            </button>
           </div>
 
           {/* Customer Display */}
@@ -937,8 +930,8 @@ const AllCustomers = () => {
                   {/* Header */}
                   <div className="mb-3 flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="flex size-10 items-center justify-center rounded-full bg-blue-100">
-                        <span className="text-sm font-semibold text-blue-700">
+                      <div className="flex size-10 items-center justify-center rounded-full bg-emerald-100">
+                        <span className="text-sm font-semibold text-emerald-700">
                           {(customer.fullName || "")
                             .split(" ")
                             .map((n) => n[0])
@@ -956,11 +949,10 @@ const AllCustomers = () => {
                   {/* Status Badges */}
                   <div className="mb-3 flex flex-wrap gap-1">
                     <span
-                      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${getStatusStyle(
+                      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getStatusStyle(
                         customer.status
                       )}`}
                     >
-                      <span className={`size-1.5 rounded-full ${dotStyle(customer.status)}`}></span>
                       {customer.status}
                     </span>
                     <span
@@ -1007,7 +999,7 @@ const AllCustomers = () => {
                   <div className="mt-3">
                     <button
                       onClick={() => handleViewDetails(customer)}
-                      className="flex w-full items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                      className="flex w-full items-center justify-center gap-2 rounded-md border border-emerald-200 bg-white px-3 py-2 text-sm font-medium text-[#004B23] transition-colors hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
                     >
                       <VscEye className="size-4" />
                       View Details
@@ -1075,8 +1067,8 @@ const AllCustomers = () => {
                       <tr key={customer.id} className="transition-colors hover:bg-gray-50">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="flex size-8 items-center justify-center rounded-full bg-blue-100">
-                            <span className="text-xs font-semibold text-blue-700">
+                          <div className="flex size-8 items-center justify-center rounded-full bg-emerald-100">
+                            <span className="text-xs font-semibold text-emerald-700">
                               {(customer.fullName || "")
                                 .split(" ")
                                 .map((n) => n[0])
@@ -1092,11 +1084,10 @@ const AllCustomers = () => {
                       </td>
                       <td className="px-4 py-3">
                         <span
-                          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${getStatusStyle(
+                          className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getStatusStyle(
                             customer.status
                           )}`}
                         >
-                          <span className={`size-1.5 rounded-full ${dotStyle(customer.status)}`}></span>
                           {customer.status}
                         </span>
                       </td>
@@ -1148,7 +1139,7 @@ const AllCustomers = () => {
                     name="pageSize"
                     value={pagination.pageSize}
                     onChange={handleRowsChange}
-                    className="h-9 w-16 cursor-pointer appearance-none rounded-md border-gray-300 bg-white px-2 py-1 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="h-9 w-16 cursor-pointer appearance-none rounded-md border-gray-300 bg-white px-2 py-1 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
                   >
                     <option value={6}>6 rows</option>
                     <option value={12}>12 rows</option>
@@ -1184,7 +1175,7 @@ const AllCustomers = () => {
                         key={item}
                         className={`flex size-8 items-center justify-center rounded-md text-sm ${
                           pagination.currentPage === item
-                            ? "bg-blue-600 font-medium text-white"
+                            ? "bg-[#004B23] font-medium text-white"
                             : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                         }`}
                         onClick={() => changePage(item)}
@@ -1224,11 +1215,11 @@ const AllCustomers = () => {
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="hidden w-80 shrink-0 rounded-lg border border-gray-200 bg-white p-4 2xl:block"
+            className="hidden w-80 shrink-0 rounded-lg border border-gray-200 bg-gradient-to-b from-emerald-50/40 to-white p-4 shadow-sm 2xl:block"
           >
             <div className="mb-4 flex items-center justify-between border-b border-gray-200 pb-3">
               <h2 className="text-base font-semibold text-gray-900">Filters & Sorting</h2>
-              <button onClick={resetFilters} className="text-sm font-medium text-blue-600 hover:text-blue-800">
+              <button onClick={resetFilters} className="text-sm font-medium text-[#004B23] hover:text-[#00361a]">
                 Clear all
               </button>
             </div>
@@ -1280,11 +1271,11 @@ const AllCustomers = () => {
                     <button
                       key={status}
                       onClick={() => handleFilterChange("status", localFilters.status === status ? "" : status)}
-                      className={`rounded-md px-3 py-2 text-xs transition-colors ${
-                        localFilters.status === status
-                          ? "border border-blue-200 bg-blue-50 font-medium text-blue-700"
+                        className={`rounded-md px-3 py-2 text-xs transition-colors ${
+                          localFilters.status === status
+                          ? "border border-emerald-200 bg-emerald-50 font-medium text-emerald-700"
                           : "border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100"
-                      }`}
+                        }`}
                     >
                       {status}
                     </button>
@@ -1363,7 +1354,7 @@ const AllCustomers = () => {
                         onClick={() => handleSortChange(option)}
                         className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors ${
                           localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                            ? "border border-purple-200 bg-purple-50 font-medium text-purple-700"
+                            ? "border border-emerald-200 bg-emerald-50 font-medium text-emerald-700"
                             : "border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100"
                         }`}
                       >
@@ -1384,7 +1375,7 @@ const AllCustomers = () => {
             <div className="mt-6">
               <button
                 onClick={applyFilters}
-                className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="w-full rounded-md bg-[#004B23] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#00361a] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
               >
                 Apply Filters
               </button>
