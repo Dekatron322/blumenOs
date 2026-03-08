@@ -830,7 +830,7 @@ const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps, onV
                             <p className="text-sm font-medium text-gray-900">
                               {cap.feederName || `Feeder #${cap.feederId}`}
                             </p>
-                            <p className="text-xs text-gray-500">ID: {cap.feederId}</p>
+                            {/* <p className="text-xs text-gray-500">ID: {cap.feederId}</p> */}
                           </div>
                         </div>
                       </td>
@@ -909,9 +909,13 @@ const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps, onV
                 <CycleIcon />
               </div>
               <h3 className="mt-4 text-base font-medium text-gray-900">No Energy Caps Found</h3>
-              <EmptySearchState title={getActiveFilterCount() > 0 || searchText.trim()
-                  ? "Try adjusting your search criteria or filters"
-                  : "No energy caps available"} />
+              <EmptySearchState
+                title={
+                  getActiveFilterCount() > 0 || searchText.trim()
+                    ? "Try adjusting your search criteria or filters"
+                    : "No energy caps available"
+                }
+              />
             </div>
           )}
 

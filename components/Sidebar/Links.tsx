@@ -150,6 +150,7 @@ export const allLinks: LinkItem[] = [
     requiredActions: ["R"],
     children: [
       { name: "Overview", href: "/metering/overview", privilegeKey: "meters", requiredActions: ["R"] },
+      { name: "Search Meter", href: "/metering/search" },
       { name: "All Meters", href: "/metering/all-meters", privilegeKey: "meters", requiredActions: ["R"] },
       {
         name: "Postpaid Meter Readings",
@@ -186,6 +187,7 @@ export const allLinks: LinkItem[] = [
     requiredActions: ["R"],
     children: [
       { name: "Overview", href: "/tokens/overview", privilegeKey: "payments", requiredActions: ["R"] },
+      { name: "Search Tokens", href: "/tokens/search" },
       {
         name: "Prepaid History",
         href: "/tokens/prepaid-history",
@@ -249,6 +251,7 @@ export const allLinks: LinkItem[] = [
     requiredActions: ["R"],
     children: [
       { name: "Overview", href: "/payment/overview", privilegeKey: "payments", requiredActions: ["R"] },
+      { name: "Search Payments", href: "/payment/search" },
       { name: "All Collections", href: "/payment/all-payment", privilegeKey: "payments", requiredActions: ["R"] },
       { name: "Bulk Uploads", href: "/payment/bulk-upload", privilegeKey: "payments", requiredActions: ["R"] },
       {

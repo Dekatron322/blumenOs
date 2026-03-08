@@ -707,7 +707,7 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
                         </div>
                         <div>
                           <p className="text-sm font-medium text-gray-900">{cycle.name}</p>
-                          <p className="text-xs text-gray-500">ID: {cycle.id}</p>
+                          {/* <p className="text-xs text-gray-500">ID: {cycle.id}</p> */}
                         </div>
                       </div>
                     </td>
@@ -775,9 +775,13 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
                 <CyclesIcon />
               </div>
               <h3 className="mt-4 text-base font-medium text-gray-900">No Billing Cycles Found</h3>
-              <EmptySearchState title={getActiveFilterCount() > 0 || searchText.trim()
-                  ? "Try adjusting your search criteria or filters"
-                  : "No billing cycles available for the selected period"} />
+              <EmptySearchState
+                title={
+                  getActiveFilterCount() > 0 || searchText.trim()
+                    ? "Try adjusting your search criteria or filters"
+                    : "No billing cycles available for the selected period"
+                }
+              />
             </div>
           )}
 

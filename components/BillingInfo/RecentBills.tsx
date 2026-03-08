@@ -866,7 +866,7 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
                           </div>
                           <div>
                             <p className="text-sm font-medium text-gray-900">{bill.customerName}</p>
-                            <p className="text-xs text-gray-500">ID: {bill.id}</p>
+                            {/* <p className="text-xs text-gray-500">ID: {bill.id}</p> */}
                           </div>
                         </div>
                       </td>
@@ -937,9 +937,13 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
                 <BillsIcon />
               </div>
               <h3 className="mt-4 text-base font-medium text-gray-900">No Bills Found</h3>
-              <EmptySearchState title={getActiveFilterCount() > 0 || searchText.trim()
-                  ? "Try adjusting your search criteria or filters"
-                  : "No bills available"} />
+              <EmptySearchState
+                title={
+                  getActiveFilterCount() > 0 || searchText.trim()
+                    ? "Try adjusting your search criteria or filters"
+                    : "No bills available"
+                }
+              />
             </div>
           )}
 

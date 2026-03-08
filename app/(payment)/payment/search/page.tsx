@@ -1,17 +1,14 @@
 "use client"
 
 import DashboardNav from "components/Navbar/DashboardNav"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { clearCustomerAnalytics, fetchCustomerAnalytics } from "lib/redux/analyticsSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { useRouter } from "next/navigation"
-import { clearCustomers, Customer, fetchCustomers } from "lib/redux/customerSlice"
+import { clearPayments, fetchPayments, Payment } from "lib/redux/paymentSlice"
 import { SearchModule } from "components/ui/Search/search-module"
 
-export default function AllTransactions() {
-  const [isPolling, setIsPolling] = useState(true)
-  const [pollingInterval, setPollingInterval] = useState(480000) // 8 minutes default
+export default function SearchPayments() {
   const [searchQuery, setSearchQuery] = useState("")
   const [isSearchActive, setIsSearchActive] = useState(false)
   const [showResults, setShowResults] = useState(false)
@@ -20,34 +17,23 @@ export default function AllTransactions() {
 
   // Redux hooks
   const dispatch = useAppDispatch()
-  const { customerAnalyticsData, customerAnalyticsLoading } = useAppSelector((state) => state.analytics)
-  const { user } = useAppSelector((state) => state.auth)
-  const { customers, loading, error } = useAppSelector((state) => state.customers)
 
-  // Fetch customer analytics on component mount
-  useEffect(() => {
-    dispatch(fetchCustomerAnalytics())
-  }, [dispatch])
-
-  const handleRefreshData = useCallback(() => {
-    dispatch(clearCustomerAnalytics())
-    dispatch(fetchCustomerAnalytics())
-  }, [dispatch])
+  const { payments, loading, error } = useAppSelector((state) => state.payments)
 
   const handleSearch = useCallback(() => {
     if (!searchQuery.trim()) {
       setShowResults(false)
       setIsSearchActive(false)
-      dispatch(clearCustomers())
+      dispatch(clearPayments())
       return
     }
 
     setIsSearchActive(true)
     setShowResults(true)
-    dispatch(clearCustomers())
+    dispatch(clearPayments())
 
     dispatch(
-      fetchCustomers({
+      fetchPayments({
         pageNumber: 1,
         pageSize: 20,
         search: searchQuery.trim(),
@@ -62,20 +48,9 @@ export default function AllTransactions() {
     if (!value.trim()) {
       setShowResults(false)
       setIsSearchActive(false)
-      dispatch(clearCustomers())
+      dispatch(clearPayments())
     }
   }
-
-  // Short polling effect
-  useEffect(() => {
-    if (!isPolling) return
-
-    const interval = setInterval(() => {
-      handleRefreshData()
-    }, pollingInterval)
-
-    return () => clearInterval(interval)
-  }, [dispatch, isPolling, pollingInterval, handleRefreshData])
 
   return (
     <section className="min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100 pb-24 sm:pb-20">
@@ -88,8 +63,10 @@ export default function AllTransactions() {
             <div className="mb-8">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900 sm:text-2xl">Search Customer</h1>
-                  <p className="mt-1 text-sm text-gray-600">Manage customer accounts, KYC, and service connections</p>
+                  <h1 className="text-2xl font-bold text-gray-900 sm:text-2xl">Search Payments</h1>
+                  <p className="mt-1 text-sm text-gray-600">
+                    Find and manage payment transactions, receipts, and payment status
+                  </p>
                 </div>
               </div>
             </div>
@@ -103,14 +80,14 @@ export default function AllTransactions() {
                   setSearchQuery("")
                   setShowResults(false)
                   setIsSearchActive(false)
-                  dispatch(clearCustomers())
+                  dispatch(clearPayments())
                 }}
                 onSearch={handleSearch}
-                placeholder="Type customer name, account number, phone number, or email..."
+                placeholder="Type payment reference, customer name, account number..."
                 prominent={true}
                 prominentLabel="Primary action"
-                prominentTitle="Search Customer"
-                prominentDescription="Find records quickly by customer name, account number, phone number, or email."
+                prominentTitle="Search Payments"
+                prominentDescription="Find and manage payment transactions, receipts, and payment status by reference or customer details."
                 height="h-14"
                 className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
                 disabled={loading}
@@ -145,7 +122,7 @@ export default function AllTransactions() {
                         d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    How to search customers
+                    How to search payments
                   </h2>
                 </div>
 
@@ -164,10 +141,10 @@ export default function AllTransactions() {
                       <span className="text-xs font-medium text-gray-700">Enter details</span>
                     </div>
                     <p className="mt-1.5 line-clamp-2 text-xs text-gray-500">
-                      Type name, account number, phone, or email
+                      Type payment reference, customer name, or account number
                     </p>
                     <div className="mt-1.5 text-[10px] text-gray-400">
-                      e.g., <span className="font-mono text-[#004B23]">John Doe</span>
+                      e.g., <span className="font-mono text-[#004B23]">PAY123456</span>
                     </div>
                   </motion.div>
 
@@ -185,14 +162,16 @@ export default function AllTransactions() {
                       <span className="text-xs font-medium text-gray-700">Review info</span>
                     </div>
                     <p className="mt-1.5 line-clamp-2 text-xs text-gray-500">
-                      View customer details, status, and service info
+                      View payment details, status, and transaction info
                     </p>
                     <div className="mt-1.5 flex gap-1">
-                      <span className="rounded-full bg-green-100 px-1.5 py-0.5 text-[8px] text-green-700">Active</span>
-                      <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[8px] text-red-700">Suspended</span>
-                      <span className="rounded-full bg-yellow-100 px-1.5 py-0.5 text-[8px] text-yellow-700">
-                        Inactive
+                      <span className="rounded-full bg-green-100 px-1.5 py-0.5 text-[8px] text-green-700">
+                        Confirmed
                       </span>
+                      <span className="rounded-full bg-yellow-100 px-1.5 py-0.5 text-[8px] text-yellow-700">
+                        Pending
+                      </span>
+                      <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[8px] text-red-700">Failed</span>
                     </div>
                   </motion.div>
 
@@ -210,7 +189,7 @@ export default function AllTransactions() {
                       <span className="text-xs font-medium text-gray-700">Take action</span>
                     </div>
                     <p className="mt-1.5 line-clamp-2 text-xs text-gray-500">
-                      Click &quot;View Details&quot; to manage customer account
+                      Click &quot;View Details&quot; to manage payment transaction
                     </p>
                     <div className="mt-1.5">
                       <span className="inline-flex items-center text-[10px] text-[#004B23]">
@@ -243,10 +222,10 @@ export default function AllTransactions() {
                       <div className="text-xs text-gray-600">
                         <span className="font-medium text-gray-700">Quick Steps:</span>
                         <ol className="mt-1 list-inside list-decimal space-y-1">
-                          <li>Enter customer details (name, account, phone, or email)</li>
+                          <li>Enter payment details (reference, customer name or account number)</li>
                           <li>Press Enter or click the Search button</li>
-                          <li>Review customer information and status</li>
-                          <li>Click "View Details" to manage the customer account</li>
+                          <li>Review payment information and status</li>
+                          <li>Click "View Details" to manage the payment transaction</li>
                         </ol>
                       </div>
                     </div>
@@ -272,7 +251,7 @@ export default function AllTransactions() {
                     {loading && (
                       <div className="flex items-center justify-center py-8">
                         <div className="size-8 animate-spin rounded-full border-b-2 border-[#004B23]"></div>
-                        <span className="ml-3 text-gray-600">Searching customers...</span>
+                        <span className="ml-3 text-gray-600">Searching payments...</span>
                       </div>
                     )}
 
@@ -285,7 +264,7 @@ export default function AllTransactions() {
                       </div>
                     )}
 
-                    {!loading && !error && customers.length === 0 && isSearchActive && (
+                    {!loading && !error && payments.length === 0 && isSearchActive && (
                       <div className="py-8 text-center">
                         <div className="mb-4 text-gray-500">
                           <svg
@@ -298,111 +277,94 @@ export default function AllTransactions() {
                               strokeLinecap="round"
                               strokeLinejoin="round"
                               strokeWidth={2}
-                              d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                              d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
                             />
                           </svg>
                         </div>
-                        <h3 className="mb-2 text-lg font-medium text-gray-900">No customers found</h3>
+                        <h3 className="mb-2 text-lg font-medium text-gray-900">No payments found</h3>
                         <p className="text-gray-600">
-                          We couldn&apos;t find any customers matching &quot;{searchQuery}&quot;
+                          We couldn&apos;t find any payments matching &quot;{searchQuery}&quot;
                         </p>
                         <p className="mt-2 text-sm text-gray-500">
-                          Try checking the spelling or use different keywords
+                          Try checking the payment reference or use different keywords
                         </p>
                       </div>
                     )}
 
-                    {!loading && !error && customers.length > 0 && (
+                    {!loading && !error && payments.length > 0 && (
                       <div className="space-y-2">
                         <div className="mb-3 text-sm text-gray-600">
-                          Found {customers.length} customer{customers.length !== 1 ? "s" : ""}
+                          Found {payments.length} payment{payments.length !== 1 ? "s" : ""}
                         </div>
-                        {customers.map((customer: Customer) => (
+                        {payments.map((payment: Payment) => (
                           <div
-                            key={customer.id}
+                            key={payment.id}
                             className="cursor-pointer rounded-lg border border-gray-200 p-3 transition-colors hover:bg-gray-50"
-                            onClick={() => router.push(`/customers/${customer.id}`)}
+                            onClick={() => router.push(`/payment/payment-detail/${payment.id}`)}
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex-1">
                                 <div className="mb-2 flex items-center space-x-2">
-                                  <h3 className="text-base font-medium text-gray-900">{customer.fullName}</h3>
+                                  <h3 className="text-base font-medium text-gray-900">{payment.reference}</h3>
                                   <span
                                     className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                                      customer.status === "Active"
+                                      payment.status === "Confirmed"
                                         ? "bg-green-100 text-green-800"
-                                        : customer.status === "Suspended"
-                                        ? "bg-red-100 text-red-800"
-                                        : "bg-yellow-100 text-yellow-800"
+                                        : payment.status === "Pending"
+                                        ? "bg-yellow-100 text-yellow-800"
+                                        : "bg-red-100 text-red-800"
                                     }`}
                                   >
-                                    {customer.status}
+                                    {payment.status}
                                   </span>
-                                  {customer.isMD && (
+                                  {payment.isPrepaid && (
                                     <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
-                                      MD
-                                    </span>
-                                  )}
-                                  {customer.isPPM && (
-                                    <span className="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800">
-                                      PPM
+                                      Prepaid
                                     </span>
                                   )}
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 sm:grid-cols-3 lg:grid-cols-4">
                                   <div>
-                                    <span className="text-gray-500">Acct:</span>
-                                    <span className="ml-1 font-medium text-gray-900">{customer.accountNumber}</span>
+                                    <span className="text-gray-500">Customer:</span>
+                                    <span className="ml-1 font-medium text-gray-900">{payment.customerName}</span>
                                   </div>
                                   <div>
-                                    <span className="text-gray-500">Phone:</span>
-                                    <span className="ml-1 font-medium text-gray-900">{customer.phoneNumber}</span>
-                                  </div>
-                                  <div>
-                                    <span className="text-gray-500">Email:</span>
-                                    <span className="ml-1 font-medium text-gray-900">{customer.email || "N/A"}</span>
-                                  </div>
-                                  <div>
-                                    <span className="text-gray-500">Area:</span>
+                                    <span className="text-gray-500">Account:</span>
                                     <span className="ml-1 font-medium text-gray-900">
-                                      {customer.areaOfficeName || "N/A"}
+                                      {payment.customerAccountNumber}
                                     </span>
                                   </div>
                                   <div>
-                                    <span className="text-gray-500">Tariff:</span>
+                                    <span className="text-gray-500">Amount:</span>
                                     <span className="ml-1 font-medium text-gray-900">
-                                      {customer.tariff?.name || "N/A"}
+                                      {payment.currency} {Number(payment.totalAmountPaid).toLocaleString()}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-500">Channel:</span>
+                                    <span className="ml-1 font-medium text-gray-900">{payment.channel}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-500">Type:</span>
+                                    <span className="ml-1 font-medium text-gray-900">
+                                      {payment.isPrepaid ? "Prepaid" : "Postpaid"}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-500">Payment Type:</span>
+                                    <span className="ml-1 font-medium text-gray-900">{payment.paymentTypeName}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-500">Date:</span>
+                                    <span className="ml-1 font-medium text-gray-900">
+                                      {new Date(payment.paidAtUtc).toLocaleDateString()}
                                     </span>
                                   </div>
                                   <div>
                                     <span className="text-gray-500">Meter:</span>
                                     <span className="ml-1 font-medium text-gray-900">
-                                      {customer.isMeteredPostpaid
-                                        ? "Postpaid"
-                                        : customer.isPPM
-                                        ? "Prepaid"
-                                        : "Unmetered"}
-                                    </span>
-                                  </div>
-                                  <div>
-                                    <span className="text-gray-500">Balance:</span>
-                                    <span
-                                      className={`ml-1 font-medium ${
-                                        customer.customerOutstandingBalance > 0
-                                          ? "text-red-600"
-                                          : customer.customerOutstandingBalance < 0
-                                          ? "text-green-600"
-                                          : "text-gray-600"
-                                      }`}
-                                    >
-                                      {customer.customerOutstandingBalanceLabel || "₦0"}
-                                    </span>
-                                  </div>
-                                  <div>
-                                    <span className="text-gray-500">Monthly Vend:</span>
-                                    <span className="ml-1 font-medium text-gray-900">
-                                      ₦{customer.totalMonthlyVend || 0}
+                                      {payment.customerMeterNumber || "N/A"}
                                     </span>
                                   </div>
                                 </div>
@@ -412,7 +374,7 @@ export default function AllTransactions() {
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation()
-                                    router.push(`/customers/${customer.id}`)
+                                    router.push(`/payment/payment-detail/${payment.id}`)
                                   }}
                                   className="inline-flex items-center rounded-md border border-gray-300 bg-white px-2 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#004B23] focus:ring-offset-2"
                                 >
@@ -421,13 +383,7 @@ export default function AllTransactions() {
                                       strokeLinecap="round"
                                       strokeLinejoin="round"
                                       strokeWidth={2}
-                                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                    />
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                                     />
                                   </svg>
                                   View
@@ -448,7 +404,7 @@ export default function AllTransactions() {
 
       {/* Loading Overlay */}
       <AnimatePresence>
-        {customerAnalyticsLoading && !customerAnalyticsData && (
+        {loading && !payments.length && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -464,7 +420,7 @@ export default function AllTransactions() {
               <div className="flex flex-col items-center gap-4">
                 <div className="size-12 animate-spin rounded-full border-4 border-[#004B23] border-t-transparent" />
                 <div className="text-center">
-                  <p className="font-medium text-gray-900">Loading Customer Data</p>
+                  <p className="font-medium text-gray-900">Loading Payment Data</p>
                   <p className="text-sm text-gray-600">Please wait</p>
                 </div>
               </div>

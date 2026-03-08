@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { useRouter } from "next/navigation"
 import { clearEmployees, Employee, fetchEmployees } from "lib/redux/employeeSlice"
+import { SearchModule } from "components/ui/Search/search-module"
 
 export default function SearchEmployees() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -51,12 +52,6 @@ export default function SearchEmployees() {
     }
   }
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handleSearch()
-    }
-  }
-
   return (
     <section className="min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100 pb-24 sm:pb-20">
       <div className="flex w-full">
@@ -78,74 +73,164 @@ export default function SearchEmployees() {
 
             {/* Search Section */}
             <div className="mb-8">
-              <div className="w-full">
-                <label htmlFor="employee-search" className="sr-only">
-                  Search employees
-                </label>
-                <div className="relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                    <svg className="size-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <SearchModule
+                value={searchQuery}
+                onChange={handleInputChange}
+                onCancel={() => {
+                  setSearchQuery("")
+                  setShowResults(false)
+                  setIsSearchActive(false)
+                  dispatch(clearEmployees())
+                }}
+                onSearch={handleSearch}
+                placeholder="Type employee name, email, employee ID, or phone number..."
+                prominent={true}
+                prominentLabel="Primary action"
+                prominentTitle="Search Employees"
+                prominentDescription="Find records quickly by employee name, email, employee ID, or phone number."
+                height="h-14"
+                className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+                disabled={employeesLoading}
+              />
+              {searchQuery && (
+                <div className="mt-3 text-base text-gray-600">
+                  Searching for: <span className="font-medium text-gray-900">&quot;{searchQuery}&quot;</span>
+                </div>
+              )}
+            </div>
+
+            {/* How It Works Illustration - Compact Version */}
+            {!isSearchActive && !searchQuery && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+                className="mb-8 overflow-hidden rounded-lg bg-white shadow-sm"
+              >
+                <div className="border-b border-gray-100 bg-gray-50/80 px-4 py-2.5">
+                  <h2 className="flex items-center text-sm font-semibold text-gray-700">
+                    <svg
+                      className="mr-1.5 h-4 w-4 text-[#004B23]"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                  </div>
-                  <input
-                    id="employee-search"
-                    type="text"
-                    value={searchQuery}
-                    onChange={handleInputChange}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Search by employee name, email, employee ID, or phone number..."
-                    className="block w-full rounded-lg border border-gray-300 bg-white py-4 pl-14 pr-24 text-lg placeholder-gray-500 focus:border-[#004B23] focus:outline-none focus:ring-2 focus:ring-[#004B23]"
-                  />
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-2">
-                    <button
-                      type="button"
-                      onClick={handleSearch}
-                      disabled={employeesLoading}
-                      className="inline-flex items-center rounded-md bg-[#004B23] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#003d1c] focus:outline-none focus:ring-2 focus:ring-[#004B23] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {employeesLoading ? (
-                        <>
-                          <svg
-                            className="-ml-1 mr-2 h-4 w-4 animate-spin text-white"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            ></circle>
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            ></path>
-                          </svg>
-                          Searching...
-                        </>
-                      ) : (
-                        "Search"
-                      )}
-                    </button>
+                    How to search employees
+                  </h2>
+                </div>
+
+                <div className="grid grid-cols-3 divide-x divide-gray-100">
+                  {/* Step 1 */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.1 }}
+                    className="px-3 py-3"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#004B23]/10 text-xs font-semibold text-[#004B23]">
+                        1
+                      </div>
+                      <span className="text-xs font-medium text-gray-700">Enter details</span>
+                    </div>
+                    <p className="mt-1.5 line-clamp-2 text-xs text-gray-500">
+                      Type name, email, employee ID, or phone number
+                    </p>
+                    <div className="mt-1.5 text-[10px] text-gray-400">
+                      e.g., <span className="font-mono text-[#004B23]">John Smith</span>
+                    </div>
+                  </motion.div>
+
+                  {/* Step 2 */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="px-3 py-3"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#004B23]/10 text-xs font-semibold text-[#004B23]">
+                        2
+                      </div>
+                      <span className="text-xs font-medium text-gray-700">Review info</span>
+                    </div>
+                    <p className="mt-1.5 line-clamp-2 text-xs text-gray-500">
+                      View employee details, position, and department
+                    </p>
+                    <div className="mt-1.5 flex gap-1">
+                      <span className="rounded-full bg-green-100 px-1.5 py-0.5 text-[8px] text-green-700">Active</span>
+                      <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[8px] text-red-700">Inactive</span>
+                      <span className="rounded-full bg-yellow-100 px-1.5 py-0.5 text-[8px] text-yellow-700">
+                        Password Change
+                      </span>
+                    </div>
+                  </motion.div>
+
+                  {/* Step 3 */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="px-3 py-3"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#004B23]/10 text-xs font-semibold text-[#004B23]">
+                        3
+                      </div>
+                      <span className="text-xs font-medium text-gray-700">Take action</span>
+                    </div>
+                    <p className="mt-1.5 line-clamp-2 text-xs text-gray-500">
+                      Click &quot;View Details&quot; to manage employee account
+                    </p>
+                    <div className="mt-1.5">
+                      <span className="inline-flex items-center text-[10px] text-[#004B23]">
+                        View Details
+                        <svg className="ml-0.5 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </span>
+                    </div>
+                  </motion.div>
+                </div>
+
+                {/* Quick Tips - Detailed Steps */}
+                <div className="border-t border-gray-100 bg-gray-50/30 px-4 py-3">
+                  <div className="space-y-2">
+                    <div className="flex items-start gap-2">
+                      <svg
+                        className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      <div className="text-xs text-gray-600">
+                        <span className="font-medium text-gray-700">Quick Steps:</span>
+                        <ol className="mt-1 list-inside list-decimal space-y-1">
+                          <li>Enter employee details (name, email, ID, or phone)</li>
+                          <li>Press Enter or click the Search button</li>
+                          <li>Review employee information and status</li>
+                          <li>Click "View Details" to manage the employee account</li>
+                        </ol>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                {searchQuery && (
-                  <div className="mt-3 text-base text-gray-600">
-                    Searching for: <span className="font-medium text-gray-900">&quot;{searchQuery}&quot;</span>
-                  </div>
-                )}
-              </div>
-            </div>
+              </motion.div>
+            )}
 
             {/* Search Results */}
             {showResults && (
@@ -205,75 +290,77 @@ export default function SearchEmployees() {
                     )}
 
                     {!employeesLoading && !employeesError && employees.length > 0 && (
-                      <div className="space-y-4">
-                        <div className="mb-4 text-sm text-gray-600">
+                      <div className="space-y-2">
+                        <div className="mb-3 text-sm text-gray-600">
                           Found {employees.length} employee{employees.length !== 1 ? "s" : ""}
                         </div>
                         {employees.map((employee: Employee) => (
                           <div
                             key={employee.id}
-                            className="cursor-pointer rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
+                            className="cursor-pointer rounded-lg border border-gray-200 p-3 transition-colors hover:bg-gray-50"
                             onClick={() => router.push(`/employees/${employee.id}`)}
                           >
-                            <div className="flex items-start justify-between">
+                            <div className="flex items-center justify-between">
                               <div className="flex-1">
-                                <div className="mb-3 flex items-center space-x-3">
-                                  <h3 className="text-lg font-medium text-gray-900">{employee.fullName}</h3>
+                                <div className="mb-2 flex items-center space-x-2">
+                                  <h3 className="text-base font-medium text-gray-900">{employee.fullName}</h3>
                                   <span
-                                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
                                       employee.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
                                     }`}
                                   >
                                     {employee.isActive ? "Active" : "Inactive"}
                                   </span>
                                   {employee.mustChangePassword && (
-                                    <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">
-                                      Password Change Required
+                                    <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">
+                                      Password Change
                                     </span>
                                   )}
                                 </div>
 
-                                <div className="mb-3 grid grid-cols-1 gap-3 text-sm md:grid-cols-2 lg:grid-cols-3">
-                                  <div className="flex items-center space-x-2">
+                                <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 sm:grid-cols-3 lg:grid-cols-4">
+                                  <div>
                                     <span className="text-gray-500">Email:</span>
-                                    <span className="font-medium text-gray-900">{employee.email}</span>
+                                    <span className="ml-1 font-medium text-gray-900">{employee.email}</span>
                                   </div>
-                                  <div className="flex items-center space-x-2">
+                                  <div>
                                     <span className="text-gray-500">Phone:</span>
-                                    <span className="font-medium text-gray-900">{employee.phoneNumber}</span>
+                                    <span className="ml-1 font-medium text-gray-900">{employee.phoneNumber}</span>
                                   </div>
-                                  <div className="flex items-center space-x-2">
-                                    <span className="text-gray-500">Employee ID:</span>
-                                    <span className="font-medium text-gray-900">{employee.employeeId || "N/A"}</span>
+                                  <div>
+                                    <span className="text-gray-500">ID:</span>
+                                    <span className="ml-1 font-medium text-gray-900">
+                                      {employee.employeeId || "N/A"}
+                                    </span>
                                   </div>
-                                  <div className="flex items-center space-x-2">
+                                  <div>
                                     <span className="text-gray-500">Position:</span>
-                                    <span className="font-medium text-gray-900">{employee.position || "N/A"}</span>
+                                    <span className="ml-1 font-medium text-gray-900">{employee.position || "N/A"}</span>
                                   </div>
-                                  <div className="flex items-center space-x-2">
-                                    <span className="text-gray-500">Department:</span>
-                                    <span className="font-medium text-gray-900">
+                                  <div>
+                                    <span className="text-gray-500">Dept:</span>
+                                    <span className="ml-1 font-medium text-gray-900">
                                       {employee.departmentName || "N/A"}
                                     </span>
                                   </div>
-                                  <div className="flex items-center space-x-2">
-                                    <span className="text-gray-500">Area Office:</span>
-                                    <span className="font-medium text-gray-900">
+                                  <div>
+                                    <span className="text-gray-500">Area:</span>
+                                    <span className="ml-1 font-medium text-gray-900">
                                       {employee.areaOfficeName || "N/A"}
                                     </span>
                                   </div>
                                 </div>
                               </div>
 
-                              <div className="ml-4 flex-shrink-0">
+                              <div className="ml-3 flex-shrink-0">
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation()
                                     router.push(`/employees/${employee.id}`)
                                   }}
-                                  className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#004B23] focus:ring-offset-2"
+                                  className="inline-flex items-center rounded-md border border-gray-300 bg-white px-2 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#004B23] focus:ring-offset-2"
                                 >
-                                  <svg className="mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <svg className="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path
                                       strokeLinecap="round"
                                       strokeLinejoin="round"
@@ -287,7 +374,7 @@ export default function SearchEmployees() {
                                       d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                                     />
                                   </svg>
-                                  View Details
+                                  View
                                 </button>
                               </div>
                             </div>

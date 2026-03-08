@@ -693,9 +693,14 @@ const ClearTamper = () => {
                         value={searchQuery}
                         onChange={handleSearchChange}
                         onSearch={handleSearch}
-                        placeholder="Search by meter number, customer account number, or customer name..."
-                        height="h-12"
-                        className="w-full md:w-auto"
+                        placeholder="Type meter number, customer account number, or customer name..."
+                        prominent={true}
+                        prominentLabel="Primary action"
+                        prominentTitle="Search Meters"
+                        prominentDescription="Find meters to clear tamper status by meter number, account number, or customer name."
+                        height="h-14"
+                        className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+                        disabled={loading}
                       />
                     </div>
 
@@ -1066,7 +1071,7 @@ const ClearTamper = () => {
                           {showDesktopFilters && (
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                               {/* Search */}
-                              <div>
+                              <div className="col-span-full">
                                 <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
                                   Search
                                 </label>
@@ -1074,9 +1079,14 @@ const ClearTamper = () => {
                                   value={searchText}
                                   onChange={(e) => setSearchText(e.target.value)}
                                   onSearch={handleSearchJobs}
-                                  placeholder="Search jobs..."
-                                  className="w-full md:w-auto"
-                                  bgClassName="bg-white"
+                                  placeholder="Type job details to search..."
+                                  prominent={true}
+                                  prominentLabel="Primary action"
+                                  prominentTitle="Search Jobs"
+                                  prominentDescription="Find and filter clear tamper jobs by filename, status, or other details."
+                                  height="h-14"
+                                  className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+                                  disabled={csvJobsLoading}
                                   searchTypeOptions={undefined}
                                   onSearchTypeChange={undefined}
                                 />

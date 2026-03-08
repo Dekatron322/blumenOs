@@ -15,6 +15,7 @@ import { fetchDistributionSubstations } from "lib/redux/distributionSubstationsS
 import { formatCurrency } from "utils/formatCurrency"
 import TransactionReceiptModal from "components/ui/Modal/transaction-receipt-modal"
 import EmptySearchState from "components/ui/EmptySearchState"
+import { SearchModule } from "components/ui/Search/search-module"
 
 // Compact Action Dropdown
 const CompactActionDropdown: React.FC<{
@@ -536,11 +537,11 @@ const CompactLoadingSkeleton = () => {
   )
 }
 
-// Main Component
 const PrepaidTransactionTable: React.FC<{ pageSize?: number }> = ({ pageSize: propPageSize = 10 }) => {
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize] = useState(propPageSize)
   const [showFilters, setShowFilters] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
   const [expandedRow, setExpandedRow] = useState<number | null>(null)
   const [showReceiptModal, setShowReceiptModal] = useState(false)
   const [selectedTransaction, setSelectedTransaction] = useState<PrepaidTransaction | null>(null)
@@ -561,6 +562,7 @@ const PrepaidTransactionTable: React.FC<{ pageSize?: number }> = ({ pageSize: pr
     state: "",
     sortBy: "",
     sortOrder: "asc" as "asc" | "desc",
+    search: "",
   })
 
   const dispatch = useAppDispatch()
@@ -596,6 +598,9 @@ const PrepaidTransactionTable: React.FC<{ pageSize?: number }> = ({ pageSize: pr
       params.sortBy = localFilters.sortBy
       params.sortOrder = localFilters.sortOrder
     }
+    if (localFilters.search) {
+      params.search = localFilters.search
+    }
 
     dispatch(fetchPrepaidTransactions(params))
   }, [dispatch, currentPage, pageSize, localFilters])
@@ -619,7 +624,20 @@ const PrepaidTransactionTable: React.FC<{ pageSize?: number }> = ({ pageSize: pr
     setCurrentPage(1)
   }
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setSearchQuery(value)
+
+    // Update the search in filters
+    handleFilterChange("search", value.trim())
+  }
+
+  const handleSearch = () => {
+    handleFilterChange("search", searchQuery.trim())
+  }
+
   const resetFilters = () => {
+    setSearchQuery("")
     setLocalFilters({
       status: "",
       channel: "",
@@ -636,6 +654,7 @@ const PrepaidTransactionTable: React.FC<{ pageSize?: number }> = ({ pageSize: pr
       state: "",
       sortBy: "",
       sortOrder: "asc",
+      search: "",
     })
     setCurrentPage(1)
   }
@@ -713,6 +732,23 @@ const PrepaidTransactionTable: React.FC<{ pageSize?: number }> = ({ pageSize: pr
           )}
         </div>
 
+        {/* Search Section */}
+        <div className="mb-4">
+          <SearchModule
+            value={searchQuery}
+            onChange={handleSearchChange}
+            onSearch={handleSearch}
+            placeholder="Type transaction reference, customer name, or meter number..."
+            prominent={true}
+            prominentLabel="Primary action"
+            prominentTitle="Search Transactions"
+            prominentDescription="Find prepaid transactions quickly by reference, customer name, meter number, or other details."
+            height="h-14"
+            className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+            disabled={loading}
+          />
+        </div>
+
         {/* Active Filters Bar */}
         {getActiveFilterCount() > 0 && (
           <div className="flex flex-wrap items-center gap-1.5 rounded-md bg-gray-50 p-2">
@@ -739,6 +775,11 @@ const PrepaidTransactionTable: React.FC<{ pageSize?: number }> = ({ pageSize: pr
             )}
             {localFilters.serviceCenterId && (
               <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-700">Service Center</span>
+            )}
+            {localFilters.search && (
+              <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] text-indigo-700">
+                Search: {localFilters.search}
+              </span>
             )}
             {localFilters.paidFromUtc && (
               <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-700">
