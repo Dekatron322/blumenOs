@@ -590,7 +590,7 @@ const TokenDisplayModal: React.FC<TokenDisplayModalProps> = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col gap-3 border-t border-gray-200 bg-white p-4 max-sm:gap-2 max-sm:px-3 max-sm:py-3 sm:flex-row sm:justify-end sm:px-6">
+          <div className="flex flex-col gap-3 border-t border-gray-200 bg-white p-4 max-sm:gap-2 max-sm:p-3 sm:flex-row sm:justify-end sm:px-6">
             <ButtonModule
               variant="outline"
               onClick={() => setShowReceipt(false)}
@@ -635,7 +635,7 @@ const TokenDisplayModal: React.FC<TokenDisplayModalProps> = ({
         className="relative w-[90vw] max-w-2xl rounded-lg bg-white shadow-2xl max-sm:flex max-sm:h-[90vh] max-sm:max-w-full max-sm:flex-col max-sm:rounded-t-3xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b bg-[#F9F9F9] px-6 py-4 max-sm:shrink-0 max-sm:px-3 max-sm:py-3">
+        <div className="flex items-center justify-between border-b bg-[#F9F9F9] px-6 py-4 max-sm:shrink-0 max-sm:p-3">
           <h2 className="text-lg font-semibold text-gray-900  max-sm:text-sm">Electricity Token Generated</h2>
           <button
             onClick={onRequestClose}

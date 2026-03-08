@@ -585,7 +585,7 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({ agentId, appl
           onSearch={handleManualSearch}
           placeholder="Search clearances..."
           height="h-14"
-          className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+          className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
           bgClassName="bg-white"
         />
       </div>
@@ -807,7 +807,7 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({ agentId, appl
                                 setExpandedClearanceId((prev) => (prev === clearance.id ? null : clearance.id))
                               }
                             >
-                              {expandedClearanceId === clearance.id ? "Hide details" : "View details"}
+                              {expandedClearanceId === clearance.id ? "Hide details" : "View Detail"}
                             </ButtonModule>
                             {agentInfo?.agentType !== "SalesRep" &&
                               agentInfo?.agentType !== "Cashier" &&

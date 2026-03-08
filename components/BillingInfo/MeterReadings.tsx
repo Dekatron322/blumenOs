@@ -56,7 +56,7 @@ const LoadingSkeleton = () => {
               }}
             />
           </div>
-          <div className="mt-1 h-4 w-48 rounded bg-gray-200">
+          <div className="mt-1 size-48 rounded bg-gray-200">
             <motion.div
               className="size-full rounded bg-gray-300"
               initial={{ opacity: 0.3 }}
@@ -844,9 +844,13 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
                   <DateIcon />
                 </div>
                 <h3 className="mt-3 text-base font-medium text-gray-900 sm:mt-4 sm:text-lg">No Meter Readings Found</h3>
-                <EmptySearchState title={getActiveFilterCount() > 0 || searchText.trim()
-                    ? "Try adjusting your search criteria or filters"
-                    : "No meter readings available"} />
+                <EmptySearchState
+                  title={
+                    getActiveFilterCount() > 0 || searchText.trim()
+                      ? "Try adjusting your search criteria or filters"
+                      : "No meter readings available"
+                  }
+                />
               </div>
             </div>
           )}

@@ -39,7 +39,7 @@ export default function ProfileSidebar() {
               <button
                 key={tab.id}
                 onClick={() => (tab.id === "security" ? setIsPasswordModalOpen(true) : null)}
-                className={`flex w-full items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors ${
+                className={`flex w-full items-center gap-3 rounded-lg p-3 text-sm font-medium transition-colors ${
                   activeTab === tab.id
                     ? "bg-blue-50 text-blue-600"
                     : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"

@@ -121,7 +121,7 @@ const LoadingSkeleton = () => {
               }}
             />
           </div>
-          <div className="mt-1 h-4 w-48 rounded bg-gray-200">
+          <div className="mt-1 size-48 rounded bg-gray-200">
             <motion.div
               className="size-full rounded bg-gray-300"
               initial={{ opacity: 0.3 }}
@@ -1003,7 +1003,7 @@ const MeterInventoryTable: React.FC<MeterInventoryTableProps> = ({ pageSize: pro
                   onSearch={handleSearch}
                   placeholder="Search by Meter Number and Customer"
                   height="h-14"
-                  className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+                  className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
                   bgClassName="bg-white"
                 />
               </div>

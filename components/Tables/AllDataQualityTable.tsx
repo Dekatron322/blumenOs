@@ -523,7 +523,7 @@ const TableSkeleton = () => (
 
     {/* Pagination skeleton */}
     <div className="flex items-center justify-between">
-      <div className="h-4 w-48 rounded bg-gray-200"></div>
+      <div className="size-48 rounded bg-gray-200"></div>
       <div className="flex gap-2">
         <div className="h-8 w-20 rounded bg-gray-200"></div>
         <div className="h-8 w-20 rounded bg-gray-200"></div>
@@ -1280,7 +1280,7 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
     <div className="w-full">
       {/* Header Section */}
       <div className="mb-4 space-y-4">
-          <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">Data Quality Issues</h2>
             <p className="text-sm text-gray-500">
@@ -1288,22 +1288,22 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
             </p>
           </div>
 
-            <div className="flex w-full flex-wrap items-center gap-2">
-              <div className="w-full">
-                <SearchModule
-                  prominent
-                  prominentTitle="Search Data Quality Issues"
-                  prominentDescription="Find issues quickly by rule key, customer, or payment details."
-                  value={searchInput}
-                  onChange={handleSearch}
-                  onCancel={handleCancelSearch}
-                  onSearch={handleManualSearch}
-                  placeholder="Search by rule key..."
-                  height="h-14"
-                  className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
-                  bgClassName="bg-white"
-                />
-              </div>
+          <div className="flex w-full flex-wrap items-center gap-2">
+            <div className="w-full">
+              <SearchModule
+                prominent
+                prominentTitle="Search Data Quality Issues"
+                prominentDescription="Find issues quickly by rule key, customer, or payment details."
+                value={searchInput}
+                onChange={handleSearch}
+                onCancel={handleCancelSearch}
+                onSearch={handleManualSearch}
+                placeholder="Search by rule key..."
+                height="h-14"
+                className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+                bgClassName="bg-white"
+              />
+            </div>
 
             {/* Mobile Filter Button */}
             <button

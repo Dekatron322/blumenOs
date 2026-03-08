@@ -869,7 +869,7 @@ const AllCustomers = () => {
               onSearch={handleManualSearch}
               placeholder="Type customer name, account number, phone number, or email..."
               height="h-14"
-              className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+              className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
             />
           </div>
 
@@ -927,84 +927,84 @@ const AllCustomers = () => {
                     key={customer.id}
                     className="rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-gray-300 hover:shadow-sm"
                   >
-                  {/* Header */}
-                  <div className="mb-3 flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex size-10 items-center justify-center rounded-full bg-emerald-100">
-                        <span className="text-sm font-semibold text-emerald-700">
-                          {(customer.fullName || "")
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")
-                            .slice(0, 2)}
-                        </span>
+                    {/* Header */}
+                    <div className="mb-3 flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex size-10 items-center justify-center rounded-full bg-emerald-100">
+                          <span className="text-sm font-semibold text-emerald-700">
+                            {(customer.fullName || "")
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")
+                              .slice(0, 2)}
+                          </span>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-semibold text-gray-900">{displayValue(customer.fullName)}</h3>
+                          <p className="text-xs text-gray-500">{displayValue(customer.accountNumber)}</p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="text-sm font-semibold text-gray-900">{displayValue(customer.fullName)}</h3>
-                        <p className="text-xs text-gray-500">{displayValue(customer.accountNumber)}</p>
-                      </div>
                     </div>
-                  </div>
 
-                  {/* Status Badges */}
-                  <div className="mb-3 flex flex-wrap gap-1">
-                    <span
-                      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getStatusStyle(
-                        customer.status
-                      )}`}
-                    >
-                      {customer.status}
-                    </span>
-                    <span
-                      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${getCustomerTypeStyle(
-                        customer.isPPM ? "PREPAID" : "POSTPAID"
-                      )}`}
-                    >
-                      {customer.isPPM ? "PREPAID" : "POSTPAID"}
-                    </span>
-                  </div>
-
-                  {/* Details */}
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Region:</span>
-                      <span className="font-medium text-gray-900">{displayValue(customer.provinceName)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Service Center:</span>
-                      <span className="font-medium text-gray-900">{displayValue(customer.serviceCenterName)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Tariff:</span>
-                      <span className="font-medium text-gray-900">{displayValue(customer.tariffRate)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Arrears:</span>
+                    {/* Status Badges */}
+                    <div className="mb-3 flex flex-wrap gap-1">
                       <span
-                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${getArrearsStyle(
-                          (customer.customerOutstandingDebtBalance || 0).toString()
+                        className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getStatusStyle(
+                          customer.status
                         )}`}
                       >
-                        ₦{(customer.customerOutstandingDebtBalance || 0).toLocaleString()}
+                        {customer.status}
+                      </span>
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${getCustomerTypeStyle(
+                          customer.isPPM ? "PREPAID" : "POSTPAID"
+                        )}`}
+                      >
+                        {customer.isPPM ? "PREPAID" : "POSTPAID"}
                       </span>
                     </div>
-                  </div>
 
-                  {/* Address */}
-                  <div className="mt-3 border-t border-gray-100 pt-3">
-                    <p className="line-clamp-2 text-xs text-gray-500">{displayValue(customer.address)}</p>
-                  </div>
+                    {/* Details */}
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Region:</span>
+                        <span className="font-medium text-gray-900">{displayValue(customer.provinceName)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Service Center:</span>
+                        <span className="font-medium text-gray-900">{displayValue(customer.serviceCenterName)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Tariff:</span>
+                        <span className="font-medium text-gray-900">{displayValue(customer.tariffRate)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Arrears:</span>
+                        <span
+                          className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${getArrearsStyle(
+                            (customer.customerOutstandingDebtBalance || 0).toString()
+                          )}`}
+                        >
+                          ₦{(customer.customerOutstandingDebtBalance || 0).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
 
-                  {/* Actions */}
-                  <div className="mt-3">
-                    <button
-                      onClick={() => handleViewDetails(customer)}
-                      className="flex w-full items-center justify-center gap-2 rounded-md border border-emerald-200 bg-white px-3 py-2 text-sm font-medium text-[#004B23] transition-colors hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
-                    >
-                      <VscEye className="size-4" />
-                      View Details
-                    </button>
-                  </div>
+                    {/* Address */}
+                    <div className="mt-3 border-t border-gray-100 pt-3">
+                      <p className="line-clamp-2 text-xs text-gray-500">{displayValue(customer.address)}</p>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="mt-3">
+                      <button
+                        onClick={() => handleViewDetails(customer)}
+                        className="flex w-full items-center justify-center gap-2 rounded-md border border-emerald-200 bg-white px-3 py-2 text-sm font-medium text-[#004B23] transition-colors hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                      >
+                        <VscEye className="size-4" />
+                        View Details
+                      </button>
+                    </div>
                   </div>
                 ))
               )}
@@ -1065,62 +1065,62 @@ const AllCustomers = () => {
                   ) : (
                     customers.map((customer: Customer) => (
                       <tr key={customer.id} className="transition-colors hover:bg-gray-50">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="flex size-8 items-center justify-center rounded-full bg-emerald-100">
-                            <span className="text-xs font-semibold text-emerald-700">
-                              {(customer.fullName || "")
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")
-                                .slice(0, 2)}
-                            </span>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <div className="flex size-8 items-center justify-center rounded-full bg-emerald-100">
+                              <span className="text-xs font-semibold text-emerald-700">
+                                {(customer.fullName || "")
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")
+                                  .slice(0, 2)}
+                              </span>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{displayValue(customer.fullName)}</p>
+                              <p className="text-xs text-gray-500">{displayValue(customer.email)}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">{displayValue(customer.fullName)}</p>
-                            <p className="text-xs text-gray-500">{displayValue(customer.email)}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getStatusStyle(
-                            customer.status
-                          )}`}
-                        >
-                          {customer.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${getCustomerTypeStyle(
-                            customer.isPPM ? "PREPAID" : "POSTPAID"
-                          )}`}
-                        >
-                          {customer.isPPM ? "PREPAID" : "POSTPAID"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-700">{displayValue(customer.accountNumber)}</td>
-                      <td className="px-4 py-3 text-sm text-gray-700">{displayValue(customer.provinceName)}</td>
-                      <td className="px-4 py-3 text-sm text-gray-700">{displayValue(customer.serviceCenterName)}</td>
-                      <td className="px-4 py-3 text-right">
-                        <span
-                          className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${getArrearsStyle(
-                            (customer.customerOutstandingDebtBalance || 0).toString()
-                          )}`}
-                        >
-                          ₦{(customer.customerOutstandingDebtBalance || 0).toLocaleString()}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <button
-                          onClick={() => handleViewDetails(customer)}
-                          className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
-                        >
-                          <VscEye className="size-3.5" />
-                          View
-                        </button>
-                      </td>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getStatusStyle(
+                              customer.status
+                            )}`}
+                          >
+                            {customer.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${getCustomerTypeStyle(
+                              customer.isPPM ? "PREPAID" : "POSTPAID"
+                            )}`}
+                          >
+                            {customer.isPPM ? "PREPAID" : "POSTPAID"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-700">{displayValue(customer.accountNumber)}</td>
+                        <td className="px-4 py-3 text-sm text-gray-700">{displayValue(customer.provinceName)}</td>
+                        <td className="px-4 py-3 text-sm text-gray-700">{displayValue(customer.serviceCenterName)}</td>
+                        <td className="px-4 py-3 text-right">
+                          <span
+                            className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${getArrearsStyle(
+                              (customer.customerOutstandingDebtBalance || 0).toString()
+                            )}`}
+                          >
+                            ₦{(customer.customerOutstandingDebtBalance || 0).toLocaleString()}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            onClick={() => handleViewDetails(customer)}
+                            className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                          >
+                            <VscEye className="size-3.5" />
+                            View
+                          </button>
+                        </td>
                       </tr>
                     ))
                   )}
@@ -1148,7 +1148,7 @@ const AllCustomers = () => {
                     <option value={50}>50 rows</option>
                   </select>
                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1">
-                    <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="size-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </div>
@@ -1271,11 +1271,11 @@ const AllCustomers = () => {
                     <button
                       key={status}
                       onClick={() => handleFilterChange("status", localFilters.status === status ? "" : status)}
-                        className={`rounded-md px-3 py-2 text-xs transition-colors ${
-                          localFilters.status === status
+                      className={`rounded-md px-3 py-2 text-xs transition-colors ${
+                        localFilters.status === status
                           ? "border border-emerald-200 bg-emerald-50 font-medium text-emerald-700"
                           : "border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100"
-                        }`}
+                      }`}
                     >
                       {status}
                     </button>

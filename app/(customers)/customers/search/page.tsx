@@ -132,12 +132,7 @@ export default function AllTransactions() {
               >
                 <div className="border-b border-gray-100 bg-gray-50/80 px-4 py-2.5">
                   <h2 className="flex items-center text-sm font-semibold text-gray-700">
-                    <svg
-                      className="mr-1.5 h-4 w-4 text-[#004B23]"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
+                    <svg className="mr-1.5 size-4 text-[#004B23]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -155,10 +150,10 @@ export default function AllTransactions() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.1 }}
-                    className="px-3 py-3"
+                    className="p-3"
                   >
                     <div className="flex items-center gap-2">
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#004B23]/10 text-xs font-semibold text-[#004B23]">
+                      <div className="flex size-6 items-center justify-center rounded-full bg-[#004B23]/10 text-xs font-semibold text-[#004B23]">
                         1
                       </div>
                       <span className="text-xs font-medium text-gray-700">Enter details</span>
@@ -176,10 +171,10 @@ export default function AllTransactions() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2 }}
-                    className="px-3 py-3"
+                    className="p-3"
                   >
                     <div className="flex items-center gap-2">
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#004B23]/10 text-xs font-semibold text-[#004B23]">
+                      <div className="flex size-6 items-center justify-center rounded-full bg-[#004B23]/10 text-xs font-semibold text-[#004B23]">
                         2
                       </div>
                       <span className="text-xs font-medium text-gray-700">Review info</span>
@@ -201,10 +196,10 @@ export default function AllTransactions() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.3 }}
-                    className="px-3 py-3"
+                    className="p-3"
                   >
                     <div className="flex items-center gap-2">
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#004B23]/10 text-xs font-semibold text-[#004B23]">
+                      <div className="flex size-6 items-center justify-center rounded-full bg-[#004B23]/10 text-xs font-semibold text-[#004B23]">
                         3
                       </div>
                       <span className="text-xs font-medium text-gray-700">Take action</span>
@@ -215,7 +210,7 @@ export default function AllTransactions() {
                     <div className="mt-1.5">
                       <span className="inline-flex items-center text-[10px] text-[#004B23]">
                         View Details
-                        <svg className="ml-0.5 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="ml-0.5 size-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
                       </span>
@@ -228,7 +223,7 @@ export default function AllTransactions() {
                   <div className="space-y-2">
                     <div className="flex items-start gap-2">
                       <svg
-                        className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-gray-400"
+                        className="mt-0.5 size-3.5 shrink-0 text-gray-400"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -246,7 +241,7 @@ export default function AllTransactions() {
                           <li>Enter customer details (name, account, phone, or email)</li>
                           <li>Press Enter or click the Search button</li>
                           <li>Review customer information and status</li>
-                          <li>Click "View Details" to manage the customer account</li>
+                          <li>Click &quot;View Details&quot; to manage the customer account</li>
                         </ol>
                       </div>
                     </div>
@@ -408,7 +403,7 @@ export default function AllTransactions() {
                                 </div>
                               </div>
 
-                              <div className="ml-3 flex-shrink-0">
+                              <div className="ml-3 shrink-0">
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation()
@@ -416,7 +411,7 @@ export default function AllTransactions() {
                                   }}
                                   className="inline-flex items-center rounded-md border border-gray-300 bg-white px-2 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#004B23] focus:ring-offset-2"
                                 >
-                                  <svg className="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <svg className="mr-1 size-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path
                                       strokeLinecap="round"
                                       strokeLinejoin="round"

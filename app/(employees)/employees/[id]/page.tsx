@@ -2155,7 +2155,7 @@ const LoadingSkeleton = () => (
                     <div className="size-8 animate-pulse rounded-lg bg-gray-200"></div>
                     <div className="flex-1">
                       <div className="mb-1 h-4 w-24 animate-pulse rounded-lg bg-gray-200"></div>
-                      <div className="h-3 w-32 animate-pulse rounded-lg bg-gray-200"></div>
+                      <div className="size-32 animate-pulse rounded-lg bg-gray-200"></div>
                     </div>
                   </div>
                 ))}

@@ -526,7 +526,7 @@ const CompactLoadingSkeleton = () => {
           <div className="flex items-center gap-3">
             <div className="size-8 rounded-full bg-gray-200"></div>
             <div>
-              <div className="h-3 w-32 rounded bg-gray-200"></div>
+              <div className="size-32 rounded bg-gray-200"></div>
               <div className="mt-1 h-2 w-24 rounded bg-gray-200"></div>
             </div>
           </div>
