@@ -20,6 +20,7 @@ import { fetchCustomers } from "lib/redux/customerSlice"
 import { UserIcon } from "components/Icons/Icons"
 import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface DebtRecoveryItem {
   id: number
@@ -925,14 +926,7 @@ const AllDebtRecoveryContent: React.FC = () => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4 }}
             >
-              <motion.p
-                className="text-base font-bold text-[#202B3C]"
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.2 }}
-              >
-                {searchText ? "No matching recovery records found" : "No recovery records available"}
-              </motion.p>
+              <EmptySearchState title={searchText ? "No matching recovery records found" : "No recovery records available"} />
             </motion.div>
           ) : (
             <>

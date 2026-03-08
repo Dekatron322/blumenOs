@@ -31,6 +31,7 @@ import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"
 import { notify } from "components/ui/Notification/Notification"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import EmptySearchState from "components/ui/EmptySearchState"
 import CsvUploadFailuresModal from "components/ui/Modal/CsvUploadFailuresModal"
 import {
   AlertCircle,
@@ -624,10 +625,7 @@ const JobTypeUploadsTable = ({ jobType }: { jobType: number | null }) => {
               ) : jobs.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="border-b border-gray-200 p-8 text-center">
-                    <div className="text-gray-500">
-                      <FileIcon className="mx-auto mb-2 size-10 text-gray-300" />
-                      <p className="text-sm">No uploads found for this type</p>
-                    </div>
+                    <EmptySearchState title="No uploads found for this type" className="py-4" />
                   </td>
                 </tr>
               ) : (

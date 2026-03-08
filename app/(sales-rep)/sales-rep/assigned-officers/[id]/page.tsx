@@ -29,6 +29,7 @@ import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
 import AgentChangeRequestModal from "components/ui/Modal/agent-change-request-modal"
 import PaymentReceiptModal from "components/ui/Modal/payment-receipt-modal"
+import EmptySearchState from "components/ui/EmptySearchState"
 import {
   ChangeRequestOutlineIcon,
   ExportCsvIcon,
@@ -1542,9 +1543,11 @@ const AgentDetailsPage = () => {
                         ) : changeRequestsByAgentError ? (
                           <div className="py-8 text-center text-sm text-red-600">{changeRequestsByAgentError}</div>
                         ) : changeRequestsByAgent.length === 0 ? (
-                          <div className="py-8 text-center text-sm text-gray-500">
-                            No change requests found for this agent.
-                          </div>
+                          <EmptySearchState
+                            title="No change requests found"
+                            description="This agent has no change requests yet."
+                            className="py-8"
+                          />
                         ) : (
                           <>
                             <div className="divide-y">
@@ -1675,9 +1678,11 @@ const AgentDetailsPage = () => {
                         ) : paymentsError ? (
                           <div className="py-8 text-center text-sm text-red-600">{paymentsError}</div>
                         ) : payments.length === 0 ? (
-                          <div className="py-8 text-center text-sm text-gray-500">
-                            No payments found for this agent.
-                          </div>
+                          <EmptySearchState
+                            title="No payments found"
+                            description="No payment records are available for this agent yet."
+                            className="py-8"
+                          />
                         ) : (
                           <>
                             <div className="divide-y">

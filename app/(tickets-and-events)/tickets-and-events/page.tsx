@@ -10,6 +10,7 @@ import Filtericon from "public/filter-icon"
 import CalendarIcon from "public/Icons/calendar-2"
 import { MapIcon, TicketIcon } from "lucide-react"
 import DashboardNav from "components/Navbar/DashboardNav"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 type SortOrder = "asc" | "desc" | null
 
@@ -274,7 +275,7 @@ const TicketsTable: React.FC<{ tickets: Ticket[] }> = ({ tickets }) => {
       {filteredTickets.length === 0 ? (
         <div className="flex h-60 flex-col items-center justify-center gap-2 bg-[#f9f9f9]">
           <EmptyState />
-          <p className="text-base font-bold text-[#202B3C]">No tickets found.</p>
+          <EmptySearchState title="No tickets found." />
         </div>
       ) : (
         <>

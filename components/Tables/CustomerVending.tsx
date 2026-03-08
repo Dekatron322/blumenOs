@@ -11,6 +11,7 @@ import {
   selectCustomerMetersPagination,
   selectCustomerMetersSuccess,
 } from "lib/redux/customersDashboardSlice"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 // Component Props
 interface CustomerVendingProps {
@@ -250,7 +251,7 @@ const CustomerVending: React.FC<CustomerVendingProps> = ({
             ) : (
               <tr>
                 <td colSpan={8} className="border-b px-4 py-8 text-center text-gray-500">
-                  No meters found
+                  <EmptySearchState title="No meters found" />
                 </td>
               </tr>
             )}

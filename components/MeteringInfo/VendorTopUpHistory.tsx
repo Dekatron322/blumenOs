@@ -11,7 +11,6 @@ import {
   Download,
   Eye,
   Filter,
-  Info,
   Loader2,
   RefreshCw,
   Search,
@@ -26,6 +25,7 @@ import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { ButtonModule } from "components/ui/Button/Button"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { fetchVendorTopUpHistory } from "lib/redux/vendorSlice"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface VendorTopUpHistoryItem {
   id: number
@@ -900,15 +900,14 @@ const VendorTopUpHistory: React.FC<VendorTopUpHistoryProps> = ({ pageSize: propP
           <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
             {!vendorTopUpHistory?.length ? (
               <div className="flex h-72 flex-col items-center justify-center px-4">
-                <div className="rounded-full bg-gray-100 p-3">
-                  <Info className="size-6 text-gray-400" />
-                </div>
-                <p className="mt-3 text-base font-medium text-gray-900">No top-up history found</p>
-                <p className="mt-1 text-xs text-gray-600">
-                  {searchText || getActiveFilterCount() > 0
-                    ? "Try adjusting your search or filters"
-                    : "Vendor top-ups will appear here once processed"}
-                </p>
+                <EmptySearchState
+                  title="No top-up history found"
+                  description={
+                    searchText || getActiveFilterCount() > 0
+                      ? "Try adjusting your search or filters"
+                      : "Vendor top-ups will appear here once processed"
+                  }
+                />
                 {(searchText || getActiveFilterCount() > 0) && (
                   <button
                     onClick={resetFilters}

@@ -21,6 +21,7 @@ import {
 import { format } from "date-fns"
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface ActionDropdownProps {
   clearance: CashClearance
@@ -431,22 +432,10 @@ const CashCollectionsTable: React.FC<{ agentId?: number }> = ({ agentId }) => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4 }}
           >
-            <motion.p
-              className="text-base font-bold text-[#202B3C]"
-              initial={{ y: 10, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.4, delay: 0.2 }}
-            >
-              {searchText ? "No matching clearances found" : "No clearance records available"}
-            </motion.p>
-            <motion.p
-              className="text-sm text-gray-500"
-              initial={{ y: 10, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.4, delay: 0.3 }}
-            >
-              {searchText ? "Try a different search term" : "Cash clearance records will appear here"}
-            </motion.p>
+            <EmptySearchState
+              title={searchText ? "No matching clearances found" : "No clearance records available"}
+              description={searchText ? "Try a different search term" : "Cash clearance records will appear here"}
+            />
           </motion.div>
         ) : (
           <>

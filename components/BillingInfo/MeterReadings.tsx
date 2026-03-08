@@ -22,6 +22,7 @@ import { clearCustomers, fetchCustomers } from "lib/redux/customerSlice"
 import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import Image from "next/image"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface SortOption {
   label: string
@@ -843,11 +844,9 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
                   <DateIcon />
                 </div>
                 <h3 className="mt-3 text-base font-medium text-gray-900 sm:mt-4 sm:text-lg">No Meter Readings Found</h3>
-                <p className="mt-1 text-xs text-gray-500 sm:mt-2 sm:text-sm">
-                  {getActiveFilterCount() > 0 || searchText.trim()
+                <EmptySearchState title={getActiveFilterCount() > 0 || searchText.trim()
                     ? "Try adjusting your search criteria or filters"
-                    : "No meter readings available"}
-                </p>
+                    : "No meter readings available"} />
               </div>
             </div>
           )}

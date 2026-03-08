@@ -27,6 +27,7 @@ import {
   YAxis,
 } from "recharts"
 import { BillingIcon, CollectionIcon, CustomeraIcon, RevenueIcon, VendingIcon } from "components/Icons/Icons"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 // Dropdown Popover Component
 const DropdownPopover = ({
@@ -573,10 +574,11 @@ export default function PerformanceAnalyticsDashboard() {
                   </div>
                 ) : !collectionEfficiencyData ? (
                   <div className="flex h-64 items-center justify-center">
-                    <div className="text-center">
-                      <div className="mb-2 text-lg font-semibold text-gray-900">No data available</div>
-                      <div className="text-sm text-gray-600">Try changing the time range.</div>
-                    </div>
+                    <EmptySearchState
+                      title="No data available"
+                      description="Try changing the time range."
+                      className="py-0"
+                    />
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-4">

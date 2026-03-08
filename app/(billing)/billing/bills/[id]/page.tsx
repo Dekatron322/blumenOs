@@ -27,6 +27,7 @@ import type {
 } from "lib/redux/postpaidSlice"
 import { BillingAdjustmentStatus, getBillingAdjustmentStatusText } from "lib/types/billing"
 import Image from "next/image"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 // Helper functions
 const formatCurrency = (amount: number) => {
@@ -745,7 +746,7 @@ const BillingJobChangeRequestsSection = ({ billingJobId }: { billingJobId: numbe
           </div>
         ) : changeRequestsByBillingJob.length === 0 ? (
           <div className="py-8 text-center">
-            <p className="text-sm text-gray-500 sm:text-base">No change requests found for this billing job</p>
+            <EmptySearchState title={"No change requests found for this billing job"} />
           </div>
         ) : viewMode === "grid" ? (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">

@@ -14,6 +14,7 @@ import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from 
 import { ExportCsvIcon } from "components/Icons/Icons"
 import Image from "next/image"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 import { ChangeRequestListItem, fetchChangeRequests } from "lib/redux/postpaidSlice"
 import ViewChangeRequestModal from "../ui/Modal/view-billing-change-request-modal"
@@ -1061,20 +1062,15 @@ const BillingChangeRequestsTable = () => {
           {/* Change Request Display Area */}
           <div className="w-full">
             {changeRequests.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 md:py-12">
-                <div className="text-center">
-                  <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-gray-100 md:size-12">
-                    <VscEye className="size-5 text-gray-400 md:size-6" />
-                  </div>
-                  <h3 className="mt-3 text-base font-medium text-gray-900 md:mt-4 md:text-lg">
-                    No billing change requests found
-                  </h3>
-                  <p className="mt-1 text-xs text-gray-500 md:mt-2 md:text-sm">
-                    {searchText || getActiveFilterCount() > 0
+              <div className="flex items-center justify-center py-8 md:py-12">
+                <EmptySearchState
+                  title="No billing change requests found"
+                  description={
+                    searchText || getActiveFilterCount() > 0
                       ? "Try adjusting your filters or search criteria"
-                      : "No billing change requests available"}
-                  </p>
-                </div>
+                      : "No billing change requests available"
+                  }
+                />
               </div>
             ) : viewMode === "grid" ? (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-3">

@@ -32,6 +32,7 @@ import { Customer, fetchCustomers } from "lib/redux/customerSlice"
 import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
 import { BillingJobRunStatus } from "lib/types/billing"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 const groupByOptions = [
   { value: "", label: "All Groupings" },
@@ -1312,7 +1313,7 @@ const PrintJobs = () => {
                           <td colSpan={8} className="border-b p-8 text-center">
                             <div className="text-gray-500">
                               <FileIcon className="mx-auto mb-2 size-12 text-gray-300" />
-                              <p>No print jobs found</p>
+                              <EmptySearchState title="No print jobs found" />
                               <p className="text-sm">Try adjusting your filters or check back later</p>
                             </div>
                           </td>

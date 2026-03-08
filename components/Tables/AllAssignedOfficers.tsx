@@ -11,6 +11,7 @@ import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { Agent, AgentsRequestParams, clearAgents, clearError, fetchAgents, setPagination } from "lib/redux/agentSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import { VscEye } from "react-icons/vsc"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface ActionDropdownProps {
   agent: Agent
@@ -448,24 +449,14 @@ const AllAssignedOfficers: React.FC<AllAssignedOfficersProps> = ({
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
         >
-          <motion.p
-            className="text-base font-bold text-[#202B3C]"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            {searchText ? "No matching agents found" : "No agents available"}
-          </motion.p>
-          <motion.p
-            className="text-sm text-gray-600"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-          >
-            {searchText
-              ? "Try adjusting your search term"
-              : "Agents will appear here once they are added to the system"}
-          </motion.p>
+          <EmptySearchState
+            title={searchText ? "No matching agents found" : "No agents available"}
+            description={
+              searchText
+                ? "Try adjusting your search term"
+                : "Agents will appear here once they are added to the system"
+            }
+          />
         </motion.div>
       ) : (
         <>

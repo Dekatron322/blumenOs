@@ -12,7 +12,6 @@ import {
   Download,
   Eye,
   Filter,
-  Info,
   Loader2,
   RefreshCw,
   Search,
@@ -39,6 +38,7 @@ import { fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
 import { api } from "lib/redux/authSlice"
 import { API_ENDPOINTS, buildApiUrl } from "lib/config/api"
 import ResolveAnomalyModal from "components/Modals/ResolveAnomalyModal"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 // ==================== Status Badge Component ====================
 const StatusBadge = ({ status }: { status: "Open" | "Resolved" }) => {
@@ -1616,15 +1616,14 @@ const AllAnomaliesTable: React.FC<AllAnomaliesTableProps> = ({
           <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
             {allAnomalies.length === 0 ? (
               <div className="flex h-72 flex-col items-center justify-center px-4">
-                <div className="rounded-full bg-gray-100 p-3">
-                  <Info className="size-6 text-gray-400" />
-                </div>
-                <p className="mt-3 text-base font-medium text-gray-900">No anomalies found</p>
-                <p className="mt-1 text-xs text-gray-600">
-                  {searchText || getActiveFilterCountLocal() > 0
-                    ? "Try adjusting your search or filters"
-                    : "Anomalies will appear here once payments are processed"}
-                </p>
+                <EmptySearchState
+                  title="No anomalies found"
+                  description={
+                    searchText || getActiveFilterCountLocal() > 0
+                      ? "Try adjusting your search or filters"
+                      : "Anomalies will appear here once payments are processed"
+                  }
+                />
                 {(searchText || getActiveFilterCountLocal() > 0) && (
                   <button
                     onClick={resetFilters}

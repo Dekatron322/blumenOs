@@ -13,6 +13,7 @@ import AddAgentModal from "components/ui/Modal/add-agent-modal"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { BillingDisputeData, getAllBillingDisputes, GetAllDisputesParams } from "lib/redux/billingDisputeSlice"
 import { formatCurrency } from "utils/formatCurrency"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 const CyclesIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -594,14 +595,7 @@ const PostpaidBillDisputes: React.FC = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <motion.p
-                    className="text-base font-bold text-[#202B3C]"
-                    initial={{ y: 10, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ duration: 0.4, delay: 0.2 }}
-                  >
-                    {searchText ? "No matching disputes found" : "No disputes available"}
-                  </motion.p>
+                  <EmptySearchState title={searchText ? "No matching disputes found" : "No disputes available"} />
                 </motion.div>
               ) : (
                 <>

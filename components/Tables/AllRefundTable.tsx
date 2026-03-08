@@ -12,7 +12,6 @@ import {
   Download,
   Eye,
   Filter,
-  Info,
   Loader2,
   RefreshCw,
   Search,
@@ -38,6 +37,7 @@ import { fetchVendors } from "lib/redux/vendorSlice"
 import { fetchAgents } from "lib/redux/agentSlice"
 import { api } from "lib/redux/authSlice"
 import { API_ENDPOINTS, buildApiUrl } from "lib/config/api"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 // ==================== Status Badge Component ====================
 const StatusBadge = ({ status }: { status: "Pending" | "Confirmed" | "Failed" | "Reversed" }) => {
@@ -1687,13 +1687,12 @@ const AllRefundsTable: React.FC<AllRefundsTableProps> = ({
           <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
             {refundHistoryData.length === 0 ? (
               <div className="flex h-72 flex-col items-center justify-center px-4">
-                <div className="rounded-full bg-gray-100 p-3">
-                  <Info className="size-6 text-gray-400" />
-                </div>
-                <p className="mt-3 text-base font-medium text-gray-900">No refunds found</p>
-                <p className="mt-1 text-xs text-gray-600">
-                  {searchText ? "Try adjusting your search or filters" : "Refunds will appear here once processed"}
-                </p>
+                <EmptySearchState
+                  title="No refunds found"
+                  description={
+                    searchText ? "Try adjusting your search or filters" : "Refunds will appear here once processed"
+                  }
+                />
                 {(searchText || getActiveFilterCountLocal() > 0) && (
                   <button
                     onClick={resetFilters}

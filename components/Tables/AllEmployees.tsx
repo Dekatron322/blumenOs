@@ -34,6 +34,7 @@ import { ExportCsvIcon } from "components/Icons/Icons"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import Image from "next/image"
 import { ButtonModule } from "components/ui/Button/Button"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 type SortOrder = "asc" | "desc" | null
 
@@ -999,22 +1000,19 @@ const AllEmployees = () => {
           <div className="w-full">
             {(!employees || employees.length === 0) && !employeesLoading ? (
               <div className="flex flex-col items-center justify-center py-8 md:py-12">
-                <div className="text-center">
-                  <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-gray-100">
-                    <FileText className="size-6 text-gray-400" />
-                  </div>
-                  <h3 className="mt-3 text-sm font-medium text-gray-900 md:mt-4 md:text-base">No employees found</h3>
-                  <p className="mt-1 text-xs text-gray-500 md:mt-2 md:text-xs">
-                    {filters.search || getActiveFilterCount() > 0
+                <EmptySearchState
+                  title={filters.search || getActiveFilterCount() > 0 ? "No employees found" : "No employees available"}
+                  description={
+                    filters.search || getActiveFilterCount() > 0
                       ? "Try adjusting your search or filter criteria"
-                      : "No employees available"}
-                  </p>
-                  {getActiveFilterCount() > 0 && (
-                    <ButtonModule onClick={resetFilters} size="sm" className="mt-4">
-                      Clear All Filters
-                    </ButtonModule>
-                  )}
-                </div>
+                      : "No employees available"
+                  }
+                />
+                {getActiveFilterCount() > 0 && (
+                  <ButtonModule onClick={resetFilters} size="sm" className="mt-4">
+                    Clear All Filters
+                  </ButtonModule>
+                )}
               </div>
             ) : (
               <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">

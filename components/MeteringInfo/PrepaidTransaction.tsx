@@ -15,6 +15,7 @@ import { fetchServiceStations } from "lib/redux/serviceStationsSlice"
 import { fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
 import { formatCurrency } from "utils/formatCurrency"
 import TransactionReceiptModal from "components/ui/Modal/transaction-receipt-modal"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 // Compact Action Dropdown
 const CompactActionDropdown: React.FC<{
@@ -783,8 +784,8 @@ const PrepaidTransactionTable: React.FC<{ pageSize?: number }> = ({ pageSize: pr
           {loading && prepaidTransactions.length === 0 ? (
             <CompactLoadingSkeleton />
           ) : prepaidTransactions.length === 0 ? (
-            <div className="flex h-32 items-center justify-center">
-              <p className="text-xs text-gray-500">No transactions found</p>
+            <div className="flex items-center justify-center">
+              <EmptySearchState title="No transactions found" className="py-6" />
             </div>
           ) : (
             <>

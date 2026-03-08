@@ -47,6 +47,7 @@ import { clearBills, fetchPostpaidBills } from "lib/redux/postpaidSlice"
 import { clearCountries, fetchCountries } from "lib/redux/countriesSlice"
 import { VscEye } from "react-icons/vsc"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 // Boolean options for filters
 const booleanOptions = [
@@ -2078,12 +2079,7 @@ const AllPayments: React.FC = () => {
                     {isPolling ? (
                       <>
                         <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                          />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
                         ON
                       </>
@@ -2191,14 +2187,7 @@ const AllPayments: React.FC = () => {
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.4 }}
                   >
-                    <motion.p
-                      className="text-base font-bold text-[#202B3C]"
-                      initial={{ y: 10, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ duration: 0.4, delay: 0.2 }}
-                    >
-                      {searchText ? "No matching payments found" : "No payments available"}
-                    </motion.p>
+                    <EmptySearchState title={searchText ? "No matching payments found" : "No payments available"} />
                   </motion.div>
                 ) : (
                   <>

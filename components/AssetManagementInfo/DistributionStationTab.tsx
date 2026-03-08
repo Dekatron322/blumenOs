@@ -20,6 +20,7 @@ import { fetchInjectionSubstations } from "lib/redux/injectionSubstationSlice"
 import { fetchFeeders } from "lib/redux/feedersSlice"
 import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface ActionDropdownProps {
   substation: DistributionSubstation
@@ -834,16 +835,9 @@ const DistributionStationTab: React.FC = () => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4 }}
             >
-              <motion.p
-                className="text-base font-bold text-[#202B3C]"
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.2 }}
-              >
-                {appliedFilters.searchText || getActiveFilterCount() > 0
+              <EmptySearchState title={appliedFilters.searchText || getActiveFilterCount() > 0
                   ? "No matching distribution substations found"
-                  : "No distribution substations available"}
-              </motion.p>
+                  : "No distribution substations available"} />
             </motion.div>
           ) : (
             <>

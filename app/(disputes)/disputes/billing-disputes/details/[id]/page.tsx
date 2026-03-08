@@ -38,6 +38,7 @@ import { clearCurrentBill, fetchPostpaidBillById } from "lib/redux/postpaidSlice
 import { formatCurrency } from "utils/formatCurrency"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 // Status options mapping
 const statusOptions = [
@@ -1038,7 +1039,7 @@ const BillingDisputeDetailsPage = () => {
                       </div>
                       {disputeById.payments.length === 0 && (
                         <div className="py-8 text-center">
-                          <p className="text-sm text-gray-500 sm:text-base">No payments found for this dispute</p>
+                          <EmptySearchState title="No payments found for this dispute" />
                         </div>
                       )}
                     </motion.div>

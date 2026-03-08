@@ -25,6 +25,7 @@ import { fetchCustomers } from "lib/redux/customerSlice"
 import { VscCloudUpload, VscEye } from "react-icons/vsc"
 import ApproveAdjustmentsModal from "components/ui/Modal/ApproveAdjustmentsModal"
 import BillAdjustmentDetailsModal from "components/ui/Modal/BillAdjustmentDetailsModal"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 // Status options for filters - matching the API values
 const statusOptions = [
@@ -631,7 +632,7 @@ const Adjustments: React.FC = () => {
                           <td colSpan={9} className="border-b p-8 text-center">
                             <div className="text-gray-500">
                               <FileIcon className="mx-auto mb-2 size-12 text-gray-300" />
-                              <p>No adjustments found</p>
+                              <EmptySearchState title="No adjustments found" />
                               <p className="text-sm">Try adjusting your filters or create new adjustments</p>
                             </div>
                           </td>

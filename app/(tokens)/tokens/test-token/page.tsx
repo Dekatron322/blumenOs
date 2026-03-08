@@ -38,6 +38,7 @@ import {
 } from "lucide-react"
 import { VscAdd, VscArrowLeft, VscArrowRight, VscChevronLeft, VscChevronRight } from "react-icons/vsc"
 import * as XLSX from "xlsx"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface Meter {
   id: number
@@ -858,7 +859,7 @@ const TestToken = () => {
                   {/* No Results */}
                   {searchQuery && !loading && meters && meters.length === 0 && !error && (
                     <div className="mb-6 py-8 text-center">
-                      <p className="text-sm text-gray-600">No meters found matching &ldquo;{searchQuery}&ldquo;</p>
+                      <EmptySearchState title={`No meters found matching "${searchQuery}"`} />
                     </div>
                   )}
                 </motion.div>
@@ -1182,7 +1183,7 @@ const TestToken = () => {
                                   <td colSpan={6} className="border-b border-gray-200 p-8 text-center">
                                     <div className="text-gray-500">
                                       <FileIcon className="mx-auto mb-2 size-10 text-gray-300" />
-                                      <p className="text-sm">No test token jobs found</p>
+                                      <EmptySearchState title="No test token jobs found" />
                                       <p className="mt-1 text-xs text-gray-400">
                                         Try adjusting your filters or create a new bulk upload
                                       </p>

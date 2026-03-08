@@ -53,6 +53,7 @@ import Footer from "components/Footer/Footer"
 import { formatCurrencyWithAbbreviation } from "utils/helpers"
 import { DateFilter, getDateRangeUtc } from "utils/dateRange"
 import { motion } from "framer-motion"
+import EmptySearchState from "components/ui/EmptySearchState"
 import {
   Activity,
   AlertCircle,
@@ -247,7 +248,7 @@ const PaymentHealthCard = ({
           <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-gray-100">
             <PieChartIcon className="size-6 text-gray-400" />
           </div>
-          <p className="text-sm font-medium text-gray-900">No payment health data available</p>
+          <EmptySearchState title="No payment health data available" />
           <p className="mt-1 text-xs text-gray-500">Check back later for system performance metrics</p>
         </div>
       )}

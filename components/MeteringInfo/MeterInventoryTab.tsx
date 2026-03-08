@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion"
 import { RxDotsVertical } from "react-icons/rx"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos } from "react-icons/md"
 import { SearchModule } from "components/ui/Search/search-module"
+import EmptySearchState from "components/ui/EmptySearchState"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { fetchMeters, Meter } from "lib/redux/metersSlice"
 import { ButtonModule } from "components/ui/Button/Button"
@@ -1040,14 +1041,7 @@ const MeterInventoryTable: React.FC<MeterInventoryTableProps> = ({ pageSize: pro
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4 }}
               >
-                <motion.p
-                  className="text-base font-bold text-[#202B3C]"
-                  initial={{ y: 10, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.4, delay: 0.2 }}
-                >
-                  {searchText ? "No matching meters found" : "No meters available"}
-                </motion.p>
+                <EmptySearchState title={searchText ? "No matching meters found" : "No meters available"} />
               </motion.div>
             ) : (
               <>

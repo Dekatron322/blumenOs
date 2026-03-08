@@ -10,6 +10,7 @@ import { MapIcon } from "components/Icons/Icons"
 import { fetchMaintenances, setPagination } from "lib/redux/maintenanceSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { ButtonModule } from "components/ui/Button/Button"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface SortOption {
   label: string
@@ -726,7 +727,7 @@ const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ onViewMaintenanceDetail
           )}
           {!loading && !error && maintenances.length === 0 && (
             <div className="mb-4 mt-2 rounded-lg bg-yellow-50 p-3">
-              <p className="text-center text-sm text-yellow-600">No maintenance records found.</p>
+              <EmptySearchState title="No maintenance records found." />
             </div>
           )}
 

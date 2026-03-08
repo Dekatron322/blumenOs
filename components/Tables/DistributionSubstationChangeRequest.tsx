@@ -14,6 +14,7 @@ import { ExportCsvIcon } from "components/Icons/Icons"
 import type { ChangeRequestListItem } from "lib/redux/distributionSubstationsSlice"
 import { clearChangeRequests, fetchChangeRequests } from "lib/redux/distributionSubstationsSlice"
 import ViewDistributionSubstationChangeRequestModal from "../ui/Modal/view-distribution-substation-change-request-modal"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 // Types
 type ViewMode = "list" | "grid"
@@ -670,11 +671,13 @@ const DistributionSubstationChangeRequest = () => {
           <div className="w-full">
             {changeRequests.length === 0 ? (
               <div className="py-8 text-center">
-                <p className="text-gray-500">
-                  {appliedFilters.searchText || getActiveFilterCount() > 0
-                    ? "No change requests found matching your filters"
-                    : "No change requests found"}
-                </p>
+                <EmptySearchState
+                  title={
+                    appliedFilters.searchText || getActiveFilterCount() > 0
+                      ? "No change requests found matching your filters"
+                      : "No change requests found"
+                  }
+                />
               </div>
             ) : viewMode === "grid" ? (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">

@@ -14,6 +14,7 @@ import { AppDispatch, RootState } from "lib/redux/store"
 import { clearPaymentsStatus, getPaymentsList } from "lib/redux/customersDashboardSlice"
 import Image from "next/image"
 import { ButtonModule } from "components/ui/Button/Button"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 // Payment status enum matching API
 enum PaymentStatus {
@@ -1004,26 +1005,18 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
         >
-          <motion.p
-            className="text-base font-bold text-[#202B3C]"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            {searchText || filters.status || filters.channel || filters.collectorType
-              ? "No matching payments found"
-              : "No payments available"}
-          </motion.p>
-          <motion.p
-            className="text-sm text-gray-600"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-          >
-            {searchText || filters.status || filters.channel || filters.collectorType
-              ? "Try adjusting your search or filters"
-              : "Payments will appear here once transactions are processed"}
-          </motion.p>
+          <EmptySearchState
+            title={
+              searchText || filters.status || filters.channel || filters.collectorType
+                ? "No matching payments found"
+                : "No payments available"
+            }
+            description={
+              searchText || filters.status || filters.channel || filters.collectorType
+                ? "Try adjusting your search or filters"
+                : "Payments will appear here once transactions are processed"
+            }
+          />
         </motion.div>
       ) : (
         <>

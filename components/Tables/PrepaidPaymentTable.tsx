@@ -29,6 +29,7 @@ import { API_ENDPOINTS, buildApiUrl } from "lib/config/api"
 import { api } from "lib/redux/authSlice"
 import VendTokenModal from "components/ui/Modal/vend-token-modal"
 import CollectPaymentReceiptModal from "components/ui/Modal/collect-payment-receipt-modal"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface ActionDropdownProps {
   payment: PrepaidPayment
@@ -1032,24 +1033,14 @@ const AllPrepaidPaymentsTable: React.FC<AllPrepaidPaymentsTableProps> = ({
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
         >
-          <motion.p
-            className="text-base font-bold text-[#202B3C]"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            {searchText ? "No matching payments found" : "No payments available"}
-          </motion.p>
-          <motion.p
-            className="text-sm text-gray-600"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-          >
-            {searchText
-              ? "Try adjusting your search term"
-              : "Payments will appear here once transactions are processed"}
-          </motion.p>
+          <EmptySearchState
+            title={searchText ? "No matching payments found" : "No payments available"}
+            description={
+              searchText
+                ? "Try adjusting your search term"
+                : "Payments will appear here once transactions are processed"
+            }
+          />
         </motion.div>
       ) : (
         <>
@@ -1409,7 +1400,7 @@ const AllPrepaidPaymentsTable: React.FC<AllPrepaidPaymentsTableProps> = ({
                 paymentTypeName: selectedPayment.paymentTypeName,
                 paidAtUtc: selectedPayment.paidAtUtc,
                 externalReference: selectedPayment.externalReference ?? undefined,
-              }}
+              }
             />
           )
         })()}
@@ -1461,7 +1452,7 @@ const AllPrepaidPaymentsTable: React.FC<AllPrepaidPaymentsTableProps> = ({
                   },
                 }
               : undefined,
-          }}
+          }
         />
       )}
     </div>

@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
 import SearchInput from "components/Search/SearchInput"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 // Types
 interface Location {
@@ -588,14 +589,7 @@ const LocationsTab: React.FC = () => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
         >
-          <motion.p
-            className="text-base font-bold text-[#202B3C]"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            {searchText ? "No matching locations found" : "No locations available"}
-          </motion.p>
+          <EmptySearchState title={searchText ? "No matching locations found" : "No locations available"} />
         </motion.div>
       ) : (
         <>

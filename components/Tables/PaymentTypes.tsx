@@ -16,6 +16,7 @@ import {
 import { SearchModule } from "components/ui/Search/search-module"
 import { ButtonModule } from "components/ui/Button/Button"
 import DeleteModal from "components/ui/Modal/delete-modal"
+import EmptySearchState from "components/ui/EmptySearchState"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { deletePaymentType, fetchPaymentTypes, PaymentType } from "lib/redux/paymentTypeSlice"
 
@@ -540,11 +541,12 @@ const PaymentTypes: React.FC = () => {
           </div>
         ) : filteredPaymentTypes.length === 0 ? (
           <div className="flex flex-col items-center rounded-lg bg-gray-50 py-12 text-center">
-            <MdOutlinePeople className="mx-auto mb-4 size-12 text-gray-300" />
-            <h3 className="mb-2 text-lg font-medium text-gray-900">No payment types found</h3>
-            <p className="mb-6 text-gray-600">
-              {searchText ? "Try adjusting your search or filters" : "Create your first payment type to get started"}
-            </p>
+            <EmptySearchState
+              title="No payment types found"
+              description={
+                searchText ? "Try adjusting your search or filters" : "Create your first payment type to get started"
+              }
+            />
             <ButtonModule variant="primary" onClick={handleCreateNew}>
               Create New Payment Type
             </ButtonModule>

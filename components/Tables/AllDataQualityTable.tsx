@@ -11,7 +11,6 @@ import {
   ChevronUp,
   Download,
   Eye,
-  FileText,
   Filter,
   Loader2,
   RefreshCw,
@@ -30,6 +29,7 @@ import { fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import ResolveDataQualityModal from "components/Modals/ResolveDataQualityModal"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 // Types
 interface SortOption {
@@ -1416,15 +1416,14 @@ const AllDataQualityTable: React.FC<AllDataQualityTableProps> = ({ customerId })
 
           {dataQuality.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16">
-              <div className="flex size-12 items-center justify-center rounded-full bg-gray-100">
-                <FileText className="size-6 text-gray-400" />
-              </div>
-              <h3 className="mt-4 text-base font-medium text-gray-900">No issues found</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                {searchText || getActiveFilterCount() > 0
-                  ? "Try adjusting your search or filters"
-                  : "No data quality issues detected"}
-              </p>
+              <EmptySearchState
+                title="No issues found"
+                description={
+                  searchText || getActiveFilterCount() > 0
+                    ? "Try adjusting your search or filters"
+                    : "No data quality issues detected"
+                }
+              />
             </div>
           ) : (
             <>

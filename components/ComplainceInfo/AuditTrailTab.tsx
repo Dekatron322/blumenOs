@@ -25,6 +25,7 @@ import { fetchAgentById } from "lib/redux/agentSlice"
 import { fetchEmployeeById } from "lib/redux/employeeSlice"
 import { fetchVendorById } from "lib/redux/vendorSlice"
 import { format } from "date-fns"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface ActorNames {
   userId?: string
@@ -744,11 +745,7 @@ const AuditTrailTab: React.FC = () => {
       >
         {entries.length === 0 ? (
           <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-gray-300 bg-gray-50 py-16">
-            <div className="rounded-full bg-gray-200 p-4">
-              <MdFilterList className="text-3xl text-gray-400" />
-            </div>
-            <p className="text-sm font-medium text-gray-600">No audit logs found</p>
-            <p className="text-xs text-gray-400">Try adjusting your filters or search criteria</p>
+            <EmptySearchState title="No audit logs found" description="Try adjusting your filters or search criteria" />
             {activeFiltersCount > 0 && (
               <button onClick={handleClearFilters} className="mt-2 text-sm font-medium text-[#004B23] hover:underline">
                 Clear all filters

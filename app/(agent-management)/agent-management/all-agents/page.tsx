@@ -15,6 +15,7 @@ import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { AgentsRequestParams, type Agent as BackendAgent, fetchAgents } from "lib/redux/agentSlice"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { formatCurrency } from "utils/formatCurrency"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 // Dropdown Popover Component
 const DropdownPopover = ({
@@ -1185,14 +1186,7 @@ const AllAgents: React.FC = () => {
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.4 }}
                   >
-                    <motion.p
-                      className="text-base font-bold text-[#202B3C]"
-                      initial={{ y: 10, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ duration: 0.4, delay: 0.2 }}
-                    >
-                      {searchText ? "No matching agents found" : "No agents available"}
-                    </motion.p>
+                    <EmptySearchState title={searchText ? "No matching agents found" : "No agents available"} />
                   </motion.div>
                 ) : (
                   <>

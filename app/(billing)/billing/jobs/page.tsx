@@ -24,6 +24,7 @@ import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { fetchAreaOffices as fetchFormDataAreaOffices } from "lib/redux/formDataSlice"
 import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
 import { VscEye } from "react-icons/vsc"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface BillingJob {
   id: number
@@ -1148,14 +1149,7 @@ const BillingJobs: React.FC = () => {
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.4 }}
                       >
-                        <motion.p
-                          className="text-base font-bold text-[#202B3C]"
-                          initial={{ y: 10, opacity: 0 }}
-                          animate={{ y: 0, opacity: 1 }}
-                          transition={{ duration: 0.4, delay: 0.2 }}
-                        >
-                          {searchText || getActiveFilterCount() > 0 ? "No matching jobs found" : "No jobs available"}
-                        </motion.p>
+                        <EmptySearchState title={searchText || getActiveFilterCount() > 0 ? "No matching jobs found" : "No jobs available"} />
                       </motion.div>
                     ) : (
                       <>

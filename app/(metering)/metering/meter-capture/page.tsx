@@ -9,6 +9,7 @@ import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { SearchModule } from "components/ui/Search/search-module"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
@@ -1238,11 +1239,7 @@ const MeterCapture: React.FC = () => {
                       {meterCaptures.length === 0 ? (
                         <tr>
                           <td colSpan={13} className="border-b p-8 text-center">
-                            <div className="text-gray-500">
-                              <FileIcon className="mx-auto mb-2 size-12 text-gray-300" />
-                              <p>No meter captures found</p>
-                              <p className="text-sm">Try adjusting your filters</p>
-                            </div>
+                            <EmptySearchState title="No meter captures found" description="Try adjusting your filters" />
                           </td>
                         </tr>
                       ) : (

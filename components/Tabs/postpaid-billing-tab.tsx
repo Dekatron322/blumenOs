@@ -24,6 +24,7 @@ import {
 } from "lib/redux/postpaidSlice"
 import PostpaidBillDetailsModal from "components/ui/Modal/postpaid-bill-modal"
 import { ButtonModule } from "components/ui/Button/Button"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 // Status configuration
 const getStatusConfig = (status: number) => {
@@ -463,11 +464,9 @@ const PostpaidBillingTab: React.FC<PostpaidBillingTabProps> = ({ customerId }) =
               <FileText className="size-6 text-gray-400" />
             </div>
             <h3 className="mt-4 text-base font-medium text-gray-900">No bills found</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              {searchText || selectedStatus || selectedCategory
+            <EmptySearchState title={searchText || selectedStatus || selectedCategory
                 ? "Try adjusting your filters"
-                : "No postpaid bills available for this customer"}
-            </p>
+                : "No postpaid bills available for this customer"} />
           </div>
         ) : (
           <div className="overflow-x-auto rounded-lg border border-gray-200">

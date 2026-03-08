@@ -26,6 +26,7 @@ import EmptyState from "public/empty-state"
 import PdfFile from "public/pdf-file"
 import Filtericon from "public/filter-icon"
 import CalendarIcon from "public/Icons/calendar-2"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 // Types
 type SortOrder = "asc" | "desc" | null
@@ -556,7 +557,7 @@ const AttendeesTable: React.FC<{ attendees: Attendee[] }> = ({ attendees }) => {
           className="flex h-60 flex-col items-center justify-center gap-2 rounded-lg bg-gray-50"
         >
           <EmptyState />
-          <p className="text-base font-bold text-gray-800">No attendees found.</p>
+          <EmptySearchState title="No attendees found." />
         </motion.div>
       ) : (
         <>

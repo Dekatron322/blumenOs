@@ -2,10 +2,11 @@
 
 import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { AlertCircle, RefreshCw, Wallet } from "lucide-react"
+import { AlertCircle, RefreshCw } from "lucide-react"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos } from "react-icons/md"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { clearVendorTopUpHistory, fetchVendorTopUpHistory } from "lib/redux/vendorSlice"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface VendorTopUpHistoryTabProps {
   vendorId: number
@@ -154,10 +155,11 @@ const VendorTopUpHistoryTab: React.FC<VendorTopUpHistoryTabProps> = ({ vendorId 
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col items-center justify-center py-12"
       >
-        <div className="flex flex-col items-center gap-4 text-center">
-          <Wallet className="size-12 text-gray-400" />
-          <span className="text-gray-600">No top-up history available</span>
-        </div>
+        <EmptySearchState
+          title="No top-up history available"
+          description="Top-up records will appear here once transactions are made."
+          className="py-8"
+        />
       </motion.div>
     )
   }

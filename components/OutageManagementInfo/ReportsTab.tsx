@@ -8,6 +8,7 @@ import { SearchModule } from "components/ui/Search/search-module"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { ButtonModule } from "components/ui/Button/Button"
 import { useAppSelector } from "lib/hooks/useRedux"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface SortOption {
   label: string
@@ -914,14 +915,7 @@ const ReportsTab: React.FC = () => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4 }}
             >
-              <motion.p
-                className="text-base font-bold text-[#202B3C]"
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.2 }}
-              >
-                {searchText || getActiveFilterCount() > 0 ? "No matching reports found" : "No reports available"}
-              </motion.p>
+              <EmptySearchState title={searchText || getActiveFilterCount() > 0 ? "No matching reports found" : "No reports available"} />
               {(searchText || getActiveFilterCount() > 0) && (
                 <button className="text-blue-600 hover:underline" onClick={resetFilters}>
                   Clear filters

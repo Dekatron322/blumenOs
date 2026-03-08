@@ -14,6 +14,7 @@ import { AppDispatch, RootState } from "lib/redux/store"
 import { clearSupportTicketsStatus, getSupportTickets } from "lib/redux/customersDashboardSlice"
 import Image from "next/image"
 import { ButtonModule } from "components/ui/Button/Button"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 // Support ticket status enum matching API
 enum TicketStatus {
@@ -891,26 +892,18 @@ const AllSupportTicket: React.FC<AllSupportTicketProps> = ({
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
         >
-          <motion.p
-            className="text-base font-bold text-[#202B3C]"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            {searchText || filters.status || filters.priority || filters.categoryId
-              ? "No matching support tickets found"
-              : "No support tickets available"}
-          </motion.p>
-          <motion.p
-            className="text-sm text-gray-600"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-          >
-            {searchText || filters.status || filters.priority || filters.categoryId
-              ? "Try adjusting your search or filters"
-              : "Support tickets will appear here once they are created"}
-          </motion.p>
+          <EmptySearchState
+            title={
+              searchText || filters.status || filters.priority || filters.categoryId
+                ? "No matching support tickets found"
+                : "No support tickets available"
+            }
+            description={
+              searchText || filters.status || filters.priority || filters.categoryId
+                ? "Try adjusting your search or filters"
+                : "Support tickets will appear here once they are created"
+            }
+          />
         </motion.div>
       ) : (
         <>

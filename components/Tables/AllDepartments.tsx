@@ -21,6 +21,7 @@ import {
 } from "react-icons/md"
 import { SearchModule } from "components/ui/Search/search-module"
 import { ButtonModule } from "components/ui/Button/Button"
+import EmptySearchState from "components/ui/EmptySearchState"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
   clearCurrentDepartment,
@@ -696,11 +697,14 @@ const DepartmentsTable: React.FC = () => {
             <CardsLoadingSkeleton />
           ) : sortedDepartments.length === 0 ? (
             <div className="rounded-lg border border-gray-200 bg-white py-12 text-center">
-              <MdOutlineBusiness className="mx-auto mb-4 size-12 text-gray-300" />
-              <h3 className="mb-2 text-lg font-medium text-gray-900">No departments found</h3>
-              <p className="mb-6 text-gray-600">
-                {searchText ? "Try adjusting your search or filters" : "Create your first department to get started"}
-              </p>
+              <EmptySearchState
+                title="No departments found"
+                description={
+                  searchText
+                    ? "Try adjusting your search or filters"
+                    : "Create your first department to get started"
+                }
+              />
               <div className="flex justify-center">
                 <ButtonModule variant="primary" onClick={() => router.push("/departments/add")}>
                   Create New Department

@@ -15,6 +15,7 @@ import { clearFeeders, fetchFeeders } from "lib/redux/feedersSlice"
 import { ArrowLeft, Filter, Loader2, PlusIcon, RefreshCw, X } from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { CreateBillingPeriodModal } from "components/ui/Modal/create-billing-period-modal"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 // Check if user has specific privilege
 const hasPrivilege = (user: any, key: string, action?: string): boolean => {
@@ -774,11 +775,9 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
                 <CyclesIcon />
               </div>
               <h3 className="mt-4 text-base font-medium text-gray-900">No Billing Cycles Found</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                {getActiveFilterCount() > 0 || searchText.trim()
+              <EmptySearchState title={getActiveFilterCount() > 0 || searchText.trim()
                   ? "Try adjusting your search criteria or filters"
-                  : "No billing cycles available for the selected period"}
-              </p>
+                  : "No billing cycles available for the selected period"} />
             </div>
           )}
 

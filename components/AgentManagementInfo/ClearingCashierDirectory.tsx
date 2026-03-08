@@ -17,6 +17,7 @@ import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { AgentsRequestParams, type Agent as BackendAgent, fetchAgents } from "lib/redux/agentSlice"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { formatCurrency } from "utils/formatCurrency"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 // ==================== Status Badge Component ====================
 const StatusBadge = ({ status, canCollectCash }: { status: string; canCollectCash: boolean }) => {
@@ -700,13 +701,8 @@ const ClearingCashierDirectory: React.FC = () => {
                 className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
               >
                 <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
                 <span className="hidden sm:inline">Refresh</span>
               </button>
             </div>
@@ -756,15 +752,9 @@ const ClearingCashierDirectory: React.FC = () => {
           <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
             {agents.length === 0 ? (
               <div className="flex h-72 flex-col items-center justify-center px-4">
-                <div className="rounded-full bg-gray-100 p-3">
-                  <Info className="size-6 text-gray-400" />
-                </div>
-                <p className="mt-3 text-base font-medium text-gray-900">No clearing cashiers found</p>
-                <p className="mt-1 text-xs text-gray-600">
-                  {searchText || getActiveFilterCount() > 0
+                <EmptySearchState title="No clearing cashiers found" description={searchText || getActiveFilterCount() > 0
                     ? "Try adjusting your search or filters"
-                    : "Clearing cashiers will appear here"}
-                </p>
+                    : "Clearing cashiers will appear here"} />
                 {(searchText || getActiveFilterCount() > 0) && (
                   <button
                     onClick={resetFilters}

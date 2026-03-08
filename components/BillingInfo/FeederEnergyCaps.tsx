@@ -15,6 +15,7 @@ import { clearFeeders, fetchFeeders } from "lib/redux/feedersSlice"
 import { clearCompanies, fetchCompanies } from "lib/redux/companySlice"
 import { ArrowLeft, ChevronDown, ChevronUp, Filter, Loader2, RefreshCw, SortAsc, SortDesc, X } from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface SortOption {
   label: string
@@ -908,11 +909,9 @@ const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps, onV
                 <CycleIcon />
               </div>
               <h3 className="mt-4 text-base font-medium text-gray-900">No Energy Caps Found</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                {getActiveFilterCount() > 0 || searchText.trim()
+              <EmptySearchState title={getActiveFilterCount() > 0 || searchText.trim()
                   ? "Try adjusting your search criteria or filters"
-                  : "No energy caps available"}
-              </p>
+                  : "No energy caps available"} />
             </div>
           )}
 

@@ -21,6 +21,7 @@ import Image from "next/image"
 import { formatCurrency } from "utils/formatCurrency"
 import TransactionReceiptModal from "components/ui/Modal/transaction-receipt-modal"
 import RetryReceiptModal from "components/MeteringInfo/RetryReceiptModal"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface ActionDropdownProps {
   transaction: FailedPayment
@@ -880,16 +881,13 @@ const FailedTransactionTable: React.FC<FailedTransactionTableProps> = ({ pageSiz
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <motion.p
-                    className="text-base font-bold text-[#202B3C]"
-                    initial={{ y: 10, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ duration: 0.4, delay: 0.2 }}
-                  >
-                    {localFilters.paymentReference || localFilters.meterNumber
-                      ? "No matching failed payments found"
-                      : "No failed payments available"}
-                  </motion.p>
+                  <EmptySearchState
+                    title={
+                      localFilters.paymentReference || localFilters.meterNumber
+                        ? "No matching failed payments found"
+                        : "No failed payments available"
+                    }
+                  />
                 </motion.div>
               ) : (
                 <>

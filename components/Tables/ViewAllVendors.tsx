@@ -7,7 +7,6 @@ import {
   ChevronDown,
   ChevronUp,
   Filter,
-  Info,
   MapPin,
   Phone,
   Search,
@@ -26,6 +25,7 @@ import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { fetchVendors, setPagination, VendorsRequestParams } from "lib/redux/vendorSlice"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import Image from "next/image"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface SortOption {
   label: string
@@ -950,15 +950,14 @@ const AllVendors: React.FC = () => {
           <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
             {vendors.length === 0 ? (
               <div className="flex h-72 flex-col items-center justify-center px-4">
-                <div className="rounded-full bg-gray-100 p-3">
-                  <Info className="size-6 text-gray-400" />
-                </div>
-                <p className="mt-3 text-base font-medium text-gray-900">No vendors found</p>
-                <p className="mt-1 text-xs text-gray-600">
-                  {searchText || getActiveFilterCount() > 0
-                    ? "Try adjusting your search or filters"
-                    : "Vendors will appear here"}
-                </p>
+                <EmptySearchState
+                  title="No vendors found"
+                  description={
+                    searchText || getActiveFilterCount() > 0
+                      ? "Try adjusting your search or filters"
+                      : "Vendors will appear here"
+                  }
+                />
                 {(searchText || getActiveFilterCount() > 0) && (
                   <button
                     onClick={resetFilters}
@@ -979,7 +978,7 @@ const AllVendors: React.FC = () => {
                             onClick={() => {
                               const option = sortOptions.find((o) => o.value === "name")
                               if (option) handleSortChange(option)
-                            }}
+                            }
                             className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
                           >
                             Vendor

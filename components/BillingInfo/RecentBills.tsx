@@ -14,6 +14,7 @@ import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { clearFeeders, fetchFeeders } from "lib/redux/feedersSlice"
 import { ArrowLeft, ChevronDown, ChevronUp, Filter, Loader2, RefreshCw, SortAsc, SortDesc, X } from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import EmptySearchState from "components/ui/EmptySearchState"
 import {
   getCustomerCategoryColors,
   getCustomerCategoryLabel,
@@ -936,11 +937,9 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
                 <BillsIcon />
               </div>
               <h3 className="mt-4 text-base font-medium text-gray-900">No Bills Found</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                {getActiveFilterCount() > 0 || searchText.trim()
+              <EmptySearchState title={getActiveFilterCount() > 0 || searchText.trim()
                   ? "Try adjusting your search criteria or filters"
-                  : "No bills available"}
-              </p>
+                  : "No bills available"} />
             </div>
           )}
 

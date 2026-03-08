@@ -31,6 +31,7 @@ import { fetchServiceStations } from "lib/redux/serviceStationsSlice"
 import { fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { ButtonModule } from "components/ui/Button/Button"
+import EmptySearchState from "components/ui/EmptySearchState"
 import Image from "next/image"
 import { displayValue } from "utils/helpers"
 
@@ -820,16 +821,15 @@ const AllCustomers = () => {
   if (customers.length === 0 && !loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <div className="flex flex-col items-center gap-4 text-center">
-          <div className="flex size-12 items-center justify-center rounded-full bg-gray-100">
-            <User className="size-6 text-gray-400" />
-          </div>
-          <div>
-            <p className="font-medium text-gray-900">No customers found</p>
-            <p className="mt-1 text-sm text-gray-500">
-              {filters.search ? "Try adjusting your search criteria" : "No customers available"}
-            </p>
-          </div>
+        <div className="flex flex-col items-center gap-2 text-center">
+          <EmptySearchState
+            title={filters.search ? "No customers found" : "No customers available"}
+            description={
+              filters.search
+                ? "Try adjusting your search criteria"
+                : "Start by searching with customer name, account number, phone number, or email."
+            }
+          />
           {filters.search && (
             <ButtonModule variant="outline" size="sm" onClick={resetFilters}>
               Clear filters

@@ -11,6 +11,7 @@ import ExportScheduleRunARModal from "components/ui/Modal/ExportScheduleRunARMod
 import DownloadScheduleRunPDFModal from "components/ui/Modal/DownloadScheduleRunPDFModal"
 import { AlertCircle, CheckCircle, Clock, Download, FileText, Loader2, RefreshCw, User, XCircle } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface BillingScheduleRunsTabProps {
   scheduleId: string | null
@@ -162,7 +163,7 @@ const BillingScheduleRunsTab: React.FC<BillingScheduleRunsTabProps> = ({ schedul
             <FileText className="size-6 text-gray-400" />
           </div>
           <div>
-            <p className="font-medium text-gray-900">No schedule runs found</p>
+            <EmptySearchState title="No schedule runs found" />
             <p className="mt-1 text-sm text-gray-500">
               No billing schedule runs have been created for this schedule yet.
             </p>

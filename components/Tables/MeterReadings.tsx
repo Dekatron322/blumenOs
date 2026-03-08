@@ -18,6 +18,7 @@ import { clearDistributionSubstations, fetchDistributionSubstations } from "lib/
 import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { VscEye } from "react-icons/vsc"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface ActionDropdownProps {
   reading: MeterReading
@@ -1084,14 +1085,7 @@ const MeterReadings: React.FC = () => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4 }}
             >
-              <motion.p
-                className="text-base font-bold text-[#202B3C]"
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.2 }}
-              >
-                {searchText ? "No matching readings found" : "No meter readings available"}
-              </motion.p>
+              <EmptySearchState title={searchText ? "No matching readings found" : "No meter readings available"} />
             </motion.div>
           ) : (
             <>

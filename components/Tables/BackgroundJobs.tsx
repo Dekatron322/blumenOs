@@ -22,6 +22,7 @@ import {
   triggerJob,
 } from "lib/redux/backgroundJobsSlice"
 import type { BackgroundJob } from "lib/redux/backgroundJobsSlice"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface ActionDropdownProps {
   job: BackgroundJob
@@ -343,14 +344,7 @@ const BackgroundJobs: React.FC = () => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
         >
-          <motion.p
-            className="text-base font-bold text-[#202B3C]"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            {searchTerm ? "No matching jobs found" : "No background jobs available"}
-          </motion.p>
+          <EmptySearchState title={searchTerm ? "No matching jobs found" : "No background jobs available"} />
         </motion.div>
       ) : (
         <>

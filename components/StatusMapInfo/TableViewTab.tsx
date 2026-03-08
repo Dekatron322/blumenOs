@@ -2,6 +2,7 @@
 
 import React, { useState } from "react"
 import { motion } from "framer-motion"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface TableRow {
   id: string
@@ -227,8 +228,12 @@ const TableViewTab = () => {
               ))
             ) : (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
-                  No data found
+                <td colSpan={7} className="px-4 py-2">
+                  <EmptySearchState
+                    title="No customers found"
+                    description="Try adjusting your search criteria."
+                    className="py-8"
+                  />
                 </td>
               </tr>
             )}

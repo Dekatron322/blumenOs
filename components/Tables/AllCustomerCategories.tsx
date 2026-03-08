@@ -21,6 +21,7 @@ import {
 } from "react-icons/md"
 import { SearchModule } from "components/ui/Search/search-module"
 import { ButtonModule } from "components/ui/Button/Button"
+import EmptySearchState from "components/ui/EmptySearchState"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
   clearCategories,
@@ -751,11 +752,12 @@ const AllCustomerCategoriesTable: React.FC = () => {
             <CardsLoadingSkeleton />
           ) : filteredCategories.length === 0 ? (
             <div className="rounded-lg border border-gray-200 bg-white py-12 text-center">
-              <MdOutlineCategory className="mx-auto mb-4 size-12 text-gray-300" />
-              <h3 className="mb-2 text-lg font-medium text-gray-900">No categories found</h3>
-              <p className="mb-6 text-gray-600">
-                {searchText ? "Try adjusting your search or filters" : "Create your first category to get started"}
-              </p>
+              <EmptySearchState
+                title="No categories found"
+                description={
+                  searchText ? "Try adjusting your search or filters" : "Create your first category to get started"
+                }
+              />
               <div className="flex justify-center">
                 <ButtonModule variant="primary" onClick={() => router.push("/customer-categories/add")}>
                   Create New Category

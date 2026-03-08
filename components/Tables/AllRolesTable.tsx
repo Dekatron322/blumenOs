@@ -18,6 +18,7 @@ import {
 } from "react-icons/md"
 import { SearchModule } from "components/ui/Search/search-module"
 import { ButtonModule } from "components/ui/Button/Button"
+import EmptySearchState from "components/ui/EmptySearchState"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { clearPrivileges, fetchPrivileges, fetchRoles, Privilege, Role } from "lib/redux/roleSlice"
 
@@ -770,11 +771,12 @@ const AllRoleTable: React.FC = () => {
             <CardsLoadingSkeleton />
           ) : filteredRoles.length === 0 ? (
             <div className="rounded-lg border border-gray-200 bg-white py-12 text-center">
-              <MdOutlinePeople className="mx-auto mb-4 size-12 text-gray-300" />
-              <h3 className="mb-2 text-lg font-medium text-gray-900">No roles found</h3>
-              <p className="mb-6 text-gray-600">
-                {searchText ? "Try adjusting your search or filters" : "Create your first role to get started"}
-              </p>
+              <EmptySearchState
+                title="No roles found"
+                description={
+                  searchText ? "Try adjusting your search or filters" : "Create your first role to get started"
+                }
+              />
               <ButtonModule variant="primary" onClick={() => router.push("/roles/create")}>
                 Create New Role
               </ButtonModule>

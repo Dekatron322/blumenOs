@@ -14,6 +14,7 @@ import { ExportCsvIcon } from "components/Icons/Icons"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import ViewPaymentChangeRequestModal from "components/ui/Modal/view-payment-change-request-modal"
 import { SearchModule } from "components/ui/Search/search-module"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 import { AppDispatch, RootState } from "lib/redux/store"
 import { ChangeRequestListItem, ChangeRequestsRequestParams, fetchChangeRequests } from "lib/redux/paymentSlice"
@@ -1007,20 +1008,15 @@ const AllPaymentChangeRequests = () => {
           {/* Change Request Display Area */}
           <div className="w-full">
             {changeRequests.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 sm:py-12">
-                <div className="text-center">
-                  <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-gray-100 sm:size-16">
-                    <VscEye className="size-5 text-gray-400 sm:size-6" />
-                  </div>
-                  <h3 className="mt-3 text-base font-medium text-gray-900 sm:mt-4 sm:text-lg">
-                    No change requests found
-                  </h3>
-                  <p className="mt-1 text-xs text-gray-500 sm:mt-2 sm:text-sm">
-                    {getActiveFilterCount() > 0 || searchText.trim()
+              <div className="flex items-center justify-center py-8 sm:py-12">
+                <EmptySearchState
+                  title="No change requests found"
+                  description={
+                    getActiveFilterCount() > 0 || searchText.trim()
                       ? "Try adjusting your search criteria or filters"
-                      : "No change requests available"}
-                  </p>
-                </div>
+                      : "No change requests available"
+                  }
+                />
               </div>
             ) : viewMode === "grid" ? (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-3">

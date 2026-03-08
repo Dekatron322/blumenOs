@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react"
 import { PaymentDisputeSource, PaymentDisputeStatus, usePaymentDispute } from "lib/hooks/usePaymentDispute"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface PaymentDisputeListProps {
   initialParams?: {
@@ -253,7 +254,7 @@ export const PaymentDisputeList: React.FC<PaymentDisputeListProps> = ({
       {/* Empty State */}
       {disputes.length === 0 && !loading && (
         <div className="py-8 text-center">
-          <p className="text-gray-500">No payment disputes found</p>
+          <EmptySearchState title="No payment disputes found" />
         </div>
       )}
     </div>

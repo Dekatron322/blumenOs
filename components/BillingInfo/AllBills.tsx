@@ -16,6 +16,7 @@ import { ArrowLeft, ChevronDown, ChevronUp, Filter, Loader2, RefreshCw, SortAsc,
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { VscEye } from "react-icons/vsc"
 import PostpaidBillDetailsModal from "components/ui/Modal/postpaid-bill-modal"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 export enum BillStatus {
   Draft = 0,
@@ -1246,14 +1247,7 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4 }}
             >
-              <motion.p
-                className="text-base font-bold text-[#202B3C]"
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.2 }}
-              >
-                {searchText ? "No matching bills found" : "No bills available"}
-              </motion.p>
+              <EmptySearchState title={searchText ? "No matching bills found" : "No bills available"} />
             </motion.div>
           ) : (
             <>
