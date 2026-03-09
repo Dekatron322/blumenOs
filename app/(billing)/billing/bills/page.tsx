@@ -298,7 +298,7 @@ export default function MeteringDashboard() {
   const [selectedFeeder, setSelectedFeeder] = useState("")
   const [selectedDistributionSubstation, setSelectedDistributionSubstation] = useState("")
   const [selectedStatus, setSelectedStatus] = useState("")
-  const [isMd, setIsMd] = useState(false)
+  const [isMd, setIsMd] = useState<boolean | null>(false)
   const [isLoading, setIsLoading] = useState(false)
   const [meterData, setMeterData] = useState(generateMeterData())
 
@@ -412,7 +412,7 @@ export default function MeteringDashboard() {
         distributionSubstationId: parseInt(selectedDistributionSubstation),
       }),
       ...(selectedStatus && { billStatus: parseInt(selectedStatus) }),
-      isMd: isMd,
+      ...(isMd !== null && { isMd: isMd }),
     }
 
     try {
@@ -437,7 +437,7 @@ export default function MeteringDashboard() {
     setSelectedAreaOffice("")
     setSelectedFeeder("")
     setSelectedDistributionSubstation("")
-    setIsMd(false)
+    setIsMd(null)
   }
 
   const handleRefreshData = () => {
@@ -632,32 +632,36 @@ export default function MeteringDashboard() {
 
                 {/* Bill Status - Optional */}
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700">Bill Status</label>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Status Code</label>
                   <FormSelectModule
-                    name="billStatus"
+                    name="statusCode"
                     value={selectedStatus}
                     onChange={(e) => setSelectedStatus(e.target.value)}
                     options={[
-                      { value: "", label: "All Statuses" },
-                      { value: BillStatus.Draft.toString(), label: "Draft" },
-                      { value: BillStatus.Finalized.toString(), label: "Finalized" },
-                      { value: BillStatus.Refunded.toString(), label: "Refunded" },
+                      { value: "all", label: "All" },
+                      { value: "02", label: "02" },
+                      { value: "04", label: "04" },
+                      { value: "07", label: "07" },
                     ]}
                   />
                 </div>
 
-                {/* Is MD - Optional */}
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="isMd"
-                    checked={isMd}
-                    onChange={(e) => setIsMd(e.target.checked)}
-                    className="size-4 rounded border-gray-300 text-[#004B23] focus:ring-[#004B23]"
+                {/* MD Customers - Optional */}
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">MD Customers</label>
+                  <FormSelectModule
+                    name="mdCustomers"
+                    value={isMd ? "md" : "all"}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      setIsMd(value === "md" ? true : null)
+                    }}
+                    options={[
+                      { value: "all", label: "All Customers" },
+                      { value: "md", label: "MD Only" },
+                      // { value: "non-md", label: "Non-MD Only" },
+                    ]}
                   />
-                  <label htmlFor="isMd" className="ml-2 block text-sm text-gray-700">
-                    MD Customers Only
-                  </label>
                 </div>
 
                 {/* Error Message */}
