@@ -441,7 +441,7 @@ const TransformersTab: React.FC = () => {
   return (
     <motion.div className="relative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
       <motion.div
-        className="items-center justify-between border-b py-2 md:flex md:py-4"
+        className="space-y-4 border-b py-2 md:py-4"
         initial={{ y: -10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.3 }}
@@ -450,13 +450,18 @@ const TransformersTab: React.FC = () => {
           <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Transformer Inventory</p>
           <p className="text-sm text-gray-600">Manage and monitor transformer assets across the network</p>
         </div>
-        <div className="flex gap-4">
+        <div className="w-full">
           <SearchModule
+            prominent
+            prominentTitle="Search Transformers"
+            prominentDescription="Find transformers quickly by name, location, capacity, or operational status."
             value={searchText}
             onChange={handleSearch}
             onCancel={handleCancelSearch}
+            onSearch={() => setCurrentPage(1)}
             placeholder="Search transformers..."
-            className="w-[380px]"
+            height="h-14"
+            className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
             bgClassName="bg-white"
           />
         </div>

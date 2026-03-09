@@ -219,7 +219,7 @@ const SubstationsTab: React.FC = () => {
   const [searchInput, setSearchInput] = useState("")
   const [searchText, setSearchText] = useState("")
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [isSortExpanded, setIsSortExpanded] = useState(true)
 
   // Local filter state (not applied yet)
@@ -679,40 +679,31 @@ const SubstationsTab: React.FC = () => {
           }
         >
           <motion.div
-            className="items-center justify-between border-b py-2 md:flex md:py-4"
+            className="space-y-4 border-b py-2 md:py-4"
             initial={{ y: -10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="mb-3 flex items-center gap-3 md:mb-0">
-              {/* Filter Button for ALL screens up to 2xl */}
-              <button
-                onClick={() => setShowMobileFilters(true)}
-                className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
-              >
-                <Filter className="size-4" />
-                Filters
-                {getActiveFilterCount() > 0 && (
-                  <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
-                    {getActiveFilterCount()}
-                  </span>
-                )}
-              </button>
-              <div>
-                <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Injection Substations</p>
-                <p className="text-sm text-gray-600">Manage and monitor injection substations operations</p>
+            <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+              <div className="flex items-center gap-3">
+                {/* Filter Button for ALL screens up to 2xl */}
+                <button
+                  onClick={() => setShowMobileFilters(true)}
+                  className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
+                >
+                  <Filter className="size-4" />
+                  Filters
+                  {getActiveFilterCount() > 0 && (
+                    <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
+                      {getActiveFilterCount()}
+                    </span>
+                  )}
+                </button>
+                <div>
+                  <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Injection Substations</p>
+                  <p className="text-sm text-gray-600">Manage and monitor injection substations operations</p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <SearchModule
-                value={searchInput}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                onCancel={handleCancelSearch}
-                onSearch={handleManualSearch}
-                placeholder="Search injection substations..."
-                className="w-full max-w-[300px]"
-                bgClassName="bg-white"
-              />
 
               {/* Hide/Show Filters button - Desktop only (2xl and above) */}
               <button
@@ -723,6 +714,22 @@ const SubstationsTab: React.FC = () => {
                 {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
                 {showDesktopFilters ? "Hide filters" : "Show filters"}
               </button>
+            </div>
+
+            <div className="w-full">
+              <SearchModule
+                prominent
+                prominentTitle="Search Injection Substations"
+                prominentDescription="Find injection substations quickly by code, area office, company, or status."
+                value={searchInput}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                onCancel={handleCancelSearch}
+                onSearch={handleManualSearch}
+                placeholder="Search injection substations..."
+                height="h-14"
+                className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+                bgClassName="bg-white"
+              />
             </div>
           </motion.div>
 

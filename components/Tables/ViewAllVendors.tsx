@@ -818,87 +818,85 @@ const AllVendors: React.FC = () => {
     <div className="w-full space-y-5">
       {/* Header Section */}
       <div className="rounded-xl border border-gray-200 bg-white p-4">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">All Vendors</h2>
             <p className="mt-1 text-xs text-gray-600">Manage and monitor all vendors</p>
           </div>
 
-          <div className="flex w-full flex-wrap items-center gap-2">
-            <div className="w-full">
-              <SearchModule
-                prominent
-                prominentTitle="Search Vendors"
-                prominentDescription="Find vendors quickly by name, location, contact, or status."
-                value={searchInput}
-                onChange={(e) => handleSearchChange(e)}
-                onCancel={handleCancelSearch}
-                onSearch={handleManualSearch}
-                placeholder="Search vendors..."
-                height="h-14"
-                className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
-                bgClassName="bg-white"
-              />
-            </div>
+          <div className="w-full">
+            <SearchModule
+              prominent
+              prominentTitle="Search Vendors"
+              prominentDescription="Find vendors quickly by name, location, contact, or status."
+              value={searchInput}
+              onChange={(e) => handleSearchChange(e)}
+              onCancel={handleCancelSearch}
+              onSearch={handleManualSearch}
+              placeholder="Search vendors..."
+              height="h-14"
+              className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+              bgClassName="bg-white"
+            />
+          </div>
 
-            {/* Filter Buttons */}
-            <div className="flex items-center gap-1.5">
-              {/* Mobile Filter Button */}
-              <button
-                onClick={() => setShowMobileFilters(true)}
-                className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 lg:hidden"
-              >
-                <Filter className="size-3.5" />
-                <span>Filters</span>
-                {getActiveFilterCount() > 0 && (
-                  <span className="flex size-4 items-center justify-center rounded-full bg-blue-500 text-[10px] font-semibold text-white">
-                    {getActiveFilterCount()}
-                  </span>
-                )}
-              </button>
+          {/* Filter Buttons */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            {/* Mobile Filter Button */}
+            <button
+              onClick={() => setShowMobileFilters(true)}
+              className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 lg:hidden"
+            >
+              <Filter className="size-3.5" />
+              <span>Filters</span>
+              {getActiveFilterCount() > 0 && (
+                <span className="flex size-4 items-center justify-center rounded-full bg-blue-500 text-[10px] font-semibold text-white">
+                  {getActiveFilterCount()}
+                </span>
+              )}
+            </button>
 
-              {/* Desktop Filter Toggle */}
-              <button
-                onClick={() => setShowDesktopFilters(!showDesktopFilters)}
-                className="hidden items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 lg:flex"
-              >
-                {showDesktopFilters ? <X className="size-3.5" /> : <Filter className="size-3.5" />}
-                <span>{showDesktopFilters ? "Hide Filters" : "Show Filters"}</span>
-                {getActiveFilterCount() > 0 && (
-                  <span className="ml-0.5 flex size-4 items-center justify-center rounded-full bg-blue-500 text-[10px] font-semibold text-white">
-                    {getActiveFilterCount()}
-                  </span>
-                )}
-              </button>
+            {/* Desktop Filter Toggle */}
+            <button
+              onClick={() => setShowDesktopFilters(!showDesktopFilters)}
+              className="hidden items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 lg:flex"
+            >
+              {showDesktopFilters ? <X className="size-3.5" /> : <Filter className="size-3.5" />}
+              <span>{showDesktopFilters ? "Hide Filters" : "Show Filters"}</span>
+              {getActiveFilterCount() > 0 && (
+                <span className="ml-0.5 flex size-4 items-center justify-center rounded-full bg-blue-500 text-[10px] font-semibold text-white">
+                  {getActiveFilterCount()}
+                </span>
+              )}
+            </button>
 
-              {/* Export CSV Button */}
-              <button
-                onClick={exportToCSV}
-                disabled={!vendors || vendors.length === 0}
-                className="flex items-center gap-1.5 rounded-lg border border-blue-300 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <ExportCsvIcon color="#2563EB" size={16} />
-                <span className="hidden sm:inline">Export</span>
-              </button>
+            {/* Export CSV Button */}
+            <button
+              onClick={exportToCSV}
+              disabled={!vendors || vendors.length === 0}
+              className="flex items-center gap-1.5 rounded-lg border border-blue-300 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <ExportCsvIcon color="#2563EB" size={16} />
+              <span className="hidden sm:inline">Export</span>
+            </button>
 
-              {/* Refresh Button */}
-              <button
-                onClick={() => {
-                  dispatch(fetchVendors({ pageNumber: currentPage, pageSize, ...appliedFilters }))
-                }}
-                className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
-              >
-                <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
-                <span className="hidden sm:inline">Refresh</span>
-              </button>
-            </div>
+            {/* Refresh Button */}
+            <button
+              onClick={() => {
+                dispatch(fetchVendors({ pageNumber: currentPage, pageSize, ...appliedFilters }))
+              }}
+              className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
+            >
+              <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
           </div>
         </div>
 
