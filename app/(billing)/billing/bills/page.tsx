@@ -12,7 +12,7 @@ import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
 
 import { fetchAreaOffices, fetchDistributionSubstations, fetchFeeders } from "lib/redux/formDataSlice"
-import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
+import { fetchBillingPeriods, BillingPeriod } from "lib/redux/billingPeriodsSlice"
 import { clearDownloadARStatus, downloadAR, DownloadARRequestParams } from "lib/redux/postpaidSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 
@@ -297,7 +297,7 @@ export default function MeteringDashboard() {
   const [selectedAreaOffice, setSelectedAreaOffice] = useState("")
   const [selectedFeeder, setSelectedFeeder] = useState("")
   const [selectedDistributionSubstation, setSelectedDistributionSubstation] = useState("")
-  const [selectedStatus, setSelectedStatus] = useState("")
+  const [selectedStatus, setSelectedStatus] = useState("all")
   const [isMd, setIsMd] = useState<boolean | null>(false)
   const [isLoading, setIsLoading] = useState(false)
   const [meterData, setMeterData] = useState(generateMeterData())
@@ -350,6 +350,29 @@ export default function MeteringDashboard() {
       dispatch(fetchDistributionSubstations({ PageNumber: 1, PageSize: 100 }))
     }
   }, [isDownloadARModalOpen, dispatch])
+
+  // Set default billing period to most recent when data is loaded
+  useEffect(() => {
+    if (billingPeriods && billingPeriods.length > 0 && !selectedBillingPeriod) {
+      // Find the most recent billing period by year and month
+      const mostRecentPeriod = billingPeriods.reduce(
+        (mostRecent, current) => {
+          if (!mostRecent) return current
+
+          // Compare year first, then month
+          if (current.year > mostRecent.year) return current
+          if (current.year === mostRecent.year && current.month > mostRecent.month) return current
+
+          return mostRecent
+        },
+        null as BillingPeriod | null
+      )
+
+      if (mostRecentPeriod) {
+        setSelectedBillingPeriod(mostRecentPeriod.id.toString())
+      }
+    }
+  }, [billingPeriods, selectedBillingPeriod])
 
   // Search handlers for dropdowns - only update search term state
   const handleAreaOfficeSearchChange = (searchValue: string) => {
@@ -411,8 +434,8 @@ export default function MeteringDashboard() {
       ...(selectedDistributionSubstation && {
         distributionSubstationId: parseInt(selectedDistributionSubstation),
       }),
-      ...(selectedStatus && { billStatus: parseInt(selectedStatus) }),
-      ...(isMd !== null && { isMd: isMd }),
+      ...(selectedStatus && { statusCode: selectedStatus }),
+      ...(isMd === true && { isMd: isMd }),
     }
 
     try {
@@ -543,7 +566,6 @@ export default function MeteringDashboard() {
 
             <div className="p-4">
               <div className="space-y-4">
-                {/* Billing Period - Required */}
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-700">
                     Billing Period <span className="text-red-500">*</span>
