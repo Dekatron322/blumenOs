@@ -380,6 +380,7 @@ const mockTransformers: Transformer[] = [
 const TransformersTab: React.FC = () => {
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
+  const [searchInput, setSearchInput] = useState("")
   const [searchText, setSearchText] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedTransformer, setSelectedTransformer] = useState<Transformer | null>(null)
@@ -389,8 +390,38 @@ const TransformersTab: React.FC = () => {
   const isLoading = false
   const isError = false
   const transformers = mockTransformers
-  const totalRecords = transformers.length
+  const filteredTransformers = React.useMemo(() => {
+    const query = searchText.trim().toLowerCase()
+    if (!query) return transformers
+
+    return transformers.filter((transformer) =>
+      [
+        transformer.id,
+        transformer.name,
+        transformer.location,
+        transformer.capacity,
+        transformer.status,
+        transformer.lastMaintenance,
+        transformer.customers.toString(),
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(query)
+    )
+  }, [transformers, searchText])
+  const totalRecords = filteredTransformers.length
   const totalPages = Math.ceil(totalRecords / pageSize)
+  const safeTotalPages = Math.max(1, totalPages)
+  const paginatedTransformers = React.useMemo(() => {
+    const start = (currentPage - 1) * pageSize
+    return filteredTransformers.slice(start, start + pageSize)
+  }, [filteredTransformers, currentPage, pageSize])
+
+  useEffect(() => {
+    if (currentPage > safeTotalPages) {
+      setCurrentPage(safeTotalPages)
+    }
+  }, [currentPage, safeTotalPages])
 
   const getStatusStyle = (status: Transformer["status"]) => {
     switch (status) {
@@ -424,12 +455,17 @@ const TransformersTab: React.FC = () => {
   }
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchText(e.target.value)
+    setSearchInput(e.target.value)
+  }
+
+  const handleManualSearch = () => {
+    setSearchText(searchInput.trim())
     setCurrentPage(1)
   }
 
   const handleCancelSearch = () => {
     setSearchText("")
+    setSearchInput("")
     setCurrentPage(1)
   }
 
@@ -455,10 +491,10 @@ const TransformersTab: React.FC = () => {
             prominent
             prominentTitle="Search Transformers"
             prominentDescription="Find transformers quickly by name, location, capacity, or operational status."
-            value={searchText}
+            value={searchInput}
             onChange={handleSearch}
             onCancel={handleCancelSearch}
-            onSearch={() => setCurrentPage(1)}
+            onSearch={handleManualSearch}
             placeholder="Search transformers..."
             height="h-14"
             className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
@@ -467,7 +503,7 @@ const TransformersTab: React.FC = () => {
         </div>
       </motion.div>
 
-      {transformers.length === 0 ? (
+      {filteredTransformers.length === 0 ? (
         <motion.div
           className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
           initial={{ opacity: 0, scale: 0.95 }}
@@ -548,7 +584,7 @@ const TransformersTab: React.FC = () => {
               </thead>
               <tbody>
                 <AnimatePresence>
-                  {transformers.map((transformer, index) => (
+                  {paginatedTransformers.map((transformer, index) => (
                     <motion.tr
                       key={transformer.id}
                       initial={{ opacity: 0, y: 10 }}
@@ -600,7 +636,7 @@ const TransformersTab: React.FC = () => {
             transition={{ duration: 0.4, delay: 0.2 }}
           >
             <div className="text-sm text-gray-700">
-              Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalRecords)} of{" "}
+              Showing {totalRecords === 0 ? 0 : (currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalRecords)} of{" "}
               {totalRecords} entries
             </div>
             <div className="flex items-center gap-2">
@@ -667,12 +703,12 @@ const TransformersTab: React.FC = () => {
 
               <motion.button
                 onClick={() => paginate(currentPage + 1)}
-                disabled={currentPage === totalPages}
+                disabled={currentPage === safeTotalPages}
                 className={`flex items-center justify-center rounded-md p-2 ${
-                  currentPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
+                  currentPage === safeTotalPages ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
                 }`}
-                whileHover={{ scale: currentPage === totalPages ? 1 : 1.1 }}
-                whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
+                whileHover={{ scale: currentPage === safeTotalPages ? 1 : 1.1 }}
+                whileTap={{ scale: currentPage === safeTotalPages ? 1 : 0.95 }}
               >
                 <MdOutlineArrowForwardIos />
               </motion.button>

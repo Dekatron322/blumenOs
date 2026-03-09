@@ -422,8 +422,10 @@ const ServiceStationTab: React.FC = () => {
 
   // Apply all filters at once
   const applyFilters = () => {
+    const normalizedSearch = searchInput.trim()
+    setSearchText(normalizedSearch)
     setAppliedFilters({
-      searchText: searchText.trim(),
+      searchText: normalizedSearch,
       companyId: localFilters.companyId,
       areaOfficeId: localFilters.areaOfficeId,
       stationNameId: localFilters.stationNameId,
@@ -480,16 +482,22 @@ const ServiceStationTab: React.FC = () => {
 
   const handleManualSearch = () => {
     const trimmed = searchInput.trim()
-    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
-
-    if (shouldUpdate) {
-      setSearchText(trimmed)
-    }
+    setSearchText(trimmed)
+    setAppliedFilters((prev) => ({
+      ...prev,
+      searchText: trimmed,
+    }))
+    dispatch(setPagination({ page: 1, pageSize }))
   }
 
   const handleCancelSearch = () => {
     setSearchText("")
     setSearchInput("")
+    setAppliedFilters((prev) => ({
+      ...prev,
+      searchText: "",
+    }))
+    dispatch(setPagination({ page: 1, pageSize }))
   }
 
   const paginate = (pageNumber: number) => {
