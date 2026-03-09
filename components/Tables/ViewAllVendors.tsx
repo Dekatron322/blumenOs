@@ -134,7 +134,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ vendor, onViewDetails }) 
   return (
     <div className="relative" ref={dropdownRef}>
       <motion.button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleViewDetails}
         className="flex items-center gap-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
@@ -142,30 +142,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ vendor, onViewDetails }) 
       >
         <Search className="size-3" />
         <span className="hidden sm:inline">Details</span>
-        <RxDotsVertical className="size-3" />
       </motion.button>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            className="absolute right-0 top-full z-50 mt-1 w-48 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-            initial={{ opacity: 0, scale: 0.95, y: -10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -10 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
-          >
-            <div className="py-1">
-              <motion.button
-                className="block w-full px-4 py-2 text-left text-xs text-gray-700 hover:bg-gray-100"
-                onClick={handleViewDetails}
-                whileHover={{ backgroundColor: "#f3f4f6" }}
-              >
-                View Details
-              </motion.button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   )
 }
@@ -835,7 +812,7 @@ const AllVendors: React.FC = () => {
               onSearch={handleManualSearch}
               placeholder="Search vendors..."
               height="h-14"
-              className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+              className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
               bgClassName="bg-white"
             />
           </div>

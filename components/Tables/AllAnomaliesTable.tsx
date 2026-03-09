@@ -1471,12 +1471,11 @@ const AllAnomaliesTable: React.FC<AllAnomaliesTableProps> = ({
     <div className="space-y-5">
       {/* Header Section */}
       <div className="rounded-xl border border-gray-200 bg-white p-4">
+        <div className="mb-3">
+          <h2 className="text-lg font-semibold text-gray-900">Payment Anomalies</h2>
+          <p className="mt-1 text-xs text-gray-600">View and manage all payment anomalies</p>
+        </div>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">Payment Anomalies</h2>
-            <p className="mt-1 text-xs text-gray-600">View and manage all payment anomalies</p>
-          </div>
-
           <div className="flex w-full flex-wrap items-center gap-2">
             <div className="w-full">
               <SearchModule
@@ -1489,7 +1488,7 @@ const AllAnomaliesTable: React.FC<AllAnomaliesTableProps> = ({
                 onSearch={handleManualSearch}
                 placeholder="Search anomalies..."
                 height="h-14"
-                className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+                className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
                 bgClassName="bg-white"
               />
             </div>

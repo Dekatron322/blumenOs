@@ -479,7 +479,7 @@ const DebtManagementCustomers = ({
   const { customers: customerList, loading: customersLoadingList } = useAppSelector((state) => state.customers)
 
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
@@ -711,27 +711,6 @@ const DebtManagementCustomers = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {/* Search */}
-            <div className="relative min-w-[220px]">
-              <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                value={searchInput}
-                onChange={handleSearch}
-                onKeyDown={(e) => e.key === "Enter" && handleManualSearch()}
-                placeholder="Search customers..."
-                className="h-9 w-full rounded-lg border border-gray-300 bg-white px-8 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-              {searchInput && (
-                <button
-                  onClick={handleCancelSearch}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  <X className="size-3.5" />
-                </button>
-              )}
-            </div>
-
             {/* Filter Buttons */}
             <div className="flex items-center gap-1.5">
               {/* Mobile Filter Button */}
@@ -820,6 +799,27 @@ const DebtManagementCustomers = ({
             )}
           </div>
         )}
+      </div>
+
+      {/* Search Priority Section */}
+      <div className="rounded-xl border border-gray-200 bg-gradient-to-r from-green-50/60 to-white p-4 shadow-sm">
+        <div className="mb-3">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#004B23]">Primary action</p>
+          <h2 className="text-base font-semibold text-gray-900 sm:text-lg">Search Debt Management</h2>
+          <p className="text-xs text-gray-600 sm:text-sm">
+            Find customers quickly by name, account number, or customer ID.
+          </p>
+        </div>
+
+        <SearchModule
+          value={searchInput}
+          onChange={handleSearch}
+          onCancel={handleCancelSearch}
+          onSearch={handleManualSearch}
+          placeholder="Search by customer name, account number, or customer ID..."
+          height="h-14"
+          className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+        />
       </div>
 
       {/* Main Content with Table on Left, Filters on Right */}
@@ -1383,7 +1383,7 @@ const AllDebtEntriesTable = ({
   onViewDetails: (entry: DebtEntryData) => void
 }) => {
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
 
   // Local state for filters
   const [localFilters, setLocalFilters] = useState({

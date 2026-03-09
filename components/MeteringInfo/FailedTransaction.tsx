@@ -499,7 +499,7 @@ const FailedTransactionTable: React.FC<FailedTransactionTableProps> = ({ pageSiz
 
   // Filter states
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [localFilters, setLocalFilters] = useState({
     paymentReference: "",
     meterNumber: "",
@@ -812,31 +812,6 @@ const FailedTransactionTable: React.FC<FailedTransactionTableProps> = ({ pageSiz
                   </div>
 
                   <div className="flex items-center gap-2">
-                    {/* Mobile search icon button */}
-                    <button
-                      type="button"
-                      className="flex size-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm transition hover:bg-gray-50 sm:hidden md:size-9"
-                      onClick={() => {
-                        /* Handle mobile search toggle if needed */
-                      }}
-                      aria-label="Toggle search"
-                    >
-                      <Image src="/DashboardImages/Search.svg" width={16} height={16} alt="Search Icon" />
-                    </button>
-
-                    {/* Desktop/Tablet search input */}
-                    <div className="hidden sm:block">
-                      <SearchModule
-                        value={searchInput}
-                        onChange={(e) => setSearchInput(e.target.value)}
-                        onCancel={handleCancelSearch}
-                        onSearch={handleManualSearch}
-                        placeholder="Search by Payment Reference or Meter Number"
-                        className="w-full max-w-full sm:max-w-[320px]"
-                        bgClassName="bg-white"
-                      />
-                    </div>
-
                     {/* Active filters badge - Desktop only (2xl and above) */}
                     {getActiveFilterCount() > 0 && (
                       <div className="hidden items-center gap-2 2xl:flex">
@@ -858,18 +833,28 @@ const FailedTransactionTable: React.FC<FailedTransactionTableProps> = ({ pageSiz
                   </div>
                 </div>
 
-                {/* Mobile search input revealed when icon is tapped */}
-                <div className="mb-3 sm:hidden">
+                {/* Search Priority Section */}
+                <div className="mb-4 rounded-xl border border-gray-200 bg-gradient-to-r from-green-50/60 to-white p-4 shadow-sm">
+                  <div className="mb-3">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-[#004B23]">Primary action</p>
+                    <h2 className="text-base font-semibold text-gray-900 sm:text-lg">Search Failed Payments</h2>
+                    <p className="text-xs text-gray-600 sm:text-sm">
+                      Find records quickly by payment reference or meter number.
+                    </p>
+                  </div>
+
                   <SearchModule
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
                     onCancel={handleCancelSearch}
                     onSearch={handleManualSearch}
-                    placeholder="Search by Payment Reference or Meter Number"
-                    className="w-full"
-                    bgClassName="bg-white"
+                    placeholder="Type payment reference or meter number..."
+                    height="h-14"
+                    className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
                   />
                 </div>
+
+                {/* Mobile search input - removed as it's now in the priority section above */}
               </div>
 
               {loading && failedPayments.length === 0 ? (

@@ -14,6 +14,7 @@ import {
   setPagination,
 } from "lib/redux/cashRemittanceSlice"
 import { ButtonModule } from "components/ui/Button/Button"
+import { SearchModule } from "components/ui/Search/search-module"
 import CashRemittanceModal from "components/ui/Modal/cash-remittance-modal"
 import ReceiptUploadModal from "components/ui/Modal/receipt-upload-modal"
 import { HiChevronDown } from "react-icons/hi"
@@ -145,6 +146,7 @@ const LoadingSkeleton = () => {
 const CashRemittance = () => {
   const dispatch = useDispatch<AppDispatch>()
   const [searchText, setSearchText] = useState("")
+  const [searchInput, setSearchInput] = useState("")
   const [selectedRecord, setSelectedRecord] = useState<CashRemittanceRecord | null>(null)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [showSidebar, setShowSidebar] = useState(true)
@@ -166,8 +168,18 @@ const CashRemittance = () => {
   )
   const { agent } = useSelector((state: RootState) => state.auth)
 
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchInput(e.target.value)
+  }
+
+  const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    setSearchText(trimmed)
+  }
+
   const handleCancelSearch = () => {
     setSearchText("")
+    setSearchInput("")
   }
 
   // Fetch cash remittance records with date range
@@ -210,6 +222,11 @@ const CashRemittance = () => {
       fetchRecords()
     }
   }, [startDate, endDate, dispatch])
+
+  // Sync local search input
+  useEffect(() => {
+    setSearchInput(searchText)
+  }, [searchText])
 
   // Initialize with current month date range
   useEffect(() => {
@@ -767,26 +784,6 @@ const CashRemittance = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {/* Search */}
-            <div className="relative min-w-[220px]">
-              <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                placeholder="Search records..."
-                className="h-9 w-full rounded-lg border border-gray-300 bg-white px-8 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-              {searchText && (
-                <button
-                  onClick={handleCancelSearch}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  <X className="size-3.5" />
-                </button>
-              )}
-            </div>
-
             {/* Date Filter */}
             <DateFilter />
 
@@ -822,13 +819,39 @@ const CashRemittance = () => {
         </AnimatePresence>
       </div>
 
+      {/* Search Priority Section */}
+      <div className="rounded-xl border border-gray-200 bg-gradient-to-r from-green-50/60 to-white p-4 shadow-sm">
+        <div className="mb-3">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#004B23]">Primary action</p>
+          <h2 className="text-base font-semibold text-gray-900 sm:text-lg">Search Cash Remittance</h2>
+          <p className="text-xs text-gray-600 sm:text-sm">
+            Find records quickly by collection officer, bank name, teller number, or notes.
+          </p>
+        </div>
+
+        <SearchModule
+          value={searchInput}
+          onChange={handleSearch}
+          onCancel={handleCancelSearch}
+          onSearch={handleManualSearch}
+          placeholder="Search by collection officer, bank name, teller number, or notes..."
+          height="h-14"
+          className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+        />
+      </div>
+
       {/* Main Content with Table */}
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
         {records.length === 0 ? (
           <div className="flex h-72 flex-col items-center justify-center px-4">
-            <EmptySearchState title="No records found" description={searchText || (startDate && endDate)
-                ? "Try adjusting your search or filters"
-                : "Cash remittance records will appear here once recorded"} />
+            <EmptySearchState
+              title="No records found"
+              description={
+                searchText || (startDate && endDate)
+                  ? "Try adjusting your search or filters"
+                  : "Cash remittance records will appear here once recorded"
+              }
+            />
             {(searchText || (startDate && endDate)) && (
               <button
                 onClick={() => {

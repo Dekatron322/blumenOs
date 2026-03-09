@@ -15,7 +15,18 @@ import {
   setPagination,
 } from "lib/redux/feederEnergyCapSlice"
 import { ButtonModule } from "components/ui/Button/Button"
-import { ArrowLeft, ChevronDown, ChevronUp, Download, Filter, PlusCircle, SortAsc, SortDesc, X } from "lucide-react"
+import {
+  ArrowLeft,
+  ChevronDown,
+  ChevronUp,
+  Download,
+  Filter,
+  Loader2,
+  PlusCircle,
+  SortAsc,
+  SortDesc,
+  X,
+} from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { clearFeeders, fetchFeeders } from "lib/redux/feedersSlice"
@@ -404,62 +415,6 @@ const MobileFilterSidebar = ({
         </motion.div>
       )}
     </AnimatePresence>
-  )
-}
-
-const LoadingSkeleton = () => {
-  return (
-    <div className="flex-3 mt-5 flex flex-col rounded-md border bg-white p-5">
-      {/* Header Section Skeleton */}
-      <div className="items-center justify-between border-b py-2 md:flex md:py-4">
-        <div className="mb-3 md:mb-0">
-          <div className="mb-2 h-8 w-48 rounded bg-gray-200"></div>
-          <div className="h-4 w-64 rounded bg-gray-200"></div>
-        </div>
-        <div className="flex gap-4">
-          <div className="h-10 w-48 rounded bg-gray-200"></div>
-          <div className="h-10 w-24 rounded bg-gray-200"></div>
-        </div>
-      </div>
-
-      {/* Table Skeleton */}
-      <div className="w-full overflow-x-auto border-x bg-[#f9f9f9]">
-        <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
-          <thead>
-            <tr>
-              {[...Array(8)].map((_, i) => (
-                <th key={i} className="whitespace-nowrap border-b p-4">
-                  <div className="h-4 w-24 rounded bg-gray-200"></div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {[...Array(5)].map((_, rowIndex) => (
-              <tr key={rowIndex}>
-                {[...Array(8)].map((_, cellIndex) => (
-                  <td key={cellIndex} className="whitespace-nowrap border-b px-4 py-3">
-                    <div className="h-4 w-full rounded bg-gray-200"></div>
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination Section Skeleton */}
-      <div className="flex items-center justify-between border-t py-3">
-        <div className="h-6 w-48 rounded bg-gray-200"></div>
-        <div className="flex items-center gap-2">
-          <div className="size-8 rounded bg-gray-200"></div>
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="size-8 rounded bg-gray-200"></div>
-          ))}
-          <div className="size-8 rounded bg-gray-200"></div>
-        </div>
-      </div>
-    </div>
   )
 }
 
@@ -916,7 +871,17 @@ const FeederEnergyCaps: React.FC = () => {
     return items
   }
 
-  if (feederEnergyCapsLoading) return <LoadingSkeleton />
+  // Loading state
+  if (feederEnergyCapsLoading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="size-8 animate-spin text-blue-600" />
+          <p className="text-sm text-gray-500">Loading feeder energy caps...</p>
+        </div>
+      </div>
+    )
+  }
   if (feederEnergyCapsError)
     return <div className="p-4 text-red-500">Error loading feeder energy cap data: {feederEnergyCapsError}</div>
 
@@ -996,7 +961,7 @@ const FeederEnergyCaps: React.FC = () => {
                 onSearch={handleManualSearch}
                 placeholder="Search by period (e.g., 2024-01)..."
                 height="h-14"
-                className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+                className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
                 bgClassName="bg-white"
               />
             </div>

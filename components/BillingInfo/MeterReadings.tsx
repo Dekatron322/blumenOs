@@ -19,7 +19,7 @@ import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { clearFeeders, fetchFeeders } from "lib/redux/feedersSlice"
 import { clearDistributionSubstations, fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
 import { clearCustomers, fetchCustomers } from "lib/redux/customerSlice"
-import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
+import { ArrowLeft, ChevronDown, ChevronUp, Filter, Loader2, SortAsc, SortDesc, X } from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import Image from "next/image"
 import EmptySearchState from "components/ui/EmptySearchState"
@@ -34,116 +34,6 @@ interface MeterReadingsProps {
   onExport?: () => void
   onGenerateBills?: () => void
   onViewDetails?: (reading: MeterReading) => void
-}
-
-const LoadingSkeleton = () => {
-  return (
-    <div className="space-y-4">
-      {/* Header skeleton */}
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="h-6 w-40 rounded bg-gray-200">
-            <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
-              animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                },
-              }}
-            />
-          </div>
-          <div className="mt-1 size-48 rounded bg-gray-200">
-            <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
-              animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.2,
-                },
-              }}
-            />
-          </div>
-        </div>
-        <div className="h-8 w-20 rounded bg-gray-200">
-          <motion.div
-            className="size-full rounded bg-gray-300"
-            initial={{ opacity: 0.3 }}
-            animate={{
-              opacity: [0.3, 0.6, 0.3],
-              transition: {
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: 0.4,
-              },
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Table skeleton */}
-      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              {[...Array(8)].map((_, i) => (
-                <th key={i} className="px-4 py-3 text-left">
-                  <div className="h-3 w-16 rounded bg-gray-200">
-                    <motion.div
-                      className="size-full rounded bg-gray-300"
-                      initial={{ opacity: 0.3 }}
-                      animate={{
-                        opacity: [0.3, 0.6, 0.3],
-                        transition: {
-                          duration: 1.5,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                          delay: i * 0.1,
-                        },
-                      }}
-                    />
-                  </div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200 bg-white">
-            {[...Array(5)].map((_, rowIndex) => (
-              <tr key={rowIndex}>
-                {[...Array(8)].map((_, cellIndex) => (
-                  <td key={cellIndex} className="px-4 py-3">
-                    <div className="h-4 w-12 rounded bg-gray-200">
-                      <motion.div
-                        className="size-full rounded bg-gray-300"
-                        initial={{ opacity: 0.3 }}
-                        animate={{
-                          opacity: [0.3, 0.6, 0.3],
-                          transition: {
-                            duration: 1.5,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                            delay: (rowIndex * 8 + cellIndex) * 0.05,
-                          },
-                        }}
-                      />
-                    </div>
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  )
 }
 
 // Mobile Filter Sidebar Component
@@ -380,12 +270,11 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
   const { feeders } = useAppSelector((state) => state.feeders)
   const { distributionSubstations } = useAppSelector((state) => state.distributionSubstations)
 
-  const [searchText, setSearchText] = useState("")
   const [searchInput, setSearchInput] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [isMobileView, setIsMobileView] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [isSortExpanded, setIsSortExpanded] = useState(true)
 
   // Local state for filters to avoid too many Redux dispatches
@@ -408,6 +297,7 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
     distributionSubstationId: undefined as number | undefined,
     sortBy: undefined as string | undefined,
     sortOrder: undefined as "asc" | "desc" | undefined,
+    search: undefined as string | undefined,
   })
 
   // Check for mobile view
@@ -464,7 +354,7 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
     const fetchParams: any = {
       pageNumber: currentPage,
       pageSize: pagination.pageSize,
-      ...(searchText && { customerId: Number(searchText) }),
+      ...(appliedFilters.search && { customerId: Number(appliedFilters.search) }),
       ...(appliedFilters.period && { period: appliedFilters.period }),
       ...(appliedFilters.customerId !== undefined && { customerId: appliedFilters.customerId }),
       ...(appliedFilters.areaOfficeId !== undefined && { areaOfficeId: appliedFilters.areaOfficeId }),
@@ -477,11 +367,19 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
     }
 
     void dispatch(fetchMeterReadings(fetchParams))
-  }, [dispatch, currentPage, pagination.pageSize, searchText, appliedFilters])
+  }, [dispatch, currentPage, pagination.pageSize, appliedFilters])
+
+  // Handle search
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value)
+  }
 
   const handleCancelSearch = () => {
-    setSearchText("")
     setSearchInput("")
+    setAppliedFilters({
+      ...appliedFilters,
+      search: undefined,
+    })
     setCurrentPage(1)
     dispatch(setMeterReadingPagination({ page: 1, pageSize: pagination.pageSize }))
   }
@@ -491,7 +389,10 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
     const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
 
     if (shouldUpdate) {
-      setSearchText(trimmed)
+      setAppliedFilters({
+        ...appliedFilters,
+        search: trimmed,
+      })
       setCurrentPage(1)
       dispatch(setMeterReadingPagination({ page: 1, pageSize: pagination.pageSize }))
     }
@@ -618,6 +519,7 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
       distributionSubstationId: localFilters.distributionSubstationId,
       sortBy: localFilters.sortBy || undefined,
       sortOrder: localFilters.sortOrder || undefined,
+      search: searchInput.trim() || undefined,
     })
     setCurrentPage(1)
     dispatch(setMeterReadingPagination({ page: 1, pageSize: pagination.pageSize }))
@@ -642,8 +544,8 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
       distributionSubstationId: undefined,
       sortBy: undefined,
       sortOrder: undefined,
+      search: undefined,
     })
-    setSearchText("")
     setSearchInput("")
     setCurrentPage(1)
     dispatch(setMeterReadingPagination({ page: 1, pageSize: pagination.pageSize }))
@@ -814,20 +716,36 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
             </div>
           </div>
 
-          {/* Search */}
-          <div className="mb-4 sm:mb-6">
+          {/* Search Priority Section */}
+          <div className="mb-4 rounded-xl border border-gray-200 bg-gradient-to-r from-green-50/60 to-white p-4 shadow-sm">
+            <div className="mb-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#004B23]">Primary action</p>
+              <h2 className="text-base font-semibold text-gray-900 sm:text-lg">Search Meter Readings</h2>
+              <p className="text-xs text-gray-600 sm:text-sm">
+                Find records quickly by customer ID, period, area office, or feeder.
+              </p>
+            </div>
+
             <SearchModule
               value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               onCancel={handleCancelSearch}
               onSearch={handleManualSearch}
-              placeholder="Search meter readings..."
-              className="w-full sm:w-96"
+              placeholder="Type customer ID, period, area office, or feeder..."
+              height="h-14"
+              className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
             />
           </div>
 
           {/* Loading State */}
-          {meterReadingsLoading && <LoadingSkeleton />}
+          {meterReadingsLoading && (
+            <div className="flex items-center justify-center py-16">
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="size-8 animate-spin text-blue-600" />
+                <p className="text-sm text-gray-500">Loading meter readings...</p>
+              </div>
+            </div>
+          )}
 
           {/* Error State */}
           {!meterReadingsLoading && meterReadingsError && (
@@ -846,7 +764,7 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
                 <h3 className="mt-3 text-base font-medium text-gray-900 sm:mt-4 sm:text-lg">No Meter Readings Found</h3>
                 <EmptySearchState
                   title={
-                    getActiveFilterCount() > 0 || searchText.trim()
+                    getActiveFilterCount() > 0 || searchInput.trim()
                       ? "Try adjusting your search criteria or filters"
                       : "No meter readings available"
                   }
@@ -1068,7 +986,7 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
 
                 <p className="text-center text-xs text-gray-600 sm:text-right sm:text-sm">
                   Page {currentPage} of {totalPages || 1} ({totalRecords.toLocaleString()} total meter readings)
-                  {(getActiveFilterCount() > 0 || searchText.trim()) && " - filtered"}
+                  {(getActiveFilterCount() > 0 || searchInput.trim()) && " - filtered"}
                 </p>
               </div>
             </>

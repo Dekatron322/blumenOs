@@ -1167,14 +1167,33 @@ const AllSupervisors: React.FC = () => {
                       {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
                       {showDesktopFilters ? "Hide filters" : "Show filters"}
                     </button>
+                  </div>
+                </motion.div>
+
+                {/* Search Priority Section */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.25 }}
+                  className="mt-6"
+                >
+                  <div className="rounded-xl border border-gray-200 bg-gradient-to-r from-green-50/60 to-white p-4 shadow-sm">
+                    <div className="mb-3">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-[#004B23]">Primary action</p>
+                      <h2 className="text-base font-semibold text-gray-900 sm:text-lg">Search Supervisors</h2>
+                      <p className="text-xs text-gray-600 sm:text-sm">
+                        Find supervisors quickly by name, phone number, or supervisor ID.
+                      </p>
+                    </div>
+
                     <SearchModule
-                      placeholder="Search agents..."
                       value={searchInput}
                       onChange={handleSearch}
                       onCancel={handleCancelSearch}
                       onSearch={handleManualSearch}
-                      className="w-[260px] md:w-[320px]"
-                      bgClassName="bg-white"
+                      placeholder="Search by supervisor name, phone number, or supervisor ID..."
+                      height="h-14"
+                      className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
                     />
                   </div>
                 </motion.div>
@@ -1186,7 +1205,9 @@ const AllSupervisors: React.FC = () => {
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.4 }}
                   >
-                    <EmptySearchState title={searchText ? "No matching supervisors found" : "No supervisors available"} />
+                    <EmptySearchState
+                      title={searchText ? "No matching supervisors found" : "No supervisors available"}
+                    />
                   </motion.div>
                 ) : (
                   <>

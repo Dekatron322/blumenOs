@@ -28,44 +28,6 @@ interface FeederEnergyCapsProps {
   onViewDetails?: (cap: FeederEnergyCap) => void
 }
 
-// Table Skeleton Component
-const TableSkeleton = () => (
-  <div className="w-full">
-    <div className="mb-4 flex items-center justify-between">
-      <div className="h-8 w-48 animate-pulse rounded bg-gray-200"></div>
-      <div className="h-10 w-32 animate-pulse rounded bg-gray-200"></div>
-    </div>
-    <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            {[...Array(8)].map((_, i) => (
-              <th key={i} className="px-4 py-3">
-                <div className="h-4 w-20 animate-pulse rounded bg-gray-200"></div>
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-200 bg-white">
-          {[...Array(5)].map((_, rowIndex) => (
-            <tr key={rowIndex}>
-              {[...Array(8)].map((_, colIndex) => (
-                <td key={colIndex} className="px-4 py-3">
-                  <div className="h-4 w-full animate-pulse rounded bg-gray-200"></div>
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-    <div className="mt-4 flex items-center justify-between">
-      <div className="h-8 w-64 animate-pulse rounded bg-gray-200"></div>
-      <div className="h-8 w-48 animate-pulse rounded bg-gray-200"></div>
-    </div>
-  </div>
-)
-
 // Mobile Filter Sidebar Component
 const MobileFilterSidebar = ({
   isOpen,
@@ -271,10 +233,9 @@ const MobileFilterSidebar = ({
 }
 
 const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps, onViewDetails }) => {
-  const [searchText, setSearchText] = useState("")
-  const [searchTrigger, setSearchTrigger] = useState(0)
+  const [searchInput, setSearchInput] = useState("")
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [isSortExpanded, setIsSortExpanded] = useState(true)
   const dispatch = useAppDispatch()
   const router = useRouter()
@@ -297,6 +258,7 @@ const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps, onV
     companyId: undefined as number | undefined,
     sortBy: undefined as string | undefined,
     sortOrder: undefined as "asc" | "desc" | undefined,
+    search: undefined as string | undefined,
   })
 
   // Get state from Redux store
@@ -343,7 +305,7 @@ const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps, onV
     const fetchParams: any = {
       pageNumber: pagination.currentPage,
       pageSize: pagination.pageSize,
-      ...(searchText && { search: searchText }),
+      ...(appliedFilters.search && { search: appliedFilters.search }),
       ...(appliedFilters.period && { period: appliedFilters.period }),
       ...(appliedFilters.areaOfficeId !== undefined && { areaOfficeId: appliedFilters.areaOfficeId }),
       ...(appliedFilters.feederId !== undefined && { feederId: appliedFilters.feederId }),
@@ -353,19 +315,33 @@ const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps, onV
     }
 
     void dispatch(fetchFeederEnergyCaps(fetchParams))
-  }, [dispatch, pagination.currentPage, pagination.pageSize, appliedFilters, searchTrigger])
+  }, [dispatch, pagination.currentPage, pagination.pageSize, appliedFilters])
 
   // Handle search
-  const handleSearch = (text: string) => {
-    setSearchText(text)
-    dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
-    setSearchTrigger((prev) => prev + 1)
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value)
+  }
+
+  const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      setAppliedFilters({
+        ...appliedFilters,
+        search: trimmed,
+      })
+      dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
+    }
   }
 
   const handleCancelSearch = () => {
-    setSearchText("")
+    setSearchInput("")
+    setAppliedFilters({
+      ...appliedFilters,
+      search: undefined,
+    })
     dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
-    setSearchTrigger((prev) => prev + 1)
   }
 
   // Handle refresh
@@ -373,7 +349,7 @@ const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps, onV
     const fetchParams: any = {
       pageNumber: pagination.currentPage,
       pageSize: pagination.pageSize,
-      ...(searchText && { search: searchText }),
+      ...(appliedFilters.search && { search: appliedFilters.search }),
       ...(appliedFilters.period && { period: appliedFilters.period }),
       ...(appliedFilters.areaOfficeId !== undefined && { areaOfficeId: appliedFilters.areaOfficeId }),
       ...(appliedFilters.feederId !== undefined && { feederId: appliedFilters.feederId }),
@@ -496,6 +472,7 @@ const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps, onV
       companyId: localFilters.companyId,
       sortBy: localFilters.sortBy || undefined,
       sortOrder: localFilters.sortOrder || undefined,
+      search: searchInput.trim() || undefined,
     })
     dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
   }
@@ -517,8 +494,9 @@ const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps, onV
       companyId: undefined,
       sortBy: undefined,
       sortOrder: undefined,
+      search: undefined,
     })
-    setSearchText("")
+    setSearchInput("")
     dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
   }
 
@@ -682,9 +660,12 @@ const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps, onV
   // Loading state
   if (feederEnergyCapsLoading && feederEnergyCaps.length === 0) {
     return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }} className="w-full">
-        <TableSkeleton />
-      </motion.div>
+      <div className="flex items-center justify-center py-16">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="size-8 animate-spin text-blue-600" />
+          <p className="text-sm text-gray-500">Loading feeder energy caps...</p>
+        </div>
+      </div>
     )
   }
 
@@ -723,62 +704,70 @@ const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps, onV
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4 }}
         >
-          {/* Header with Search and Actions */}
-          <div className="mb-6">
-            <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 sm:text-xl">Feeder Energy Caps</h3>
-                <p className="text-sm text-gray-500">
-                  {totalRecords} cap(s) found • Page {pagination.currentPage} of {totalPages || 1}
-                </p>
-              </div>
+          {/* Search Priority Section */}
+          <div className="mb-4 rounded-xl border border-gray-200 bg-gradient-to-r from-green-50/60 to-white p-4 shadow-sm">
+            <div className="mb-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#004B23]">Primary action</p>
+              <h2 className="text-base font-semibold text-gray-900 sm:text-lg">Search Feeder Energy Caps</h2>
+              <p className="text-xs text-gray-600 sm:text-sm">
+                Find records quickly by period, feeder name, area office, or company.
+              </p>
+            </div>
 
-              <div className="flex items-center gap-3">
-                {/* Search */}
-                <div className="w-full sm:w-64">
-                  <SearchModule
-                    value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
-                    onCancel={handleCancelSearch}
-                    onSearch={() => handleSearch(searchText)}
-                    placeholder="Search by period or feeder..."
-                  />
-                </div>
+            <SearchModule
+              value={searchInput}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              onCancel={handleCancelSearch}
+              onSearch={handleManualSearch}
+              placeholder="Type period, feeder name, area office, or company..."
+              height="h-14"
+              className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+            />
+          </div>
 
-                {/* Filter Button for screens below 2xl */}
+          {/* Filter Actions */}
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 sm:text-xl">Feeder Energy Caps</h3>
+              <p className="text-sm text-gray-500">
+                {totalRecords} cap(s) found • Page {pagination.currentPage} of {totalPages || 1}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {/* Filter Button for screens below 2xl */}
+              <button
+                onClick={() => setShowMobileFilters(true)}
+                className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
+              >
+                <Filter className="size-4" />
+                Filters
+                {getActiveFilterCount() > 0 && (
+                  <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
+                    {getActiveFilterCount()}
+                  </span>
+                )}
+              </button>
+
+              {/* Desktop Actions */}
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setShowMobileFilters(true)}
-                  className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
+                  type="button"
+                  onClick={() => setShowDesktopFilters((prev) => !prev)}
+                  className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
                 >
-                  <Filter className="size-4" />
-                  Filters
-                  {getActiveFilterCount() > 0 && (
-                    <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
-                      {getActiveFilterCount()}
-                    </span>
-                  )}
+                  {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
+                  {showDesktopFilters ? "Hide filters" : "Show filters"}
                 </button>
-
-                {/* Desktop Actions */}
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowDesktopFilters((prev) => !prev)}
-                    className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
-                  >
-                    {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
-                    {showDesktopFilters ? "Hide filters" : "Show filters"}
-                  </button>
-                  <button
-                    onClick={handleRefresh}
-                    disabled={feederEnergyCapsLoading}
-                    className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <RefreshCw className={`mr-2 size-4 ${feederEnergyCapsLoading ? "animate-spin" : ""}`} />
-                    Refresh
-                  </button>
-                </div>
               </div>
+              <button
+                onClick={handleRefresh}
+                disabled={feederEnergyCapsLoading}
+                className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <RefreshCw className={`mr-2 size-4 ${feederEnergyCapsLoading ? "animate-spin" : ""}`} />
+                Refresh
+              </button>
             </div>
           </div>
 
@@ -911,7 +900,7 @@ const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps, onV
               <h3 className="mt-4 text-base font-medium text-gray-900">No Energy Caps Found</h3>
               <EmptySearchState
                 title={
-                  getActiveFilterCount() > 0 || searchText.trim()
+                  getActiveFilterCount() > 0 || searchInput.trim()
                     ? "Try adjusting your search criteria or filters"
                     : "No energy caps available"
                 }

@@ -13,10 +13,11 @@ import { VscEye } from "react-icons/vsc"
 import { useRouter } from "next/navigation"
 import EditMeterModal from "components/ui/Modal/edit-meter-modal"
 import MeterHistoryModal from "components/ui/Modal/meter-history-modal"
-import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
+import { ArrowLeft, ChevronDown, ChevronUp, Filter, Loader2, SortAsc, SortDesc, X } from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { fetchServiceStations } from "lib/redux/serviceStationsSlice"
 import { fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
+import LoadingSkeleton from "components/Loader/loading-skeleton"
 
 interface ActionDropdownProps {
   meter: Meter
@@ -97,116 +98,6 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ meter, onViewDetails })
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
-  )
-}
-
-const LoadingSkeleton = () => {
-  return (
-    <div className="space-y-4">
-      {/* Header skeleton */}
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="h-6 w-32 rounded bg-gray-200">
-            <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
-              animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                },
-              }}
-            />
-          </div>
-          <div className="mt-1 size-48 rounded bg-gray-200">
-            <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
-              animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.2,
-                },
-              }}
-            />
-          </div>
-        </div>
-        <div className="h-8 w-20 rounded bg-gray-200">
-          <motion.div
-            className="size-full rounded bg-gray-300"
-            initial={{ opacity: 0.3 }}
-            animate={{
-              opacity: [0.3, 0.6, 0.3],
-              transition: {
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: 0.4,
-              },
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Table skeleton */}
-      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              {[...Array(8)].map((_, i) => (
-                <th key={i} className="px-4 py-3 text-left">
-                  <div className="h-3 w-20 rounded bg-gray-200">
-                    <motion.div
-                      className="size-full rounded bg-gray-300"
-                      initial={{ opacity: 0.3 }}
-                      animate={{
-                        opacity: [0.3, 0.6, 0.3],
-                        transition: {
-                          duration: 1.5,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                          delay: i * 0.1,
-                        },
-                      }}
-                    />
-                  </div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200 bg-white">
-            {[...Array(5)].map((_, rowIndex) => (
-              <tr key={rowIndex}>
-                {[...Array(8)].map((_, cellIndex) => (
-                  <td key={cellIndex} className="px-4 py-3">
-                    <div className="h-4 w-16 rounded bg-gray-200">
-                      <motion.div
-                        className="size-full rounded bg-gray-300"
-                        initial={{ opacity: 0.3 }}
-                        animate={{
-                          opacity: [0.3, 0.6, 0.3],
-                          transition: {
-                            duration: 1.5,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                            delay: (rowIndex * 8 + cellIndex) * 0.05,
-                          },
-                        }}
-                      />
-                    </div>
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
     </div>
   )
 }
@@ -602,7 +493,7 @@ const MeterInventoryTable: React.FC<MeterInventoryTableProps> = ({ pageSize: pro
 
   // Filter states
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [localFilters, setLocalFilters] = useState({
     status: "",
     meterType: "",
@@ -927,7 +818,17 @@ const MeterInventoryTable: React.FC<MeterInventoryTableProps> = ({ pageSize: pro
   const totalPages = Math.ceil(totalRecords / pageSize)
   const isLoading = loading
 
-  if (isLoading && meters.length === 0) return <LoadingSkeleton />
+  // Loading state
+  if (isLoading && meters.length === 0) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="size-8 animate-spin text-blue-600" />
+          <p className="text-sm text-gray-500">Loading meters...</p>
+        </div>
+      </div>
+    )
+  }
   if (error) return <div>Error loading meters</div>
 
   return (

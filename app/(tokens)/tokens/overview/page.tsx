@@ -156,28 +156,6 @@ const CompactAnalyticsCard = ({
   )
 }
 
-// Compact Skeleton Card
-const CompactSkeletonCard = () => (
-  <motion.div
-    className="rounded-lg border border-gray-200 bg-white p-3"
-    initial={{ opacity: 0.6 }}
-    animate={{
-      opacity: [0.6, 1, 0.6],
-      transition: { duration: 1.5, repeat: Infinity, ease: "easeInOut" },
-    }}
-  >
-    <div className="flex items-start justify-between">
-      <div className="size-7 rounded-md bg-gray-200"></div>
-      <div className="h-4 w-12 rounded-full bg-gray-200"></div>
-    </div>
-    <div className="mt-2 space-y-1.5">
-      <div className="h-3 w-16 rounded bg-gray-200"></div>
-      <div className="h-5 w-20 rounded bg-gray-200"></div>
-      <div className="h-2 w-14 rounded bg-gray-200"></div>
-    </div>
-  </motion.div>
-)
-
 // Compact Queue Status
 const CompactQueueStatus = ({ stats }: { stats: any }) => {
   const items = [
@@ -364,10 +342,11 @@ const CompactPrepaidAnalytics = () => {
 
   if (prepaidSummaryLoading || prepaidStatsLoading) {
     return (
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {[...Array(4)].map((_, i) => (
-          <CompactSkeletonCard key={i} />
-        ))}
+      <div className="flex items-center justify-center py-16">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="size-8 animate-spin text-blue-600" />
+          <p className="text-sm text-gray-500">Loading prepaid analytics...</p>
+        </div>
       </div>
     )
   }

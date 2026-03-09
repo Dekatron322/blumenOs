@@ -118,73 +118,6 @@ interface MobileFilterSidebarProps {
   feedersLoading: boolean
 }
 
-// Table Skeleton Component
-const TableSkeleton = () => (
-  <motion.div
-    className="w-full rounded-md border bg-white p-3 sm:p-5"
-    initial={{ opacity: 0.6 }}
-    animate={{
-      opacity: [0.6, 1, 0.6],
-      transition: {
-        duration: 1.5,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
-    }}
-  >
-    {/* Header Section Skeleton */}
-    <div className="items-center justify-between border-b py-2 md:flex md:py-4">
-      <div className="mb-3 md:mb-0">
-        <div className="mb-2 h-8 w-40 rounded bg-gray-200 sm:w-48"></div>
-        <div className="h-4 w-56 rounded bg-gray-200 sm:w-64"></div>
-      </div>
-      <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
-        <div className="h-10 w-full rounded bg-gray-200 sm:w-48"></div>
-        <div className="h-10 w-24 rounded bg-gray-200 sm:w-28"></div>
-      </div>
-    </div>
-
-    {/* Table Skeleton */}
-    <div className="w-full overflow-x-auto border-x bg-[#f9f9f9]">
-      <table className="w-full min-w-[1200px] border-separate border-spacing-0 text-left">
-        <thead>
-          <tr>
-            {[...Array(10)].map((_, i) => (
-              <th key={i} className="whitespace-nowrap border-b p-3 sm:p-4">
-                <div className="h-4 w-24 rounded bg-gray-200"></div>
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {[...Array(5)].map((_, rowIndex) => (
-            <tr key={rowIndex}>
-              {[...Array(10)].map((_, cellIndex) => (
-                <td key={cellIndex} className="whitespace-nowrap border-b px-3 py-2 sm:px-4 sm:py-3">
-                  <div className="h-4 w-full rounded bg-gray-200"></div>
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-
-    {/* Pagination Section Skeleton */}
-    <div className="flex flex-col items-center justify-between gap-3 border-t py-3 sm:flex-row">
-      <div className="h-6 w-48 rounded bg-gray-200"></div>
-      <div className="flex items-center gap-2">
-        <div className="size-8 rounded bg-gray-200"></div>
-        {[...Array(5)].map((_, i) => (
-          <div key={i} className="size-8 rounded bg-gray-200"></div>
-        ))}
-        <div className="size-8 rounded bg-gray-200"></div>
-      </div>
-      <div className="h-6 w-32 rounded bg-gray-200"></div>
-    </div>
-  </motion.div>
-)
-
 const ActionDropdown: React.FC<ActionDropdownProps> = ({ bill, onViewDetails, onUpdateBill }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [dropdownDirection, setDropdownDirection] = useState<"bottom" | "top">("bottom")
@@ -579,7 +512,7 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
   const [searchTrigger, setSearchTrigger] = useState(0)
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [isSortExpanded, setIsSortExpanded] = useState(false)
 
   // Search states for dropdowns
@@ -1129,8 +1062,11 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
   // Loading state
   if (loading && bills.length === 0) {
     return (
-      <div className="flex items-center justify-center px-3  sm:px-4 md:px-6 ">
-        <TableSkeleton />
+      <div className="flex items-center justify-center py-16">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="size-8 animate-spin text-blue-600" />
+          <p className="text-sm text-gray-500">Loading bills...</p>
+        </div>
       </div>
     )
   }
@@ -1240,7 +1176,7 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
                 onSearch={handleManualSearch}
                 placeholder="Enter account number to search."
                 height="h-14"
-                className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+                className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
                 bgClassName="bg-white"
               />
             </div>

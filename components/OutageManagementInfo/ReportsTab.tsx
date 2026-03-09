@@ -1,7 +1,7 @@
 "use client"
 import React, { useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
+import { ArrowLeft, ChevronDown, ChevronUp, Filter, Grid, LayoutList, SortAsc, SortDesc, X } from "lucide-react"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
 import { SearchModule } from "components/ui/Search/search-module"
@@ -563,15 +563,16 @@ const ReportsTab: React.FC = () => {
   const [searchText, setSearchText] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedReport, setSelectedReport] = useState<Report | null>(null)
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list")
+  const [pageSize, setPageSize] = useState(10)
   const { user } = useAppSelector((state) => state.auth)
 
   const canGenerateReport = !!user?.privileges?.some(
     (p) => (p.key === "outage-management" || p.key === "reports") && p.actions?.includes("W")
   )
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [isSortExpanded, setIsSortExpanded] = useState(true)
-  const pageSize = 10
 
   // Filter state
   const [localFilters, setLocalFilters] = useState<{
@@ -820,18 +821,90 @@ const ReportsTab: React.FC = () => {
     setCurrentPage(1)
   }
 
+  // Handle view mode change
+  const handleViewModeChange = (mode: "list" | "grid") => {
+    setViewMode(mode)
+  }
+
+  // Handle page size change
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size)
+    setCurrentPage(1) // Reset to first page when page size changes
+  }
+
+  // Get page items for pagination
+  const getPageItems = (): (number | string)[] => {
+    const total = totalPages
+    const current = currentPage
+    const items: (number | string)[] = []
+
+    if (total <= 7) {
+      for (let i = 1; i <= total; i += 1) {
+        items.push(i)
+      }
+      return items
+    }
+
+    items.push(1)
+    const showLeftEllipsis = current > 4
+    const showRightEllipsis = current < total - 3
+
+    if (!showLeftEllipsis) {
+      items.push(2, 3, 4, "...")
+    } else if (!showRightEllipsis) {
+      items.push("...", total - 3, total - 2, total - 1)
+    } else {
+      items.push("...", current - 1, current, current + 1, "...")
+    }
+
+    if (!items.includes(total)) {
+      items.push(total)
+    }
+
+    return items
+  }
+
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
 
+  // Handle view details
+  const handleViewDetails = (report: Report) => {
+    setSelectedReport(report)
+    // In a real app, this would open a modal or navigate to details page
+    console.log("View report details:", report)
+  }
+
   if (isLoading) {
-    return <LoadingSkeleton />
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="flex flex-col items-center gap-3">
+          <div className="size-8 animate-spin rounded-full border-2 border-gray-300 border-t-[#004B23]"></div>
+          <p className="text-sm text-gray-500">Loading reports...</p>
+        </div>
+      </div>
+    )
   }
 
   if (isError) {
     return (
-      <div className="flex h-64 items-center justify-center rounded-lg border bg-white">
-        <div className="text-center">
-          <p className="text-gray-500">Failed to load reports data</p>
-          <button className="mt-2 text-blue-600 hover:underline">Try again</button>
+      <div className="flex items-center justify-center py-16">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <div className="flex size-12 items-center justify-center rounded-full bg-red-100">
+            <svg className="size-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+          <div>
+            <p className="font-medium text-gray-900">Failed to load reports</p>
+            <p className="mt-1 text-sm text-gray-500">Please try again later</p>
+          </div>
+          <button className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+            Retry
+          </button>
         </div>
       </div>
     )
@@ -851,7 +924,7 @@ const ReportsTab: React.FC = () => {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4 }}
         >
-          <div className="items-center justify-between border-b py-2 md:flex md:py-4">
+          <div className="items-center justify-between  py-2 md:flex md:py-4">
             <div>
               <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Reports Management</p>
               <p className="text-sm text-gray-500">Generate and manage system reports</p>
@@ -889,99 +962,271 @@ const ReportsTab: React.FC = () => {
                 {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
                 {showDesktopFilters ? "Hide filters" : "Show filters"}
               </button>
-
-              <div className=":max-w-[310px] sm:w-64 md:w-80">
-                <SearchModule
-                  placeholder="Search reports..."
-                  value={searchText}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  onCancel={handleCancelSearch}
-                  onSearch={handleManualSearch}
-                  className="max-w-[310px] sm:w-64 md:w-80"
-                />
-              </div>
-              {canGenerateReport && (
-                <button className="w-full rounded-md bg-[#004B23] px-4 py-2 text-white hover:bg-[#000000] sm:w-auto">
-                  Generate Report
-                </button>
-              )}
             </div>
           </div>
 
-          {reports.length === 0 ? (
-            <motion.div
-              className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4 }}
+          {/* Search Priority Section - Standalone */}
+          <div className="mb-4 rounded-xl border border-gray-200 bg-gradient-to-r from-green-50/60 to-white p-4 shadow-sm">
+            <div className="mb-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#004B23]">Primary action</p>
+              <h2 className="text-base font-semibold text-gray-900 sm:text-lg">Search Reports</h2>
+              <p className="text-xs text-gray-600 sm:text-sm">Find reports quickly by title, description, or tags.</p>
+            </div>
+
+            <SearchModule
+              value={searchText}
+              onChange={(e) => handleSearch(e.target.value)}
+              onCancel={handleCancelSearch}
+              onSearch={handleManualSearch}
+              placeholder="Search by report title, description, or tags..."
+              height="h-14"
+              className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+            />
+          </div>
+
+          {/* View Toggle */}
+          <div className="mb-4 flex items-center gap-2">
+            <button
+              className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+                viewMode === "list"
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+              }`}
+              onClick={() => handleViewModeChange("list")}
             >
-              <EmptySearchState title={searchText || getActiveFilterCount() > 0 ? "No matching reports found" : "No reports available"} />
-              {(searchText || getActiveFilterCount() > 0) && (
-                <button className="text-blue-600 hover:underline" onClick={resetFilters}>
-                  Clear filters
-                </button>
-              )}
-            </motion.div>
+              <LayoutList className="size-4" />
+              <span className="hidden sm:inline">List</span>
+            </button>
+            <button
+              className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+                viewMode === "grid"
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+              }`}
+              onClick={() => handleViewModeChange("grid")}
+            >
+              <Grid className="size-4" />
+              <span className="hidden sm:inline">Grid</span>
+            </button>
+          </div>
+
+          {reports.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 p-6">
+              <div className="flex flex-col items-center gap-2 text-center">
+                <EmptySearchState
+                  title={
+                    searchText || getActiveFilterCount() > 0 ? "No matching reports found" : "No reports available"
+                  }
+                  description={
+                    searchText || getActiveFilterCount() > 0
+                      ? "Try adjusting your search criteria"
+                      : "Start by searching with report title, description, or tags."
+                  }
+                  className="py-6"
+                />
+                {(searchText || getActiveFilterCount() > 0) && (
+                  <button
+                    onClick={resetFilters}
+                    className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    Clear filters
+                  </button>
+                )}
+              </div>
+            </div>
           ) : (
             <>
-              <motion.div
-                className="w-full overflow-x-auto border-x bg-[#FFFFFF]"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-              >
-                <table className="w-full min-w-[1200px] border-separate border-spacing-0 text-left">
-                  <thead>
-                    <tr>
-                      <th className="whitespace-nowrap border-b p-4 text-sm">
-                        <div className="flex items-center gap-2">
-                          <MdOutlineCheckBoxOutlineBlank className="text-lg" />
-                          Report Details
+              {viewMode === "grid" ? (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {reports.map((report) => (
+                    <div
+                      key={report.id}
+                      className="rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-gray-300 hover:shadow-sm"
+                    >
+                      {/* Header */}
+                      <div className="mb-3 flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex size-10 items-center justify-center rounded-full bg-indigo-100">
+                            <span className="text-sm font-semibold text-indigo-600">
+                              {getFormatIcon(report.format)}
+                            </span>
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-semibold text-gray-900">{report.title}</h3>
+                            <p className="text-xs text-gray-500">{report.id}</p>
+                          </div>
                         </div>
-                      </th>
-                      <th className="text-500 whitespace-nowrap border-b p-4 text-sm">
-                        <div className="flex items-center gap-2">Type & Period</div>
-                      </th>
-                      <th className="whitespace-nowrap border-b p-4 text-sm">
-                        <div className="flex items-center gap-2">Status</div>
-                      </th>
-                      <th className="whitespace-nowrap border-b p-4 text-sm">
-                        <div className="flex items-center gap-2">File Info</div>
-                      </th>
-                      <th className="whitespace-nowrap border-b p-4 text-sm">
-                        <div className="flex items-center gap-2">Usage Stats</div>
-                      </th>
-                      <th className="whitespace-nowrap border-b p-4 text-sm">
-                        <div className="flex items-center gap-2">Actions</div>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <AnimatePresence>
-                      {reports.map((report, index) => (
-                        <motion.tr
-                          key={report.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.3, delay: index * 0.05 }}
-                          exit={{ opacity: 0, y: -10 }}
+                      </div>
+
+                      {/* Status and Type Badges */}
+                      <div className="mb-3 flex flex-wrap gap-1">
+                        <motion.div
+                          style={getStatusStyle(report.status)}
+                          className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1"
+                          whileHover={{ scale: 1.05 }}
+                          transition={{ duration: 0.1 }}
                         >
-                          <td className="whitespace-nowrap border-b p-4">
-                            <div className="text-sm font-medium text-gray-900">{report.title}</div>
-                            <div className="text-sm text-gray-500">{report.description}</div>
-                            <div className="text-sm text-gray-500">ID: {report.id}</div>
-                            <div className="mt-1 flex flex-wrap gap-1">
-                              {report.tags.map((tag, tagIndex) => (
-                                <span
-                                  key={tagIndex}
-                                  className="inline-block rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-600"
-                                >
-                                  {tag}
-                                </span>
-                              ))}
+                          <span
+                            className="size-2 rounded-full"
+                            style={{
+                              backgroundColor:
+                                report.status === "draft"
+                                  ? "#D97706"
+                                  : report.status === "pending"
+                                  ? "#2563EB"
+                                  : report.status === "approved"
+                                  ? "#589E67"
+                                  : "#16A34A",
+                            }}
+                          ></span>
+                          <span className="text-xs font-medium">
+                            {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
+                          </span>
+                        </motion.div>
+                        <motion.div
+                          style={getTypeStyle(report.type)}
+                          className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1"
+                          whileHover={{ scale: 1.05 }}
+                          transition={{ duration: 0.1 }}
+                        >
+                          <span
+                            className="size-2 rounded-full"
+                            style={{
+                              backgroundColor:
+                                report.type === "outage"
+                                  ? "#AF4B4B"
+                                  : report.type === "maintenance"
+                                  ? "#D97706"
+                                  : report.type === "performance"
+                                  ? "#2563EB"
+                                  : report.type === "compliance"
+                                  ? "#7C3AED"
+                                  : "#589E67",
+                            }}
+                          ></span>
+                          <span className="text-xs font-medium">
+                            {report.type.charAt(0).toUpperCase() + report.type.slice(1)}
+                          </span>
+                        </motion.div>
+                      </div>
+
+                      {/* Details */}
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Format:</span>
+                          <span className="font-medium text-gray-900">{report.format.toUpperCase()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Size:</span>
+                          <span className="font-medium text-gray-900">{report.fileSize}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Downloads:</span>
+                          <span className="font-medium text-gray-900">{report.downloadCount}</span>
+                        </div>
+                      </div>
+
+                      {/* Description */}
+                      <div className="mt-3 border-t border-gray-100 pt-3">
+                        <p className="line-clamp-2 text-xs text-gray-500">{report.description}</p>
+                      </div>
+
+                      {/* Tags */}
+                      {report.tags.length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-1">
+                          {report.tags.slice(0, 2).map((tag, index) => (
+                            <span
+                              key={index}
+                              className="inline-block rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-600"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                          {report.tags.length > 2 && (
+                            <span className="inline-block rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-600">
+                              +{report.tags.length - 2}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Actions */}
+                      <div className="mt-3">
+                        <button
+                          onClick={() => handleViewDetails(report)}
+                          className="flex w-full items-center justify-center gap-2 rounded-md border border-indigo-200 bg-white px-3 py-2 text-sm font-medium text-indigo-700 transition-colors hover:bg-indigo-50"
+                        >
+                          <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                            />
+                          </svg>
+                          View Details
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-lg border border-gray-200">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                          Report Details
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                          Type & Period
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                          Status
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                          File Info
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                          Usage Stats
+                        </th>
+                        <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 bg-white">
+                      {reports.map((report) => (
+                        <tr key={report.id} className="transition-colors hover:bg-gray-50">
+                          <td className="px-4 py-3">
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{report.title}</p>
+                              <p className="text-xs text-gray-500">{report.description}</p>
+                              <p className="text-xs text-gray-500">ID: {report.id}</p>
+                              <div className="mt-1 flex flex-wrap gap-1">
+                                {report.tags.slice(0, 2).map((tag, index) => (
+                                  <span
+                                    key={index}
+                                    className="inline-block rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-600"
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
+                                {report.tags.length > 2 && (
+                                  <span className="inline-block rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-600">
+                                    +{report.tags.length - 2}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </td>
-                          <td className="whitespace-nowrap border-b p-4">
+                          <td className="px-4 py-3">
                             <div className="flex flex-col gap-1">
                               <motion.div
                                 style={getTypeStyle(report.type)}
@@ -1004,12 +1249,14 @@ const ReportsTab: React.FC = () => {
                                         : "#589E67",
                                   }}
                                 ></span>
-                                {report.type.charAt(0).toUpperCase() + report.type.slice(1)}
+                                <span className="text-xs font-medium">
+                                  {report.type.charAt(0).toUpperCase() + report.type.slice(1)}
+                                </span>
                               </motion.div>
-                              <div className="text-sm text-gray-500">{report.period}</div>
+                              <div className="text-xs text-gray-500">{report.period}</div>
                             </div>
                           </td>
-                          <td className="whitespace-nowrap border-b p-4">
+                          <td className="px-4 py-3">
                             <motion.div
                               style={getStatusStyle(report.status)}
                               className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1"
@@ -1029,129 +1276,145 @@ const ReportsTab: React.FC = () => {
                                       : "#16A34A",
                                 }}
                               ></span>
-                              {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
+                              <span className="text-xs font-medium">
+                                {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
+                              </span>
                             </motion.div>
                           </td>
-                          <td className="whitespace-nowrap border-b p-4">
+                          <td className="px-4 py-3">
                             <div className="flex items-center gap-2">
-                              <span className="text-lg">{getFormatIcon(report.format)}</span>
+                              <span className="text-sm">{getFormatIcon(report.format)}</span>
                               <div>
                                 <div className="text-sm text-gray-900">{report.format.toUpperCase()}</div>
-                                <div className="text-sm text-gray-500">{report.fileSize}</div>
+                                <div className="text-xs text-gray-500">{report.fileSize}</div>
                               </div>
                             </div>
-                            <div className="mt-1 text-sm text-gray-500">
+                            <div className="mt-1 text-xs text-gray-500">
                               Generated: {new Date(report.generatedDate).toLocaleDateString()}
                             </div>
                           </td>
-                          <td className="whitespace-nowrap border-b p-4">
+                          <td className="px-4 py-3">
                             <div className="text-sm text-gray-900">{report.downloadCount} downloads</div>
                             {report.lastDownloaded && (
-                              <div className="text-sm text-gray-500">
+                              <div className="text-xs text-gray-500">
                                 Last: {new Date(report.lastDownloaded).toLocaleDateString()}
                               </div>
                             )}
-                            <div className="text-sm text-gray-500">By: {report.generatedBy}</div>
+                            <div className="text-xs text-gray-500">By: {report.generatedBy}</div>
                           </td>
-                          <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
-                            <ButtonModule variant="outline" size="sm" className="mt-2 md:mt-0 md:w-auto">
-                              View Details
-                            </ButtonModule>
+                          <td className="px-4 py-3 text-right">
+                            <button
+                              onClick={() => handleViewDetails(report)}
+                              className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                            >
+                              <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                />
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                />
+                              </svg>
+                              View
+                            </button>
                           </td>
-                        </motion.tr>
+                        </tr>
                       ))}
-                    </AnimatePresence>
-                  </tbody>
-                </table>
-              </motion.div>
-
-              <motion.div
-                className="flex items-center justify-between border-t py-3"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.2 }}
-              >
-                <div className="text-sm text-gray-700">
-                  Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalRecords)} of{" "}
-                  {totalRecords} entries
+                    </tbody>
+                  </table>
                 </div>
-                <div className="flex items-center gap-2">
-                  <motion.button
-                    onClick={() => paginate(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className={`flex items-center justify-center rounded-md p-2 ${
-                      currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
-                    }`}
-                    whileHover={{ scale: currentPage === 1 ? 1 : 1.1 }}
-                    whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
-                  >
-                    <MdOutlineArrowBackIosNew />
-                  </motion.button>
+              )}
 
-                  {Array.from({ length: Math.min(5, totalPages) }).map((_, index) => {
-                    let pageNum
-                    if (totalPages <= 5) {
-                      pageNum = index + 1
-                    } else if (currentPage <= 3) {
-                      pageNum = index + 1
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNum = totalPages - 4 + index
-                    } else {
-                      pageNum = currentPage - 2 + index
-                    }
-
-                    return (
-                      <motion.button
-                        key={index}
-                        onClick={() => paginate(pageNum)}
-                        className={`flex size-8 items-center justify-center rounded-md text-sm ${
-                          currentPage === pageNum
-                            ? "bg-[#004B23] text-white"
-                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                        }`}
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ duration: 0.2, delay: index * 0.05 }}
+              {/* Pagination */}
+              {reports.length > 0 && (
+                <div className="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-gray-700">Rows per page:</span>
+                    <div className="relative">
+                      <select
+                        name="pageSize"
+                        value={pageSize}
+                        onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                        className="h-9 w-16 cursor-pointer appearance-none rounded-md border-gray-300 bg-white px-2 py-1 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
                       >
-                        {pageNum}
-                      </motion.button>
-                    )
-                  })}
+                        <option value={6}>6 rows</option>
+                        <option value={10}>10 rows</option>
+                        <option value={12}>12 rows</option>
+                        <option value={18}>18 rows</option>
+                        <option value={24}>24 rows</option>
+                        <option value={50}>50 rows</option>
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1">
+                        <svg className="size-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
 
-                  {totalPages > 5 && currentPage < totalPages - 2 && <span className="px-2">...</span>}
-
-                  {totalPages > 5 && currentPage < totalPages - 1 && (
-                    <motion.button
-                      onClick={() => paginate(totalPages)}
-                      className={`flex size-8 items-center justify-center rounded-md text-sm ${
-                        currentPage === totalPages
-                          ? "bg-[#004B23] text-white"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  <div className="flex items-center gap-2">
+                    <button
+                      className={`flex size-8 items-center justify-center rounded-md border ${
+                        currentPage === 1
+                          ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400"
+                          : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                       }`}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
+                      onClick={() => paginate(currentPage - 1)}
+                      disabled={currentPage === 1}
                     >
-                      {totalPages}
-                    </motion.button>
-                  )}
+                      <svg className="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
 
-                  <motion.button
-                    onClick={() => paginate(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className={`flex items-center justify-center rounded-md p-2 ${
-                      currentPage === totalPages
-                        ? "cursor-not-allowed text-gray-400"
-                        : "text-[#003F9F] hover:bg-gray-100"
-                    }`}
-                    whileHover={{ scale: currentPage === totalPages ? 1 : 1.1 }}
-                    whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
-                  >
-                    <MdOutlineArrowForwardIos />
-                  </motion.button>
+                    <div className="flex items-center gap-1">
+                      {getPageItems().map((item, index) =>
+                        typeof item === "number" ? (
+                          <button
+                            key={item}
+                            className={`flex size-8 items-center justify-center rounded-md text-sm ${
+                              currentPage === item
+                                ? "bg-[#004B23] font-medium text-white"
+                                : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                            }`}
+                            onClick={() => paginate(item)}
+                          >
+                            {item}
+                          </button>
+                        ) : (
+                          <span key={`ellipsis-${index}`} className="px-1 text-sm text-gray-500">
+                            {item}
+                          </span>
+                        )
+                      )}
+                    </div>
+
+                    <button
+                      className={`flex size-8 items-center justify-center rounded-md border ${
+                        currentPage === totalPages
+                          ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400"
+                          : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                      }`}
+                      onClick={() => paginate(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                    >
+                      <svg className="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div className="text-sm text-gray-500">
+                    Page {currentPage} of {totalPages}
+                  </div>
                 </div>
-              </motion.div>
+              )}
             </>
           )}
         </motion.div>

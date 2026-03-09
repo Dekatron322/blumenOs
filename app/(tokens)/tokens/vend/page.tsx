@@ -455,7 +455,7 @@ const VendPage: React.FC = () => {
         <div className="flex w-full flex-col">
           <DashboardNav />
 
-          <div className="mx-auto flex w-full flex-col px-3 py-4  xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3 py-4  xl:px-6">
             <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
               <div>
                 <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">Vend</h1>

@@ -649,7 +649,7 @@ const MobileFilterSidebar = ({
                     applyFilters()
                     onClose()
                   }}
-                  className="flex-1 rounded-lg bg-[#004B23] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#003618]"
+                  className="flex-1 rounded-md bg-[#004B23] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#00361a] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
                 >
                   Apply Filters
                 </button>
@@ -658,7 +658,7 @@ const MobileFilterSidebar = ({
                     resetFilters()
                     onClose()
                   }}
-                  className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                  className="flex-1 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                 >
                   Reset
                 </button>
@@ -1605,28 +1605,6 @@ const RecentPayments = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {/* Search */}
-            <div className="relative min-w-[220px]">
-              <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                value={searchInput}
-                onChange={handleSearch}
-                onKeyDown={(e) => e.key === "Enter" && handleManualSearch()}
-                placeholder="Search payments..."
-                className="h-9 w-full rounded-lg border border-gray-300 bg-white px-8 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-              {searchInput && (
-                <button
-                  onClick={handleCancelSearch}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  <X className="size-3.5" />
-                </button>
-              )}
-            </div>
-
-            {/* Filter Buttons */}
             <div className="flex items-center gap-1.5">
               {/* Mobile Filter Button */}
               <button
@@ -1735,6 +1713,27 @@ const RecentPayments = () => {
         </AnimatePresence>
       </div>
 
+      {/* Search Priority Section */}
+      <div className="rounded-xl border border-gray-200 bg-gradient-to-r from-green-50/60 to-white p-4 shadow-sm">
+        <div className="mb-3">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#004B23]">Primary action</p>
+          <h2 className="text-base font-semibold text-gray-900 sm:text-lg">Search Payments</h2>
+          <p className="text-xs text-gray-600 sm:text-sm">
+            Find payments quickly by transaction ID, customer name, amount, or payment method.
+          </p>
+        </div>
+
+        <SearchModule
+          value={searchInput}
+          onChange={handleSearch}
+          onCancel={handleCancelSearch}
+          onSearch={handleManualSearch}
+          placeholder="Search by transaction ID, customer name, amount, or payment method..."
+          height="h-14"
+          className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+        />
+      </div>
+
       {/* Main Content with Table on Left, Filters on Right */}
       <div className="flex flex-col-reverse gap-5 lg:flex-row">
         {/* Table - Takes remaining width */}
@@ -1742,9 +1741,14 @@ const RecentPayments = () => {
           <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
             {payments.length === 0 ? (
               <div className="flex h-72 flex-col items-center justify-center px-4">
-                <EmptySearchState title="No payments found" description={searchText || getActiveFilterCount() > 0
-                    ? "Try adjusting your search or filters"
-                    : "Payments will appear here once processed"} />
+                <EmptySearchState
+                  title="No payments found"
+                  description={
+                    searchText || getActiveFilterCount() > 0
+                      ? "Try adjusting your search or filters"
+                      : "Payments will appear here once processed"
+                  }
+                />
                 {(searchText || getActiveFilterCount() > 0) && (
                   <button
                     onClick={resetFilters}

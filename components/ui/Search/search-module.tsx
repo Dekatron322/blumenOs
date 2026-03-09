@@ -94,9 +94,7 @@ export const SearchModule: React.FC<SearchModuleProps> = ({
 
   const resolvedHeight = prominent && height === "h-[37px]" ? "h-14" : height
 
-  const controlSizeClasses = prominent
-    ? "w-full max-w-none sm:max-w-none md:w-full md:max-w-none"
-    : ""
+  const controlSizeClasses = prominent ? "w-full max-w-none sm:max-w-none md:w-full md:max-w-none" : ""
 
   const prominentInputClasses = prominent
     ? "rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"

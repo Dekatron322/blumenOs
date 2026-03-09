@@ -572,7 +572,7 @@ const OutagesTab: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedOutage, setSelectedOutage] = useState<Outage | null>(null)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [isSortExpanded, setIsSortExpanded] = useState(true)
 
   // Filter state
@@ -887,17 +887,6 @@ const OutagesTab: React.FC = () => {
                 {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
                 {showDesktopFilters ? "Hide filters" : "Show filters"}
               </button>
-
-              <div className="w-80 max-w-[350px]">
-                <SearchModule
-                  placeholder="Search outages..."
-                  value={searchInput}
-                  onChange={handleSearch}
-                  onCancel={handleCancelSearch}
-                  onSearch={handleManualSearch}
-                  className="w-80 max-w-[310px]"
-                />
-              </div>
               {canReportOutage && (
                 <button
                   className="w-full rounded-md bg-[#004B23] px-4 py-2 text-white hover:bg-[#000000] sm:w-auto"
@@ -909,6 +898,32 @@ const OutagesTab: React.FC = () => {
             </div>
           </motion.div>
 
+          {/* Search Priority Section */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.25 }}
+            className="mt-6"
+          >
+            <div className="rounded-xl border border-gray-200 bg-gradient-to-r from-green-50/60 to-white p-4 shadow-sm">
+              <div className="mb-3">
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#004B23]">Primary action</p>
+                <h2 className="text-base font-semibold text-gray-900 sm:text-lg">Search Outages</h2>
+                <p className="text-xs text-gray-600 sm:text-sm">Find outages quickly by title, location, or status.</p>
+              </div>
+
+              <SearchModule
+                value={searchInput}
+                onChange={handleSearch}
+                onCancel={handleCancelSearch}
+                onSearch={handleManualSearch}
+                placeholder="Search by outage title, location, or status..."
+                height="h-14"
+                className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+              />
+            </div>
+          </motion.div>
+
           {outages.length === 0 ? (
             <motion.div
               className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
@@ -916,7 +931,9 @@ const OutagesTab: React.FC = () => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4 }}
             >
-              <EmptySearchState title={searchText || getActiveFilterCount() > 0 ? "No matching outages found" : "No outages reported"} />
+              <EmptySearchState
+                title={searchText || getActiveFilterCount() > 0 ? "No matching outages found" : "No outages reported"}
+              />
               {(searchText || getActiveFilterCount() > 0) && (
                 <button className="text-blue-600 hover:underline" onClick={resetFilters}>
                   Clear filters

@@ -190,9 +190,6 @@ export default function MeteringDashboard() {
   const [isLoading, setIsLoading] = useState(false)
   const [meterData, setMeterData] = useState(generateMeterData())
 
-  // Use mock data
-  const { smartMeters, conventionalMeters, readSuccessRate, alerts, totalMeters } = meterData
-
   // Format numbers with commas
   const formatNumber = (num: number) => {
     return num.toLocaleString()
@@ -217,7 +214,7 @@ export default function MeteringDashboard() {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto w-full px-4 py-8  max-sm:px-2 xl:px-16">
+          <div className="mx-auto w-full px-4 max-sm:px-2 ">
             {isLoading ? (
               <>
                 <SkeletonLoader />

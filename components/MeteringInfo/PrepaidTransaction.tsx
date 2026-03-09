@@ -8,7 +8,7 @@ import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { fetchPrepaidTransactions, PrepaidTransaction, PrepaidTransactionParams } from "lib/redux/metersSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import { VscChevronDown, VscChevronUp } from "react-icons/vsc"
-import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
+import { ArrowLeft, ChevronDown, ChevronUp, Filter, Loader2, SortAsc, SortDesc, X } from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { fetchServiceStations } from "lib/redux/serviceStationsSlice"
 import { fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
@@ -509,34 +509,6 @@ const CompactFilterSidebar = ({
   )
 }
 
-// Compact Loading Skeleton
-const CompactLoadingSkeleton = () => {
-  return (
-    <div className="space-y-2">
-      {[...Array(5)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="flex items-center justify-between rounded-lg border border-gray-100 bg-white p-3"
-          initial={{ opacity: 0.6 }}
-          animate={{
-            opacity: [0.6, 1, 0.6],
-            transition: { duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: i * 0.1 },
-          }}
-        >
-          <div className="flex items-center gap-3">
-            <div className="size-8 rounded-full bg-gray-200"></div>
-            <div>
-              <div className="size-32 rounded bg-gray-200"></div>
-              <div className="mt-1 h-2 w-24 rounded bg-gray-200"></div>
-            </div>
-          </div>
-          <div className="h-6 w-16 rounded bg-gray-200"></div>
-        </motion.div>
-      ))}
-    </div>
-  )
-}
-
 const PrepaidTransactionTable: React.FC<{ pageSize?: number }> = ({ pageSize: propPageSize = 10 }) => {
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize] = useState(propPageSize)
@@ -797,7 +769,12 @@ const PrepaidTransactionTable: React.FC<{ pageSize?: number }> = ({ pageSize: pr
         {/* Table - Compact Card View for Mobile, Table for Desktop */}
         <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
           {loading && prepaidTransactions.length === 0 ? (
-            <CompactLoadingSkeleton />
+            <div className="flex items-center justify-center py-16">
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="size-8 animate-spin text-blue-600" />
+                <p className="text-sm text-gray-500">Loading prepaid transactions...</p>
+              </div>
+            </div>
           ) : prepaidTransactions.length === 0 ? (
             <div className="flex items-center justify-center">
               <EmptySearchState title="No transactions found" className="py-6" />

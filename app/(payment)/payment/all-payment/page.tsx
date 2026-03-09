@@ -9,6 +9,7 @@ import {
   ChevronUp,
   Download,
   Filter,
+  Loader2,
   RefreshCw,
   SortAsc,
   SortDesc,
@@ -370,83 +371,12 @@ interface SortOption {
 
 const LoadingSkeleton = () => {
   return (
-    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200">
-      <div className="flex w-full">
-        <div className="flex w-full flex-col">
-          <DashboardNav />
-          <div className="mx-auto w-full px-4 py-8  max-sm:px-2 xl:px-16">
-            <div className="mb-6 flex w-full flex-col justify-between gap-4 lg:flex-row lg:items-center">
-              <div className="flex-1">
-                <h4 className="text-2xl font-semibold">Payment Management</h4>
-                <p className="text-gray-600">Track and manage customer payments and transactions</p>
-              </div>
-            </div>
-            <motion.div
-              className="flex-3 mt-5 flex flex-col rounded-md border bg-white p-5"
-              initial={{ opacity: 0.6 }}
-              animate={{
-                opacity: [0.6, 1, 0.6],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                },
-              }}
-            >
-              {/* Header Section Skeleton */}
-              <div className="items-center justify-between border-b py-2 md:flex md:py-4">
-                <div className="mb-3 md:mb-0">
-                  <div className="mb-2 h-8 w-48 rounded bg-gray-200"></div>
-                  <div className="h-4 w-64 rounded bg-gray-200"></div>
-                </div>
-                <div className="flex gap-4">
-                  <div className="h-10 w-48 rounded bg-gray-200"></div>
-                  <div className="h-10 w-24 rounded bg-gray-200"></div>
-                </div>
-              </div>
-
-              {/* Table Skeleton */}
-              <div className="w-full overflow-x-auto border-x bg-[#f9f9f9]">
-                <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
-                  <thead>
-                    <tr>
-                      {[...Array(10)].map((_, i) => (
-                        <th key={i} className="whitespace-nowrap border-b p-4">
-                          <div className="h-4 w-24 rounded bg-gray-200"></div>
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[...Array(5)].map((_, rowIndex) => (
-                      <tr key={rowIndex}>
-                        {[...Array(10)].map((_, cellIndex) => (
-                          <td key={cellIndex} className="whitespace-nowrap border-b px-4 py-3">
-                            <div className="h-4 w-full rounded bg-gray-200"></div>
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination Section Skeleton */}
-              <div className="flex items-center justify-between border-t py-3">
-                <div className="h-6 w-48 rounded bg-gray-200"></div>
-                <div className="flex items-center gap-2">
-                  <div className="size-8 rounded bg-gray-200"></div>
-                  {[...Array(5)].map((_, i) => (
-                    <div key={i} className="size-8 rounded bg-gray-200"></div>
-                  ))}
-                  <div className="size-8 rounded bg-gray-200"></div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
+    <div className="flex items-center justify-center py-16">
+      <div className="flex flex-col items-center gap-3">
+        <Loader2 className="size-8 animate-spin text-[#004B23]" />
+        <p className="text-sm text-gray-500">Loading payments...</p>
       </div>
-    </section>
+    </div>
   )
 }
 
@@ -1156,7 +1086,7 @@ const AllPayments: React.FC = () => {
   const [searchInput, setSearchInput] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [isSortExpanded, setIsSortExpanded] = useState(false)
 
   // Export CSV state
@@ -2079,7 +2009,12 @@ const AllPayments: React.FC = () => {
                     {isPolling ? (
                       <>
                         <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                          />
                         </svg>
                         ON
                       </>
@@ -2179,7 +2114,7 @@ const AllPayments: React.FC = () => {
                     onCancel={handleCancelSearch}
                     onSearch={handleSearch}
                     height="h-14"
-                    className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+                    className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
                     bgClassName="bg-white"
                   />
                 </div>

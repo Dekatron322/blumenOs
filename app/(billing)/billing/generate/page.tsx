@@ -335,7 +335,7 @@ const GenerateBillPage = () => {
                   {billingSchedulesLoading && (
                     <div className="flex items-center justify-center py-12">
                       <div className="size-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
-                      <span className="ml-2 text-gray-600">Loading billing schedules...</span>
+                      <span className="ml-2 text-gray-600">Loading</span>
                     </div>
                   )}
 

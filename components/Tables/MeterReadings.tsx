@@ -516,7 +516,6 @@ const MeterReadings: React.FC = () => {
 
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
-  const [searchText, setSearchText] = useState("")
   const [searchInput, setSearchInput] = useState("")
   const [selectedReading, setSelectedReading] = useState<MeterReading | null>(null)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
@@ -530,19 +529,22 @@ const MeterReadings: React.FC = () => {
     areaOfficeId: undefined as number | undefined,
     feederId: undefined as number | undefined,
     distributionSubstationId: undefined as number | undefined,
-    sortBy: "",
-    sortOrder: "asc" as "asc" | "desc",
+    validationStatus: undefined as number | undefined,
+    sortBy: undefined as string | undefined,
+    sortOrder: undefined as "asc" | "desc" | undefined,
   })
 
   // Applied filters state (only updated when "Apply Filters" is clicked)
   const [appliedFilters, setAppliedFilters] = useState({
-    period: "",
+    period: undefined as string | undefined,
     customerId: undefined as number | undefined,
     areaOfficeId: undefined as number | undefined,
     feederId: undefined as number | undefined,
     distributionSubstationId: undefined as number | undefined,
-    sortBy: "",
-    sortOrder: "asc" as "asc" | "desc",
+    validationStatus: undefined as number | undefined,
+    sortBy: undefined as string | undefined,
+    sortOrder: undefined as "asc" | "desc" | undefined,
+    search: undefined as string | undefined,
   })
 
   // Get pagination values from Redux state
@@ -594,6 +596,7 @@ const MeterReadings: React.FC = () => {
     const fetchParams = {
       pageNumber: currentPage,
       pageSize: pageSize,
+      ...(appliedFilters.search ? { Search: appliedFilters.search } : {}),
       ...(appliedFilters.period ? { BillingPeriodId: parseInt(appliedFilters.period) } : {}),
       ...(appliedFilters.customerId !== undefined ? { CustomerId: appliedFilters.customerId } : {}),
       ...(appliedFilters.areaOfficeId !== undefined ? { AreaOfficeId: appliedFilters.areaOfficeId } : {}),
@@ -807,14 +810,17 @@ const MeterReadings: React.FC = () => {
     setSortColumn(column)
   }
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchText(e.target.value)
-    dispatch(setPagination({ page: 1, pageSize }))
+  // Handle search
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value)
   }
 
   const handleCancelSearch = () => {
-    setSearchText("")
     setSearchInput("")
+    setAppliedFilters({
+      ...appliedFilters,
+      search: undefined,
+    })
     dispatch(setPagination({ page: 1, pageSize }))
   }
 
@@ -823,7 +829,10 @@ const MeterReadings: React.FC = () => {
     const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
 
     if (shouldUpdate) {
-      setSearchText(trimmed)
+      setAppliedFilters({
+        ...appliedFilters,
+        search: trimmed,
+      })
       dispatch(setPagination({ page: 1, pageSize }))
     }
   }
@@ -878,7 +887,12 @@ const MeterReadings: React.FC = () => {
   // Apply all filters at once
   const applyFilters = () => {
     // Copy localFilters to appliedFilters to trigger API call
-    setAppliedFilters({ ...localFilters })
+    setAppliedFilters({
+      ...localFilters,
+      period: localFilters.period || undefined,
+      sortBy: localFilters.sortBy || undefined,
+      search: searchInput.trim() || undefined,
+    })
     // Reset to first page when applying filters
     dispatch(setPagination({ page: 1, pageSize }))
   }
@@ -891,12 +905,22 @@ const MeterReadings: React.FC = () => {
       areaOfficeId: undefined,
       feederId: undefined,
       distributionSubstationId: undefined,
+      validationStatus: undefined,
       sortBy: "",
       sortOrder: "asc" as "asc" | "desc",
     }
     setLocalFilters(emptyFilters)
-    setAppliedFilters(emptyFilters)
-    setSearchText("")
+    setAppliedFilters({
+      period: undefined,
+      customerId: undefined,
+      areaOfficeId: undefined,
+      feederId: undefined,
+      distributionSubstationId: undefined,
+      validationStatus: undefined,
+      sortBy: undefined,
+      sortOrder: undefined,
+      search: undefined,
+    })
     setSearchInput("")
     dispatch(setPagination({ page: 1, pageSize }))
   }
@@ -1010,7 +1034,7 @@ const MeterReadings: React.FC = () => {
           transition={{ duration: 0.4 }}
         >
           <motion.div
-            className="items-center justify-between border-b py-2 md:flex md:py-4"
+            className="items-center justify-between  py-2 md:flex md:py-4"
             initial={{ y: -10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.3 }}
@@ -1035,29 +1059,7 @@ const MeterReadings: React.FC = () => {
                 <p className="text-sm text-gray-600">Manage and validate customer meter readings</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="w-full sm:w-64 md:w-[380px]">
-                <SearchModule
-                  prominent
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  onCancel={handleCancelSearch}
-                  onSearch={handleManualSearch}
-                  placeholder="Search by customer, account or period..."
-                  className="w-full"
-                  bgClassName="bg-white"
-                />
-              </div>
-
-              {/* Active filters badge - Desktop only (2xl and above) */}
-              {getActiveFilterCount() > 0 && (
-                <div className="hidden items-center gap-2 2xl:flex">
-                  <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
-                    {getActiveFilterCount()} active filter{getActiveFilterCount() !== 1 ? "s" : ""}
-                  </span>
-                </div>
-              )}
-
+            <div className="flex items-center gap-2">
               {/* Hide/Show Filters button - Desktop only (2xl and above) */}
               <button
                 type="button"
@@ -1079,6 +1081,27 @@ const MeterReadings: React.FC = () => {
             </div>
           </motion.div>
 
+          {/* Search Priority Section */}
+          <div className="mb-4 rounded-xl border border-gray-200 bg-gradient-to-r from-green-50/60 to-white p-4 shadow-sm">
+            <div className="mb-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#004B23]">Primary action</p>
+              <h2 className="text-base font-semibold text-gray-900 sm:text-lg">Search Meter Readings</h2>
+              <p className="text-xs text-gray-600 sm:text-sm">
+                Find records quickly by customer name, account number, or period.
+              </p>
+            </div>
+
+            <SearchModule
+              value={searchInput}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              onCancel={handleCancelSearch}
+              onSearch={handleManualSearch}
+              placeholder="Search by customer, account or period..."
+              height="h-14"
+              className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+            />
+          </div>
+
           {meterReadings.length === 0 ? (
             <motion.div
               className="mt-4 flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
@@ -1086,7 +1109,7 @@ const MeterReadings: React.FC = () => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4 }}
             >
-              <EmptySearchState title={searchText ? "No matching readings found" : "No meter readings available"} />
+              <EmptySearchState title={searchInput ? "No matching readings found" : "No meter readings available"} />
             </motion.div>
           ) : (
             <>
@@ -1385,7 +1408,7 @@ const MeterReadings: React.FC = () => {
 
                 <p className="text-center text-xs text-gray-600 sm:text-right sm:text-sm">
                   Page {pagination.currentPage} of {totalPages || 1} ({totalRecords.toLocaleString()} total entries)
-                  {searchText.trim() && " - filtered"}
+                  {searchInput.trim() && " - filtered"}
                 </p>
               </div>
             </>

@@ -539,15 +539,6 @@ const AllCustomers = () => {
     setActiveDropdown(null)
   }
 
-  const openModal = (modalType: "details" | "suspend" | "reminder" | "status", customer?: Customer) => {
-    closeAllModals()
-    setActiveModal(modalType)
-    if (customer) {
-      setSelectedCustomer(customer)
-    }
-    setActiveDropdown(null)
-  }
-
   // Modal handlers
   const handleViewDetails = (customer: Customer) => {
     router.push(`/customers/${customer.id}`)
@@ -763,12 +754,6 @@ const AllCustomers = () => {
     } else {
       return "border border-red-200 bg-red-100 text-red-700"
     }
-  }
-
-  const toggleSort = (column: string) => {
-    const isAscending = sortColumn === column && sortOrder === "asc"
-    setSortOrder(isAscending ? "desc" : "asc")
-    setSortColumn(column)
   }
 
   // Loading State

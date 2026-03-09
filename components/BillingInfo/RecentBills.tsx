@@ -33,44 +33,6 @@ interface RecentBillsProps {
   onViewDetails?: (bill: PostpaidBill) => void
 }
 
-// Table Skeleton Component
-const TableSkeleton = () => (
-  <div className="w-full">
-    <div className="mb-4 flex items-center justify-between">
-      <div className="h-8 w-48 animate-pulse rounded bg-gray-200"></div>
-      <div className="h-10 w-32 animate-pulse rounded bg-gray-200"></div>
-    </div>
-    <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            {[...Array(8)].map((_, i) => (
-              <th key={i} className="px-4 py-3">
-                <div className="h-4 w-20 animate-pulse rounded bg-gray-200"></div>
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-200 bg-white">
-          {[...Array(5)].map((_, rowIndex) => (
-            <tr key={rowIndex}>
-              {[...Array(8)].map((_, colIndex) => (
-                <td key={colIndex} className="px-4 py-3">
-                  <div className="h-4 w-full animate-pulse rounded bg-gray-200"></div>
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-    <div className="mt-4 flex items-center justify-between">
-      <div className="h-8 w-64 animate-pulse rounded bg-gray-200"></div>
-      <div className="h-8 w-48 animate-pulse rounded bg-gray-200"></div>
-    </div>
-  </div>
-)
-
 // Mobile Filter Sidebar Component
 const MobileFilterSidebar = ({
   isOpen,
@@ -331,11 +293,10 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
   const { areaOffices } = useAppSelector((state) => state.areaOffices)
   const { feeders } = useAppSelector((state) => state.feeders)
 
-  const [searchText, setSearchText] = useState("")
-  const [searchTrigger, setSearchTrigger] = useState(0)
+  const [searchInput, setSearchInput] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [isSortExpanded, setIsSortExpanded] = useState(true)
 
   // Local state for filters to avoid too many Redux dispatches
@@ -358,6 +319,7 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
     feederId: undefined as number | undefined,
     sortBy: undefined as string | undefined,
     sortOrder: undefined as "asc" | "desc" | undefined,
+    search: undefined as string | undefined,
   })
 
   // Fetch area offices and feeders on component mount for filter dropdowns
@@ -388,7 +350,7 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
     const fetchParams: any = {
       pageNumber: currentPage,
       pageSize: pagination.pageSize,
-      ...(searchText && { accountNumber: searchText }),
+      ...(appliedFilters.search && { accountNumber: appliedFilters.search }),
       ...(appliedFilters.period && { period: appliedFilters.period }),
       ...(appliedFilters.status !== undefined && { status: appliedFilters.status }),
       ...(appliedFilters.category !== undefined && { category: appliedFilters.category }),
@@ -399,21 +361,35 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
     }
 
     void dispatch(fetchPostpaidBills(fetchParams))
-  }, [dispatch, currentPage, pagination.pageSize, appliedFilters, searchTrigger])
+  }, [dispatch, currentPage, pagination.pageSize, appliedFilters])
 
   // Handle search
-  const handleSearch = (text: string) => {
-    setSearchText(text)
-    setCurrentPage(1)
-    dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
-    setSearchTrigger((prev) => prev + 1)
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value)
+  }
+
+  const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      setAppliedFilters({
+        ...appliedFilters,
+        search: trimmed,
+      })
+      setCurrentPage(1)
+      dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
+    }
   }
 
   const handleCancelSearch = () => {
-    setSearchText("")
+    setSearchInput("")
+    setAppliedFilters({
+      ...appliedFilters,
+      search: undefined,
+    })
     setCurrentPage(1)
     dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
-    setSearchTrigger((prev) => prev + 1)
   }
 
   // Handle refresh
@@ -421,7 +397,7 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
     const fetchParams: any = {
       pageNumber: currentPage,
       pageSize: pagination.pageSize,
-      ...(searchText && { accountNumber: searchText }),
+      ...(appliedFilters.search && { accountNumber: appliedFilters.search }),
       ...(appliedFilters.period && { period: appliedFilters.period }),
       ...(appliedFilters.status !== undefined && { status: appliedFilters.status }),
       ...(appliedFilters.category !== undefined && { category: appliedFilters.category }),
@@ -548,6 +524,7 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
       feederId: localFilters.feederId,
       sortBy: localFilters.sortBy || undefined,
       sortOrder: localFilters.sortOrder || undefined,
+      search: searchInput.trim() || undefined,
     })
     setCurrentPage(1)
     dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
@@ -572,8 +549,9 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
       feederId: undefined,
       sortBy: undefined,
       sortOrder: undefined,
+      search: undefined,
     })
-    setSearchText("")
+    setSearchInput("")
     setCurrentPage(1)
     dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
   }
@@ -723,9 +701,12 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
   // Loading state
   if (loading && bills.length === 0) {
     return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }} className="w-full">
-        <TableSkeleton />
-      </motion.div>
+      <div className="flex items-center justify-center py-16">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="size-8 animate-spin text-blue-600" />
+          <p className="text-sm text-gray-500">Loading recent bills...</p>
+        </div>
+      </div>
     )
   }
 
@@ -764,62 +745,70 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4 }}
         >
-          {/* Header with Search and Actions */}
-          <div className="mb-6">
-            <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 sm:text-xl">Recent Bills</h3>
-                <p className="text-sm text-gray-500">
-                  {totalRecords} bill(s) found • Page {currentPage} of {totalPages || 1}
-                </p>
-              </div>
+          {/* Search Priority Section */}
+          <div className="mb-4 rounded-xl border border-gray-200 bg-gradient-to-r from-green-50/60 to-white p-4 shadow-sm">
+            <div className="mb-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#004B23]">Primary action</p>
+              <h2 className="text-base font-semibold text-gray-900 sm:text-lg">Search Recent Bills</h2>
+              <p className="text-xs text-gray-600 sm:text-sm">
+                Find records quickly by account number, customer name, period, or status.
+              </p>
+            </div>
 
-              <div className="flex items-center gap-3">
-                {/* Search */}
-                <div className="w-full sm:w-64">
-                  <SearchModule
-                    value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
-                    onCancel={handleCancelSearch}
-                    onSearch={() => handleSearch(searchText)}
-                    placeholder="Search by account..."
-                  />
-                </div>
+            <SearchModule
+              value={searchInput}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              onCancel={handleCancelSearch}
+              onSearch={handleManualSearch}
+              placeholder="Type account number, customer name, period, or status..."
+              height="h-14"
+              className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+            />
+          </div>
 
-                {/* Filter Button for screens below 2xl */}
+          {/* Filter Actions */}
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 sm:text-xl">Recent Bills</h3>
+              <p className="text-sm text-gray-500">
+                {totalRecords} bill(s) found • Page {currentPage} of {totalPages || 1}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {/* Filter Button for screens below 2xl */}
+              <button
+                onClick={() => setShowMobileFilters(true)}
+                className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
+              >
+                <Filter className="size-4" />
+                Filters
+                {getActiveFilterCount() > 0 && (
+                  <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
+                    {getActiveFilterCount()}
+                  </span>
+                )}
+              </button>
+
+              {/* Desktop Actions */}
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setShowMobileFilters(true)}
-                  className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
+                  type="button"
+                  onClick={() => setShowDesktopFilters((prev) => !prev)}
+                  className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
                 >
-                  <Filter className="size-4" />
-                  Filters
-                  {getActiveFilterCount() > 0 && (
-                    <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
-                      {getActiveFilterCount()}
-                    </span>
-                  )}
+                  {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
+                  {showDesktopFilters ? "Hide filters" : "Show filters"}
                 </button>
-
-                {/* Desktop Actions */}
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowDesktopFilters((prev) => !prev)}
-                    className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
-                  >
-                    {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
-                    {showDesktopFilters ? "Hide filters" : "Show filters"}
-                  </button>
-                  <button
-                    onClick={handleRefresh}
-                    disabled={loading}
-                    className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <RefreshCw className={`mr-2 size-4 ${loading ? "animate-spin" : ""}`} />
-                    Refresh
-                  </button>
-                </div>
               </div>
+              <button
+                onClick={handleRefresh}
+                disabled={loading}
+                className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <RefreshCw className={`mr-2 size-4 ${loading ? "animate-spin" : ""}`} />
+                Refresh
+              </button>
             </div>
           </div>
 
@@ -939,7 +928,7 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
               <h3 className="mt-4 text-base font-medium text-gray-900">No Bills Found</h3>
               <EmptySearchState
                 title={
-                  getActiveFilterCount() > 0 || searchText.trim()
+                  getActiveFilterCount() > 0 || searchInput.trim()
                     ? "Try adjusting your search criteria or filters"
                     : "No bills available"
                 }

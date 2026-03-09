@@ -416,7 +416,7 @@ const SupervisorsDirectory: React.FC = () => {
   const [searchInput, setSearchInput] = useState("")
   const [searchText, setSearchText] = useState("")
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const pageSize = 10
 
@@ -640,27 +640,6 @@ const SupervisorsDirectory: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {/* Search */}
-            <div className="relative min-w-[220px]">
-              <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                value={searchInput}
-                onChange={handleSearchChange}
-                onKeyDown={(e) => e.key === "Enter" && handleManualSearch()}
-                placeholder="Search supervisors..."
-                className="h-9 w-full rounded-lg border border-gray-300 bg-white px-8 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-              {searchInput && (
-                <button
-                  onClick={handleCancelSearch}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  <X className="size-3.5" />
-                </button>
-              )}
-            </div>
-
             {/* Filter Buttons */}
             <div className="flex items-center gap-1.5">
               {/* Mobile Filter Button */}
@@ -748,6 +727,27 @@ const SupervisorsDirectory: React.FC = () => {
             )}
           </div>
         )}
+      </div>
+
+      {/* Search Priority Section */}
+      <div className="rounded-xl border border-gray-200 bg-gradient-to-r from-green-50/60 to-white p-4 shadow-sm">
+        <div className="mb-3">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#004B23]">Primary action</p>
+          <h2 className="text-base font-semibold text-gray-900 sm:text-lg">Search Supervisors</h2>
+          <p className="text-xs text-gray-600 sm:text-sm">
+            Find supervisors quickly by name, phone number, or supervisor ID.
+          </p>
+        </div>
+
+        <SearchModule
+          value={searchInput}
+          onChange={handleSearchChange}
+          onCancel={handleCancelSearch}
+          onSearch={handleManualSearch}
+          placeholder="Search by supervisor name, phone number, or supervisor ID..."
+          height="h-14"
+          className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+        />
       </div>
 
       {/* Main Content with Table on Left, Filters on Right */}
