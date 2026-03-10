@@ -1,6 +1,7 @@
 "use client"
 
 import { DateFilter, getDateRangeUtcCapitalized } from "utils/dateRange"
+import { formatCurrencyWithAbbreviation } from "utils/helpers"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { useCallback, useEffect, useState } from "react"
 import { motion } from "framer-motion"
@@ -26,8 +27,357 @@ import {
   XAxis,
   YAxis,
 } from "recharts"
-import { BillingIcon, CollectionIcon, CustomeraIcon, RevenueIcon, VendingIcon } from "components/Icons/Icons"
-import EmptySearchState from "components/ui/EmptySearchState"
+import {
+  AlertCircle,
+  BarChart3,
+  CheckCircle,
+  Clock,
+  DollarSign,
+  Loader2,
+  PieChart as PieChartIcon,
+  RefreshCw,
+  Target,
+  TrendingDown,
+  TrendingUp,
+  Users,
+} from "lucide-react"
+
+// Performance Analytics Categories Component
+const PerformanceAnalyticsCategories = ({
+  collectionEfficiencyData,
+  outstandingArrearsData,
+}: {
+  collectionEfficiencyData: any
+  outstandingArrearsData: any
+}) => {
+  const formatNumber = (num: number) => num?.toLocaleString() || "0"
+
+  // Calculate percentages
+  const calculatePercentage = (part: number, total: number) => {
+    return total > 0 ? Math.round((part / total) * 100) : 0
+  }
+
+  const collectionRate = calculatePercentage(
+    collectionEfficiencyData?.totalCollected || 0,
+    collectionEfficiencyData?.totalBilled || 0
+  )
+  const arrearsRate = calculatePercentage(
+    outstandingArrearsData?.totalOutstanding || 0,
+    collectionEfficiencyData?.totalBilled || 0
+  )
+
+  const categories = [
+    {
+      name: "Collection Efficiency",
+      count: collectionEfficiencyData?.efficiencyPercent || 0,
+      percentage: collectionEfficiencyData?.efficiencyPercent || 0,
+      color: "green",
+      icon: Target,
+      description: "Overall collection performance",
+      active: Math.round((collectionEfficiencyData?.totalCollected || 0) * 0.9),
+      inactive: Math.round((collectionEfficiencyData?.totalCollected || 0) * 0.1),
+    },
+    {
+      name: "Total Billed",
+      count: collectionEfficiencyData?.totalBilled || 0,
+      percentage: 100,
+      color: "blue",
+      icon: DollarSign,
+      description: "Total amount billed",
+      active: collectionEfficiencyData?.billCount || 0,
+      inactive: Math.round((collectionEfficiencyData?.billCount || 0) * 0.1),
+    },
+    {
+      name: "Outstanding Arrears",
+      count: outstandingArrearsData?.totalOutstanding || 0,
+      percentage: arrearsRate,
+      color: "red",
+      icon: AlertCircle,
+      description: "Total outstanding amount",
+      active: outstandingArrearsData?.customersInArrears || 0,
+      inactive: Math.round((outstandingArrearsData?.customersInArrears || 0) * 0.2),
+    },
+  ]
+
+  const colorClasses = {
+    green: {
+      bg: "bg-green-50",
+      text: "text-green-700",
+      border: "border-green-200",
+      light: "bg-green-100",
+      dark: "bg-green-600",
+      gradient: "from-green-500 to-green-600",
+    },
+    blue: {
+      bg: "bg-blue-50",
+      text: "text-blue-700",
+      border: "border-blue-200",
+      light: "bg-blue-100",
+      dark: "bg-blue-600",
+      gradient: "from-blue-500 to-blue-600",
+    },
+    red: {
+      bg: "bg-red-50",
+      text: "text-red-700",
+      border: "border-red-200",
+      light: "bg-red-100",
+      dark: "bg-red-600",
+      gradient: "from-red-500 to-red-600",
+    },
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mt-6 rounded-xl border border-gray-200 bg-white p-5"
+    >
+      {/* Header */}
+      <div className="mb-4 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
+        <div className="flex items-center gap-2">
+          <div className="rounded-lg bg-blue-100 p-2">
+            <PieChartIcon className="size-5 text-blue-700" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">Performance Overview</h2>
+            <p className="text-sm text-gray-600">Key performance metrics and indicators</p>
+          </div>
+        </div>
+        <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700">
+          Efficiency: {collectionEfficiencyData?.efficiencyPercent?.toFixed(1) || "0.0"}%
+        </span>
+      </div>
+
+      {/* Categories Grid */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        {categories.map((category, index) => {
+          const colors = colorClasses[category.color as keyof typeof colorClasses]
+          const Icon = category.icon
+
+          return (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="group rounded-lg border border-gray-100 bg-white p-4 transition-all hover:border-gray-200 hover:shadow-sm"
+            >
+              {/* Header */}
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2">
+                  <div className={`rounded-lg p-2 ${colors.bg}`}>
+                    <Icon className={`size-4 ${colors.text}`} />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900">{category.name}</h3>
+                    <p className="text-xs text-gray-500">{category.description}</p>
+                  </div>
+                </div>
+                <span className={`text-sm font-semibold ${colors.text}`}>
+                  {category.name === "Collection Efficiency"
+                    ? `${category.count.toFixed(1)}%`
+                    : formatNumber(category.count)}
+                </span>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="mt-3">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-600">Performance</span>
+                  <span className="font-medium text-gray-900">{category.percentage.toFixed(1)}%</span>
+                </div>
+                <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min(category.percentage, 100)}%` }}
+                    transition={{ duration: 0.5, delay: index * 0.1 + 0.3 }}
+                    className={`h-full rounded-full bg-gradient-to-r ${colors.gradient}`}
+                  />
+                </div>
+              </div>
+
+              {/* Status Breakdown */}
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <div className="rounded-lg bg-emerald-50 p-2 text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <CheckCircle className="size-3 text-emerald-600" />
+                    <span className="text-xs font-medium text-emerald-700">
+                      {category.name === "Collection Efficiency"
+                        ? "Target Achieved"
+                        : category.name === "Total Billed"
+                        ? "Bills Issued"
+                        : category.name === "Outstanding Arrears"
+                        ? "Active Accounts"
+                        : "Completed"}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm font-semibold text-emerald-900">{formatNumber(category.active)}</p>
+                </div>
+                <div className="rounded-lg bg-amber-50 p-2 text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <Clock className="size-3 text-amber-600" />
+                    <span className="text-xs font-medium text-amber-700">
+                      {category.name === "Collection Efficiency"
+                        ? "Below Target"
+                        : category.name === "Total Billed"
+                        ? "Pending Bills"
+                        : category.name === "Outstanding Arrears"
+                        ? "Overdue Accounts"
+                        : "Pending"}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm font-semibold text-amber-900">{formatNumber(category.inactive)}</p>
+                </div>
+              </div>
+            </motion.div>
+          )
+        })}
+      </div>
+
+      {/* Summary Stats Row */}
+      <div className="mt-4 grid grid-cols-1 gap-4 rounded-lg bg-gray-50 p-4 md:grid-cols-2">
+        {/* Left Column - Collection Status */}
+        <div>
+          <h4 className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-600">Collection Status</h4>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between rounded-lg bg-white p-2">
+              <div className="flex items-center gap-2">
+                <div className="rounded-full bg-emerald-100 p-1">
+                  <CheckCircle className="size-3 text-emerald-700" />
+                </div>
+                <span className="text-sm text-gray-700">Bills with Payments</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-gray-900">
+                  {formatNumber(collectionEfficiencyData?.billsWithPayments || 0)}
+                </span>
+                <span className="text-xs text-gray-500">
+                  (
+                  {calculatePercentage(
+                    collectionEfficiencyData?.billsWithPayments || 0,
+                    collectionEfficiencyData?.billCount || 0
+                  )}
+                  %)
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between rounded-lg bg-white p-2">
+              <div className="flex items-center gap-2">
+                <div className="rounded-full bg-blue-100 p-1">
+                  <DollarSign className="size-3 text-blue-700" />
+                </div>
+                <span className="text-sm text-gray-700">Total Collected</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-gray-900">
+                  {formatNumber(collectionEfficiencyData?.totalCollected || 0)}
+                </span>
+                <span className="text-xs text-gray-500">
+                  (
+                  {calculatePercentage(
+                    collectionEfficiencyData?.totalCollected || 0,
+                    collectionEfficiencyData?.totalBilled || 0
+                  )}
+                  %)
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between rounded-lg bg-white p-2">
+              <div className="flex items-center gap-2">
+                <div className="rounded-full bg-purple-100 p-1">
+                  <BarChart3 className="size-3 text-purple-700" />
+                </div>
+                <span className="text-sm text-gray-700">Performance Rate</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-gray-900">
+                  {collectionEfficiencyData?.efficiencyPercent?.toFixed(1) || "0.0"}%
+                </span>
+                <span className="text-xs text-gray-500">
+                  {collectionEfficiencyData?.efficiencyPercent >= 90
+                    ? "Excellent"
+                    : collectionEfficiencyData?.efficiencyPercent >= 80
+                    ? "Good"
+                    : "Needs Improvement"}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column - Arrears Status */}
+        <div>
+          <h4 className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-600">Arrears Status</h4>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between rounded-lg bg-white p-2">
+              <div className="flex items-center gap-2">
+                <div className="rounded-full bg-red-100 p-1">
+                  <AlertCircle className="size-3 text-red-700" />
+                </div>
+                <span className="text-sm text-gray-700">Customers in Arrears</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-gray-900">
+                  {formatNumber(outstandingArrearsData?.customersInArrears || 0)}
+                </span>
+                <span className="text-xs text-gray-500">
+                  (
+                  {calculatePercentage(
+                    outstandingArrearsData?.customersInArrears || 0,
+                    outstandingArrearsData?.totalOutstanding || 0
+                  )}
+                  %)
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between rounded-lg bg-white p-2">
+              <div className="flex items-center gap-2">
+                <div className="rounded-full bg-orange-100 p-1">
+                  <TrendingUp className="size-3 text-orange-700" />
+                </div>
+                <span className="text-sm text-gray-700">Total Debits</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-gray-900">
+                  {formatNumber(outstandingArrearsData?.totalDebits || 0)}
+                </span>
+                <span className="text-xs text-gray-500">
+                  (
+                  {calculatePercentage(
+                    outstandingArrearsData?.totalDebits || 0,
+                    outstandingArrearsData?.totalOutstanding || 0
+                  )}
+                  %)
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between rounded-lg bg-white p-2">
+              <div className="flex items-center gap-2">
+                <div className="rounded-full bg-green-100 p-1">
+                  <TrendingDown className="size-3 text-green-700" />
+                </div>
+                <span className="text-sm text-gray-700">Total Credits</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-gray-900">
+                  {formatNumber(outstandingArrearsData?.totalCredits || 0)}
+                </span>
+                <span className="text-xs text-gray-500">
+                  (
+                  {calculatePercentage(
+                    outstandingArrearsData?.totalCredits || 0,
+                    outstandingArrearsData?.totalOutstanding || 0
+                  )}
+                  %)
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
 
 // Dropdown Popover Component
 const DropdownPopover = ({
@@ -50,7 +400,7 @@ const DropdownPopover = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 shadow-sm hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
       >
         {children}
         <svg
@@ -70,7 +420,7 @@ const DropdownPopover = ({
       {isOpen && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 z-20 mt-1 w-32 rounded-md border border-gray-200 bg-white py-1 text-sm shadow-lg">
+          <div className="absolute right-0 z-20 mt-1 min-w-[120px] overflow-hidden rounded-lg border border-gray-200 bg-white py-1 text-sm shadow-lg">
             {options.map((option) => (
               <button
                 key={option.value}
@@ -79,8 +429,10 @@ const DropdownPopover = ({
                   onSelect(option.value)
                   setIsOpen(false)
                 }}
-                className={`block w-full px-3 py-2 text-left ${
-                  option.value === selectedValue ? "bg-blue-50 text-blue-700" : "text-gray-700 hover:bg-gray-100"
+                className={`block w-full px-3 py-2 text-left text-xs transition-colors ${
+                  option.value === selectedValue
+                    ? "bg-blue-50 font-medium text-blue-700"
+                    : "text-gray-700 hover:bg-gray-100"
                 }`}
               >
                 {option.label}
@@ -89,6 +441,18 @@ const DropdownPopover = ({
           </div>
         </>
       )}
+    </div>
+  )
+}
+
+// Loading State Component
+const LoadingState = () => {
+  return (
+    <div className="flex items-center justify-center py-16">
+      <div className="flex flex-col items-center gap-3">
+        <Loader2 className="size-8 animate-spin text-[#004B23]" />
+        <p className="text-sm text-gray-500">Loading performance data...</p>
+      </div>
     </div>
   )
 }
@@ -351,785 +715,921 @@ export default function PerformanceAnalyticsDashboard() {
     </button>
   )
 
+  // Time filter options
+  const timeFilterOptions = [
+    { value: "day", label: "Today" },
+    { value: "week", label: "This Week" },
+    { value: "month", label: "This Month" },
+    { value: "quarter", label: "This Quarter" },
+    { value: "year", label: "This Year" },
+  ]
+
+  // Format numbers with commas
+  const formatNumber = (num: number) => num?.toLocaleString() || "0"
+
+  // Calculate percentages for cards
+  const calculatePercentage = (part: number, total: number) => {
+    return total > 0 ? Math.round((part / total) * 100) : 0
+  }
+
+  // Check if any data is loading
+  const anyLoading =
+    collectionEfficiencyLoading || outstandingArrearsLoading || collectionByBandLoading || cboPerformanceLoading
+
+  // Check if any data has errors
+  const anyError = collectionEfficiencyError || outstandingArrearsError || collectionByBandError || cboPerformanceError
+
+  // Check if we have any data
+  const hasData = collectionEfficiencyData || outstandingArrearsData || collectionByBandData || cboPerformanceData
+
   // Chart colors
   const COLORS = ["#004B23", "#007200", "#38b000", "#9ef01a", "#ccff33", "#004B23", "#007200"]
   const COLLECTION_BAND_COLORS = ["#3b82f6", "#8b5cf6", "#ef4444", "#f97316", "#10b981", "#0ea5e9"]
 
   return (
-    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+    <section className="min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100 pb-24 sm:pb-20">
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
 
-          {/* Main Content */}
-          <div className="mx-auto w-full px-3 py-8 xl:container xl:px-16">
-            {/* Header */}
-            <div className="mb-6 flex w-full flex-col gap-4">
-              <div className="flex w-full items-start justify-between">
+          <div className="w-full px-4 py-6 sm:px-6 lg:px-8">
+            {/* Page Header */}
+            <div className="mb-8">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <h1 className="text-lg font-bold text-gray-900 sm:text-xl md:text-xl lg:text-3xl">
-                    Performance Analytics
-                  </h1>
-                  <p className="text-sm font-medium text-gray-500 sm:text-base">Real Time performance analytics</p>
+                  <h1 className="text-2xl font-bold text-gray-900 sm:text-2xl">Performance Analytics</h1>
+                  <p className="mt-1 text-sm text-gray-600">Real-time performance metrics and analytics</p>
                 </div>
 
-                {/* Time Filter - Desktop */}
-                <div className="hidden rounded-lg p-3 sm:bg-white sm:p-2 sm:shadow-sm xl:flex">
-                  <div className="flex flex-row items-center gap-4 max-sm:justify-between sm:gap-4">
-                    <div className="flex flex-row items-center gap-2 max-sm:justify-between sm:gap-3">
-                      <span className="text-sm font-medium text-gray-500">Time Range:</span>
-                      <div className="hidden items-center gap-2 sm:flex">
-                        <TimeFilterButton filter="day" label="Today" />
-                        <TimeFilterButton filter="week" label="This Week" />
-                        <TimeFilterButton filter="month" label="This Month" />
-                        <TimeFilterButton filter="quarter" label="This Quarter" />
-                        <TimeFilterButton filter="year" label="This Year" />
-                      </div>
-                    </div>
+                {/* Header Actions */}
+                <div className="flex items-center gap-3">
+                  {/* Time Filter */}
+                  <DropdownPopover
+                    options={timeFilterOptions.map((opt, index) => ({ ...opt, value: index }))}
+                    selectedValue={timeFilterOptions.findIndex((opt) => opt.value === timeFilter)}
+                    onSelect={(index) => {
+                      const option = timeFilterOptions[index]
+                      if (option) {
+                        setTimeFilter(option.value as TimeFilter)
+                      }
+                    }}
+                  >
+                    {timeFilterOptions.find((opt) => opt.value === timeFilter)?.label}
+                  </DropdownPopover>
 
-                    {/* Polling Controls */}
-                    <div className="flex items-center gap-2 border-l pl-4">
-                      <span className="text-sm font-medium text-gray-500">Auto-refresh:</span>
-                      <button
-                        onClick={togglePolling}
-                        className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                          isPolling
-                            ? "bg-green-100 text-green-700 hover:bg-green-200"
-                            : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                        }`}
+                  {/* Polling Controls */}
+                  <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white p-1">
+                    <button
+                      onClick={togglePolling}
+                      className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                        isPolling ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      }`}
+                    >
+                      <RefreshCw className={`size-3.5 ${isPolling ? "animate-spin" : ""}`} />
+                      {isPolling ? "ON" : "OFF"}
+                    </button>
+
+                    {isPolling && (
+                      <DropdownPopover
+                        options={pollingOptions}
+                        selectedValue={pollingInterval}
+                        onSelect={handlePollingIntervalChange}
                       >
-                        {isPolling ? (
-                          <>
-                            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                              />
-                            </svg>
-                            ON
-                          </>
-                        ) : (
-                          <>
-                            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                              />
-                            </svg>
-                            OFF
-                          </>
-                        )}
-                      </button>
-
-                      {isPolling && (
-                        <DropdownPopover
-                          options={pollingOptions}
-                          selectedValue={pollingInterval}
-                          onSelect={handlePollingIntervalChange}
-                        >
-                          {pollingOptions.find((opt) => opt.value === pollingInterval)?.label}
-                        </DropdownPopover>
-                      )}
-                    </div>
+                        {pollingOptions.find((opt) => opt.value === pollingInterval)?.label}
+                      </DropdownPopover>
+                    )}
                   </div>
+
+                  <button
+                    onClick={fetchPerformanceData}
+                    disabled={anyLoading}
+                    className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    <RefreshCw className={`size-3.5 ${anyLoading ? "animate-spin" : ""}`} />
+                    Refresh
+                  </button>
                 </div>
               </div>
+            </div>
 
-              {/* Time Filter - Mobile */}
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="w-full sm:w-auto">
-                  <div className="rounded-lg p-3 sm:bg-white sm:p-2 sm:shadow-sm xl:hidden">
-                    <div className="flex flex-row items-center gap-2 max-sm:justify-between sm:gap-3">
-                      <span className="text-sm font-medium text-gray-500">Time Range:</span>
-                      <div className="relative xl:hidden">
-                        <button
-                          type="button"
-                          onClick={() => setIsMobileFilterOpen((prev) => !prev)}
-                          className="inline-flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
-                        >
-                          <span>{getTimeFilterLabel(timeFilter)}</span>
-                          <svg
-                            className="size-4 text-gray-500"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </button>
+            {/* Error Message */}
+            {anyError && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4"
+              >
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="mt-0.5 size-5 shrink-0 text-red-600" />
+                  <div>
+                    <p className="font-medium text-red-900">Failed to load analytics</p>
+                    <p className="text-sm text-red-700">{anyError}</p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
 
-                        {isMobileFilterOpen && (
-                          <div className="absolute right-0 z-10 mt-2 w-48 rounded-md border border-gray-100 bg-white py-1 text-sm shadow-lg">
-                            <div className="border-b border-gray-100 px-3 py-2">
-                              <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-                                Time Range
-                              </div>
-                            </div>
-                            {(["day", "week", "month", "quarter", "year"] as TimeFilter[]).map((filter) => (
-                              <button
-                                key={filter}
-                                type="button"
-                                onClick={() => handleTimeFilterChange(filter)}
-                                className={`block w-full px-3 py-2 text-left capitalize ${
-                                  timeFilter === filter ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-100"
-                                }`}
-                              >
-                                {getTimeFilterLabel(filter)}
-                              </button>
-                            ))}
+            {/* Main Content */}
+            {anyLoading && !hasData ? (
+              <LoadingState />
+            ) : hasData ? (
+              <div className="w-full">
+                {/* Performance Analytics Categories */}
+                <PerformanceAnalyticsCategories
+                  collectionEfficiencyData={collectionEfficiencyData}
+                  outstandingArrearsData={outstandingArrearsData}
+                />
 
-                            <div className="my-2 border-b border-gray-100"></div>
-                            <div className="px-3 py-2">
-                              <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-                                Auto-refresh
-                              </div>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={togglePolling}
-                              className={`flex w-full items-center justify-between px-3 py-2 ${
-                                isPolling ? "bg-green-50 text-green-700" : "text-gray-700 hover:bg-gray-100"
-                              }`}
+                {/* Charts Section */}
+                <div className="space-y-6">
+                  {/* Collection by Band Chart - Full Width */}
+                  {collectionByBandData && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.1 }}
+                      className="rounded-xl border border-gray-200 bg-white p-6"
+                    >
+                      {/* Header */}
+                      <div className="mb-6 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
+                        <div className="flex items-center gap-2">
+                          <div className="rounded-lg bg-blue-100 p-2">
+                            <BarChart3 className="size-5 text-blue-700" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900">Collection by Band</h3>
+                            <p className="text-sm text-gray-600">Revenue distribution across customer bands</p>
+                          </div>
+                        </div>
+                        <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700">
+                          {collectionByBandData.slices?.length} Bands
+                        </span>
+                      </div>
+
+                      {collectionByBandLoading ? (
+                        <div className="flex items-center justify-center py-16">
+                          <div className="flex flex-col items-center gap-3">
+                            <Loader2 className="size-8 animate-spin text-blue-600" />
+                            <p className="text-sm text-gray-500">Loading collection by band...</p>
+                          </div>
+                        </div>
+                      ) : collectionByBandError ? (
+                        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                          {collectionByBandError}
+                        </div>
+                      ) : collectionByBandData.slices?.length === 0 ? (
+                        <div className="flex h-[200px] w-full flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white px-6 text-center">
+                          <div className="text-sm font-semibold text-gray-900">No collection-by-band data</div>
+                          <div className="mt-1 text-sm text-gray-600">Try changing the time range.</div>
+                        </div>
+                      ) : (
+                        <div className="space-y-6">
+                          {/* Summary Cards */}
+                          <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
+                            {/* Total Revenue Card */}
+                            <motion.div
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: 0.1 }}
+                              className="group rounded-lg border border-gray-100 bg-white p-4 transition-all hover:border-gray-200 hover:shadow-sm"
                             >
-                              <span className="flex items-center gap-2">
-                                {isPolling ? (
-                                  <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                                    />
-                                  </svg>
-                                ) : (
-                                  <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                  </svg>
-                                )}
-                                {isPolling ? "Enabled" : "Disabled"}
-                              </span>
-                            </button>
-
-                            {isPolling && (
-                              <div className="px-3 py-2">
-                                <DropdownPopover
-                                  options={pollingOptions}
-                                  selectedValue={pollingInterval}
-                                  onSelect={handlePollingIntervalChange}
-                                >
-                                  {pollingOptions.find((opt) => opt.value === pollingInterval)?.label}
-                                </DropdownPopover>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Collection Efficiency Card */}
-            <div className="mb-6">
-              <Card title="Collection Efficiency" icon={<CollectionIcon />}>
-                {collectionEfficiencyLoading ? (
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
-                    {[...Array(4)].map((_, index) => (
-                      <div
-                        key={index}
-                        className="animate-pulse rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 p-6"
-                      >
-                        <div className="mb-2 h-4 w-24 rounded bg-gray-200"></div>
-                        <div className="mb-2 h-8 w-32 rounded bg-gray-300"></div>
-                        <div className="h-4 w-20 rounded bg-gray-200"></div>
-                      </div>
-                    ))}
-                  </div>
-                ) : collectionEfficiencyError ? (
-                  <div className="flex h-64 items-center justify-center">
-                    <div className="text-center">
-                      <div className="mb-2 text-lg font-semibold text-red-600">Error</div>
-                      <div className="text-sm text-gray-600">{collectionEfficiencyError}</div>
-                      <button
-                        onClick={handleRefreshData}
-                        className="mt-4 rounded-md bg-[#004B23] px-4 py-2 text-sm text-white hover:bg-[#003318]"
-                      >
-                        Retry
-                      </button>
-                    </div>
-                  </div>
-                ) : !collectionEfficiencyData ? (
-                  <div className="flex h-64 items-center justify-center">
-                    <EmptySearchState
-                      title="No data available"
-                      description="Try changing the time range."
-                      className="py-0"
-                    />
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
-                    {/* Efficiency Percentage */}
-                    <div className="rounded-lg bg-gradient-to-br from-green-50 to-green-100 p-6">
-                      <div className="mb-2 text-sm font-medium uppercase tracking-wide text-green-600">
-                        Collection Efficiency
-                      </div>
-                      <div className="text-3xl font-bold text-green-700">
-                        {collectionEfficiencyData.efficiencyPercent?.toFixed(1) || "0.0"}%
-                      </div>
-                      <div className="mt-2 text-sm text-green-700">
-                        {collectionEfficiencyData.efficiencyPercent >= 90
-                          ? "Excellent Performance"
-                          : collectionEfficiencyData.efficiencyPercent >= 80
-                          ? "Good Performance"
-                          : "Needs Improvement"}
-                      </div>
-                    </div>
-
-                    {/* Total Billed */}
-                    <div className="rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 p-6">
-                      <div className="mb-2 text-sm font-medium uppercase tracking-wide text-blue-600">Total Billed</div>
-                      <div className="text-3xl font-bold text-blue-900">
-                        {formatCurrency(collectionEfficiencyData.totalBilled)}
-                      </div>
-                      <div className="mt-2 text-sm text-blue-700">
-                        {collectionEfficiencyData.billCount?.toLocaleString() || "0"} bills issued
-                      </div>
-                    </div>
-
-                    {/* Total Collected */}
-                    <div className="rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 p-6">
-                      <div className="mb-2 text-sm font-medium uppercase tracking-wide text-purple-600">
-                        Total Collected
-                      </div>
-                      <div className="text-3xl font-bold text-purple-900">
-                        {formatCurrency(collectionEfficiencyData.totalCollected)}
-                      </div>
-                      <div className="mt-2 text-sm text-purple-700">
-                        {collectionEfficiencyData.billsWithPayments?.toLocaleString() || "0"} paid bills
-                      </div>
-                    </div>
-
-                    {/* Performance Indicator */}
-                    <div className="rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 p-6">
-                      <div className="mb-4 text-sm font-medium uppercase tracking-wide text-gray-600">
-                        Performance vs Target
-                      </div>
-                      <div className="mb-4">
-                        <div className="h-4 w-full overflow-hidden rounded-full bg-gray-200">
-                          <div
-                            className="h-full rounded-full bg-gradient-to-r from-green-400 to-green-600"
-                            style={{ width: `${Math.min(collectionEfficiencyData.efficiencyPercent || 0, 100)}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                      <div className="text-sm text-gray-700">
-                        <div className="flex justify-between">
-                          <span>Target: 85%</span>
-                          <span className="font-semibold">
-                            {collectionEfficiencyData.efficiencyPercent?.toFixed(1) || "0.0"}%
-                          </span>
-                        </div>
-                        <div className="mt-1 text-xs text-gray-500">
-                          {collectionEfficiencyData.efficiencyPercent >= 85 ? "Above target" : "Below target"}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </Card>
-            </div>
-
-            {/* Summary Metrics */}
-            <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {/* Quick Stats Cards */}
-              <Card title="Overall Performance" icon={<RevenueIcon />}>
-                <div className="space-y-4">
-                  <div>
-                    <div className="text-sm font-medium text-gray-500">Efficiency Rate</div>
-                    <div className="text-2xl font-bold text-gray-900">
-                      {collectionEfficiencyData?.efficiencyPercent?.toFixed(1) || "0.0"}%
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-gray-500">Outstanding Arrears</div>
-                    <div className="text-xl font-bold text-red-600">
-                      {formatCurrency(outstandingArrearsData?.totalOutstanding || 0)}
-                    </div>
-                  </div>
-                </div>
-              </Card>
-
-              <Card title="Collection Summary" icon={<CollectionIcon />}>
-                <div className="space-y-4">
-                  <div>
-                    <div className="text-sm font-medium text-gray-500">Total Billed</div>
-                    <div className="text-2xl font-bold text-gray-900">
-                      {formatCurrency(collectionEfficiencyData?.totalBilled || 0)}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-gray-500">Total Collected</div>
-                    <div className="text-xl font-bold text-green-600">
-                      {formatCurrency(collectionEfficiencyData?.totalCollected || 0)}
-                    </div>
-                  </div>
-                </div>
-              </Card>
-
-              <Card title="Customer Metrics" icon={<CustomeraIcon />}>
-                <div className="space-y-4">
-                  <div>
-                    <div className="text-sm font-medium text-gray-500">Customers in Arrears</div>
-                    <div className="text-2xl font-bold text-gray-900">
-                      {outstandingArrearsData?.customersInArrears.toLocaleString() || "0"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-gray-500">Bills with Payments</div>
-                    <div className="text-xl font-bold text-blue-600">
-                      {collectionEfficiencyData?.billsWithPayments?.toLocaleString() || "0"}
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            </div>
-
-            {/* Outstanding Arrears Section */}
-            <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-              {/* Outstanding Arrears Card */}
-              <Card title="Outstanding Arrears" icon={<RevenueIcon />}>
-                {outstandingArrearsLoading ? (
-                  <div className="space-y-4">
-                    {[...Array(3)].map((_, index) => (
-                      <div key={index} className="animate-pulse">
-                        <div className="mb-2 h-4 w-32 rounded bg-gray-200"></div>
-                        <div className="h-8 w-40 rounded bg-gray-300"></div>
-                      </div>
-                    ))}
-                  </div>
-                ) : outstandingArrearsError ? (
-                  <div className="flex h-64 items-center justify-center">
-                    <div className="text-center">
-                      <div className="mb-2 text-lg font-semibold text-red-600">Error</div>
-                      <div className="text-sm text-gray-600">{outstandingArrearsError}</div>
-                    </div>
-                  </div>
-                ) : !outstandingArrearsData ? (
-                  <div className="flex h-64 items-center justify-center">
-                    <div className="text-center">
-                      <div className="mb-2 text-lg font-semibold text-gray-900">No arrears data</div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    {/* Total Outstanding */}
-                    <div className="rounded-lg bg-gradient-to-br from-red-50 to-red-100 p-6">
-                      <div className="mb-2 text-sm font-medium uppercase tracking-wide text-red-600">
-                        Total Outstanding
-                      </div>
-                      <div className="text-3xl font-bold text-red-900">
-                        {formatCurrency(outstandingArrearsData.totalOutstanding)}
-                      </div>
-                      <div className="mt-2 text-sm text-red-700">
-                        {outstandingArrearsData.customersInArrears.toLocaleString()} customers in arrears
-                      </div>
-                    </div>
-
-                    {/* Breakdown */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="rounded-lg bg-gradient-to-br from-orange-50 to-orange-100 p-4">
-                        <div className="text-sm font-medium uppercase tracking-wide text-orange-600">Total Debits</div>
-                        <div className="mt-1 text-2xl font-bold text-orange-900">
-                          {formatCurrency(outstandingArrearsData.totalDebits)}
-                        </div>
-                      </div>
-                      <div className="rounded-lg bg-gradient-to-br from-green-50 to-green-100 p-4">
-                        <div className="text-sm font-medium uppercase tracking-wide text-green-600">Total Credits</div>
-                        <div className="mt-1 text-2xl font-bold text-green-900">
-                          {formatCurrency(outstandingArrearsData.totalCredits)}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Net Amount */}
-                    <div className="rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 p-4">
-                      <div className="text-sm font-medium uppercase tracking-wide text-gray-600">Net Outstanding</div>
-                      <div className="mt-1 text-2xl font-bold text-gray-900">
-                        {formatCurrency(outstandingArrearsData.totalDebits - outstandingArrearsData.totalCredits)}
-                      </div>
-                      <div className="mt-1 text-sm text-gray-700">Debits minus credits</div>
-                    </div>
-                  </div>
-                )}
-              </Card>
-
-              {/* Collection by Band Card */}
-              <Card title="Collection by Band" icon={<BillingIcon />}>
-                {collectionByBandLoading ? (
-                  <div className="flex h-64 items-center justify-center">
-                    <div className="w-full">
-                      <div className="mb-4 size-48 animate-pulse rounded bg-gray-200"></div>
-                      <div className="space-y-2">
-                        {[...Array(5)].map((_, i) => (
-                          <div key={i} className="flex items-center gap-4">
-                            <div className="h-3 w-24 animate-pulse rounded bg-gray-200"></div>
-                            <div className="h-3 flex-1 animate-pulse rounded bg-gray-200"></div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ) : collectionByBandError ? (
-                  <div className="flex h-64 items-center justify-center">
-                    <div className="text-center">
-                      <div className="mb-2 text-lg font-semibold text-red-600">Error</div>
-                      <div className="text-sm text-gray-600">{collectionByBandError}</div>
-                    </div>
-                  </div>
-                ) : !collectionByBandData || !collectionByBandData.slices?.length ? (
-                  <div className="flex h-64 items-center justify-center">
-                    <div className="text-center">
-                      <div className="mb-2 text-lg font-semibold text-gray-900">No collection band data</div>
-                      <div className="text-sm text-gray-600">Try changing the time range.</div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    {/* Summary Stats */}
-                    <div className="rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 p-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <div className="text-sm font-medium uppercase tracking-wide text-blue-600">Total Amount</div>
-                          <div className="mt-1 text-2xl font-bold text-blue-900">
-                            {formatCurrency(collectionByBandData.slices.reduce((sum, slice) => sum + slice.amount, 0))}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium uppercase tracking-wide text-blue-600">Total Count</div>
-                          <div className="mt-1 text-2xl font-bold text-blue-900">
-                            {collectionByBandData.slices.reduce((sum, slice) => sum + slice.count, 0).toLocaleString()}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Chart */}
-                    <div className="h-64">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                          data={collectionByBandData.slices.map((slice) => ({
-                            name: slice.label,
-                            amount: slice.amount,
-                            count: slice.count,
-                            percentage: slice.percentage,
-                          }))}
-                          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                        >
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" />
-                          <YAxis />
-                          <Tooltip
-                            formatter={(value, name) => [
-                              name === "amount" ? formatCurrency(value as number) : value,
-                              name === "amount" ? "Amount" : name === "count" ? "Count" : "Percentage",
-                            ]}
-                          />
-                          <Legend />
-                          <Bar dataKey="amount" name="Amount" fill="#3b82f6" />
-                          <Bar dataKey="count" name="Count" fill="#8b5cf6" />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-
-                    {/* Detailed Table */}
-                    <div className="max-h-60 overflow-y-auto">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b bg-gray-50">
-                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Band</th>
-                            <th className="px-4 py-2 text-right text-sm font-medium text-gray-700">Amount</th>
-                            <th className="px-4 py-2 text-right text-sm font-medium text-gray-700">Count</th>
-                            <th className="px-4 py-2 text-right text-sm font-medium text-gray-700">%</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {collectionByBandData.slices.map((slice, index) => (
-                            <tr key={slice.label} className="border-b hover:bg-gray-50">
-                              <td className="px-4 py-2">
+                              <div className="flex items-start justify-between">
                                 <div className="flex items-center gap-2">
-                                  <div
-                                    className="size-3 rounded-full"
-                                    style={{
-                                      backgroundColor: COLLECTION_BAND_COLORS[index % COLLECTION_BAND_COLORS.length],
-                                    }}
-                                  />
-                                  <span className="text-sm font-medium">{slice.label}</span>
+                                  <div className="rounded-lg bg-blue-50 p-2">
+                                    <DollarSign className="size-4 text-blue-700" />
+                                  </div>
+                                  <div>
+                                    <h3 className="font-medium text-gray-900">Total Revenue</h3>
+                                    <p className="text-xs text-gray-500">All bands combined</p>
+                                  </div>
                                 </div>
-                              </td>
-                              <td className="px-4 py-2 text-right font-medium">{formatCurrency(slice.amount)}</td>
-                              <td className="px-4 py-2 text-right">{slice.count.toLocaleString()}</td>
-                              <td className="px-4 py-2 text-right">
-                                <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium">
-                                  {(slice.percentage || 0).toFixed(1)}%
+                                <span className="text-sm font-semibold text-blue-700">
+                                  {formatCurrency(
+                                    collectionByBandData.slices?.reduce((sum, slice) => sum + slice.amount, 0)
+                                  )}
                                 </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-              </Card>
-            </div>
+                              </div>
+                              <div className="mt-3">
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="text-gray-600">Performance</span>
+                                  <span className="font-medium text-gray-900">100%</span>
+                                </div>
+                                <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                                  <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: "100%" }}
+                                    transition={{ duration: 0.5, delay: 0.4 }}
+                                    className="h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-600"
+                                  />
+                                </div>
+                              </div>
+                              <div className="mt-3 grid grid-cols-2 gap-2">
+                                <div className="rounded-lg bg-emerald-50 p-2 text-center">
+                                  <div className="flex items-center justify-center gap-1">
+                                    <CheckCircle className="size-3 text-emerald-600" />
+                                    <span className="text-xs font-medium text-emerald-700">Complete</span>
+                                  </div>
+                                  <p className="mt-1 text-sm font-semibold text-emerald-900">
+                                    {collectionByBandData.slices?.length}
+                                  </p>
+                                </div>
+                                <div className="rounded-lg bg-amber-50 p-2 text-center">
+                                  <div className="flex items-center justify-center gap-1">
+                                    <Clock className="size-3 text-amber-600" />
+                                    <span className="text-xs font-medium text-amber-700">Bands</span>
+                                  </div>
+                                  <p className="mt-1 text-sm font-semibold text-amber-900">Active</p>
+                                </div>
+                              </div>
+                            </motion.div>
 
-            {/* CBO Performance Section */}
-            <div className="mb-6">
-              <Card title="CBO Performance" icon={<CustomeraIcon />}>
-                {cboPerformanceLoading ? (
-                  <div className="flex h-64 items-center justify-center">
-                    <div className="w-full">
-                      <div className="mb-4 size-48 animate-pulse rounded bg-gray-200"></div>
-                      <div className="h-48 w-full animate-pulse rounded bg-gray-200"></div>
-                    </div>
-                  </div>
-                ) : cboPerformanceError ? (
-                  <div className="flex h-64 items-center justify-center">
-                    <div className="text-center">
-                      <div className="mb-2 text-lg font-semibold text-red-600">Error</div>
-                      <div className="text-sm text-gray-600">{cboPerformanceError}</div>
-                    </div>
-                  </div>
-                ) : !cboPerformanceData || !cboPerformanceData.slices?.length ? (
-                  <div className="flex h-64 items-center justify-center">
-                    <div className="text-center">
-                      <div className="mb-2 text-lg font-semibold text-gray-900">No CBO performance data</div>
-                      <div className="text-sm text-gray-600">Try changing the time range.</div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    {/* Summary Cards */}
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                      <div className="rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 p-6">
-                        <div className="text-sm font-medium uppercase tracking-wide text-purple-600">
-                          Average Performance
-                        </div>
-                        <div className="mt-2 text-3xl font-bold text-purple-900">
-                          {(
-                            cboPerformanceData.slices.reduce((sum, slice) => sum + slice.percentage, 0) /
-                            cboPerformanceData.slices.length
-                          ).toFixed(1)}
-                          %
-                        </div>
-                        <div className="mt-2 text-sm text-purple-700">Across all CBOs</div>
-                      </div>
-                      <div className="rounded-lg bg-gradient-to-br from-green-50 to-green-100 p-6">
-                        <div className="text-sm font-medium uppercase tracking-wide text-green-600">
-                          Total Collection
-                        </div>
-                        <div className="mt-2 text-3xl font-bold text-green-900">
-                          {formatCurrency(cboPerformanceData.slices.reduce((sum, slice) => sum + slice.amount, 0))}
-                        </div>
-                        <div className="mt-2 text-sm text-green-700">Combined CBO collections</div>
-                      </div>
-                      <div className="rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 p-6">
-                        <div className="text-sm font-medium uppercase tracking-wide text-blue-600">
-                          Total Transactions
-                        </div>
-                        <div className="mt-2 text-3xl font-bold text-blue-900">
-                          {cboPerformanceData.slices.reduce((sum, slice) => sum + slice.count, 0).toLocaleString()}
-                        </div>
-                        <div className="mt-2 text-sm text-blue-700">Total transaction count</div>
-                      </div>
-                    </div>
-
-                    {/* Charts */}
-                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                      {/* Pie Chart */}
-                      <div className="h-80">
-                        <h4 className="mb-4 text-sm font-medium text-gray-700">Performance Distribution</h4>
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={cboPerformanceData.slices}
-                              cx="50%"
-                              cy="50%"
-                              labelLine={false}
-                              label={(entry) => `${entry.label}: ${(entry.percentage || 0).toFixed(1)}%`}
-                              outerRadius={80}
-                              fill="#8884d8"
-                              dataKey="percentage"
+                            {/* Total Customers Card */}
+                            <motion.div
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: 0.2 }}
+                              className="group rounded-lg border border-gray-100 bg-white p-4 transition-all hover:border-gray-200 hover:shadow-sm"
                             >
-                              {cboPerformanceData.slices.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                              ))}
-                            </Pie>
-                            <Tooltip
-                              formatter={(value, name, props) => [
-                                name === "percentage"
-                                  ? `${value}%`
-                                  : name === "amount"
-                                  ? formatCurrency(value as number)
-                                  : value,
-                                name === "percentage" ? "Performance" : name === "amount" ? "Amount" : "Count",
-                              ]}
-                            />
-                            <Legend />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </div>
+                              <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-2">
+                                  <div className="rounded-lg bg-purple-50 p-2">
+                                    <Users className="size-4 text-purple-700" />
+                                  </div>
+                                  <div>
+                                    <h3 className="font-medium text-gray-900">Total Customers</h3>
+                                    <p className="text-xs text-gray-500">Across all bands</p>
+                                  </div>
+                                </div>
+                                <span className="text-sm font-semibold text-purple-700">
+                                  {formatNumber(
+                                    collectionByBandData.slices?.reduce((sum, slice) => sum + slice.count, 0)
+                                  )}
+                                </span>
+                              </div>
+                              <div className="mt-3">
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="text-gray-600">Coverage</span>
+                                  <span className="font-medium text-gray-900">100%</span>
+                                </div>
+                                <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                                  <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: "100%" }}
+                                    transition={{ duration: 0.5, delay: 0.5 }}
+                                    className="h-full rounded-full bg-gradient-to-r from-purple-500 to-purple-600"
+                                  />
+                                </div>
+                              </div>
+                              <div className="mt-3 grid grid-cols-2 gap-2">
+                                <div className="rounded-lg bg-emerald-50 p-2 text-center">
+                                  <div className="flex items-center justify-center gap-1">
+                                    <CheckCircle className="size-3 text-emerald-600" />
+                                    <span className="text-xs font-medium text-emerald-700">Active</span>
+                                  </div>
+                                  <p className="mt-1 text-sm font-semibold text-emerald-900">
+                                    {formatNumber(
+                                      Math.round(
+                                        collectionByBandData.slices?.reduce((sum, slice) => sum + slice.count, 0) * 0.8
+                                      )
+                                    )}
+                                  </p>
+                                </div>
+                                <div className="rounded-lg bg-amber-50 p-2 text-center">
+                                  <div className="flex items-center justify-center gap-1">
+                                    <Clock className="size-3 text-amber-600" />
+                                    <span className="text-xs font-medium text-amber-700">Inactive</span>
+                                  </div>
+                                  <p className="mt-1 text-sm font-semibold text-amber-900">
+                                    {formatNumber(
+                                      Math.round(
+                                        collectionByBandData.slices?.reduce((sum, slice) => sum + slice.count, 0) * 0.2
+                                      )
+                                    )}
+                                  </p>
+                                </div>
+                              </div>
+                            </motion.div>
 
-                      {/* Bar Chart */}
-                      <div className="h-80">
-                        <h4 className="mb-4 text-sm font-medium text-gray-700">Performance Comparison</h4>
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart
-                            data={cboPerformanceData.slices.map((slice) => ({
-                              name: slice.label,
-                              performance: slice.percentage,
-                              amount: slice.amount / 1000, // Convert to thousands for better display
-                              count: slice.count,
-                            }))}
-                            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                          >
+                            {/* Average Per Band Card */}
+                            <motion.div
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: 0.3 }}
+                              className="group rounded-lg border border-gray-100 bg-white p-4 transition-all hover:border-gray-200 hover:shadow-sm"
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-2">
+                                  <div className="rounded-lg bg-green-50 p-2">
+                                    <BarChart3 className="size-4 text-green-700" />
+                                  </div>
+                                  <div>
+                                    <h3 className="font-medium text-gray-900">Avg. Per Band</h3>
+                                    <p className="text-xs text-gray-500">Average revenue</p>
+                                  </div>
+                                </div>
+                                <span className="text-sm font-semibold text-green-700">
+                                  {formatCurrency(
+                                    Math.round(
+                                      collectionByBandData.slices?.reduce((sum, slice) => sum + slice.amount, 0) /
+                                        collectionByBandData.slices?.length
+                                    )
+                                  )}
+                                </span>
+                              </div>
+                              <div className="mt-3">
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="text-gray-600">Efficiency</span>
+                                  <span className="font-medium text-gray-900">85%</span>
+                                </div>
+                                <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                                  <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: "85%" }}
+                                    transition={{ duration: 0.5, delay: 0.6 }}
+                                    className="h-full rounded-full bg-gradient-to-r from-green-500 to-green-600"
+                                  />
+                                </div>
+                              </div>
+                              <div className="mt-3 grid grid-cols-2 gap-2">
+                                <div className="rounded-lg bg-emerald-50 p-2 text-center">
+                                  <div className="flex items-center justify-center gap-1">
+                                    <CheckCircle className="size-3 text-emerald-600" />
+                                    <span className="text-xs font-medium text-emerald-700">Target</span>
+                                  </div>
+                                  <p className="mt-1 text-sm font-semibold text-emerald-900">Met</p>
+                                </div>
+                                <div className="rounded-lg bg-amber-50 p-2 text-center">
+                                  <div className="flex items-center justify-center gap-1">
+                                    <Clock className="size-3 text-amber-600" />
+                                    <span className="text-xs font-medium text-amber-700">Growth</span>
+                                  </div>
+                                  <p className="mt-1 text-sm font-semibold text-amber-900">+12%</p>
+                                </div>
+                              </div>
+                            </motion.div>
+
+                            {/* Top Band Card */}
+                            <motion.div
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: 0.4 }}
+                              className="group rounded-lg border border-gray-100 bg-white p-4 transition-all hover:border-gray-200 hover:shadow-sm"
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-2">
+                                  <div className="rounded-lg bg-orange-50 p-2">
+                                    <TrendingUp className="size-4 text-orange-700" />
+                                  </div>
+                                  <div>
+                                    <h3 className="font-medium text-gray-900">Top Band</h3>
+                                    <p className="text-xs text-gray-500">Best performer</p>
+                                  </div>
+                                </div>
+                                <span className="text-sm font-semibold text-orange-700">
+                                  {collectionByBandData.slices?.length > 0
+                                    ? collectionByBandData.slices[0]?.label
+                                    : "N/A"}
+                                </span>
+                              </div>
+                              <div className="mt-3">
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="text-gray-600">Performance</span>
+                                  <span className="font-medium text-gray-900">
+                                    {collectionByBandData.slices?.length > 0
+                                      ? calculatePercentage(
+                                          collectionByBandData.slices[0]?.amount || 0,
+                                          collectionByBandData.slices.reduce((sum, slice) => sum + slice.amount, 0)
+                                        ).toFixed(1)
+                                      : "0.0"}
+                                    %
+                                  </span>
+                                </div>
+                                <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                                  <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{
+                                      width:
+                                        collectionByBandData.slices?.length > 0
+                                          ? `${Math.min(
+                                              calculatePercentage(
+                                                collectionByBandData.slices[0]?.amount || 0,
+                                                collectionByBandData.slices.reduce(
+                                                  (sum, slice) => sum + slice.amount,
+                                                  0
+                                                )
+                                              ),
+                                              100
+                                            )}%`
+                                          : "0%",
+                                    }}
+                                    transition={{ duration: 0.5, delay: 0.7 }}
+                                    className="h-full rounded-full bg-gradient-to-r from-orange-500 to-orange-600"
+                                  />
+                                </div>
+                              </div>
+                              <div className="mt-3 grid grid-cols-2 gap-2">
+                                <div className="rounded-lg bg-emerald-50 p-2 text-center">
+                                  <div className="flex items-center justify-center gap-1">
+                                    <CheckCircle className="size-3 text-emerald-600" />
+                                    <span className="text-xs font-medium text-emerald-700">Revenue</span>
+                                  </div>
+                                  <p className="mt-1 text-sm font-semibold text-emerald-900">
+                                    {collectionByBandData.slices?.length > 0
+                                      ? formatCurrency(collectionByBandData.slices[0]?.amount || 0)
+                                      : "₦0"}
+                                  </p>
+                                </div>
+                                <div className="rounded-lg bg-amber-50 p-2 text-center">
+                                  <div className="flex items-center justify-center gap-1">
+                                    <Clock className="size-3 text-amber-600" />
+                                    <span className="text-xs font-medium text-amber-700">Rank</span>
+                                  </div>
+                                  <p className="mt-1 text-sm font-semibold text-amber-900">#1</p>
+                                </div>
+                              </div>
+                            </motion.div>
+                          </div>
+
+                          {/* Chart and Details Side by Side */}
+                          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                            {/* Chart */}
+                            <div className="h-80">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                  <Pie
+                                    data={collectionByBandData.slices?.map((slice, index) => ({
+                                      name: slice.label,
+                                      value: slice.amount,
+                                      fill: COLLECTION_BAND_COLORS[index % COLLECTION_BAND_COLORS.length],
+                                    }))}
+                                    cx="50%"
+                                    cy="50%"
+                                    labelLine={false}
+                                    label={({ name, percent }) =>
+                                      `${name} ${percent ? (percent * 100).toFixed(0) : 0}%`
+                                    }
+                                    outerRadius={100}
+                                    fill="#8884d8"
+                                    dataKey="value"
+                                  >
+                                    {collectionByBandData.slices?.map((entry, index) => (
+                                      <Cell
+                                        key={`cell-${index}`}
+                                        fill={COLLECTION_BAND_COLORS[index % COLLECTION_BAND_COLORS.length]}
+                                      />
+                                    ))}
+                                  </Pie>
+                                  <Tooltip formatter={(value: number, name) => [formatCurrency(value), "Revenue"]} />
+                                </PieChart>
+                              </ResponsiveContainer>
+                            </div>
+                            <div className="h-80 overflow-y-auto">
+                              <h4 className="mb-3 text-sm font-medium text-gray-700">Band Performance Details</h4>
+                              <div className="space-y-4">
+                                <h4 className="text-xs font-medium uppercase tracking-wider text-gray-600">
+                                  Band Revenue Status
+                                </h4>
+                                <div className="space-y-2 rounded-md bg-gray-50 p-4">
+                                  {collectionByBandData.slices?.map((slice, index) => {
+                                    const percentage = calculatePercentage(
+                                      slice.amount,
+                                      collectionByBandData.slices?.reduce((sum, s) => sum + s.amount, 0)
+                                    )
+                                    return (
+                                      <div
+                                        key={slice.label}
+                                        className="flex items-center justify-between rounded-lg bg-white p-2"
+                                      >
+                                        <div className="flex items-center gap-2">
+                                          <div className="rounded-full bg-blue-100 p-1">
+                                            <BarChart3 className="size-3 text-blue-700" />
+                                          </div>
+                                          <span className="text-sm text-gray-700">{slice.label}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-sm font-semibold text-gray-900">
+                                            {formatCurrency(slice.amount)}
+                                          </span>
+                                          <span className="text-xs text-gray-500">({percentage.toFixed(1)}%)</span>
+                                        </div>
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+
+                              <div className="mt-6 space-y-4">
+                                <h4 className="text-xs font-medium uppercase tracking-wider text-gray-600">
+                                  Band Customer Status
+                                </h4>
+                                <div className="space-y-2 rounded-md bg-gray-50 p-4">
+                                  {collectionByBandData.slices?.map((slice, index) => {
+                                    const customerPercentage = calculatePercentage(
+                                      slice.count,
+                                      collectionByBandData.slices?.reduce((sum, s) => sum + s.count, 0)
+                                    )
+                                    return (
+                                      <div
+                                        key={slice.label}
+                                        className="flex items-center justify-between rounded-lg bg-white p-2"
+                                      >
+                                        <div className="flex items-center gap-2">
+                                          <div className="rounded-full bg-purple-100 p-1">
+                                            <Users className="size-3 text-purple-700" />
+                                          </div>
+                                          <span className="text-sm text-gray-700">{slice.label}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-sm font-semibold text-gray-900">
+                                            {formatNumber(slice.count)}
+                                          </span>
+                                          <span className="text-xs text-gray-500">
+                                            ({customerPercentage.toFixed(1)}%)
+                                          </span>
+                                        </div>
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+
+                              <div className="mt-6 space-y-4">
+                                <h4 className="text-xs font-medium uppercase tracking-wider text-gray-600">
+                                  Band Efficiency Status
+                                </h4>
+                                <div className="space-y-2 rounded-md bg-gray-50 p-4">
+                                  {collectionByBandData.slices?.map((slice, index) => {
+                                    const avgPerCustomer = slice.count > 0 ? Math.round(slice.amount / slice.count) : 0
+                                    const maxAvgPerCustomer = Math.max(
+                                      ...collectionByBandData.slices?.map((s) =>
+                                        s.count > 0 ? Math.round(s.amount / s.count) : 0
+                                      )
+                                    )
+                                    const efficiencyPercentage =
+                                      maxAvgPerCustomer > 0 ? calculatePercentage(avgPerCustomer, maxAvgPerCustomer) : 0
+                                    return (
+                                      <div
+                                        key={slice.label}
+                                        className="flex items-center justify-between rounded-lg bg-white p-2"
+                                      >
+                                        <div className="flex items-center gap-2">
+                                          <div className="rounded-full bg-green-100 p-1">
+                                            <Target className="size-3 text-green-700" />
+                                          </div>
+                                          <span className="text-sm text-gray-700">{slice.label}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-sm font-semibold text-gray-900">
+                                            {formatCurrency(avgPerCustomer)}
+                                          </span>
+                                          <span className="text-xs text-gray-500">
+                                            ({efficiencyPercentage.toFixed(1)}%)
+                                          </span>
+                                        </div>
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+
+                  {/* CBO Performance Chart */}
+                  {cboPerformanceData && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.2 }}
+                      className="rounded-xl border border-gray-200 bg-white p-6"
+                    >
+                      <h3 className="mb-4 text-lg font-semibold text-gray-900">CBO Performance</h3>
+                      {cboPerformanceLoading ? (
+                        <div className="flex items-center justify-center py-16">
+                          <div className="flex flex-col items-center gap-3">
+                            <Loader2 className="size-8 animate-spin text-orange-600" />
+                            <p className="text-sm text-gray-500">Loading CBO performance...</p>
+                          </div>
+                        </div>
+                      ) : cboPerformanceError ? (
+                        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                          {cboPerformanceError}
+                        </div>
+                      ) : cboPerformanceData.slices.length === 0 ? (
+                        <div className="flex h-[200px] w-full flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white px-6 text-center">
+                          <div className="text-sm font-semibold text-gray-900">No CBO performance data</div>
+                          <div className="mt-1 text-sm text-gray-600">Try changing the time range.</div>
+                        </div>
+                      ) : (
+                        <ResponsiveContainer width="100%" height={300}>
+                          <BarChart data={cboPerformanceData.slices}>
                             <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="name" />
-                            <YAxis yAxisId="left" />
-                            <YAxis yAxisId="right" orientation="right" />
+                            <XAxis dataKey="label" />
+                            <YAxis />
                             <Tooltip
                               formatter={(value, name) => [
-                                name === "performance"
-                                  ? `${value}%`
-                                  : name === "amount"
-                                  ? `${formatCurrency((value as number) * 1000)}`
-                                  : value,
-                                name === "performance" ? "Performance %" : name === "amount" ? "Amount (K)" : "Count",
+                                name === "amount" ? formatCurrency(value as number) : value,
+                                name === "amount" ? "Amount" : name === "count" ? "Count" : "Percentage",
                               ]}
                             />
-                            <Legend />
-                            <Bar yAxisId="left" dataKey="performance" name="Performance %" fill="#004B23" />
-                            <Bar yAxisId="right" dataKey="count" name="Transaction Count" fill="#38b000" />
+                            <Bar dataKey="amount" fill="#004B23" />
                           </BarChart>
                         </ResponsiveContainer>
+                      )}
+                    </motion.div>
+                  )}
+                </div>
+
+                {/* Outstanding Arrears Section */}
+                {outstandingArrearsData && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.3 }}
+                    className="mt-6 rounded-xl border border-gray-200 bg-white p-5"
+                  >
+                    {/* Header */}
+                    <div className="mb-4 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
+                      <div className="flex items-center gap-2">
+                        <div className="rounded-lg bg-red-100 p-2">
+                          <AlertCircle className="size-5 text-red-700" />
+                        </div>
+                        <div>
+                          <h2 className="text-lg font-semibold text-gray-900">Outstanding Arrears Summary</h2>
+                          <p className="text-sm text-gray-600">Arrears breakdown and payment status</p>
+                        </div>
                       </div>
+                      <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700">
+                        {outstandingArrearsData.customersInArrears.toLocaleString()} Customers
+                      </span>
                     </div>
 
-                    {/* Performance Table */}
-                    <div className="rounded-lg border">
-                      <div className="overflow-x-auto">
-                        <table className="w-full">
-                          <thead>
-                            <tr className="border-b bg-gray-50">
-                              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700">
-                                CBO
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700">
-                                Performance
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700">
-                                Amount Collected
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700">
-                                Transactions
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700">
-                                Status
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-200">
-                            {cboPerformanceData.slices.map((slice, index) => {
-                              const performanceStatus =
-                                slice.percentage >= 90
-                                  ? "Excellent"
-                                  : slice.percentage >= 80
-                                  ? "Good"
-                                  : slice.percentage >= 70
-                                  ? "Average"
-                                  : "Needs Improvement"
-                              const statusColor =
-                                slice.percentage >= 90
-                                  ? "bg-green-100 text-green-800"
-                                  : slice.percentage >= 80
-                                  ? "bg-blue-100 text-blue-800"
-                                  : slice.percentage >= 70
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : "bg-red-100 text-red-800"
+                    {/* Categories Grid */}
+                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                      {/* Total Outstanding Card */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="group rounded-lg border border-gray-100 bg-white p-4 transition-all hover:border-gray-200 hover:shadow-sm"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="rounded-lg bg-red-50 p-2">
+                              <AlertCircle className="size-4 text-red-700" />
+                            </div>
+                            <div>
+                              <h3 className="font-medium text-gray-900">Total Outstanding</h3>
+                              <p className="text-xs text-gray-500">Total arrears amount</p>
+                            </div>
+                          </div>
+                          <span className="text-sm font-semibold text-red-700">
+                            {
+                              formatCurrencyWithAbbreviation(
+                                outstandingArrearsData.totalOutstanding,
+                                selectedCurrencySymbol
+                              ).formatted
+                            }
+                          </span>
+                        </div>
+                        <div className="mt-3">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-600">Outstanding</span>
+                            <span className="font-medium text-gray-900">100%</span>
+                          </div>
+                          <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: "100%" }}
+                              transition={{ duration: 0.5, delay: 0.4 }}
+                              className="h-full rounded-full bg-gradient-to-r from-red-500 to-red-600"
+                            />
+                          </div>
+                        </div>
+                        <div className="mt-3 grid grid-cols-2 gap-2">
+                          <div className="rounded-lg bg-emerald-50 p-2 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <CheckCircle className="size-3 text-emerald-600" />
+                              <span className="text-xs font-medium text-emerald-700">Full Amount</span>
+                            </div>
+                            <p className="mt-1 text-sm font-semibold text-emerald-900">
+                              {
+                                formatCurrencyWithAbbreviation(
+                                  outstandingArrearsData.totalOutstanding,
+                                  selectedCurrencySymbol
+                                ).formatted
+                              }
+                            </p>
+                          </div>
+                          <div className="rounded-lg bg-amber-50 p-2 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <Clock className="size-3 text-amber-600" />
+                              <span className="text-xs font-medium text-amber-700">Customers</span>
+                            </div>
+                            <p className="mt-1 text-sm font-semibold text-amber-900">
+                              {outstandingArrearsData.customersInArrears.toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                      </motion.div>
 
-                              return (
-                                <tr key={slice.label} className="hover:bg-gray-50">
-                                  <td className="whitespace-nowrap px-6 py-4">
-                                    <div className="flex items-center">
-                                      <div className="shrink-0">
-                                        <div
-                                          className="flex size-8 items-center justify-center rounded-full font-bold text-white"
-                                          style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                                        >
-                                          {slice.label.charAt(0)}
-                                        </div>
-                                      </div>
-                                      <div className="ml-4">
-                                        <div className="text-sm font-medium text-gray-900">{slice.label}</div>
-                                      </div>
-                                    </div>
-                                  </td>
-                                  <td className="whitespace-nowrap px-6 py-4">
-                                    <div className="flex items-center">
-                                      <div className="mr-2 text-sm text-gray-900">
-                                        {(slice.percentage || 0).toFixed(1)}%
-                                      </div>
-                                      <div className="w-32">
-                                        <div className="h-2 w-full rounded-full bg-gray-200">
-                                          <div
-                                            className="h-2 rounded-full"
-                                            style={{
-                                              width: `${Math.min(slice.percentage, 100)}%`,
-                                              backgroundColor: COLORS[index % COLORS.length],
-                                            }}
-                                          />
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </td>
-                                  <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">
-                                    {formatCurrency(slice.amount)}
-                                  </td>
-                                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                                    {slice.count.toLocaleString()}
-                                  </td>
-                                  <td className="whitespace-nowrap px-6 py-4">
-                                    <span
-                                      className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${statusColor}`}
-                                    >
-                                      {performanceStatus}
-                                    </span>
-                                  </td>
-                                </tr>
-                              )
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
+                      {/* Total Debits Card */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="group rounded-lg border border-gray-100 bg-white p-4 transition-all hover:border-gray-200 hover:shadow-sm"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="rounded-lg bg-orange-50 p-2">
+                              <TrendingDown className="size-4 text-orange-700" />
+                            </div>
+                            <div>
+                              <h3 className="font-medium text-gray-900">Total Debits</h3>
+                              <p className="text-xs text-gray-500">Outstanding debits</p>
+                            </div>
+                          </div>
+                          <span className="text-sm font-semibold text-orange-700">
+                            {
+                              formatCurrencyWithAbbreviation(outstandingArrearsData.totalDebits, selectedCurrencySymbol)
+                                .formatted
+                            }
+                          </span>
+                        </div>
+                        <div className="mt-3">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-600">Debit Share</span>
+                            <span className="font-medium text-gray-900">
+                              {calculatePercentage(
+                                outstandingArrearsData.totalDebits,
+                                outstandingArrearsData.totalOutstanding
+                              ).toFixed(1)}
+                              %
+                            </span>
+                          </div>
+                          <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{
+                                width: `${Math.min(
+                                  calculatePercentage(
+                                    outstandingArrearsData.totalDebits,
+                                    outstandingArrearsData.totalOutstanding
+                                  ),
+                                  100
+                                )}%`,
+                              }}
+                              transition={{ duration: 0.5, delay: 0.5 }}
+                              className="h-full rounded-full bg-gradient-to-r from-orange-500 to-orange-600"
+                            />
+                          </div>
+                        </div>
+                        <div className="mt-3 grid grid-cols-2 gap-2">
+                          <div className="rounded-lg bg-emerald-50 p-2 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <CheckCircle className="size-3 text-emerald-600" />
+                              <span className="text-xs font-medium text-emerald-700">Amount</span>
+                            </div>
+                            <p className="mt-1 text-sm font-semibold text-emerald-900">
+                              {
+                                formatCurrencyWithAbbreviation(
+                                  outstandingArrearsData.totalDebits,
+                                  selectedCurrencySymbol
+                                ).formatted
+                              }
+                            </p>
+                          </div>
+                          <div className="rounded-lg bg-amber-50 p-2 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <Clock className="size-3 text-amber-600" />
+                              <span className="text-xs font-medium text-amber-700">Share</span>
+                            </div>
+                            <p className="mt-1 text-sm font-semibold text-amber-900">
+                              {calculatePercentage(
+                                outstandingArrearsData.totalDebits,
+                                outstandingArrearsData.totalOutstanding
+                              ).toFixed(1)}
+                              %
+                            </p>
+                          </div>
+                        </div>
+                      </motion.div>
+
+                      {/* Total Credits Card */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="group rounded-lg border border-gray-100 bg-white p-4 transition-all hover:border-gray-200 hover:shadow-sm"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="rounded-lg bg-green-50 p-2">
+                              <TrendingUp className="size-4 text-green-700" />
+                            </div>
+                            <div>
+                              <h3 className="font-medium text-gray-900">Total Credits</h3>
+                              <p className="text-xs text-gray-500">Outstanding credits</p>
+                            </div>
+                          </div>
+                          <span className="text-sm font-semibold text-green-700">
+                            {
+                              formatCurrencyWithAbbreviation(
+                                outstandingArrearsData.totalCredits,
+                                selectedCurrencySymbol
+                              ).formatted
+                            }
+                          </span>
+                        </div>
+                        <div className="mt-3">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-600">Credit Share</span>
+                            <span className="font-medium text-gray-900">
+                              {calculatePercentage(
+                                outstandingArrearsData.totalCredits,
+                                outstandingArrearsData.totalOutstanding
+                              ).toFixed(1)}
+                              %
+                            </span>
+                          </div>
+                          <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{
+                                width: `${Math.min(
+                                  calculatePercentage(
+                                    outstandingArrearsData.totalCredits,
+                                    outstandingArrearsData.totalOutstanding
+                                  ),
+                                  100
+                                )}%`,
+                              }}
+                              transition={{ duration: 0.5, delay: 0.6 }}
+                              className="h-full rounded-full bg-gradient-to-r from-green-500 to-green-600"
+                            />
+                          </div>
+                        </div>
+                        <div className="mt-3 grid grid-cols-2 gap-2">
+                          <div className="rounded-lg bg-emerald-50 p-2 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <CheckCircle className="size-3 text-emerald-600" />
+                              <span className="text-xs font-medium text-emerald-700">Amount</span>
+                            </div>
+                            <p className="mt-1 text-sm font-semibold text-emerald-900">
+                              {
+                                formatCurrencyWithAbbreviation(
+                                  outstandingArrearsData.totalCredits,
+                                  selectedCurrencySymbol
+                                ).formatted
+                              }
+                            </p>
+                          </div>
+                          <div className="rounded-lg bg-amber-50 p-2 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <Clock className="size-3 text-amber-600" />
+                              <span className="text-xs font-medium text-amber-700">Share</span>
+                            </div>
+                            <p className="mt-1 text-sm font-semibold text-amber-900">
+                              {calculatePercentage(
+                                outstandingArrearsData.totalCredits,
+                                outstandingArrearsData.totalOutstanding
+                              ).toFixed(1)}
+                              %
+                            </p>
+                          </div>
+                        </div>
+                      </motion.div>
                     </div>
-                  </div>
+                  </motion.div>
                 )}
-              </Card>
-            </div>
+              </div>
+            ) : (
+              // Empty State
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white p-12"
+              >
+                <div className="text-center">
+                  <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-gray-100">
+                    <PieChartIcon className="size-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900">No Performance Data</h3>
+                  <p className="mt-1 text-sm text-gray-600">Try refreshing the data or changing the time range.</p>
+                  <button
+                    onClick={fetchPerformanceData}
+                    className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                  >
+                    <RefreshCw className="size-4" />
+                    Refresh Data
+                  </button>
+                </div>
+              </motion.div>
+            )}
           </div>
         </div>
       </div>

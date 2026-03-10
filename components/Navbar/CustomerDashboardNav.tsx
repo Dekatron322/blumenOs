@@ -168,7 +168,7 @@ const CustomerDashboardNav = () => {
       </nav>
 
       {/* Mobile Navigation */}
-      <nav className="sticky top-0 z-50 block border-b bg-[#F9f9f9] px-3 py-4 max-md:px-3 xl:hidden xl:px-16">
+      <nav className="sticky top-0 z-50 block border-b bg-[#F9f9f9] px-3 py-4 max-md:px-3 xl:hidden xl:px-6">
         <div className="flex items-center justify-between">
           <Link href="/" className="content-center">
             <Image src="/kadco.svg" alt="Dashboard" width={100} height={50} />

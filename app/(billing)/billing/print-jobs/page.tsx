@@ -646,7 +646,7 @@ const LoadingSkeleton = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto w-full px-4 py-8  max-sm:px-2 xl:px-16">
+          <div className="mx-auto w-full px-4 py-8  max-sm:px-2 xl:px-6">
             <div className="mb-6 flex w-full flex-col justify-between gap-4 lg:flex-row lg:items-center">
               <div className="flex-1">
                 <h4 className="text-2xl font-semibold">Bulk Upload Management</h4>

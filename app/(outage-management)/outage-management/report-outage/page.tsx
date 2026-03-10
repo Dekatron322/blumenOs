@@ -526,7 +526,7 @@ const ReportOutage = () => {
     <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
       <DashboardNav />
       <div className="flex w-full">
-        <div className="flex w-full flex-col px-3  max-sm:px-3 xl:px-16">
+        <div className="flex w-full flex-col px-3  max-sm:px-3 xl:px-6">
           {/* Page Header */}
           <div className="flex w-full justify-between gap-6 max-md:flex-col max-md:items-start max-sm:my-4 md:my-8">
             <div>

@@ -543,7 +543,7 @@ const PostpaidBillDisputes: React.FC = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto mt-6 flex w-full flex-col px-3  xl:px-16">
+          <div className="mx-auto mt-6 flex w-full flex-col px-3  xl:px-6">
             <motion.div
               className="items-center justify-between border-b py-2 md:flex md:py-4"
               initial={{ y: -10, opacity: 0 }}

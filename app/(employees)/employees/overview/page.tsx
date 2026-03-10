@@ -830,7 +830,7 @@ export default function EmployeeManagement() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.3 }}
-                  className="mt-6 overflow-hidden rounded-xl border border-gray-200 bg-white"
+                  className="overflow-hidden rounded-xl "
                 >
                   <AllEmployees />
                 </motion.div>
