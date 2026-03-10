@@ -61,6 +61,7 @@ import {
   CheckCircle,
   Clock,
   FileText,
+  Loader2,
   PieChart as PieChartIcon,
   XCircle,
   Zap,
@@ -209,26 +210,10 @@ const PaymentHealthCard = ({
       </div>
 
       {loading && (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div className="animate-pulse">
-            <div className="rounded-lg border border-gray-100 bg-white p-4">
-              <div className="mb-3 h-4 w-3/4 rounded bg-gray-200"></div>
-              <div className="space-y-2">
-                <div className="h-3 w-1/2 rounded bg-gray-200"></div>
-                <div className="h-3 w-1/3 rounded bg-gray-200"></div>
-                <div className="h-3 w-2/3 rounded bg-gray-200"></div>
-              </div>
-            </div>
-          </div>
-          <div className="animate-pulse">
-            <div className="rounded-lg border border-gray-100 bg-white p-4">
-              <div className="mb-3 h-4 w-3/4 rounded bg-gray-200"></div>
-              <div className="space-y-2">
-                <div className="h-3 w-1/2 rounded bg-gray-200"></div>
-                <div className="h-3 w-1/3 rounded bg-gray-200"></div>
-                <div className="h-3 w-2/3 rounded bg-gray-200"></div>
-              </div>
-            </div>
+        <div className="flex items-center justify-center py-16">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="size-8 animate-spin text-blue-600" />
+            <p className="text-sm text-gray-500">Loading payment health data...</p>
           </div>
         </div>
       )}
@@ -1408,8 +1393,11 @@ export default function Dashboard() {
                         </div>
 
                         {dashboardCardsLoading || isLoading ? (
-                          <div className="animate-pulse">
-                            <div className="h-8 w-32 rounded bg-gray-200"></div>
+                          <div className="flex items-center justify-center py-8">
+                            <div className="flex flex-col items-center gap-3">
+                              <Loader2 className="size-6 animate-spin text-[#004B23]" />
+                              <p className="text-sm text-gray-500">Loading dashboard cards...</p>
+                            </div>
                           </div>
                         ) : (
                           <div className="flex items-start justify-between">
@@ -1449,33 +1437,10 @@ export default function Dashboard() {
                   <div className="mb-6">
                     <Card title="Collection Efficiency">
                       {collectionEfficiencyLoading ? (
-                        <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
-                          {/* Efficiency Percentage Skeleton */}
-                          <div className="rounded-lg bg-gradient-to-br from-green-50 to-green-100 p-6">
-                            <div className="mb-2 h-4 w-32 animate-pulse rounded bg-green-200"></div>
-                            <div className="mb-2 h-10 w-20 animate-pulse rounded bg-green-300"></div>
-                            <div className="h-4 w-24 animate-pulse rounded bg-green-200"></div>
-                          </div>
-
-                          {/* Total Billed Skeleton */}
-                          <div className="rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 p-6">
-                            <div className="mb-2 h-4 w-24 animate-pulse rounded bg-blue-200"></div>
-                            <div className="mb-2 h-8 w-32 animate-pulse rounded bg-blue-300"></div>
-                            <div className="h-4 w-16 animate-pulse rounded bg-blue-200"></div>
-                          </div>
-
-                          {/* Total Collected Skeleton */}
-                          <div className="rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 p-6">
-                            <div className="mb-2 h-4 w-28 animate-pulse rounded bg-purple-200"></div>
-                            <div className="mb-2 h-8 w-32 animate-pulse rounded bg-purple-300"></div>
-                            <div className="h-4 w-20 animate-pulse rounded bg-purple-200"></div>
-                          </div>
-
-                          {/* Performance Indicator Skeleton */}
-                          <div className="rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 p-6">
-                            <div className="mb-2 h-4 w-20 animate-pulse rounded bg-gray-300"></div>
-                            <div className="mb-4 h-4 w-full animate-pulse rounded bg-gray-200"></div>
-                            <div className="h-4 w-24 animate-pulse rounded bg-gray-300"></div>
+                        <div className="flex items-center justify-center py-16">
+                          <div className="flex flex-col items-center gap-3">
+                            <Loader2 className="size-8 animate-spin text-green-600" />
+                            <p className="text-sm text-gray-500">Loading collection efficiency...</p>
                           </div>
                         </div>
                       ) : collectionEfficiencyError ? (
@@ -1619,8 +1584,11 @@ export default function Dashboard() {
                   {/* ENERGY DELIVERED vs ENERGY BILLED Chart */}
                   <Card title="ENERGY DELIVERED vs ENERGY BILLED" className="mb-6">
                     {energyBalanceLoading ? (
-                      <div className="animate-pulse">
-                        <div className="h-[300px] w-full rounded bg-gray-200" />
+                      <div className="flex items-center justify-center py-16">
+                        <div className="flex flex-col items-center gap-3">
+                          <Loader2 className="size-8 animate-spin text-blue-600" />
+                          <p className="text-sm text-gray-500">Loading energy balance...</p>
+                        </div>
                       </div>
                     ) : energyBalanceError ? (
                       <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -1669,9 +1637,11 @@ export default function Dashboard() {
                     <Card title="Collection by BAND">
                       <div className="my-4 flex flex-col">
                         {collectionByBandLoading ? (
-                          <div className="animate-pulse">
-                            <div className="mb-4 h-24 w-full rounded bg-gray-200" />
-                            <div className="h-[200px] w-full rounded bg-gray-200" />
+                          <div className="flex items-center justify-center py-16">
+                            <div className="flex flex-col items-center gap-3">
+                              <Loader2 className="size-8 animate-spin text-purple-600" />
+                              <p className="text-sm text-gray-500">Loading collection by band...</p>
+                            </div>
                           </div>
                         ) : collectionByBandError ? (
                           <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -1732,8 +1702,11 @@ export default function Dashboard() {
                     <div className="grid grid-cols-1  gap-6">
                       <Card title="Daily Collection">
                         {dailyCollectionLoading ? (
-                          <div className="animate-pulse">
-                            <div className="h-[200px] w-full rounded bg-gray-200" />
+                          <div className="flex items-center justify-center py-16">
+                            <div className="flex flex-col items-center gap-3">
+                              <Loader2 className="size-8 animate-spin text-blue-600" />
+                              <p className="text-sm text-gray-500">Loading daily collection...</p>
+                            </div>
                           </div>
                         ) : dailyCollectionError ? (
                           <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -1765,8 +1738,11 @@ export default function Dashboard() {
 
                       <Card title="State Performance">
                         {cboPerformanceLoading ? (
-                          <div className="animate-pulse">
-                            <div className="h-[150px] w-full rounded bg-gray-200" />
+                          <div className="flex items-center justify-center py-16">
+                            <div className="flex flex-col items-center gap-3">
+                              <Loader2 className="size-8 animate-spin text-orange-600" />
+                              <p className="text-sm text-gray-500">Loading state performance...</p>
+                            </div>
                           </div>
                         ) : cboPerformanceError ? (
                           <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -1799,8 +1775,11 @@ export default function Dashboard() {
                         <Text>Meter Installations</Text>
                       </div>
                       {newConnectionsLoading || isLoading ? (
-                        <div className="animate-pulse">
-                          <div className="h-8 w-32 rounded bg-gray-200"></div>
+                        <div className="flex items-center justify-center py-8">
+                          <div className="flex flex-col items-center gap-3">
+                            <Loader2 className="size-6 animate-spin text-blue-600" />
+                            <p className="text-sm text-gray-500">Loading meter installations...</p>
+                          </div>
                         </div>
                       ) : newConnectionsError ? (
                         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -1823,8 +1802,11 @@ export default function Dashboard() {
                         <Text>Token Transactions</Text>
                       </div>
                       {prepaidVendsLoading || isLoading ? (
-                        <div className="animate-pulse">
-                          <div className="h-8 w-32 rounded bg-gray-200"></div>
+                        <div className="flex items-center justify-center py-8">
+                          <div className="flex flex-col items-center gap-3">
+                            <Loader2 className="size-6 animate-spin text-green-600" />
+                            <p className="text-sm text-gray-500">Loading token transactions...</p>
+                          </div>
                         </div>
                       ) : prepaidVendsError ? (
                         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -1846,8 +1828,11 @@ export default function Dashboard() {
                         <Text>KCT, CTT, CCT Tokens</Text>
                       </div>
                       {tokenGeneratedLoading || isLoading ? (
-                        <div className="animate-pulse">
-                          <div className="h-8 w-32 rounded bg-gray-200"></div>
+                        <div className="flex items-center justify-center py-8">
+                          <div className="flex flex-col items-center gap-3">
+                            <Loader2 className="size-6 animate-spin text-purple-600" />
+                            <p className="text-sm text-gray-500">Loading KCT, CTT, CCT tokens...</p>
+                          </div>
                         </div>
                       ) : tokenGeneratedError ? (
                         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -1869,8 +1854,11 @@ export default function Dashboard() {
                         <Text>{metersProgrammedDistinctTotal.toLocaleString()} distinct meters</Text>
                       </div>
                       {metersProgrammedLoading || isLoading ? (
-                        <div className="animate-pulse">
-                          <div className="h-8 w-32 rounded bg-gray-200"></div>
+                        <div className="flex items-center justify-center py-8">
+                          <div className="flex flex-col items-center gap-3">
+                            <Loader2 className="size-6 animate-spin text-orange-600" />
+                            <p className="text-sm text-gray-500">Loading meters programmed...</p>
+                          </div>
                         </div>
                       ) : metersProgrammedError ? (
                         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -1894,26 +1882,10 @@ export default function Dashboard() {
                   <div className="mb-6">
                     <Card title="Outstanding Arrears Summary" icon={<RevenueIcon />}>
                       {outstandingArrearsLoading || isLoading ? (
-                        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                          {/* Total Outstanding Skeleton */}
-                          <div className="rounded-lg bg-gradient-to-br from-red-50 to-red-100 p-6">
-                            <div className="mb-2 h-4 w-32 animate-pulse rounded bg-red-200"></div>
-                            <div className="mb-2 h-10 w-32 animate-pulse rounded bg-red-300"></div>
-                            <div className="h-4 w-24 animate-pulse rounded bg-red-200"></div>
-                          </div>
-
-                          {/* Debits Skeleton */}
-                          <div className="rounded-lg bg-gradient-to-br from-orange-50 to-orange-100 p-6">
-                            <div className="mb-2 h-4 w-24 animate-pulse rounded bg-orange-200"></div>
-                            <div className="mb-2 h-8 w-28 animate-pulse rounded bg-orange-300"></div>
-                            <div className="h-4 w-20 animate-pulse rounded bg-orange-200"></div>
-                          </div>
-
-                          {/* Credits Skeleton */}
-                          <div className="rounded-lg bg-gradient-to-br from-green-50 to-green-100 p-6">
-                            <div className="mb-2 h-4 w-24 animate-pulse rounded bg-green-200"></div>
-                            <div className="mb-2 h-8 w-28 animate-pulse rounded bg-green-300"></div>
-                            <div className="h-4 w-20 animate-pulse rounded bg-green-200"></div>
+                        <div className="flex items-center justify-center py-16">
+                          <div className="flex flex-col items-center gap-3">
+                            <Loader2 className="size-8 animate-spin text-red-600" />
+                            <p className="text-sm text-gray-500">Loading outstanding arrears...</p>
                           </div>
                         </div>
                       ) : outstandingArrearsError ? (
@@ -2083,31 +2055,10 @@ export default function Dashboard() {
                           <p className="text-sm text-gray-600">Payment channels and collector types analysis</p>
                         </div>
                         {breakdownLoading ? (
-                          <div className="flex h-64 items-center justify-center p-4">
-                            <div className="w-full">
-                              {/* Chart skeleton */}
-                              <div className="mb-4 h-6 w-48 animate-pulse rounded bg-gray-200"></div>
-                              <div className="flex h-48 items-end justify-between gap-2">
-                                {[...Array(8)].map((_, i) => (
-                                  <div key={i} className="flex w-full flex-col gap-1">
-                                    <div
-                                      className="h-full animate-pulse rounded bg-gray-200"
-                                      style={{ height: `${Math.random() * 60 + 20}%` }}
-                                    ></div>
-                                    <div className="h-2 w-full animate-pulse rounded bg-gray-200"></div>
-                                  </div>
-                                ))}
-                              </div>
-                              <div className="mt-4 flex justify-center gap-4">
-                                <div className="flex items-center gap-2">
-                                  <div className="size-3 animate-pulse rounded bg-gray-300"></div>
-                                  <div className="h-3 w-16 animate-pulse rounded bg-gray-200"></div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <div className="size-3 animate-pulse rounded bg-gray-300"></div>
-                                  <div className="h-3 w-12 animate-pulse rounded bg-gray-200"></div>
-                                </div>
-                              </div>
+                          <div className="flex items-center justify-center py-16">
+                            <div className="flex flex-col items-center gap-3">
+                              <Loader2 className="size-8 animate-spin text-blue-600" />
+                              <p className="text-sm text-gray-500">Loading payment breakdown...</p>
                             </div>
                           </div>
                         ) : breakdownError ? (
@@ -2154,8 +2105,11 @@ export default function Dashboard() {
 
                       <Card title="DISPUTES OVERVIEW">
                         {disputesLoading ? (
-                          <div className="animate-pulse">
-                            <div className="h-[300px] w-full rounded bg-gray-200" />
+                          <div className="flex items-center justify-center py-16">
+                            <div className="flex flex-col items-center gap-3">
+                              <Loader2 className="size-8 animate-spin text-orange-600" />
+                              <p className="text-sm text-gray-500">Loading disputes data...</p>
+                            </div>
                           </div>
                         ) : disputesError ? (
                           <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -2362,31 +2316,10 @@ export default function Dashboard() {
                       <p className="text-sm text-gray-600">Confirmed payments over time</p>
                     </div>
                     {trendLoading ? (
-                      <div className="flex h-64 items-center justify-center p-4">
-                        <div className="w-full">
-                          {/* Chart skeleton */}
-                          <div className="mb-4 h-6 w-48 animate-pulse rounded bg-gray-200"></div>
-                          <div className="flex h-48 items-end justify-between gap-2">
-                            {[...Array(12)].map((_, i) => (
-                              <div key={i} className="flex w-full flex-col gap-1">
-                                <div
-                                  className="h-full animate-pulse rounded bg-gray-200"
-                                  style={{ height: `${Math.random() * 60 + 20}%` }}
-                                ></div>
-                                <div className="h-2 w-full animate-pulse rounded bg-gray-200"></div>
-                              </div>
-                            ))}
-                          </div>
-                          <div className="mt-4 flex justify-center gap-4">
-                            <div className="flex items-center gap-2">
-                              <div className="size-3 animate-pulse rounded bg-gray-300"></div>
-                              <div className="h-3 w-16 animate-pulse rounded bg-gray-200"></div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <div className="size-3 animate-pulse rounded bg-gray-300"></div>
-                              <div className="h-3 w-12 animate-pulse rounded bg-gray-200"></div>
-                            </div>
-                          </div>
+                      <div className="flex items-center justify-center py-16">
+                        <div className="flex flex-col items-center gap-3">
+                          <Loader2 className="size-8 animate-spin text-blue-600" />
+                          <p className="text-sm text-gray-500">Loading payment trends...</p>
                         </div>
                       </div>
                     ) : trendError ? (
