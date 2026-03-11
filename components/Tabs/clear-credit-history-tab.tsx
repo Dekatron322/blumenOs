@@ -6,7 +6,6 @@ import { AlertCircle, RefreshCw, Shield } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import { VscEye } from "react-icons/vsc"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
-import { MdFormatListBulleted, MdGridView } from "react-icons/md"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { clearClearCreditHistory, clearCredit, fetchClearCreditHistory } from "lib/redux/metersSlice"
 import type { ClearTamperHistoryEntry } from "lib/redux/metersSlice"
@@ -39,7 +38,6 @@ const ClearCreditHistoryTab: React.FC<ClearCreditHistoryTabProps> = ({ meterId }
       (p.key === "finance-bill-payments-and-vending" && p.actions?.includes("W"))
   )
 
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list")
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [showFilters, setShowFilters] = useState(false)
@@ -458,20 +456,6 @@ const ClearCreditHistoryTab: React.FC<ClearCreditHistoryTabProps> = ({ meterId }
           <p className="text-sm text-gray-500">View all clear credit history and events</p>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            className={`button-oulined text-sm ${viewMode === "grid" ? "bg-[#f9f9f9]" : ""}`}
-            onClick={() => setViewMode("grid")}
-          >
-            <MdGridView className="size-4" />
-            <p className="max-sm:hidden">Grid</p>
-          </button>
-          <button
-            className={`button-oulined text-sm ${viewMode === "list" ? "bg-[#f9f9f9]" : ""}`}
-            onClick={() => setViewMode("list")}
-          >
-            <MdFormatListBulleted className="size-4" />
-            <p className="max-sm:hidden">List</p>
-          </button>
           {canClearCredit && (
             <ButtonModule
               variant="primary"
@@ -549,19 +533,154 @@ const ClearCreditHistoryTab: React.FC<ClearCreditHistoryTabProps> = ({ meterId }
         </div>
       ) : (
         <>
-          {viewMode === "list" ? (
-            <div className="divide-y">
-              {paginatedData.map((event) => (
-                <TamperListItem key={event.id} event={event} />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {paginatedData.map((event) => (
-                <TamperCard key={event.id} event={event} />
-              ))}
-            </div>
-          )}
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Event
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Token
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Amount
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Meter
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Status
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Date
+                  </th>
+                  <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 bg-white">
+                {paginatedData.map((event) => {
+                  const statusConfig = getStatusConfig(event.isSuccessful)
+
+                  // Extract info from response payload
+                  const getResponseInfo = () => {
+                    try {
+                      const parsed = JSON.parse(event.responsePayload || "{}") as any
+                      const token = parsed.tokens?.[0]
+                      return {
+                        tokenDec: token?.tokenDec,
+                        drn: token?.drn,
+                        description: token?.description,
+                        transferAmount: token?.transferAmount,
+                        scaledAmount: token?.scaledAmount,
+                        scaledUnitName: token?.scaledUnitName,
+                      }
+                    } catch {
+                      return {}
+                    }
+                  }
+
+                  const responseInfo = getResponseInfo()
+
+                  return (
+                    <tr key={event.id} className="transition-colors hover:bg-gray-50">
+                      <td className="px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <div className="flex size-6 items-center justify-center rounded-full bg-red-100">
+                            <Shield className="size-3 text-red-600" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium text-gray-900">Clear Credit #{event.id}</p>
+                            {responseInfo.description && (
+                              <p className="text-xs text-gray-500">{responseInfo.description}</p>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="text-xs">
+                          {responseInfo.tokenDec && (
+                            <div className="flex items-center gap-1">
+                              <span className="font-mono text-xs">
+                                {responseInfo.tokenDec.length >= 16
+                                  ? responseInfo.tokenDec.match(/.{1,4}/g)?.join("-") || responseInfo.tokenDec
+                                  : responseInfo.tokenDec}
+                              </span>
+                              <button
+                                onClick={() => handleCopyToken(responseInfo.tokenDec!)}
+                                className="flex items-center gap-1 rounded-md px-1 py-0.5 text-xs text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-800"
+                              >
+                                {copiedToken === responseInfo.tokenDec ? (
+                                  <svg className="size-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M5 13l4 4L19 7"
+                                    />
+                                  </svg>
+                                ) : (
+                                  <svg className="size-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                    />
+                                  </svg>
+                                )}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="text-xs">
+                          {responseInfo.transferAmount && (
+                            <p className="font-medium text-gray-900">
+                              {new Intl.NumberFormat("en-NG", {
+                                style: "currency",
+                                currency: "NGN",
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 2,
+                              }).format(responseInfo.transferAmount)}
+                            </p>
+                          )}
+                          {responseInfo.scaledAmount && (
+                            <p className="text-xs text-gray-500">
+                              {responseInfo.scaledAmount} {responseInfo.scaledUnitName || ""}
+                            </p>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="text-xs">
+                          <p className="font-medium text-gray-900">{responseInfo.drn || event.meterId}</p>
+                        </div>
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className={`rounded-full px-1.5 py-0.5 text-xs ${statusConfig.bg} ${statusConfig.color}`}>
+                          {statusConfig.label}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2 text-xs text-gray-700">{formatDateTime(event.requestedAtUtc)}</td>
+                      <td className="px-3 py-2 text-right">
+                        <button
+                          onClick={() => setSelectedEvent(event)}
+                          className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                        >
+                          <VscEye className="size-3" />
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
 
           {/* Pagination */}
           <div className="mt-4 flex w-full flex-row items-center justify-between gap-3 sm:flex-row">

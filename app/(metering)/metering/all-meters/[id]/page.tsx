@@ -389,9 +389,7 @@ const MeterHistoryListItem = ({
               <span>
                 <strong>Reason:</strong> {history.reason || "No reason provided"}
               </span>
-              <span>
-                <strong>User ID:</strong> {history.userAccountId}
-              </span>
+
               {history.agentId && (
                 <span>
                   <strong>Agent ID:</strong> {history.agentId}
@@ -2065,18 +2063,6 @@ const MeterDetailsPage = () => {
                   </div>
 
                   <div className="flex items-center gap-2 sm:gap-3">
-                    <ButtonModule
-                      variant="secondary"
-                      size="sm"
-                      className="flex items-center gap-2 text-sm"
-                      onClick={exportToPDF}
-                      disabled={isExporting}
-                    >
-                      <ExportOutlineIcon className="size-3 sm:size-4" />
-                      <span className="max-sm:hidden">{isExporting ? "Exporting..." : "Export"}</span>
-                      <span className="sm:hidden">Export</span>
-                    </ButtonModule>
-
                     {canUpdate ? (
                       <></>
                     ) : (

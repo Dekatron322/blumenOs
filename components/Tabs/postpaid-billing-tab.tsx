@@ -25,6 +25,7 @@ import {
 import PostpaidBillDetailsModal from "components/ui/Modal/postpaid-bill-modal"
 import { ButtonModule } from "components/ui/Button/Button"
 import EmptySearchState from "components/ui/EmptySearchState"
+import { SearchModule } from "components/ui/Search/search-module"
 
 // Status configuration
 const getStatusConfig = (status: number) => {
@@ -115,36 +116,36 @@ const TableRowSkeleton = () => (
       },
     }}
   >
-    <td className="p-4">
-      <div className="space-y-2">
-        <div className="h-4 w-32 rounded bg-gray-200"></div>
-        <div className="h-3 w-24 rounded bg-gray-200"></div>
-      </div>
-    </td>
-    <td className="p-4">
-      <div className="h-6 w-20 rounded-full bg-gray-200"></div>
-    </td>
-    <td className="p-4">
-      <div className="h-6 w-24 rounded-full bg-gray-200"></div>
-    </td>
-    <td className="p-4">
+    <td className="p-2">
       <div className="space-y-1">
-        <div className="h-3 w-28 rounded bg-gray-200"></div>
-        <div className="h-3 w-20 rounded bg-gray-200"></div>
+        <div className="h-3 w-24 rounded bg-gray-200"></div>
+        <div className="h-2.5 w-20 rounded bg-gray-200"></div>
       </div>
     </td>
-    <td className="p-4">
-      <div className="h-6 w-24 rounded bg-gray-200"></div>
+    <td className="p-2">
+      <div className="h-5 w-16 rounded-full bg-gray-200"></div>
     </td>
-    <td className="p-4">
-      <div className="h-6 w-20 rounded bg-gray-200"></div>
+    <td className="p-2">
+      <div className="h-5 w-20 rounded-full bg-gray-200"></div>
     </td>
-    <td className="p-4">
-      <div className="h-6 w-16 rounded bg-gray-200"></div>
+    <td className="p-2">
+      <div className="space-y-1">
+        <div className="h-2.5 w-20 rounded bg-gray-200"></div>
+        <div className="h-2.5 w-16 rounded bg-gray-200"></div>
+      </div>
     </td>
-    <td className="p-4">
-      <div className="flex justify-end gap-2">
-        <div className="h-8 w-16 rounded bg-gray-200"></div>
+    <td className="p-2">
+      <div className="h-5 w-20 rounded bg-gray-200"></div>
+    </td>
+    <td className="p-2">
+      <div className="h-5 w-16 rounded bg-gray-200"></div>
+    </td>
+    <td className="p-2">
+      <div className="h-5 w-12 rounded bg-gray-200"></div>
+    </td>
+    <td className="p-2">
+      <div className="flex justify-end gap-1">
+        <div className="h-6 w-12 rounded bg-gray-200"></div>
       </div>
     </td>
   </motion.tr>
@@ -188,6 +189,7 @@ const PostpaidBillingTab: React.FC<PostpaidBillingTabProps> = ({ customerId }) =
 
   const [currentPage, setCurrentPage] = useState(1)
   const [searchText, setSearchText] = useState("")
+  const [searchInput, setSearchInput] = useState("")
   const [selectedStatus, setSelectedStatus] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("")
   const [isStatusOpen, setIsStatusOpen] = useState(false)
@@ -208,6 +210,11 @@ const PostpaidBillingTab: React.FC<PostpaidBillingTabProps> = ({ customerId }) =
 
     dispatch(fetchPostpaidBills(params))
   }, [dispatch, customerId, currentPage, pagination.pageSize, selectedStatus, selectedCategory, searchText])
+
+  // Sync local search input
+  useEffect(() => {
+    setSearchInput(searchText)
+  }, [searchText])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -237,6 +244,27 @@ const PostpaidBillingTab: React.FC<PostpaidBillingTabProps> = ({ customerId }) =
     dispatch(fetchPostpaidBills(params))
   }
 
+  // Search handlers
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value)
+  }
+
+  const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate && trimmed !== searchText) {
+      setSearchText(trimmed)
+      setCurrentPage(1)
+    }
+  }
+
+  const handleCancelSearch = () => {
+    setSearchInput("")
+    setSearchText("")
+    setCurrentPage(1)
+  }
+
   const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newPageSize = Number(event.target.value)
     dispatch(setPagination({ page: currentPage, pageSize: newPageSize }))
@@ -262,32 +290,32 @@ const PostpaidBillingTab: React.FC<PostpaidBillingTabProps> = ({ customerId }) =
       >
         <TableHeaderSkeleton />
 
-        <div className="mt-6 overflow-x-auto">
+        <div className="mt-4 overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                   Bill Details
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                   Status
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                   Category
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                   Period
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                   Amount
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                   Consumption
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                   Created
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
                   Actions
                 </th>
               </tr>
@@ -313,10 +341,10 @@ const PostpaidBillingTab: React.FC<PostpaidBillingTabProps> = ({ customerId }) =
         className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
       >
         {/* Header with title and actions */}
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-4 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Postpaid Bills</h2>
-            <p className="text-sm text-gray-500">{totalRecords} bill(s) found</p>
+            <h2 className="text-base font-semibold text-gray-900">Postpaid Bills</h2>
+            <p className="text-xs text-gray-500">{totalRecords} bill(s) found</p>
           </div>
 
           <div className="flex items-center gap-2">
@@ -346,36 +374,42 @@ const PostpaidBillingTab: React.FC<PostpaidBillingTabProps> = ({ customerId }) =
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="mb-6 flex flex-wrap items-center gap-3">
-          {/* Search input */}
-          <div className="relative max-w-md flex-1">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              placeholder="Search by account number..."
-              className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
+        {/* Search Section */}
+        <div className="mb-4 rounded-xl border border-gray-200 bg-gradient-to-r from-green-50/60 to-white p-4 shadow-sm">
+          <div className="mb-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-[#004B23]">Search Bills</p>
+            <h4 className="text-sm font-medium text-gray-900">Find bill records</h4>
+            <p className="text-xs text-gray-600">Search by account number, bill reference, or customer details.</p>
           </div>
+          <SearchModule
+            value={searchInput}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            onCancel={handleCancelSearch}
+            onSearch={handleManualSearch}
+            placeholder="Type account number, bill reference, or customer details..."
+            height="h-12"
+            className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[32px] [&_button]:px-4 [&_button]:text-xs [&_input]:text-xs sm:[&_input]:text-sm"
+          />
+        </div>
 
+        {/* Filters */}
+        <div className="mb-4 flex flex-wrap items-center gap-2">
           {/* Status filter */}
           <div className="relative">
             <button
               type="button"
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               onClick={() => setIsStatusOpen(!isStatusOpen)}
             >
-              <Filter className="size-4" />
+              <Filter className="size-3.5" />
               {statusOptions.find((opt) => opt.value === selectedStatus)?.label || "Status"}
             </button>
             {isStatusOpen && (
-              <div className="absolute left-0 top-full z-50 mt-1 w-48 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+              <div className="absolute left-0 top-full z-50 mt-1 w-44 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
                 {statusOptions.map((option) => (
                   <button
                     key={option.value}
-                    className={`flex w-full px-4 py-2 text-left text-sm hover:bg-gray-50 ${
+                    className={`flex w-full px-3 py-1.5 text-left text-xs hover:bg-gray-50 ${
                       selectedStatus === option.value ? "bg-blue-50 text-blue-700" : "text-gray-700"
                     }`}
                     onClick={() => {
@@ -394,18 +428,18 @@ const PostpaidBillingTab: React.FC<PostpaidBillingTabProps> = ({ customerId }) =
           <div className="relative">
             <button
               type="button"
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               onClick={() => setIsCategoryOpen(!isCategoryOpen)}
             >
-              <Filter className="size-4" />
+              <Filter className="size-3.5" />
               {categoryOptions.find((opt) => opt.value === selectedCategory)?.label || "Category"}
             </button>
             {isCategoryOpen && (
-              <div className="absolute left-0 top-full z-50 mt-1 w-48 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+              <div className="absolute left-0 top-full z-50 mt-1 w-44 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
                 {categoryOptions.map((option) => (
                   <button
                     key={option.value}
-                    className={`flex w-full px-4 py-2 text-left text-sm hover:bg-gray-50 ${
+                    className={`flex w-full px-3 py-1.5 text-left text-xs hover:bg-gray-50 ${
                       selectedCategory === option.value ? "bg-blue-50 text-blue-700" : "text-gray-700"
                     }`}
                     onClick={() => {
@@ -428,7 +462,7 @@ const PostpaidBillingTab: React.FC<PostpaidBillingTabProps> = ({ customerId }) =
                 setSelectedCategory("")
                 setSearchText("")
               }}
-              className="text-sm text-red-600 hover:text-red-700"
+              className="text-xs text-red-600 hover:text-red-700"
             >
               Clear filters
             </button>
@@ -437,64 +471,68 @@ const PostpaidBillingTab: React.FC<PostpaidBillingTabProps> = ({ customerId }) =
 
         {/* Error message */}
         {error && (
-          <div className="mb-4 rounded-lg bg-red-50 p-4">
+          <div className="mb-3 rounded-lg bg-red-50 p-3">
             <div className="flex items-center gap-2 text-red-700">
-              <AlertCircle className="size-5" />
-              <p className="text-sm font-medium">Error loading bills: {error}</p>
+              <AlertCircle className="size-4" />
+              <p className="text-xs font-medium">Error loading bills: {error}</p>
             </div>
           </div>
         )}
 
         {/* Bills table */}
         {error ? (
-          <div className="flex flex-col items-center justify-center py-16">
-            <div className="flex size-12 items-center justify-center rounded-full bg-red-100">
-              <AlertCircle className="size-6 text-red-600" />
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="flex size-10 items-center justify-center rounded-full bg-red-100">
+              <AlertCircle className="size-5 text-red-600" />
             </div>
-            <h3 className="mt-4 text-base font-medium text-gray-900">Failed to load bills</h3>
-            <p className="mt-1 text-sm text-gray-500">{error}</p>
-            <ButtonModule variant="outline" size="sm" onClick={handleRefresh} className="mt-4">
-              <RefreshCw className="mr-2 size-4" />
+            <h3 className="mt-3 text-sm font-medium text-gray-900">Failed to load bills</h3>
+            <p className="mt-1 text-xs text-gray-500">{error}</p>
+            <ButtonModule variant="outline" size="sm" onClick={handleRefresh} className="mt-3">
+              <RefreshCw className="mr-2 size-3.5" />
               Try again
             </ButtonModule>
           </div>
         ) : bills.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16">
-            <div className="flex size-12 items-center justify-center rounded-full bg-gray-100">
-              <FileText className="size-6 text-gray-400" />
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="flex size-10 items-center justify-center rounded-full bg-gray-100">
+              <FileText className="size-5 text-gray-400" />
             </div>
-            <h3 className="mt-4 text-base font-medium text-gray-900">No bills found</h3>
-            <EmptySearchState title={searchText || selectedStatus || selectedCategory
-                ? "Try adjusting your filters"
-                : "No postpaid bills available for this customer"} />
+            <h3 className="mt-3 text-sm font-medium text-gray-900">No bills found</h3>
+            <EmptySearchState
+              title={
+                searchText || selectedStatus || selectedCategory
+                  ? "Try adjusting your filters"
+                  : "No postpaid bills available for this customer"
+              }
+            />
           </div>
         ) : (
           <div className="overflow-x-auto rounded-lg border border-gray-200">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                     Bill Details
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                     Status
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                     Category
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                     Period
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                     Amount
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                     Consumption
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                     Created
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
                     Actions
                   </th>
                 </tr>
@@ -507,58 +545,58 @@ const PostpaidBillingTab: React.FC<PostpaidBillingTabProps> = ({ customerId }) =
 
                   return (
                     <tr key={bill.id} className="transition-colors hover:bg-gray-50">
-                      <td className="p-4">
+                      <td className="p-2">
                         <div className="max-w-xs">
-                          <p className="truncate text-sm font-medium text-gray-900">{bill.name}</p>
+                          <p className="truncate text-xs font-medium text-gray-900">{bill.name}</p>
                           <p className="text-xs text-gray-500">Acc: {bill.customerAccountNumber}</p>
                           {hasDisputes && (
                             <div className="mt-1 flex items-center gap-1 text-xs text-amber-600">
-                              <AlertCircle className="size-3" />
+                              <AlertCircle className="size-2.5" />
                               <span>{bill.openDisputeCount} dispute(s)</span>
                             </div>
                           )}
                         </div>
                       </td>
 
-                      <td className="whitespace-nowrap p-4">
+                      <td className="whitespace-nowrap p-2">
                         <span
-                          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium ${statusConfig.color}`}
+                          className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${statusConfig.color}`}
                         >
                           {statusConfig.icon}
                           {statusConfig.label}
                         </span>
                       </td>
 
-                      <td className="whitespace-nowrap p-4">
+                      <td className="whitespace-nowrap p-2">
                         <span
-                          className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${categoryConfig.badge}`}
+                          className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${categoryConfig.badge}`}
                         >
                           {categoryConfig.label}
                         </span>
                       </td>
 
-                      <td className="whitespace-nowrap p-4 text-sm text-gray-700">{bill.period}</td>
+                      <td className="whitespace-nowrap p-2 text-xs text-gray-700">{bill.period}</td>
 
-                      <td className="whitespace-nowrap p-4">
+                      <td className="whitespace-nowrap p-2">
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{formatCurrency(bill.totalDue)}</p>
+                          <p className="text-xs font-medium text-gray-900">{formatCurrency(bill.totalDue)}</p>
                           <p className="text-xs text-gray-500">Bill: {formatCurrency(bill.currentBillAmount)}</p>
                         </div>
                       </td>
 
-                      <td className="whitespace-nowrap p-4 text-sm text-gray-700">
+                      <td className="whitespace-nowrap p-2 text-xs text-gray-700">
                         {formatNumber(bill.consumptionKwh)} kWh
                       </td>
 
-                      <td className="whitespace-nowrap p-4 text-sm text-gray-500">{formatDate(bill.createdAt)}</td>
+                      <td className="whitespace-nowrap p-2 text-xs text-gray-500">{formatDate(bill.createdAt)}</td>
 
-                      <td className="p-4">
+                      <td className="p-2">
                         <div className="flex justify-end">
                           <button
                             onClick={() => handleViewDetails(bill)}
-                            className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                            className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                           >
-                            <Eye className="size-3.5" />
+                            <Eye className="size-3" />
                             View
                           </button>
                         </div>
@@ -573,13 +611,13 @@ const PostpaidBillingTab: React.FC<PostpaidBillingTabProps> = ({ customerId }) =
 
         {/* Pagination */}
         {bills.length > 0 && (
-          <div className="mt-4 flex items-center justify-between">
+          <div className="mt-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-700">Show rows</span>
+              <span className="text-xs text-gray-700">Show rows</span>
               <select
                 value={pagination.pageSize}
                 onChange={handleRowsChange}
-                className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="rounded-md border border-gray-300 bg-white px-2 py-1 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 <option value={10}>10</option>
                 <option value={25}>25</option>
@@ -599,7 +637,7 @@ const PostpaidBillingTab: React.FC<PostpaidBillingTabProps> = ({ customerId }) =
                 Previous
               </ButtonModule>
 
-              <span className="text-sm text-gray-700">
+              <span className="text-xs text-gray-700">
                 Page {currentPage} of {totalPages}
               </span>
 
@@ -614,7 +652,7 @@ const PostpaidBillingTab: React.FC<PostpaidBillingTabProps> = ({ customerId }) =
               </ButtonModule>
             </div>
 
-            <div className="text-sm text-gray-500">Total records: {formatNumber(totalRecords)}</div>
+            <div className="text-xs text-gray-500">Total records: {formatNumber(totalRecords)}</div>
           </div>
         )}
 

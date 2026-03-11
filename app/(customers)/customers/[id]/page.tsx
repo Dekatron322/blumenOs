@@ -48,11 +48,12 @@ import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
 
 import { clearCurrentCustomer, fetchCustomerById } from "lib/redux/customerSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { fetchPayments } from "lib/redux/paymentSlice"
+import { fetchPayments, type PaymentsResponse } from "lib/redux/paymentSlice"
 import type { Payment } from "lib/redux/paymentSlice"
 import PaymentReceiptModal from "components/ui/Modal/payment-receipt-modal"
 import ChangeAccountNumberModal from "components/ui/Modal/change-account-number-modal"
 import { formatCurrency as formatCurrencyUtil } from "utils/formatCurrency"
+import { SearchModule } from "components/ui/Search/search-module"
 
 // Import tab components
 import BasicInfoTab from "components/Tabs/basic-info-tab"
@@ -440,6 +441,7 @@ const CustomerDetailsPage = () => {
   // Payments state
   const [paymentsPage, setPaymentsPage] = useState(1)
   const [paymentsPageSize, setPaymentsPageSize] = useState(10)
+  const [paymentsSearchInput, setPaymentsSearchInput] = useState("")
 
   // Fetch customer data
   useEffect(() => {
@@ -473,10 +475,11 @@ const CustomerDetailsPage = () => {
           pageNumber: paymentsPage,
           pageSize: paymentsPageSize,
           customerId,
+          search: paymentsSearchInput.trim() || undefined,
         })
       )
     }
-  }, [activeTab, customerId, paymentsPage, paymentsPageSize, dispatch])
+  }, [activeTab, customerId, paymentsPage, paymentsPageSize, paymentsSearchInput, dispatch])
 
   // Generate assets
   useEffect(() => {
@@ -577,6 +580,113 @@ const CustomerDetailsPage = () => {
     })
   }
 
+  // Export all customer payments to CSV
+  const exportPaymentsToCSV = async () => {
+    if (!payments || payments.length === 0) return
+
+    try {
+      // Fetch all payments for this customer (not just the current page)
+      const allPaymentsResponse = await dispatch(
+        fetchPayments({
+          pageNumber: 1,
+          pageSize: 10000, // Large number to get all payments
+          customerId,
+          search: paymentsSearchInput.trim() || undefined,
+        })
+      )
+
+      if (allPaymentsResponse.meta.requestStatus === "fulfilled" && allPaymentsResponse.payload) {
+        const allPayments = (allPaymentsResponse.payload as PaymentsResponse).data || []
+
+        if (allPayments.length === 0) {
+          alert("No payments to export")
+          return
+        }
+
+        // Create CSV headers
+        const headers = [
+          "Payment ID",
+          "Reference",
+          "Customer Name",
+          "Account Number",
+          "Amount",
+          "Currency",
+          "Payment Date",
+          "Channel",
+          "Status",
+          "Payment Type",
+          "Tariff Rate",
+          "Units",
+          "VAT Rate",
+          "VAT Amount",
+          "Electricity Amount",
+          "Outstanding Debt",
+          "Debt Payable",
+          "Collector Name",
+          "Collector Type",
+          "Bill Period",
+          "Meter Number",
+        ]
+
+        // Create CSV rows
+        const csvRows = [
+          headers.join(","),
+          ...allPayments.map((payment: Payment) => {
+            const row = [
+              payment.id,
+              `"${payment.reference}"`,
+              `"${payment.customerName}"`,
+              `"${payment.customerAccountNumber}"`,
+              payment.totalAmountPaid || payment.amount || 0,
+              payment.currency || "NGN",
+              `"${formatDateTime(payment.paidAtUtc)}"`,
+              `"${payment.channel}"`,
+              `"${payment.status}"`,
+              `"${payment.paymentTypeName}"`,
+              payment.tariffRate || 0,
+              payment.units || 0,
+              payment.vatRate || 0,
+              payment.vatAmount || 0,
+              payment.electricityAmount || 0,
+              payment.outstandingDebt || 0,
+              payment.debtPayable || 0,
+              `"${payment.collector?.name || "N/A"}"`,
+              `"${payment.collector?.type || "N/A"}"`,
+              `"${payment.postpaidBillPeriod || "N/A"}"`,
+              `"${payment.customerMeterNumber || "N/A"}"`,
+            ]
+            return row.join(",")
+          }),
+        ]
+
+        // Create CSV content
+        const csvContent = csvRows.join("\n")
+
+        // Create blob and download
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+        const link = document.createElement("a")
+        const url = URL.createObjectURL(blob)
+
+        // Generate filename with customer info and timestamp
+        const timestamp = new Date().toISOString().split("T")[0]
+        const customerName = currentCustomer?.fullName?.replace(/[^a-zA-Z0-9]/g, "_") || "unknown"
+        const filename = `payment_history_${customerName}_${
+          currentCustomer?.accountNumber || "unknown"
+        }_${timestamp}.csv`
+
+        link.setAttribute("href", url)
+        link.setAttribute("download", filename)
+        link.style.visibility = "hidden"
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+      }
+    } catch (error) {
+      console.error("Error exporting payments:", error)
+      alert("Failed to export payments. Please try again.")
+    }
+  }
+
   // Handle payments pagination
   const handlePaymentsPageChange = (page: number) => {
     setPaymentsPage(page)
@@ -585,6 +695,23 @@ const CustomerDetailsPage = () => {
   const handlePaymentsPageSizeChange = (size: number) => {
     setPaymentsPageSize(size)
     setPaymentsPage(1)
+  }
+
+  // Payments search handlers
+  const handlePaymentsSearchChange = (value: string) => {
+    setPaymentsSearchInput(value)
+  }
+
+  const handlePaymentsSearch = () => {
+    const trimmed = paymentsSearchInput.trim()
+    if (trimmed.length === 0 || trimmed.length >= 3) {
+      setPaymentsPage(1) // Reset to first page when searching
+    }
+  }
+
+  const handlePaymentsCancelSearch = () => {
+    setPaymentsSearchInput("")
+    setPaymentsPage(1) // Reset to first page when clearing search
   }
 
   const getTabLabel = (tab: TabType) => {
@@ -729,7 +856,7 @@ const CustomerDetailsPage = () => {
                   </span>
                 </div>
                 <div className="mt-1 flex flex-wrap gap-3 text-xs text-gray-600">
-                  <span className="font-medium text-gray-900">{formatCurrency(payment.amount)}</span>
+                  <span className="font-medium text-gray-900">{formatCurrency(payment.amount || 0)}</span>
                   <span>•</span>
                   <span>{formatDateTime(payment.paidAtUtc)}</span>
                   {payment.postpaidBillPeriod && (
@@ -767,13 +894,31 @@ const CustomerDetailsPage = () => {
               </div>
               <button
                 className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100 disabled:opacity-50"
-                onClick={() => {}}
+                onClick={exportPaymentsToCSV}
                 disabled={!payments || payments.length === 0}
               >
                 <Download className="size-3.5" />
                 Export CSV
               </button>
             </div>
+          </div>
+
+          {/* Search Section */}
+          <div className="border-b border-gray-200 bg-gray-50/50 p-4">
+            <div className="mb-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#004B23]">Search Payments</p>
+              <h4 className="text-sm font-medium text-gray-900">Find payment records</h4>
+              <p className="text-xs text-gray-600">Search by reference, channel, amount, or payment type.</p>
+            </div>
+            <SearchModule
+              value={paymentsSearchInput}
+              onChange={(e) => handlePaymentsSearchChange(e.target.value)}
+              onCancel={handlePaymentsCancelSearch}
+              onSearch={handlePaymentsSearch}
+              placeholder="Type payment reference, channel, amount, or type..."
+              height="h-12"
+              className="!w-full rounded-lg border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[32px] [&_button]:px-3 [&_button]:text-xs [&_input]:text-xs"
+            />
           </div>
 
           {/* Loading State */}
@@ -810,13 +955,87 @@ const CustomerDetailsPage = () => {
             </div>
           )}
 
-          {/* Payment List */}
+          {/* Payment Table */}
           {!paymentsLoading && !paymentsError && payments.length > 0 && (
             <>
-              <div className="divide-y divide-gray-100">
-                {payments.map((payment) => (
-                  <PaymentListItem key={payment.id} payment={payment} />
-                ))}
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Payment Details
+                      </th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Reference
+                      </th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Channel
+                      </th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Amount
+                      </th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Date
+                      </th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Bill Period
+                      </th>
+                      <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 bg-white">
+                    {payments.map((payment) => (
+                      <tr key={payment.id} className="transition-colors hover:bg-gray-50">
+                        <td className="px-3 py-2">
+                          <div className="flex items-center gap-2">
+                            <div className="flex size-6 items-center justify-center rounded-full bg-blue-100">
+                              <span className="text-xs font-semibold text-blue-700">
+                                {payment.customerName
+                                  .split(" ")
+                                  .map((n: string) => n[0])
+                                  .join("")
+                                  .slice(0, 2)}
+                              </span>
+                            </div>
+                            <div>
+                              <p className="text-xs font-medium text-gray-900">{payment.customerName}</p>
+                              <p className="text-xs text-gray-500">{payment.paymentTypeName}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-3 py-2">
+                          <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-700">
+                            Ref: {payment.reference}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2">
+                          <span className="rounded-full bg-blue-50 px-1.5 py-0.5 text-xs font-medium text-blue-700">
+                            {payment.channel}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2">
+                          <div className="text-xs">
+                            <p className="font-medium text-gray-900">{formatCurrency(payment.amount || 0)}</p>
+                            {payment.units && <p className="text-xs text-gray-500">{payment.units} units</p>}
+                          </div>
+                        </td>
+                        <td className="px-3 py-2 text-xs text-gray-700">{formatDateTime(payment.paidAtUtc)}</td>
+                        <td className="px-3 py-2 text-xs text-gray-700">{payment.postpaidBillPeriod || "N/A"}</td>
+                        <td className="px-3 py-2 text-right">
+                          <button
+                            onClick={() => handleViewPaymentReceipt(payment)}
+                            className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                          >
+                            <Eye className="size-3" />
+                            View Receipt
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
 
               {/* Pagination */}
