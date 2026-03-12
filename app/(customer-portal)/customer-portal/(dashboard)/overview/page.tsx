@@ -1073,7 +1073,7 @@ export default function AgentManagementDashboard() {
             )}
 
             {/* Customer Wallet Card - Mobile Optimized */}
-            <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
+            {/* <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
               <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="flex size-10 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 sm:h-12 sm:w-12">
@@ -1099,15 +1099,15 @@ export default function AgentManagementDashboard() {
                     <p className="text-xs text-gray-500 sm:hidden">Balance & Transactions</p>
                   </div>
                 </div>
-                {/* <button
+                <button
                   onClick={() => router.push("/customer-portal/wallet")}
                   className="rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-indigo-700 sm:px-4 sm:py-2 sm:text-sm"
                 >
                   Manage
-                </button> */}
+                </button>
               </div>
 
-              {/* Balance Display - Mobile Optimized */}
+              
               <div className="mb-4 rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50 p-4">
                 <div className="text-center">
                   <p className="mb-1 text-xs font-medium text-gray-500 sm:text-sm">Available Balance</p>
@@ -1119,16 +1119,16 @@ export default function AgentManagementDashboard() {
                 </div>
               </div>
 
-              {/* Quick Stats - Mobile Grid */}
+              
               <div className="grid grid-cols-2 gap-3 sm:hidden">
-                {/* Pending Transactions */}
+                
                 <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                   <p className="mb-1 text-xs font-medium text-gray-500">Pending</p>
                   <p className="text-lg font-bold text-gray-900">3</p>
                   <p className="mt-1 text-xs text-amber-600">Awaiting</p>
                 </div>
 
-                {/* Wallet Status */}
+               
                 <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                   <p className="mb-1 text-xs font-medium text-gray-500">Status</p>
                   <div className="flex items-center gap-2">
@@ -1139,23 +1139,23 @@ export default function AgentManagementDashboard() {
                 </div>
               </div>
 
-              {/* Desktop Stats - Hidden on Mobile */}
+             
               <div className="hidden grid-cols-1 gap-6 sm:grid sm:grid-cols-3">
-                {/* Current Balance */}
+               
                 <div className="text-center sm:text-left">
                   <p className="mb-1 text-sm font-medium text-gray-500">Current Balance</p>
                   <p className="text-2xl font-bold text-gray-900">₦12,500.00</p>
                   <p className="mt-1 text-xs text-green-600">+2.5% from last month</p>
                 </div>
 
-                {/* Pending Transactions */}
+                
                 <div className="text-center sm:text-left">
                   <p className="mb-1 text-sm font-medium text-gray-500">Pending Transactions</p>
                   <p className="text-2xl font-bold text-gray-900">3</p>
                   <p className="mt-1 text-xs text-amber-600">Awaiting confirmation</p>
                 </div>
 
-                {/* Wallet Status */}
+                
                 <div className="text-center sm:text-left">
                   <p className="mb-1 text-sm font-medium text-gray-500">Wallet Status</p>
                   <div className="flex items-center gap-2">
@@ -1166,7 +1166,7 @@ export default function AgentManagementDashboard() {
                 </div>
               </div>
 
-              {/* Bottom Actions - Mobile Optimized */}
+             
               <div className="mt-4 border-t border-gray-200 pt-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center justify-center gap-2 text-xs text-gray-600 sm:justify-start sm:text-sm">
@@ -1193,7 +1193,7 @@ export default function AgentManagementDashboard() {
                   </button>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* Adverts Banner Slider */}
             <div className="mb-6">

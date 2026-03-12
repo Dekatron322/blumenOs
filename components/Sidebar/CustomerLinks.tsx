@@ -43,11 +43,11 @@ const allLinks: NavLink[] = [
     href: "/customer-portal/meters",
     icon: MeterOutlineIcon,
   },
-  {
-    name: "Raise Support Ticket",
-    href: "/customer-portal/support-ticket",
-    icon: RaiseTicketIcon,
-  },
+  // {
+  //   name: "Raise Support Ticket",
+  //   href: "/customer-portal/support-ticket",
+  //   icon: RaiseTicketIcon,
+  // },
   {
     name: "My Bills",
     href: "/customer-portal/bills",

@@ -15,6 +15,7 @@ import { clearSupportTicketsStatus, getSupportTickets } from "lib/redux/customer
 import Image from "next/image"
 import { ButtonModule } from "components/ui/Button/Button"
 import EmptySearchState from "components/ui/EmptySearchState"
+import { FaTicketAlt } from "react-icons/fa"
 
 // Support ticket status enum matching API
 enum TicketStatus {
@@ -590,6 +591,16 @@ const AllSupportTicket: React.FC<AllSupportTicketProps> = ({
           <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Support Tickets</p>
           <p className="text-sm text-gray-600">View and manage all support tickets</p>
         </div>
+        <ButtonModule
+          type="button"
+          variant="primary"
+          onClick={() => router.push("/customer-portal/all-support-ticket/add")}
+          icon={<FaTicketAlt />}
+          iconPosition="start"
+          className="max-sm:w-full"
+        >
+          Create New Ticket
+        </ButtonModule>
       </motion.div>
 
       {/* Header with Search and Mobile Search Toggle */}
@@ -609,7 +620,7 @@ const AllSupportTicket: React.FC<AllSupportTicketProps> = ({
             onCancel={handleCancelSearch}
             placeholder="Search by reference, title or customer name"
             height="h-14"
-            className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+            className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
           />
         </div>
 
