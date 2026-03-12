@@ -1736,15 +1736,17 @@ const FileManagementPage = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
-                          <ButtonModule
-                            variant="outline"
-                            size="sm"
-                            onClick={downloadSampleFile}
-                            icon={<Download className="size-4" />}
-                            className="border-[#004B23] bg-white text-[#004B23] hover:bg-[#e9f5ef]"
-                          >
-                            Download Template
-                          </ButtonModule>
+                          {selectedUploadType !== 12 && (
+                            <ButtonModule
+                              variant="outline"
+                              size="sm"
+                              onClick={downloadSampleFile}
+                              icon={<Download className="size-4" />}
+                              className="border-[#004B23] bg-white text-[#004B23] hover:bg-[#e9f5ef]"
+                            >
+                              Download Template
+                            </ButtonModule>
+                          )}
                         </div>
                       </div>
                     </div>
