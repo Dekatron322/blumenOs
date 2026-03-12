@@ -1332,10 +1332,6 @@ const FileManagementPage = () => {
                 })
               } catch (bulkError: any) {
                 console.error("Bulk upload failed:", bulkError)
-                notify("warning", "Upload Queued", {
-                  description: "File uploaded but processing failed. Please check bulk upload page.",
-                  duration: 5000,
-                })
                 setUploadError(bulkError instanceof Error ? bulkError.message : "Failed to process bulk upload")
               }
 
