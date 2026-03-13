@@ -50,6 +50,9 @@ export const API_ENDPOINTS = {
     REGIONAL_FINANCE_MANAGER_EXPORT: "/agents/payments/export",
     GET_AREA_OFFICE_FOR_SALES_REP: "/agents/payments/export/area-offices",
     GET_FEEDER_FOR_SALES_REP: "/agents/payments/export/feeders",
+    PREVIEW_DEBT: "/agents/debt/clearances/preview",
+    CLEAR_DEBT: "/agents/debt/clearances",
+    GET_PROMO_CODES: "/agents/debt/clearances/promos",
   },
 
   BILLING_DISPUTE: {
