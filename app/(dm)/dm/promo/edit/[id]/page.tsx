@@ -58,11 +58,12 @@ import {
 } from "lucide-react"
 import { useParams } from "next/navigation"
 
-// Scope options with icons and descriptions
+// Scope options with icons and descriptions - matching add page
 const scopeOptions = [
-  { value: "1", label: "Global", icon: Globe, description: "Available worldwide" },
-  { value: "2", label: "Regional", icon: Building2, description: "Limited to specific region" },
-  { value: "3", label: "Local", icon: MapPin, description: "Local area only" },
+  { value: "1", label: "Everyone", icon: Globe, description: "All customers" },
+  { value: "2", label: "Province", icon: MapPin, description: "Limited to province" },
+  { value: "3", label: "Area Office", icon: Building2, description: "Limited to area office" },
+  { value: "4", label: "Feeder", icon: Zap, description: "Limited to feeder" },
 ]
 
 // Boolean options with enhanced labels
@@ -263,19 +264,19 @@ const EditPromoPage = () => {
       }
     }
 
-    // Validate province when scope is not global
-    if (formData.scope !== 1 && (!formData.provinceId || formData.provinceId <= 0)) {
-      newErrors.provinceId = "Province is required for regional and local scope"
+    // Validate province when scope is province
+    if (formData.scope === 2 && (!formData.provinceId || formData.provinceId <= 0)) {
+      newErrors.provinceId = "Province is required for province scope"
     }
 
-    // Validate area office when scope is local
+    // Validate area office when scope is area office
     if (formData.scope === 3 && (!formData.areaOfficeId || formData.areaOfficeId <= 0)) {
-      newErrors.areaOfficeId = "Area office is required for local scope"
+      newErrors.areaOfficeId = "Area office is required for area office scope"
     }
 
-    // Validate feeder when scope is local
-    if (formData.scope === 3 && (!formData.feederId || formData.feederId <= 0)) {
-      newErrors.feederId = "Feeder is required for local scope"
+    // Validate feeder when scope is feeder
+    if (formData.scope === 4 && (!formData.feederId || formData.feederId <= 0)) {
+      newErrors.feederId = "Feeder is required for feeder scope"
     }
 
     setErrors(newErrors)
@@ -773,7 +774,7 @@ const EditPromoPage = () => {
                             <label className="mb-2 block text-sm font-medium text-gray-700">
                               Scope <span className="text-red-500">*</span>
                             </label>
-                            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                            <div className="4xl:grid-cols-4 grid grid-cols-2 gap-3">
                               {scopeOptions.map((option) => {
                                 const Icon = option.icon
                                 const isSelected = formData.scope === parseInt(option.value)
@@ -781,106 +782,137 @@ const EditPromoPage = () => {
                                   <motion.button
                                     key={option.value}
                                     type="button"
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={() => handleInputChange("scope", parseInt(option.value))}
-                                    className={`relative rounded-lg border p-3 text-left transition-all ${
+                                    variants={{
+                                      rest: { scale: 1 },
+                                      hover: { scale: 1.02 },
+                                      tap: { scale: 0.98 },
+                                    }}
+                                    initial="rest"
+                                    whileHover="hover"
+                                    whileTap="tap"
+                                    onClick={() => {
+                                      handleInputChange("scope", parseInt(option.value))
+                                    }}
+                                    className={`relative rounded-xl border p-4 text-left transition-all ${
                                       isSelected
-                                        ? "border-[#004B23] bg-[#004B23]/5"
+                                        ? "border-[#004B23] bg-[#004B23]/5 shadow-sm"
                                         : "border-gray-200 bg-white hover:border-gray-300"
                                     }`}
                                   >
-                                    {isSelected && (
-                                      <motion.div
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1 }}
-                                        className="absolute right-2 top-2"
+                                    <div className="flex items-start gap-3">
+                                      <div
+                                        className={`rounded-lg p-2 ${
+                                          isSelected ? "bg-[#004B23] text-white" : "bg-gray-100 text-gray-600"
+                                        }`}
                                       >
-                                        <Check className="size-4 text-[#004B23]" />
-                                      </motion.div>
+                                        <Icon className="size-4" />
+                                      </div>
+                                      <div className="flex-1">
+                                        <p className={`font-medium ${isSelected ? "text-[#004B23]" : "text-gray-900"}`}>
+                                          {option.label}
+                                        </p>
+                                        <p className="text-xs text-gray-500">{option.description}</p>
+                                      </div>
+                                    </div>
+                                    {isSelected && (
+                                      <div className="absolute right-2 top-2">
+                                        <Check className="size-5 text-[#004B23]" />
+                                      </div>
                                     )}
-                                    <Icon
-                                      className={`mb-1 size-5 ${isSelected ? "text-[#004B23]" : "text-gray-400"}`}
-                                    />
-                                    <p
-                                      className={`text-sm font-medium ${
-                                        isSelected ? "text-[#004B23]" : "text-gray-700"
-                                      }`}
-                                    >
-                                      {option.label}
-                                    </p>
-                                    <p className="text-xs text-gray-500">{option.description}</p>
                                   </motion.button>
                                 )
                               })}
                             </div>
+                            {errors.scope && <p className="mt-1 text-sm text-[#D14343]">{errors.scope}</p>}
                           </div>
 
                           <AnimatePresence>
-                            {formData.scope !== 1 && (
+                            {formData.scope === 2 && (
                               <motion.div
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: "auto" }}
                                 exit={{ opacity: 0, height: 0 }}
-                                className="space-y-3 "
+                                className=""
                               >
-                                <h4 className="text-sm font-medium text-gray-700">Location Details</h4>
-                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                                  <FormSelectModule
-                                    label="Province"
-                                    name="provinceId"
-                                    value={formData.provinceId}
-                                    onChange={(e) => handleInputChange("provinceId", Number(e.target.value))}
-                                    options={provinces.map((province) => ({
-                                      value: province.id,
-                                      label: province.name,
-                                    }))}
-                                    disabled={isSubmitting || provincesLoading}
-                                    error={errors.provinceId}
-                                    loading={provincesLoading}
-                                    searchable={true}
-                                    searchTerm={provinceSearchTerm}
-                                    onSearchChange={setProvinceSearchTerm}
-                                  />
+                                <FormSelectModule
+                                  label="Province"
+                                  name="provinceId"
+                                  value={formData.provinceId}
+                                  onChange={(e) => handleInputChange("provinceId", Number(e.target.value))}
+                                  options={provinces.map((province) => ({
+                                    value: province.id,
+                                    label: province.name,
+                                  }))}
+                                  disabled={isSubmitting || provincesLoading}
+                                  error={
+                                    touchedFields.has("provinceId") && formData.provinceId === 0
+                                      ? "Province is required"
+                                      : ""
+                                  }
+                                  loading={provincesLoading}
+                                  searchable={true}
+                                  searchTerm={provinceSearchTerm}
+                                  onSearchChange={setProvinceSearchTerm}
+                                  required
+                                />
+                              </motion.div>
+                            )}
 
-                                  {formData.scope === 3 && (
-                                    <FormSelectModule
-                                      label="Area Office"
-                                      name="areaOfficeId"
-                                      value={formData.areaOfficeId}
-                                      onChange={(e) => handleInputChange("areaOfficeId", Number(e.target.value))}
-                                      options={areaOffices.map((areaOffice: any) => ({
-                                        value: areaOffice.id,
-                                        label: areaOffice.nameOfNewOAreaffice,
-                                      }))}
-                                      disabled={isSubmitting || areaOfficesLoading}
-                                      error={errors.areaOfficeId}
-                                      loading={areaOfficesLoading}
-                                      searchable={true}
-                                      searchTerm={areaOfficeSearchTerm}
-                                      onSearchChange={setAreaOfficeSearchTerm}
-                                    />
-                                  )}
+                            {formData.scope === 3 && (
+                              <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                exit={{ opacity: 0, height: 0 }}
+                              >
+                                <FormSelectModule
+                                  label="Area Office"
+                                  name="areaOfficeId"
+                                  value={formData.areaOfficeId}
+                                  onChange={(e) => handleInputChange("areaOfficeId", Number(e.target.value))}
+                                  options={areaOffices.map((areaOffice: any) => ({
+                                    value: areaOffice.id,
+                                    label: areaOffice.nameOfNewOAreaffice,
+                                  }))}
+                                  disabled={isSubmitting || areaOfficesLoading}
+                                  error={
+                                    touchedFields.has("areaOfficeId") && formData.areaOfficeId === 0
+                                      ? "Area office is required"
+                                      : ""
+                                  }
+                                  loading={areaOfficesLoading}
+                                  searchable={true}
+                                  searchTerm={areaOfficeSearchTerm}
+                                  onSearchChange={setAreaOfficeSearchTerm}
+                                  required
+                                />
+                              </motion.div>
+                            )}
 
-                                  {formData.scope === 3 && (
-                                    <FormSelectModule
-                                      label="Feeder"
-                                      name="feederId"
-                                      value={formData.feederId}
-                                      onChange={(e) => handleInputChange("feederId", Number(e.target.value))}
-                                      options={feeders.map((feeder: any) => ({
-                                        value: feeder.id,
-                                        label: feeder.name,
-                                      }))}
-                                      disabled={isSubmitting || feedersLoading}
-                                      error={errors.feederId}
-                                      loading={feedersLoading}
-                                      searchable={true}
-                                      searchTerm={feederSearchTerm}
-                                      onSearchChange={setFeederSearchTerm}
-                                    />
-                                  )}
-                                </div>
+                            {formData.scope === 4 && (
+                              <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                exit={{ opacity: 0, height: 0 }}
+                              >
+                                <FormSelectModule
+                                  label="Feeder"
+                                  name="feederId"
+                                  value={formData.feederId}
+                                  onChange={(e) => handleInputChange("feederId", Number(e.target.value))}
+                                  options={feeders.map((feeder: any) => ({
+                                    value: feeder.id,
+                                    label: `${feeder.name} (${feeder.feederCode})`,
+                                  }))}
+                                  disabled={isSubmitting || feedersLoading}
+                                  error={
+                                    touchedFields.has("feederId") && formData.feederId === 0 ? "Feeder is required" : ""
+                                  }
+                                  loading={feedersLoading}
+                                  searchable={true}
+                                  searchTerm={feederSearchTerm}
+                                  onSearchChange={setFeederSearchTerm}
+                                  required
+                                />
                               </motion.div>
                             )}
                           </AnimatePresence>
@@ -1116,7 +1148,7 @@ const EditPromoPage = () => {
                         </div>
                       </div>
 
-                      {formData.scope !== 1 && (
+                      {(formData.scope === 2 || formData.scope === 3 || formData.scope === 4) && (
                         <div className="mt-3 rounded border border-gray-200 p-3">
                           <p className="mb-2 flex items-center gap-1 text-xs font-medium text-gray-700">
                             <MapPin className="size-3" />
@@ -1125,20 +1157,29 @@ const EditPromoPage = () => {
                           <div className="grid grid-cols-3 gap-2 text-xs">
                             {formData.provinceId > 0 && (
                               <div>
-                                <p className="text-xs text-gray-500">Province ID</p>
-                                <p className="font-medium">{formData.provinceId}</p>
+                                <p className="text-xs text-gray-500">Province</p>
+                                <p className="font-medium">
+                                  {provinces.find((p) => p.id === formData.provinceId)?.name ||
+                                    `ID: ${formData.provinceId}`}
+                                </p>
                               </div>
                             )}
                             {formData.areaOfficeId > 0 && (
                               <div>
-                                <p className="text-xs text-gray-500">Area Office ID</p>
-                                <p className="font-medium">{formData.areaOfficeId}</p>
+                                <p className="text-xs text-gray-500">Area Office</p>
+                                <p className="font-medium">
+                                  {areaOffices.find((ao: any) => ao.id === formData.areaOfficeId)
+                                    ?.nameOfNewOAreaffice || `ID: ${formData.areaOfficeId}`}
+                                </p>
                               </div>
                             )}
                             {formData.feederId > 0 && (
                               <div>
-                                <p className="text-xs text-gray-500">Feeder ID</p>
-                                <p className="font-medium">{formData.feederId}</p>
+                                <p className="text-xs text-gray-500">Feeder</p>
+                                <p className="font-medium">
+                                  {feeders.find((f: any) => f.id === formData.feederId)?.name ||
+                                    `ID: ${formData.feederId}`}
+                                </p>
                               </div>
                             )}
                           </div>
