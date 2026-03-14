@@ -177,7 +177,7 @@ const Verify: React.FC = () => {
                       type="text"
                       inputMode="numeric"
                       maxLength={1}
-                      className="h-12 w-12 rounded-md border border-[#E0E0E0] bg-[#f9f9f9] text-center text-lg font-medium outline-none focus:border-[#004B23] focus:ring-2 focus:ring-[#004B23] focus:ring-offset-1"
+                      className="size-12 rounded-md border border-[#E0E0E0] bg-[#f9f9f9] text-center text-lg font-medium outline-none focus:border-[#004B23] focus:ring-2 focus:ring-[#004B23] focus:ring-offset-1"
                       value={digit}
                       onChange={(e) => handleOtpChange(idx, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(idx, e)}

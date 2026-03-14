@@ -218,7 +218,7 @@ export default function MeteringDashboard() {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto w-full px-4 py-8 2xl:container max-sm:px-2 xl:px-16">
+          <div className="mx-auto w-full px-4 max-sm:px-2 ">
             {isLoading ? (
               <>
                 <SkeletonLoader />

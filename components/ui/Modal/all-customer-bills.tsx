@@ -13,6 +13,7 @@ import { useDispatch, useSelector } from "react-redux"
 import { AppDispatch, RootState } from "lib/redux/store"
 import { clearMyBillsStatus, getMyBills } from "lib/redux/customersDashboardSlice"
 import { ButtonModule } from "components/ui/Button/Button"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 enum BillStatus {
   Draft = 0,
@@ -698,7 +699,7 @@ const AllBills: React.FC<AllBillsProps> = ({
         transition={{ duration: 0.3 }}
       >
         <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Bills</p>
+          <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Bills</p>
           <p className="text-sm text-gray-600">View and manage all customer bills</p>
         </div>
       </motion.div>
@@ -897,26 +898,11 @@ const AllBills: React.FC<AllBillsProps> = ({
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
         >
-          <motion.p
-            className="text-base font-bold text-[#202B3C]"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            {searchText || filters.status || filters.adjustmentStatus || filters.category
+          <EmptySearchState title={searchText || filters.status || filters.adjustmentStatus || filters.category
               ? "No matching bills found"
-              : "No bills available"}
-          </motion.p>
-          <motion.p
-            className="text-sm text-gray-600"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-          >
-            {searchText || filters.status || filters.adjustmentStatus || filters.category
+              : "No bills available"} description={searchText || filters.status || filters.adjustmentStatus || filters.category
               ? "Try adjusting your search or filters"
-              : "Bills will appear here once they are generated"}
-          </motion.p>
+              : "Bills will appear here once they are generated"} />
         </motion.div>
       ) : (
         <>

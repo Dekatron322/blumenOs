@@ -21,6 +21,7 @@ interface NavLink {
   href: string
   icon: any
   permission?: string
+  isNew?: boolean
 }
 
 const allLinks: NavLink[] = [
@@ -29,6 +30,13 @@ const allLinks: NavLink[] = [
     name: "Collect payment",
     href: "/sales-rep/collect-payment",
     icon: CollectCash,
+  },
+
+  {
+    name: "Clear Debt",
+    href: "/sales-rep/clear-debt",
+    icon: CollectCash,
+    isNew: true,
   },
 
   {
@@ -209,6 +217,16 @@ export function SalesRepLinks({ isCollapsed }: SalesRepLinksProps) {
         return false
       }
 
+      // Only show Clear Debt for SalesRep and Cashier users
+      if (
+        link.href === "/sales-rep/clear-debt" &&
+        agent &&
+        agent.agentType !== "SalesRep" &&
+        agent.agentType !== "Cashier"
+      ) {
+        return false
+      }
+
       // Hide Raise Ticket for FinanceManager and RegionalFinanceManager users
       if (
         link.href === "/sales-rep/raise-ticket" &&
@@ -299,6 +317,11 @@ export function SalesRepLinks({ isCollapsed }: SalesRepLinksProps) {
                 })}
               >
                 {link.name}
+                {link.isNew && !isCollapsed && (
+                  <span className="ml-2 inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+                    New
+                  </span>
+                )}
               </p>
             </Link>
           </div>

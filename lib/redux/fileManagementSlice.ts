@@ -966,7 +966,7 @@ export interface FileIntentRequest {
   sizeBytes: number
   purpose: string
   checksum: string
-  bulkInsertType: string
+  bulkInsertType: string | number
   columns: string[]
 }
 

@@ -5,6 +5,9 @@ import { API_ENDPOINTS, buildApiUrl } from "lib/config/api"
 
 // Interfaces for Feeder Energy Cap
 export interface FeederEnergyCap {
+  companyName: string
+  areaOfficeName: string
+  feederName: string
   id: number
   feederId: number
   period: string

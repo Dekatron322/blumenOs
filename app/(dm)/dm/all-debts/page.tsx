@@ -117,7 +117,7 @@ const FilterSidebar = ({
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header - Fixed at top */}
-            <div className="flex-shrink-0 border-b bg-white p-4">
+            <div className="shrink-0 border-b bg-white p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <button
@@ -261,7 +261,7 @@ const FilterSidebar = ({
             </div>
 
             {/* Bottom Action Buttons - Fixed at bottom */}
-            <div className="flex-shrink-0 border-t bg-white p-4">
+            <div className="shrink-0 border-t bg-white p-4">
               <div className="flex gap-3">
                 <button
                   onClick={() => {
@@ -576,6 +576,11 @@ const DebtManagementCustomers = ({
   onSearchChange,
   onSearchCancel,
   onManualSearch,
+  viewMode,
+  onViewModeChange,
+  onPageSizeChange,
+  getActiveFilterCount,
+  resetFilters,
 }: {
   customers: DebtManagementCustomer[]
   customersLoading: boolean
@@ -594,6 +599,11 @@ const DebtManagementCustomers = ({
   onSearchChange: (value: string) => void
   onSearchCancel: () => void
   onManualSearch: () => void
+  viewMode: "list" | "grid"
+  onViewModeChange: (mode: "list" | "grid") => void
+  onPageSizeChange: (size: number) => void
+  getActiveFilterCount: () => number
+  resetFilters: () => void
 }) => {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-NG", {
@@ -608,212 +618,447 @@ const DebtManagementCustomers = ({
     return new Date(dateString).toLocaleDateString()
   }
 
+  const getDebtStyle = (amount: number) => {
+    if (amount === 0) {
+      return "border border-emerald-200 bg-emerald-100 text-emerald-700"
+    } else if (amount <= 5000) {
+      return "border border-amber-200 bg-amber-100 text-amber-700"
+    } else {
+      return "border border-red-200 bg-red-100 text-red-700"
+    }
+  }
+
+  const handleViewDetails = (customer: DebtManagementCustomer) => {
+    // Navigate to customer details in the same page
+    window.location.href = `/customers/${customer.customerId}`
+  }
+
+  const getPageItems = (): (number | string)[] => {
+    const total = pagination.totalPages
+    const current = pagination.currentPage
+    const items: (number | string)[] = []
+
+    if (total <= 7) {
+      for (let i = 1; i <= total; i += 1) {
+        items.push(i)
+      }
+      return items
+    }
+
+    items.push(1)
+    const showLeftEllipsis = current > 4
+    const showRightEllipsis = current < total - 3
+
+    if (!showLeftEllipsis) {
+      items.push(2, 3, 4, "...")
+    } else if (!showRightEllipsis) {
+      items.push("...", total - 3, total - 2, total - 1)
+    } else {
+      items.push("...", current - 1, current, current + 1, "...")
+    }
+
+    if (!items.includes(total)) {
+      items.push(total)
+    }
+
+    return items
+  }
+
   if (customersLoading) {
     return (
-      <motion.div
-        className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div className="flex items-center justify-between border-b pb-3">
-          <div className="h-6 w-40 animate-pulse rounded bg-gray-200"></div>
-          <div className="h-8 w-20 animate-pulse rounded bg-gray-200"></div>
+      <div className="flex items-center justify-center py-16">
+        <div className="flex flex-col items-center gap-3">
+          <div className="size-8 animate-spin rounded-full border-2 border-gray-300 border-t-[#004B23]"></div>
+          <p className="text-sm text-gray-500">Loading customers...</p>
         </div>
-        <div className="mt-4 space-y-3">
-          {[...Array(5)].map((_, index) => (
-            <div key={index} className="flex items-center justify-between rounded-lg border p-3">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 animate-pulse rounded-full bg-gray-200"></div>
-                <div className="space-y-2">
-                  <div className="h-4 w-32 animate-pulse rounded bg-gray-200"></div>
-                  <div className="h-3 w-24 animate-pulse rounded bg-gray-200"></div>
-                </div>
-              </div>
-              <div className="space-y-1 text-right">
-                <div className="h-4 w-20 animate-pulse rounded bg-gray-200"></div>
-                <div className="h-3 w-16 animate-pulse rounded bg-gray-200"></div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </motion.div>
+      </div>
     )
   }
 
   if (customersError) {
     return (
-      <motion.div
-        className="rounded-lg border border-red-200 bg-red-50 p-4 shadow-sm"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="rounded-full bg-red-100 p-2">
-              <svg className="size-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <div>
-              <h5 className="text-sm font-medium text-red-800">Customers Error</h5>
-              <p className="text-xs text-red-600">{customersError}</p>
-            </div>
+      <div className="flex items-center justify-center py-16">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <div className="flex size-12 items-center justify-center rounded-full bg-red-100">
+            <svg className="size-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+          <div>
+            <p className="font-medium text-gray-900">Failed to load customers</p>
+            <p className="mt-1 text-sm text-gray-500">{customersError}</p>
           </div>
           <button
             onClick={onRefresh}
-            className="rounded-md bg-red-100 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-200"
+            className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             Retry
           </button>
         </div>
-      </motion.div>
+      </div>
     )
   }
 
   return (
-    <motion.div
-      className="rounded-lg border border-gray-200 bg-white shadow-sm"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-    >
-      <div className="flex flex-col border-b p-4">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="rounded-full bg-indigo-100 p-2">
-              <svg className="size-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
-            </div>
-            <div>
-              <h5 className="text-sm font-semibold text-gray-900">Debt Management Customers</h5>
-              <p className="text-xs text-gray-500">Customers with outstanding balances</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500">{pagination.totalCount} total customers</span>
-            <button
-              onClick={onRefresh}
-              className="rounded-md bg-gray-100 p-2 text-gray-600 hover:bg-gray-200"
-              title="Refresh customers"
-            >
-              <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        {/* Search Input */}
-        <div className="mb-4">
-          <SearchModule
-            value={searchInput}
-            onChange={(e) => onSearchChange(e.target.value)}
-            onCancel={onSearchCancel}
-            onSearch={onManualSearch}
-            placeholder="Search by customer name or account number..."
-            className="w-full"
-          />
-        </div>
+    <div className="flex flex-col">
+      {/* View Toggle */}
+      <div className="mb-4 flex items-center gap-2">
+        <button
+          className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+            viewMode === "list"
+              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+              : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+          }`}
+          onClick={() => onViewModeChange("list")}
+        >
+          <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+          <span className="hidden sm:inline">List</span>
+        </button>
+        <button
+          className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+            viewMode === "grid"
+              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+              : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+          }`}
+          onClick={() => onViewModeChange("grid")}
+        >
+          <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+            />
+          </svg>
+          <span className="hidden sm:inline">Grid</span>
+        </button>
       </div>
 
-      <div className="divide-y">
-        {customers.length === 0 ? (
-          <div className="p-8 text-center">
-            <div className="mx-auto size-12 text-gray-400">
-              <svg className="size-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
-            </div>
-            <h3 className="mt-4 text-sm font-medium text-gray-900">No customers found</h3>
-            <p className="mt-2 text-sm text-gray-500">
-              {searchInput
-                ? "No customers match your search criteria."
-                : "No customers with outstanding balances in the current period."}
-            </p>
-          </div>
-        ) : (
-          customers.map((customer) => (
-            <div key={customer.customerId} className="p-4 hover:bg-gray-50">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex size-10 items-center justify-center rounded-full bg-indigo-100">
-                    <span className="text-sm font-medium text-indigo-600">
-                      {customer.customerName.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <div>
-                    <h6 className="text-sm font-medium text-gray-900">{customer.customerName}</h6>
-                    <p className="text-xs text-gray-500">Account: {customer.accountNumber}</p>
-                    {customer.lastLedgerAtUtc && (
-                      <p className="text-xs text-gray-400">Last activity: {formatDate(customer.lastLedgerAtUtc)}</p>
-                    )}
-                  </div>
+      {/* Customer Display */}
+      {viewMode === "grid" ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {customers.length === 0 ? (
+            <div className="col-span-full rounded-lg border border-dashed border-gray-200 bg-gray-50 p-6">
+              <div className="flex flex-col items-center gap-2 text-center">
+                <div className="mx-auto size-12 text-gray-400">
+                  <svg className="size-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                    />
+                  </svg>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-red-600">{formatCurrency(customer.outstandingBalance)}</p>
-                  <p className="text-xs text-gray-500">
-                    Debits: {formatCurrency(customer.totalDebits)} / Credits: {formatCurrency(customer.totalCredits)}
-                  </p>
-                </div>
+                <h3 className="text-sm font-medium text-gray-900">No customers found</h3>
+                <p className="text-sm text-gray-500">
+                  {searchInput
+                    ? "No customers match your search criteria."
+                    : "No customers with outstanding balances in the current period."}
+                </p>
+                {searchInput && (
+                  <button
+                    onClick={resetFilters}
+                    className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    Clear filters
+                  </button>
+                )}
               </div>
             </div>
-          ))
-        )}
-      </div>
+          ) : (
+            customers.map((customer) => (
+              <div
+                key={customer.customerId}
+                className="rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-gray-300 hover:shadow-sm"
+              >
+                {/* Header */}
+                <div className="mb-3 flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-10 items-center justify-center rounded-full bg-indigo-100">
+                      <span className="text-sm font-semibold text-indigo-600">
+                        {customer.customerName.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-900">{customer.customerName}</h3>
+                      <p className="text-xs text-gray-500">{customer.accountNumber}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Details */}
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Outstanding:</span>
+                    <span
+                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${getDebtStyle(
+                        customer.outstandingBalance
+                      )}`}
+                    >
+                      {formatCurrency(customer.outstandingBalance)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Debits:</span>
+                    <span className="font-medium text-gray-900">{formatCurrency(customer.totalDebits)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Credits:</span>
+                    <span className="font-medium text-gray-900">{formatCurrency(customer.totalCredits)}</span>
+                  </div>
+                </div>
+
+                {/* Last Activity */}
+                {customer.lastLedgerAtUtc && (
+                  <div className="mt-3 border-t border-gray-100 pt-3">
+                    <p className="text-xs text-gray-500">Last activity: {formatDate(customer.lastLedgerAtUtc)}</p>
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="mt-3">
+                  <button
+                    onClick={() => handleViewDetails(customer)}
+                    className="flex w-full items-center justify-center gap-2 rounded-md border border-indigo-200 bg-white px-3 py-2 text-sm font-medium text-indigo-700 transition-colors hover:bg-indigo-50"
+                  >
+                    <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
+                    </svg>
+                    View Details
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-lg border border-gray-200">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  Customer
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  Account
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  Outstanding
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  Debits
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  Credits
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  Last Activity
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200 bg-white">
+              {customers.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-8">
+                    <div className="flex flex-col items-center gap-2 text-center">
+                      <div className="mx-auto size-12 text-gray-400">
+                        <svg className="size-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                          />
+                        </svg>
+                      </div>
+                      <h3 className="text-sm font-medium text-gray-900">No customers found</h3>
+                      <p className="text-sm text-gray-500">
+                        {searchInput
+                          ? "No customers match your search criteria."
+                          : "No customers with outstanding balances in the current period."}
+                      </p>
+                      {searchInput && (
+                        <button
+                          onClick={resetFilters}
+                          className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+                        >
+                          Clear filters
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                customers.map((customer) => (
+                  <tr key={customer.customerId} className="transition-colors hover:bg-gray-50">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex size-8 items-center justify-center rounded-full bg-indigo-100">
+                          <span className="text-xs font-semibold text-indigo-600">
+                            {customer.customerName.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{customer.customerName}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700">{customer.accountNumber}</td>
+                    <td className="px-4 py-3 text-right">
+                      <span
+                        className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${getDebtStyle(
+                          customer.outstandingBalance
+                        )}`}
+                      >
+                        {formatCurrency(customer.outstandingBalance)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right text-sm text-gray-700">
+                      {formatCurrency(customer.totalDebits)}
+                    </td>
+                    <td className="px-4 py-3 text-right text-sm text-gray-700">
+                      {formatCurrency(customer.totalCredits)}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-500">
+                      {customer.lastLedgerAtUtc ? formatDate(customer.lastLedgerAtUtc) : "N/A"}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={() => handleViewDetails(customer)}
+                        className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                      >
+                        <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                          />
+                        </svg>
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Pagination */}
-      {pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between border-t p-4">
-          <div className="text-sm text-gray-500">
-            Showing {(pagination.currentPage - 1) * pagination.pageSize + 1} to{" "}
-            {Math.min(pagination.currentPage * pagination.pageSize, pagination.totalCount)} of {pagination.totalCount}{" "}
-            customers
+      {customers.length > 0 && (
+        <div className="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-gray-700">Rows per page:</span>
+            <div className="relative">
+              <select
+                name="pageSize"
+                value={pagination.pageSize}
+                onChange={(e) => onPageSizeChange(Number(e.target.value))}
+                className="h-9 w-16 cursor-pointer appearance-none rounded-md border-gray-300 bg-white px-2 py-1 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+              >
+                <option value={6}>6 rows</option>
+                <option value={10}>10 rows</option>
+                <option value={12}>12 rows</option>
+                <option value={18}>18 rows</option>
+                <option value={24}>24 rows</option>
+                <option value={50}>50 rows</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1">
+                <svg className="size-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
           </div>
+
           <div className="flex items-center gap-2">
             <button
+              className={`flex size-8 items-center justify-center rounded-md border ${
+                pagination.currentPage === 1
+                  ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400"
+                  : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+              }`}
               onClick={() => onPageChange(pagination.currentPage - 1)}
-              disabled={!pagination.hasPrevious}
-              className="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={pagination.currentPage === 1}
             >
-              Previous
+              <svg className="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
             </button>
-            <span className="text-sm text-gray-500">
-              Page {pagination.currentPage} of {pagination.totalPages}
-            </span>
+
+            <div className="flex items-center gap-1">
+              {getPageItems().map((item, index) =>
+                typeof item === "number" ? (
+                  <button
+                    key={item}
+                    className={`flex size-8 items-center justify-center rounded-md text-sm ${
+                      pagination.currentPage === item
+                        ? "bg-[#004B23] font-medium text-white"
+                        : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                    }`}
+                    onClick={() => onPageChange(item)}
+                  >
+                    {item}
+                  </button>
+                ) : (
+                  <span key={`ellipsis-${index}`} className="px-1 text-sm text-gray-500">
+                    {item}
+                  </span>
+                )
+              )}
+            </div>
+
             <button
+              className={`flex size-8 items-center justify-center rounded-md border ${
+                pagination.currentPage === pagination.totalPages
+                  ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400"
+                  : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+              }`}
               onClick={() => onPageChange(pagination.currentPage + 1)}
-              disabled={!pagination.hasNext}
-              className="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={pagination.currentPage === pagination.totalPages}
             >
-              Next
+              <svg className="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
             </button>
+          </div>
+
+          <div className="text-sm text-gray-500">
+            Page {pagination.currentPage} of {pagination.totalPages}
           </div>
         </div>
       )}
-    </motion.div>
+    </div>
   )
 }
 
@@ -822,7 +1067,8 @@ export default function DebtManagementDashboard() {
   const [isPolling, setIsPolling] = useState(true)
   const [pollingInterval, setPollingInterval] = useState<number>(480000) // Default 8 minutes (480,000 ms)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list")
 
   // Initialize selectedPeriod with a stable value
   const [selectedPeriod, setSelectedPeriod] = useState<string>(() => {
@@ -831,6 +1077,10 @@ export default function DebtManagementDashboard() {
     const month = String(now.getMonth() + 1).padStart(2, "0")
     return `${year}-${month}`
   })
+
+  // State for customers pagination
+  const [customersPage, setCustomersPage] = useState(1)
+  const [customersPageSize, setCustomersPageSize] = useState(10)
 
   // Redux hooks
   const dispatch = useAppDispatch()
@@ -853,10 +1103,6 @@ export default function DebtManagementDashboard() {
   const allCustomersLoading = useAppSelector((state) => state.customers.loading)
   const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false)
 
-  // State for customers pagination
-  const [customersPage, setCustomersPage] = useState(1)
-  const customersPageSize = 10
-
   // Local state for filters
   const [localFilters, setLocalFilters] = useState({
     search: "",
@@ -866,8 +1112,23 @@ export default function DebtManagementDashboard() {
     lastLedgerStartDate: "",
     lastLedgerEndDate: "",
     sortBy: "outstandingBalance",
-    sortOrder: "desc" as "asc" | "desc",
+    sortOrder: "desc",
   })
+
+  // Fetch customers data with filters
+  useEffect(() => {
+    const customersParams: DebtManagementCustomersRequest = {
+      PageNumber: customersPage,
+      PageSize: customersPageSize,
+      SortDirection: localFilters.sortOrder === "desc" ? 2 : 1,
+      ...(localFilters.search && { Search: localFilters.search }),
+      ...(localFilters.customerId && { CustomerId: Number(localFilters.customerId) }),
+      ...(localFilters.minDebt && { MinDebt: Number(localFilters.minDebt) }),
+      ...(localFilters.maxDebt && { MaxDebt: Number(localFilters.maxDebt) }),
+    }
+
+    dispatch(fetchDebtManagementCustomers(customersParams))
+  }, [dispatch, customersPage, customersPageSize, localFilters])
 
   // Separate state for search input to enable manual search
   const [searchInput, setSearchInput] = useState("")
@@ -886,7 +1147,7 @@ export default function DebtManagementDashboard() {
 
   // Get min and max debt amounts from customers for range filtering
   const getAmountRange = () => {
-    if (customers.length === 0) return { min: 0, max: 100000 }
+    if (!customers || customers.length === 0) return { min: 0, max: 100000 }
     const amounts = customers.map((customer) => customer.outstandingBalance)
     return {
       min: Math.min(...amounts),
@@ -1003,6 +1264,17 @@ export default function DebtManagementDashboard() {
     dispatch(fetchDebtManagementCustomers(customersParams))
     setTimeout(() => setIsLoading(false), 1000)
   }, [dispatch, selectedPeriod, customersPage, customersPageSize, localFilters])
+
+  // Handle view mode change
+  const handleViewModeChange = (mode: "list" | "grid") => {
+    setViewMode(mode)
+  }
+
+  // Handle page size change
+  const handlePageSizeChange = (size: number) => {
+    setCustomersPageSize(size)
+    setCustomersPage(1) // Reset to first page when page size changes
+  }
 
   const handleCustomersPageChange = (page: number) => {
     setCustomersPage(page)
@@ -1164,11 +1436,11 @@ export default function DebtManagementDashboard() {
     <section className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200">
       <div className="flex min-h-screen w-full pb-20">
         <div className="flex w-full flex-col">
-          <div className="mx-auto flex w-full flex-col px-3 2xl:container sm:px-3 xl:px-6 2xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3  sm:px-3 xl:px-6 ">
             {/* Page Header - Always Visible */}
             <div className="flex w-full flex-col items-start justify-between gap-4 py-4 sm:py-6 md:gap-6 md:py-8 xl:flex-row xl:items-start">
               <div className="flex-1">
-                <h4 className="text-lg font-semibold sm:text-xl md:text-2xl">Debt Management</h4>
+                <h4 className="text-lg font-semibold sm:text-xl md:text-xl">Debt Management</h4>
                 <p className="text-sm text-gray-600 sm:text-base">Debt recovery tracking and management</p>
               </div>
 
@@ -1314,7 +1586,7 @@ export default function DebtManagementDashboard() {
                           totalCount: 0,
                           totalPages: 0,
                           currentPage: 1,
-                          pageSize: 10,
+                          pageSize: customersPageSize,
                           hasNext: false,
                           hasPrevious: false,
                         }}
@@ -1324,6 +1596,11 @@ export default function DebtManagementDashboard() {
                         onSearchChange={() => {}}
                         onSearchCancel={() => {}}
                         onManualSearch={() => {}}
+                        viewMode={viewMode}
+                        onViewModeChange={() => {}}
+                        onPageSizeChange={() => {}}
+                        getActiveFilterCount={() => 0}
+                        resetFilters={() => {}}
                       />
                     </motion.div>
                   </>
@@ -1344,6 +1621,36 @@ export default function DebtManagementDashboard() {
                       />
                     </motion.div>
 
+                    {/* Search Priority Section */}
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5, delay: 0.25 }}
+                      className="mt-6"
+                    >
+                      <div className="rounded-xl border border-gray-200 bg-gradient-to-r from-green-50/60 to-white p-4 shadow-sm">
+                        <div className="mb-3">
+                          <p className="text-xs font-semibold uppercase tracking-wider text-[#004B23]">
+                            Primary action
+                          </p>
+                          <h2 className="text-base font-semibold text-gray-900 sm:text-lg">Search Debt Management</h2>
+                          <p className="text-xs text-gray-600 sm:text-sm">
+                            Find customers quickly by name, account number, or customer ID.
+                          </p>
+                        </div>
+
+                        <SearchModule
+                          value={localFilters.search || ""}
+                          onChange={(e) => handleFilterChange("search", e.target.value)}
+                          onCancel={handleSearchCancel}
+                          onSearch={handleManualSearch}
+                          placeholder="Search by customer name, account number, or customer ID..."
+                          height="h-14"
+                          className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+                        />
+                      </div>
+                    </motion.div>
+
                     {/* Debt Management Customers */}
                     <motion.div
                       initial={{ opacity: 0 }}
@@ -1362,6 +1669,11 @@ export default function DebtManagementDashboard() {
                         onSearchChange={handleSearchChange}
                         onSearchCancel={handleSearchCancel}
                         onManualSearch={handleManualSearch}
+                        viewMode={viewMode}
+                        onViewModeChange={handleViewModeChange}
+                        onPageSizeChange={handlePageSizeChange}
+                        getActiveFilterCount={getActiveFilterCount}
+                        resetFilters={resetFilters}
                       />
                     </motion.div>
                   </>

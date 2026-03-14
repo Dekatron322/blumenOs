@@ -1779,6 +1779,189 @@ export interface AssignCashiersResponse {
 
 // ========== END ASSIGN CASHIERS INTERFACES ==========
 
+// ========== PREVIEW DEBT CLEARANCE INTERFACES ==========
+
+export interface PreviewDebtClearanceRequest {
+  customerId: number
+  promoCode: string
+  asOfUtc: string
+}
+
+export interface PreviewDebtClearanceData {
+  customerId: number
+  asOfUtc: string
+  outstandingAmount: number
+  promoApplied: boolean
+  promoId: number
+  promoCode: string
+  promoName: string
+  discountPercent: number
+  discountAmount: number
+  minimumPayableAmount: number
+}
+
+export interface PreviewDebtClearanceResponse {
+  isSuccess: boolean
+  message: string
+  data: PreviewDebtClearanceData
+}
+
+// ========== CLEAR DEBT INTERFACES ==========
+
+export interface ClearDebtRequest {
+  customerId: number
+  amount: number
+  paymentTypeId: number
+  channel: string
+  latitude: number
+  longitude: number
+  phoneNumber: string
+  narrative: string
+  promoCode: string
+}
+
+export interface ClearDebtToken {
+  token: string
+  tokenDec: string
+  vendAmount: string
+  unit: string
+  description: string
+  drn: string
+}
+
+export interface ClearDebtReceipt {
+  reference: string
+  bankReceiptNo: string
+  paidAtUtc: string
+  customerName: string
+  customerAccountNumber: string
+  customerAddress: string
+  customerPhoneNumber: string
+  customerMeterNumber: string
+  accountType: string
+  tariffRate: number
+  units: number
+  vatRate: number
+  vatAmount: number
+  electricityAmount: number
+  outstandingDebt: number
+  debtPayable: number
+  totalAmountPaid: number
+  currency: string
+  channel: string
+  status: string
+  tokens: ClearDebtToken[]
+  serviceCharge: number
+  discountBonus: number
+}
+
+export interface ClearDebtVirtualAccount {
+  accountNumber: string
+  bankName: string
+  reference: string
+  expiresAtUtc: string
+}
+
+export interface ClearDebtPaymentDetails {
+  reference: string
+  checkoutUrl: string
+  virtualAccount: ClearDebtVirtualAccount
+}
+
+export interface ClearDebtCollector {
+  type: string
+  name: string
+  agentId: number
+  agentCode: string
+  agentType: string
+  vendorId: number
+  vendorName: string
+  staffName: string
+  customerId: number
+  customerName: string
+}
+
+export interface ClearDebtUpgrade {
+  upgradeId: number
+  message: string
+  keyChangeTokens: ClearDebtToken[]
+  creditToken: ClearDebtToken
+}
+
+export interface ClearDebtData {
+  paymentId: number
+  isPending: boolean
+  isMd: boolean
+  externalReference: string
+  bankReceiptNo: string
+  reference: string
+  paidAtUtc: string
+  customerName: string
+  customerAccountNumber: string
+  customerAddress: string
+  customerPhoneNumber: string
+  customerMeterNumber: string
+  customerId: number
+  accountType: string
+  tariffRate: number
+  units: number
+  vatRate: number
+  vatAmount: number
+  electricityAmount: number
+  outstandingDebt: number
+  debtPayable: number
+  totalAmountPaid: number
+  currency: string
+  channel: string
+  status: string
+  paymentTypeName: string
+  shouldUpgrade: boolean
+  receipt: ClearDebtReceipt
+  paymentDetails: ClearDebtPaymentDetails
+  collector: ClearDebtCollector
+  token: ClearDebtToken
+  upgrade: ClearDebtUpgrade
+}
+
+export interface ClearDebtResponse {
+  isSuccess: boolean
+  message: string
+  data: ClearDebtData
+}
+
+// ========== GET PROMO CODES INTERFACES ==========
+
+export interface PromoCode {
+  id: number
+  name: string
+  code: string
+  description: string
+  discountPercent: number
+  startAtUtc: string
+  endAtUtc: string
+  scope: number
+  provinceId: number
+  areaOfficeId: number
+  feederId: number
+  isActive: boolean
+  isPaused: boolean
+  createdAt: string
+  lastUpdated: string
+}
+
+export interface GetPromoCodesRequestParams {
+  customerId: number
+  asOfUtc: string
+}
+
+export interface GetPromoCodesResponse {
+  isSuccess: boolean
+  message: string
+  data: PromoCode[]
+}
+
+// ========== END GET PROMO CODES INTERFACES ==========
+
 // Agent State
 interface AgentState {
   // Current logged-in agent info state
@@ -2023,6 +2206,24 @@ interface AgentState {
   salesRepFeedersLoading: boolean
   salesRepFeedersError: string | null
   salesRepFeedersSuccess: boolean
+
+  // Preview Debt Clearance state
+  previewDebtClearance: PreviewDebtClearanceData | null
+  previewDebtClearanceLoading: boolean
+  previewDebtClearanceError: string | null
+  previewDebtClearanceSuccess: boolean
+
+  // Clear Debt state
+  clearDebt: ClearDebtData | null
+  clearDebtLoading: boolean
+  clearDebtError: string | null
+  clearDebtSuccess: boolean
+
+  // Get Promo Codes state
+  promoCodes: PromoCode[]
+  promoCodesLoading: boolean
+  promoCodesError: string | null
+  promoCodesSuccess: boolean
 }
 
 // Initial state
@@ -2231,6 +2432,24 @@ const initialState: AgentState = {
   salesRepFeedersLoading: false,
   salesRepFeedersError: null,
   salesRepFeedersSuccess: false,
+
+  // Preview Debt Clearance initial state
+  previewDebtClearance: null,
+  previewDebtClearanceLoading: false,
+  previewDebtClearanceError: null,
+  previewDebtClearanceSuccess: false,
+
+  // Clear Debt initial state
+  clearDebt: null,
+  clearDebtLoading: false,
+  clearDebtError: null,
+  clearDebtSuccess: false,
+
+  // Get Promo Codes initial state
+  promoCodes: [],
+  promoCodesLoading: false,
+  promoCodesError: null,
+  promoCodesSuccess: false,
 }
 
 // Async thunks
@@ -3288,6 +3507,85 @@ export const fetchSalesRepFeeders = createAsyncThunk("agents/fetchSalesRepFeeder
   }
 })
 
+// ========== PREVIEW DEBT CLEARANCE ASYNC THUNK ==========
+export const previewDebtClearance = createAsyncThunk(
+  "agents/previewDebtClearance",
+  async (requestData: PreviewDebtClearanceRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<PreviewDebtClearanceResponse>(
+        buildApiUrl(API_ENDPOINTS.AGENTS.PREVIEW_DEBT),
+        requestData
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to preview debt clearance")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Debt clearance preview data not found")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to preview debt clearance")
+      }
+      return rejectWithValue(error.message || "Network error during debt clearance preview")
+    }
+  }
+)
+
+// ========== CLEAR DEBT ASYNC THUNK ==========
+export const clearDebt = createAsyncThunk(
+  "agents/clearDebt",
+  async (requestData: ClearDebtRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<ClearDebtResponse>(buildApiUrl(API_ENDPOINTS.AGENTS.CLEAR_DEBT), requestData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to clear debt")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Clear debt data not found")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to clear debt")
+      }
+      return rejectWithValue(error.message || "Network error during debt clearance")
+    }
+  }
+)
+
+export const getPromoCodes = createAsyncThunk(
+  "agents/getPromoCodes",
+  async (params: GetPromoCodesRequestParams, { rejectWithValue }) => {
+    try {
+      const response = await api.get<GetPromoCodesResponse>(buildApiUrl(API_ENDPOINTS.AGENTS.GET_PROMO_CODES), {
+        params,
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch promo codes")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Promo codes data not found")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch promo codes")
+      }
+      return rejectWithValue(error.message || "Network error while fetching promo codes")
+    }
+  }
+)
+
 // Agent slice
 const agentSlice = createSlice({
   name: "agents",
@@ -3349,6 +3647,30 @@ const agentSlice = createSlice({
       state.checkPaymentLoading = false
     },
 
+    // Clear preview debt clearance state
+    clearPreviewDebtClearance: (state) => {
+      state.previewDebtClearance = null
+      state.previewDebtClearanceError = null
+      state.previewDebtClearanceSuccess = false
+      state.previewDebtClearanceLoading = false
+    },
+
+    // Clear debt state
+    clearClearDebt: (state) => {
+      state.clearDebt = null
+      state.clearDebtError = null
+      state.clearDebtSuccess = false
+      state.clearDebtLoading = false
+    },
+
+    // Clear promo codes state
+    clearPromoCodes: (state) => {
+      state.promoCodes = []
+      state.promoCodesError = null
+      state.promoCodesSuccess = false
+      state.promoCodesLoading = false
+    },
+
     // Set agent info (for when we get agent info from other sources)
     setAgentInfo: (state, action: PayloadAction<AgentInfo>) => {
       state.agentInfo = action.payload
@@ -3404,13 +3726,16 @@ const agentSlice = createSlice({
       }
     },
 
-    // Clear errors
+    // Clear all errors
     clearError: (state) => {
       state.agentInfoError = null
       state.agentSummaryError = null
       state.salesRepSummaryError = null
       state.agentPerformanceDailyError = null
       state.paymentChannelsError = null
+      state.previewDebtClearanceError = null
+      state.clearDebtError = null
+      state.promoCodesError = null
       state.error = null
       state.currentAgentError = null
       state.addAgentError = null
@@ -5153,6 +5478,66 @@ const agentSlice = createSlice({
         state.salesRepFeedersError = (action.payload as string) || "Failed to fetch sales rep feeders"
         state.salesRepFeedersSuccess = false
       })
+
+      // Preview Debt Clearance cases
+      .addCase(previewDebtClearance.pending, (state) => {
+        state.previewDebtClearanceLoading = true
+        state.previewDebtClearanceError = null
+        state.previewDebtClearanceSuccess = false
+        state.previewDebtClearance = null
+      })
+      .addCase(previewDebtClearance.fulfilled, (state, action: PayloadAction<PreviewDebtClearanceData>) => {
+        state.previewDebtClearanceLoading = false
+        state.previewDebtClearanceSuccess = true
+        state.previewDebtClearance = action.payload
+        state.previewDebtClearanceError = null
+      })
+      .addCase(previewDebtClearance.rejected, (state, action) => {
+        state.previewDebtClearanceLoading = false
+        state.previewDebtClearanceError = (action.payload as string) || "Failed to preview debt clearance"
+        state.previewDebtClearanceSuccess = false
+        state.previewDebtClearance = null
+      })
+
+      // Clear Debt cases
+      .addCase(clearDebt.pending, (state) => {
+        state.clearDebtLoading = true
+        state.clearDebtError = null
+        state.clearDebtSuccess = false
+        state.clearDebt = null
+      })
+      .addCase(clearDebt.fulfilled, (state, action: PayloadAction<ClearDebtData>) => {
+        state.clearDebtLoading = false
+        state.clearDebtSuccess = true
+        state.clearDebt = action.payload
+        state.clearDebtError = null
+      })
+      .addCase(clearDebt.rejected, (state, action) => {
+        state.clearDebtLoading = false
+        state.clearDebtError = (action.payload as string) || "Failed to clear debt"
+        state.clearDebtSuccess = false
+        state.clearDebt = null
+      })
+
+      // Get Promo Codes cases
+      .addCase(getPromoCodes.pending, (state) => {
+        state.promoCodesLoading = true
+        state.promoCodesError = null
+        state.promoCodesSuccess = false
+        state.promoCodes = []
+      })
+      .addCase(getPromoCodes.fulfilled, (state, action: PayloadAction<PromoCode[]>) => {
+        state.promoCodesLoading = false
+        state.promoCodesSuccess = true
+        state.promoCodes = action.payload
+        state.promoCodesError = null
+      })
+      .addCase(getPromoCodes.rejected, (state, action) => {
+        state.promoCodesLoading = false
+        state.promoCodesError = (action.payload as string) || "Failed to fetch promo codes"
+        state.promoCodesSuccess = false
+        state.promoCodes = []
+      })
   },
 })
 
@@ -5164,6 +5549,9 @@ export const {
   clearPaymentChannels,
   clearVend,
   clearCheckPayment,
+  clearPreviewDebtClearance,
+  clearClearDebt,
+  clearPromoCodes,
   setAgentInfo,
   setAgentSummary,
   setSalesRepSummary,

@@ -340,9 +340,9 @@ const BillsDetailsPage = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <CustomerDashboardNav />
-          <div className="mx-auto flex w-full flex-col 2xl:container">
+          <div className="mx-auto flex w-full flex-col ">
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-3 py-4 sm:px-4 md:px-6 2xl:px-16">
+              <div className="mx-auto w-full px-3 py-4 sm:px-4 md:px-6 ">
                 <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-4">
                     <motion.button
@@ -392,7 +392,7 @@ const BillsDetailsPage = () => {
               </div>
             </div>
 
-            <div className="flex w-full px-3 py-6 sm:px-4 sm:py-8 md:px-6 2xl:px-16">
+            <div className="flex w-full px-3 py-6 sm:px-4 sm:py-8 md:px-6 ">
               <div className="flex w-full flex-col gap-6 xl:flex-row">
                 {/* Left Column - Bill Summary & Quick Info */}
                 <div className="flex w-full flex-col space-y-6 xl:w-[35%]">
@@ -414,7 +414,7 @@ const BillsDetailsPage = () => {
                         </div>
                       </div>
 
-                      <h2 className="mb-2 text-2xl font-bold text-gray-900 sm:text-3xl">
+                      <h2 className="mb-2 text-2xl font-bold text-gray-900 sm:text-2xl">
                         {formatCurrency(billDetails.totalDue, "NGN")}
                       </h2>
                       <p className="mb-4 text-sm text-gray-600 sm:text-base">Bill #{billDetails.publicReference}</p>

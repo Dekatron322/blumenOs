@@ -1,8 +1,6 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { MdFormatListBulleted, MdGridView } from "react-icons/md"
-import { IoMdFunnel } from "react-icons/io"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
 import { VscEye } from "react-icons/vsc"
 import { SearchModule } from "components/ui/Search/search-module"
@@ -14,10 +12,28 @@ import { AppDispatch, RootState } from "lib/redux/store"
 import { fetchEmployees, setFilters, setPagination } from "lib/redux/employeeSlice"
 import { fetchDepartments } from "lib/redux/departmentSlice"
 import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
-import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
+import {
+  AlertCircle,
+  ArrowLeft,
+  CheckCircle,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  Download,
+  FileText,
+  Filter,
+  Loader2,
+  RefreshCw,
+  SortAsc,
+  SortDesc,
+  User,
+  X,
+  XCircle,
+} from "lucide-react"
 import { ExportCsvIcon } from "components/Icons/Icons"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
-import Image from "next/image"
+import { ButtonModule } from "components/ui/Button/Button"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 type SortOrder = "asc" | "desc" | null
 
@@ -44,103 +60,77 @@ interface SortOption {
   order: "asc" | "desc"
 }
 
-// Responsive Skeleton Components
-const EmployeeCardSkeleton = () => (
-  <motion.div
-    className="rounded-lg border bg-white p-4 shadow-sm"
-    initial={{ opacity: 0.6 }}
-    animate={{
-      opacity: [0.6, 1, 0.6],
-      transition: {
-        duration: 1.5,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
-    }}
-  >
-    <div className="flex items-start justify-between">
-      <div className="flex items-center gap-3">
-        <div className="size-10 rounded-full bg-gray-200 md:size-12"></div>
-        <div className="min-w-0 flex-1">
-          <div className="h-5 w-24 rounded bg-gray-200 md:w-32"></div>
-          <div className="mt-1 flex flex-wrap gap-1 md:gap-2">
-            <div className="mt-1 h-6 w-12 rounded-full bg-gray-200 md:w-16"></div>
-            <div className="mt-1 h-6 w-16 rounded-full bg-gray-200 md:w-20"></div>
-          </div>
-        </div>
-      </div>
-      <div className="size-5 rounded bg-gray-200 md:size-6"></div>
-    </div>
+const getStatusColor = (isActive: boolean): string => {
+  return isActive ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-red-50 text-red-700 border-red-200"
+}
 
-    <div className="mt-3 space-y-2 md:mt-4">
-      {[...Array(5)].map((_, i) => (
-        <div key={i} className="flex items-center justify-between">
-          <div className="h-3 w-16 rounded bg-gray-200 md:h-4 md:w-20"></div>
-          <div className="h-3 w-12 rounded bg-gray-200 md:h-4 md:w-16"></div>
-        </div>
-      ))}
-    </div>
+const getEmploymentTypeColor = (type: string | null): string => {
+  switch (type) {
+    case "FULL_TIME":
+      return "bg-blue-50 text-blue-700 border-blue-200"
+    case "PART_TIME":
+      return "bg-purple-50 text-purple-700 border-purple-200"
+    case "CONTRACT":
+      return "bg-amber-50 text-amber-700 border-amber-200"
+    default:
+      return "bg-gray-50 text-gray-700 border-gray-200"
+  }
+}
 
-    <div className="mt-2 border-t pt-2 md:mt-3 md:pt-3">
-      <div className="h-3 w-full rounded bg-gray-200 md:h-4"></div>
-    </div>
+const getStatusIcon = (isActive: boolean) => {
+  return isActive ? (
+    <CheckCircle className="size-3.5 text-emerald-600" />
+  ) : (
+    <XCircle className="size-3.5 text-red-600" />
+  )
+}
 
-    <div className="mt-2 flex gap-2 md:mt-3">
-      <div className="h-8 flex-1 rounded bg-gray-200 md:h-9"></div>
-    </div>
-  </motion.div>
-)
+const formatDate = (dateString: string | null | undefined): string => {
+  if (!dateString) return "—"
+  try {
+    return new Date(dateString).toLocaleString("en-US", {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+    })
+  } catch {
+    return "—"
+  }
+}
 
-const EmployeeListItemSkeleton = () => (
-  <motion.div
-    className="border-b bg-white p-3 md:p-4"
-    initial={{ opacity: 0.6 }}
-    animate={{
-      opacity: [0.6, 1, 0.6],
-      transition: {
-        duration: 1.5,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
-    }}
-  >
-    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-0">
-      <div className="flex items-start gap-3 md:items-center md:gap-4">
-        <div className="size-8 flex-shrink-0 rounded-full bg-gray-200 md:size-10"></div>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
-            <div className="h-5 w-32 rounded bg-gray-200 md:w-40"></div>
-            <div className="flex flex-wrap gap-1 md:gap-2">
-              <div className="h-6 w-12 rounded-full bg-gray-200 md:w-16"></div>
-              <div className="h-6 w-16 rounded-full bg-gray-200 md:w-20"></div>
-            </div>
-          </div>
-          <div className="mt-2 flex flex-wrap gap-2 md:gap-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-3 w-16 rounded bg-gray-200 md:h-4 md:w-24"></div>
+// Table Skeleton Component
+const TableSkeleton = () => (
+  <div className="w-full">
+    <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
+          <tr>
+            {[...Array(8)].map((_, i) => (
+              <th key={i} className="px-4 py-3 text-left">
+                <div className="h-4 w-20 rounded bg-gray-200"></div>
+              </th>
             ))}
-          </div>
-          <div className="mt-2 hidden h-3 w-40 rounded bg-gray-200 md:block md:h-4 md:w-64"></div>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between gap-2 md:justify-end md:gap-3">
-        <div className="hidden text-right md:block">
-          <div className="h-3 w-20 rounded bg-gray-200 md:h-4 md:w-24"></div>
-          <div className="mt-1 h-3 w-16 rounded bg-gray-200 md:h-4 md:w-20"></div>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="h-7 w-14 rounded bg-gray-200 md:h-9 md:w-20"></div>
-          <div className="size-5 rounded bg-gray-200 md:size-6"></div>
-        </div>
-      </div>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-200 bg-white">
+          {[...Array(5)].map((_, rowIndex) => (
+            <tr key={rowIndex} className="animate-pulse">
+              {[...Array(8)].map((_, colIndex) => (
+                <td key={colIndex} className="px-4 py-3">
+                  <div className="h-4 rounded bg-gray-200" style={{ width: colIndex === 0 ? "120px" : "80px" }}></div>
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
-  </motion.div>
+  </div>
 )
 
 const FilterPanelSkeleton = () => (
   <motion.div
-    className="hidden w-full rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:block 2xl:w-80"
+    className="hidden w-full rounded-md border border-gray-200 bg-white p-3 md:p-5 2xl:mt-0 2xl:block 2xl:w-80"
     initial={{ opacity: 0.6 }}
     animate={{
       opacity: [0.6, 1, 0.6],
@@ -151,7 +141,7 @@ const FilterPanelSkeleton = () => (
       },
     }}
   >
-    <div className="border-b pb-3 md:pb-4">
+    <div className="border-b border-gray-200 pb-3 md:pb-4">
       <div className="h-6 w-32 rounded bg-gray-200 md:w-40"></div>
     </div>
 
@@ -208,31 +198,6 @@ const PaginationSkeleton = () => (
   </motion.div>
 )
 
-const HeaderSkeleton = () => (
-  <motion.div
-    className="flex flex-col py-2"
-    initial={{ opacity: 0.6 }}
-    animate={{
-      opacity: [0.6, 1, 0.6],
-      transition: {
-        duration: 1.5,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
-    }}
-  >
-    <div className="h-7 w-32 rounded bg-gray-200 md:h-8 md:w-40"></div>
-    <div className="mt-2 flex flex-col gap-3 md:mt-3 md:flex-row md:gap-4">
-      <div className="h-9 w-full rounded bg-gray-200 md:h-10 md:w-60 2xl:w-80"></div>
-      <div className="flex flex-wrap gap-1 md:gap-2">
-        {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-9 w-16 rounded bg-gray-200 md:h-10 md:w-20 2xl:w-24"></div>
-        ))}
-      </div>
-    </div>
-  </motion.div>
-)
-
 // Mobile & All Screens Filter Sidebar Component (up to 2xl)
 const MobileFilterSidebar = ({
   isOpen,
@@ -254,8 +219,8 @@ const MobileFilterSidebar = ({
   applyFilters: () => void
   resetFilters: () => void
   getActiveFilterCount: () => number
-  departments: any[]
-  areaOffices: any[]
+  departments: string[]
+  areaOffices: string[]
 }) => {
   const [isSortExpanded, setIsSortExpanded] = useState(true)
 
@@ -270,7 +235,7 @@ const MobileFilterSidebar = ({
     { label: "Oldest", value: "createdAt", order: "asc" },
   ]
   const employmentTypes = ["FULL_TIME", "PART_TIME", "CONTRACT"]
-  const statusTypes = ["ACTIVE", "INACTIVE"]
+  const statusTypes = ["active", "inactive"]
 
   return (
     <AnimatePresence>
@@ -291,7 +256,7 @@ const MobileFilterSidebar = ({
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header - Fixed at top */}
-            <div className="flex-shrink-0 border-b bg-white p-4">
+            <div className="shrink-0 border-b border-gray-200 bg-white p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <button
@@ -301,7 +266,7 @@ const MobileFilterSidebar = ({
                     <ArrowLeft className="size-5" />
                   </button>
                   <div>
-                    <h2 className="text-lg font-semibold">Filters & Sorting</h2>
+                    <h2 className="text-base font-semibold text-gray-900">Filters & Sorting</h2>
                     {getActiveFilterCount() > 0 && (
                       <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
                     )}
@@ -337,19 +302,19 @@ const MobileFilterSidebar = ({
 
                 {/* Status Filter */}
                 <div>
-                  <label className="mb-2 block text-sm font-medium">Status</label>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Status</label>
                   <div className="grid grid-cols-2 gap-2">
                     {statusTypes.map((status) => (
                       <button
                         key={status}
                         onClick={() => handleFilterChange("status", localFilters.status === status ? "" : status)}
-                        className={`rounded-lg px-3 py-2 text-sm ${
+                        className={`rounded-lg px-3 py-2 text-sm transition-colors ${
                           localFilters.status === status
                             ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
-                            : "bg-gray-50 text-gray-700"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
                         }`}
                       >
-                        {status}
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
                       </button>
                     ))}
                   </div>
@@ -357,7 +322,7 @@ const MobileFilterSidebar = ({
 
                 {/* Employment Type Filter */}
                 <div>
-                  <label className="mb-2 block text-sm font-medium">Employment Type</label>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Employment Type</label>
                   <div className="grid grid-cols-2 gap-2">
                     {employmentTypes.map((type) => (
                       <button
@@ -365,10 +330,10 @@ const MobileFilterSidebar = ({
                         onClick={() =>
                           handleFilterChange("employmentType", localFilters.employmentType === type ? "" : type)
                         }
-                        className={`rounded-lg px-3 py-2 text-sm ${
+                        className={`rounded-lg px-3 py-2 text-sm transition-colors ${
                           localFilters.employmentType === type
                             ? "bg-green-50 text-green-700 ring-1 ring-green-200"
-                            : "bg-gray-50 text-gray-700"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
                         }`}
                       >
                         {type.replace("_", " ")}
@@ -398,7 +363,7 @@ const MobileFilterSidebar = ({
 
                 {/* Password Reset Filter */}
                 <div>
-                  <label className="mb-2 block text-sm font-medium">Password Status</label>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Password Status</label>
                   <div className="grid grid-cols-2 gap-2">
                     {["REQUIRED", "ACTIVE"].map((type) => (
                       <button
@@ -406,10 +371,10 @@ const MobileFilterSidebar = ({
                         onClick={() =>
                           handleFilterChange("passwordStatus", localFilters.passwordStatus === type ? "" : type)
                         }
-                        className={`rounded-lg px-3 py-2 text-sm ${
+                        className={`rounded-lg px-3 py-2 text-sm transition-colors ${
                           localFilters.passwordStatus === type
                             ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                            : "bg-gray-50 text-gray-700"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
                         }`}
                       >
                         {type === "REQUIRED" ? "Reset Required" : "Active"}
@@ -423,7 +388,7 @@ const MobileFilterSidebar = ({
                   <button
                     type="button"
                     onClick={() => setIsSortExpanded((prev) => !prev)}
-                    className="mb-2 flex w-full items-center justify-between text-sm font-medium"
+                    className="mb-2 flex w-full items-center justify-between text-sm font-medium text-gray-700"
                     aria-expanded={isSortExpanded}
                   >
                     <span>Sort By</span>
@@ -436,10 +401,10 @@ const MobileFilterSidebar = ({
                         <button
                           key={`${option.value}-${option.order}`}
                           onClick={() => handleSortChange(option)}
-                          className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm ${
+                          className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors ${
                             localFilters.sortBy === option.value && localFilters.sortOrder === option.order
                               ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                              : "bg-gray-50 text-gray-700"
+                              : "bg-gray-50 text-gray-700 hover:bg-gray-100"
                           }`}
                         >
                           <span>{option.label}</span>
@@ -461,28 +426,31 @@ const MobileFilterSidebar = ({
             </div>
 
             {/* Bottom Action Buttons - Fixed at bottom */}
-            <div className="flex-shrink-0 border-t bg-white p-4">
+            <div className="shrink-0 border-t border-gray-200 bg-white p-4">
               <div className="flex gap-3">
-                <button
+                <ButtonModule
                   onClick={() => {
                     applyFilters()
                     onClose()
                   }}
-                  className="button-filled flex-1"
+                  size="sm"
+                  className="flex-1"
                 >
                   <Filter className="size-4" />
                   Apply Filters
-                </button>
-                <button
+                </ButtonModule>
+                <ButtonModule
                   onClick={() => {
                     resetFilters()
                     onClose()
                   }}
-                  className="button-oulined flex-1"
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
                 >
                   <X className="size-4" />
                   Reset All
-                </button>
+                </ButtonModule>
               </div>
             </div>
           </motion.div>
@@ -503,9 +471,8 @@ const AllEmployees = () => {
   const [sortOrder, setSortOrder] = useState<SortOrder>(null)
   const [isSortExpanded, setIsSortExpanded] = useState(true)
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
-  const [showMobileSearch, setShowMobileSearch] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true) // For desktop 2xl and above
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
 
   // Local state for filters to avoid too many Redux dispatches
@@ -595,9 +562,6 @@ const AllEmployees = () => {
       sortOrder: (filters.sortOrder as "asc" | "desc") || "asc",
     })
   }, [filters])
-
-  // Don't auto-apply search - wait for Apply Filters button
-  // Search will be applied when applyFilters() is called
 
   const toggleDropdown = (id: string) => {
     setActiveDropdown(activeDropdown === id ? null : id)
@@ -708,7 +672,6 @@ const AllEmployees = () => {
       sortBy: option.value,
       sortOrder: option.order,
     }))
-    // Don't apply immediately - wait for Apply Filters button
   }
 
   // Get active filter count
@@ -722,9 +685,6 @@ const AllEmployees = () => {
     if (localFilters.sortBy) count++
     return count
   }
-
-  // Employees are already filtered server-side by the API based on Redux filters
-  // No need for client-side filtering - just use employees from Redux directly
 
   // CSV Export functionality
   const exportToCSV = () => {
@@ -852,215 +812,68 @@ const AllEmployees = () => {
     return items
   }
 
-  const getStatusStyle = (isActive: boolean) => {
-    return isActive
-      ? { backgroundColor: "#EEF5F0", color: "#589E67" }
-      : { backgroundColor: "#F7EDED", color: "#AF4B4B" }
-  }
-
-  const getEmploymentTypeStyle = (type: string | null) => {
-    switch (type) {
-      case "FULL_TIME":
-        return { backgroundColor: "#EDF2FE", color: "#4976F4" }
-      case "PART_TIME":
-        return { backgroundColor: "#F4EDF7", color: "#954BAF" }
-      case "CONTRACT":
-        return { backgroundColor: "#F0F7ED", color: "#4BAF5E" }
-      default:
-        return { backgroundColor: "#FBF4EC", color: "#D28E3D" }
+  const toggleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortOrder(sortOrder === "asc" ? "desc" : sortOrder === "desc" ? null : "asc")
+      if (sortOrder === "desc") {
+        setSortColumn(null)
+      }
+    } else {
+      setSortColumn(column)
+      setSortOrder("asc")
     }
   }
 
-  const dotStyle = (isActive: boolean) => {
-    return isActive ? { backgroundColor: "#589E67" } : { backgroundColor: "#AF4B4B" }
+  const getSortIcon = (column: string) => {
+    if (sortColumn !== column) return null
+    return sortOrder === "asc" ? <SortAsc className="ml-1 size-4" /> : <SortDesc className="ml-1 size-4" />
   }
 
-  const toggleSort = (column: string) => {
-    const isAscending = sortColumn === column && sortOrder === "asc"
-    setSortOrder(isAscending ? "desc" : "asc")
-    setSortColumn(column)
-  }
-
-  const EmployeeCard = ({ employee }: { employee: Employee }) => (
-    <div className="mt-3 rounded-lg border bg-[#f9f9f9] p-4 shadow-sm transition-all hover:shadow-md">
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-full bg-blue-100 md:size-12">
-            <span className="text-sm font-semibold text-blue-600 md:text-base">
-              {employee.fullName
-                .split(" ")
-                .map((n) => n[0])
-                .join("")}
-            </span>
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 md:text-base">{employee.fullName}</h3>
-            <div className="mt-1 flex flex-wrap items-center gap-1 md:gap-2">
-              <div
-                style={getStatusStyle(employee.isActive)}
-                className="flex items-center gap-1 rounded-full px-2 py-1 text-xs"
-              >
-                <span className="size-2 rounded-full" style={dotStyle(employee.isActive)}></span>
-                {employee.isActive ? "ACTIVE" : "INACTIVE"}
-              </div>
-              {employee.employmentType && (
-                <div style={getEmploymentTypeStyle(employee.employmentType)} className="rounded-full px-2 py-1 text-xs">
-                  {employee.employmentType.replace("_", " ")}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-3 space-y-2 text-sm text-gray-600 md:mt-4">
-        <div className="flex justify-between">
-          <span className="text-xs md:text-sm">Employee ID:</span>
-          <span className="text-xs font-medium md:text-sm">{employee.employeeId || "N/A"}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-xs md:text-sm">Department:</span>
-          <span className="text-xs font-medium md:text-sm">{employee.departmentName || "N/A"}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-xs md:text-sm">Position:</span>
-          <span className="text-xs font-medium md:text-sm">{employee.position || "N/A"}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-xs md:text-sm">Work Location:</span>
-          <span className="text-xs font-medium md:text-sm">{employee.areaOfficeName || "N/A"}</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-xs md:text-sm">Account ID:</span>
-          <div className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium">{employee.accountId}</div>
-        </div>
-      </div>
-
-      <div className="mt-2 border-t pt-2 md:mt-3 md:pt-3">
-        <p className="text-xs text-gray-500">{employee.email}</p>
-      </div>
-
-      <div className="mt-2 flex gap-2 md:mt-3">
-        <button
-          onClick={() => handleViewDetails(employee)}
-          className="button-oulined flex flex-1 items-center justify-center gap-2 bg-white text-sm transition-all duration-300 ease-in-out focus-within:ring-2 focus-within:ring-[#004B23] focus-within:ring-offset-2 hover:border-[#004B23] hover:bg-[#f9f9f9] md:text-base"
-        >
-          <VscEye className="size-3 md:size-4" />
-          View Details
-        </button>
-      </div>
-    </div>
-  )
-
-  const EmployeeListItem = ({ employee }: { employee: Employee }) => (
-    <div className="border-b bg-white p-3 transition-all hover:bg-gray-50 md:p-4">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-0">
-        <div className="flex items-start gap-3 md:items-center md:gap-4">
-          <div className="flex size-8 items-center justify-center rounded-full bg-blue-100 max-sm:hidden md:size-10">
-            <span className="text-xs font-semibold text-blue-600 md:text-sm">
-              {employee.fullName
-                .split(" ")
-                .map((n) => n[0])
-                .join("")}
-            </span>
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
-              <h3 className="text-sm font-semibold text-gray-900 md:text-base">{employee.fullName}</h3>
-              <div className="flex flex-wrap gap-1 md:gap-2">
-                <div
-                  style={getStatusStyle(employee.isActive)}
-                  className="flex items-center gap-1 rounded-full px-2 py-1 text-xs"
-                >
-                  <span className="size-2 rounded-full" style={dotStyle(employee.isActive)}></span>
-                  {employee.isActive ? "ACTIVE" : "INACTIVE"}
-                </div>
-                {employee.employmentType && (
-                  <div
-                    style={getEmploymentTypeStyle(employee.employmentType)}
-                    className="rounded-full px-2 py-1 text-xs"
-                  >
-                    {employee.employmentType.replace("_", " ")}
-                  </div>
-                )}
-                <div className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium">
-                  Account: {employee.accountId}
-                </div>
-              </div>
-            </div>
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-600 md:gap-4 md:text-sm">
-              <span>
-                <strong className="md:hidden">ID:</strong>
-                <strong className="hidden md:inline">Employee ID:</strong> {employee.employeeId || "N/A"}
-              </span>
-              <span>
-                <strong>Department:</strong> {employee.departmentName || "N/A"}
-              </span>
-              <span>
-                <strong>Position:</strong> {employee.position || "N/A"}
-              </span>
-              <span>
-                <strong>Location:</strong> {employee.areaOfficeName || "N/A"}
-              </span>
-            </div>
-            <p className="mt-2 hidden text-xs text-gray-500 md:block md:text-sm">{employee.email}</p>
-          </div>
-        </div>
-
-        <div className="flex items-start justify-between md:items-center md:gap-3">
-          <div className="text-right text-xs md:text-sm">
-            <div className="hidden font-medium text-gray-900 md:block">Phone: {employee.phoneNumber || "N/A"}</div>
-            <div
-              className={`mt-1 hidden text-xs md:block ${
-                employee.mustChangePassword ? "text-amber-600" : "text-gray-500"
-              }`}
-            >
-              {employee.mustChangePassword ? "Password Reset Required" : "Active"}
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => handleViewDetails(employee)}
-              className="button-oulined flex items-center gap-2 text-xs md:text-sm"
-            >
-              <VscEye className="size-3 md:size-4" />
-              <span className="hidden md:inline">View</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-
-  if (employeesLoading) {
+  if (employeesLoading && employees.length === 0) {
     return (
       <div className="flex-3 relative mt-5 flex flex-col items-start gap-6 2xl:flex-row">
         {/* Main Content Skeleton */}
-        <div className="w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1">
-          <HeaderSkeleton />
-
-          {/* Employee Display Area Skeleton */}
-          <div className="mt-4 w-full">
-            {viewMode === "grid" ? (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 2xl:grid-cols-3">
-                {[...Array(6)].map((_, index) => (
-                  <EmployeeCardSkeleton key={index} />
-                ))}
+        <div className="w-full rounded-md border border-gray-200 bg-white p-3 md:p-5 2xl:flex-1">
+          {/* Header Skeleton */}
+          <div className="flex flex-col py-2">
+            <div className="mb-3 flex w-full flex-wrap items-center justify-between gap-3">
+              <div className="h-8 w-32 rounded bg-gray-200"></div>
+              <div className="flex items-center gap-2">
+                <div className="h-9 w-60 rounded bg-gray-200"></div>
+                <div className="h-9 w-24 rounded bg-gray-200"></div>
               </div>
-            ) : (
-              <div className="divide-y">
-                {[...Array(5)].map((_, index) => (
-                  <EmployeeListItemSkeleton key={index} />
-                ))}
-              </div>
-            )}
+            </div>
           </div>
 
+          {/* Table Skeleton */}
+          <TableSkeleton />
+
+          {/* Pagination Skeleton */}
           <PaginationSkeleton />
         </div>
 
         {/* Desktop Filters Sidebar Skeleton (2xl and above) */}
         <FilterPanelSkeleton />
+      </div>
+    )
+  }
+
+  if (employeesError) {
+    return (
+      <div className="flex-3 relative mt-5 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4 rounded-md border border-gray-200 bg-white p-8 text-center">
+          <div className="flex size-12 items-center justify-center rounded-full bg-red-100">
+            <AlertCircle className="size-6 text-red-600" />
+          </div>
+          <div>
+            <p className="font-medium text-gray-900">Failed to load employees</p>
+            <p className="mt-1 text-sm text-gray-500">{employeesError}</p>
+          </div>
+          <ButtonModule variant="outline" size="sm" onClick={() => window.location.reload()}>
+            <RefreshCw className="mr-2 size-4" />
+            Retry
+          </ButtonModule>
+        </div>
       </div>
     )
   }
@@ -1076,26 +889,24 @@ const AllEmployees = () => {
     { label: "Oldest", value: "createdAt", order: "asc" },
   ]
 
-  const departments = ["HR", "Finance", "IT", "Operations", "Sales", "Marketing", "Customer Service"]
-
   return (
     <>
       <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row">
-        {/* Main Content - Employees List/Grid */}
+        {/* Main Content - Employees Table */}
         <div
           className={
             showDesktopFilters
-              ? "w-full rounded-md border bg-white p-3 md:p-5 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
-              : "w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1"
+              ? "w-full rounded-md border border-gray-200 bg-white p-3 md:p-5 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
+              : "w-full rounded-md border border-gray-200 bg-white p-3 md:p-5 2xl:flex-1"
           }
         >
           <div className="flex flex-col py-2">
-            <div className="mb-3 flex w-full items-center justify-between gap-3">
+            <div className="mb-3 flex w-full flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 {/* Filter Button for ALL screens up to 2xl */}
                 <button
                   onClick={() => setShowMobileFilters(true)}
-                  className="flex items-center gap-2 rounded-lg border border-gray-300  bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
+                  className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
                 >
                   <Filter className="size-4" />
                   Filters
@@ -1106,32 +917,12 @@ const AllEmployees = () => {
                   )}
                 </button>
 
-                <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">All Employees</p>
+                <p className="whitespace-nowrap text-base font-medium text-gray-900 sm:text-lg md:text-xl">
+                  All Employees
+                </p>
               </div>
 
               <div className="flex items-center gap-2">
-                {/* Mobile search icon button */}
-                <button
-                  type="button"
-                  className="flex size-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm transition hover:bg-gray-50 sm:hidden md:size-9"
-                  onClick={() => setShowMobileSearch((prev) => !prev)}
-                  aria-label="Toggle search"
-                >
-                  <Image src="/DashboardImages/Search.svg" width={16} height={16} alt="Search Icon" />
-                </button>
-
-                {/* Desktop/Tablet search input */}
-                <div className="hidden sm:block">
-                  <SearchModule
-                    value={searchInput}
-                    onChange={(e) => handleSearchChange(e.target.value)}
-                    onCancel={handleCancelSearch}
-                    onSearch={applyFilters}
-                    placeholder="Search by name, email, or department"
-                    className="w-full max-w-full sm:max-w-[320px]"
-                  />
-                </div>
-
                 {/* Active filters badge - Desktop only (2xl and above) */}
                 {getActiveFilterCount() > 0 && (
                   <div className="hidden items-center gap-2 2xl:flex">
@@ -1142,108 +933,219 @@ const AllEmployees = () => {
                 )}
 
                 {/* Hide/Show Filters button - Desktop only (2xl and above) */}
-                <button
+                <ButtonModule
                   type="button"
                   onClick={() => setShowDesktopFilters((prev) => !prev)}
-                  className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300  bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+                  variant="outline"
+                  size="sm"
+                  className="hidden 2xl:flex"
                 >
-                  {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
+                  {showDesktopFilters ? <X className="mr-2 size-4" /> : <Filter className="mr-2 size-4" />}
                   {showDesktopFilters ? "Hide filters" : "Show filters"}
-                </button>
+                </ButtonModule>
 
                 {/* Export CSV Button - Desktop */}
-                <button
-                  className="button-oulined hidden items-center gap-2 border-[#2563EB] bg-[#DBEAFE] text-sm hover:border-[#2563EB] hover:bg-[#DBEAFE] sm:flex md:text-base"
+                <ButtonModule
+                  size="sm"
+                  className="hidden border border-blue-600 bg-blue-50 text-blue-600 hover:bg-blue-100 sm:flex"
                   onClick={exportToCSV}
                   disabled={!employees || employees.length === 0}
                 >
                   <ExportCsvIcon color="#2563EB" size={20} />
-                  <p className="text-sm text-[#2563EB] md:text-base">Export CSV</p>
-                </button>
+                  <span className="ml-2">Export CSV</span>
+                </ButtonModule>
               </div>
             </div>
 
-            {/* Mobile search input revealed when icon is tapped */}
-            {showMobileSearch && (
-              <div className="mb-3 sm:hidden">
-                <SearchModule
-                  value={searchInput}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  onCancel={handleCancelSearch}
-                  onSearch={applyFilters}
-                  placeholder="Search by name, email, or department"
-                  className="w-full"
-                />
-              </div>
-            )}
-            <div className="mt-2 flex flex-wrap gap-2 md:flex-nowrap md:gap-4">
-              <div className="flex flex-wrap gap-2">
-                <button
-                  className={`button-oulined ${viewMode === "grid" ? "bg-[#f9f9f9]" : ""}`}
-                  onClick={() => setViewMode("grid")}
-                >
-                  <MdGridView className="size-4 md:size-5" />
-                  <p className="text-sm md:text-base">Grid</p>
-                </button>
-                <button
-                  className={`button-oulined ${viewMode === "list" ? "bg-[#f9f9f9]" : ""}`}
-                  onClick={() => setViewMode("list")}
-                >
-                  <MdFormatListBulleted className="size-4 md:size-5" />
-                  <p className="text-sm md:text-base">List</p>
-                </button>
-              </div>
-
-              {/* Export CSV Button - Mobile */}
-              <button
-                className="button-oulined flex items-center gap-2 border-[#2563EB] bg-[#DBEAFE] text-sm hover:border-[#2563EB] hover:bg-[#DBEAFE] sm:hidden"
-                onClick={exportToCSV}
-                disabled={!employees || employees.length === 0}
-              >
-                <ExportCsvIcon color="#2563EB" size={18} />
-                <p className="text-xs text-[#2563EB]">Export</p>
-              </button>
+            <div className="mb-3 w-full">
+              <SearchModule
+                prominent
+                prominentTitle="Search Employees"
+                prominentDescription="Find employees quickly using names, IDs, account IDs, email, or department."
+                value={searchInput}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                onCancel={handleCancelSearch}
+                onSearch={applyFilters}
+                placeholder="Type employee name, employee ID, account ID, email, or department..."
+                height="h-14"
+                className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+              />
             </div>
           </div>
 
-          {/* Error Message */}
-          {employeesError && (
-            <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700 md:p-4 md:text-base">
-              <p>Error loading employees: {employeesError}</p>
-            </div>
-          )}
-
-          {/* Employee Display Area */}
+          {/* Employee Display Area - Table Format */}
           <div className="w-full">
             {(!employees || employees.length === 0) && !employeesLoading ? (
               <div className="flex flex-col items-center justify-center py-8 md:py-12">
-                <div className="text-center">
-                  <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-gray-100 md:size-12">
-                    <VscEye className="size-5 text-gray-400 md:size-6" />
-                  </div>
-                  <h3 className="mt-3 text-base font-medium text-gray-900 md:mt-4 md:text-lg">No employees found</h3>
-                  <p className="mt-1 text-xs text-gray-500 md:mt-2 md:text-sm">
-                    {filters.search || getActiveFilterCount() > 0
+                <EmptySearchState
+                  title={filters.search || getActiveFilterCount() > 0 ? "No employees found" : "No employees available"}
+                  description={
+                    filters.search || getActiveFilterCount() > 0
                       ? "Try adjusting your search or filter criteria"
-                      : "No employees available"}
-                  </p>
-                  {getActiveFilterCount() > 0 && (
-                    <button
-                      onClick={resetFilters}
-                      className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-                    >
-                      Clear All Filters
-                    </button>
-                  )}
-                </div>
-              </div>
-            ) : viewMode === "grid" ? (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 2xl:grid-cols-3">
-                {employees?.map((employee: Employee) => <EmployeeCard key={employee.id} employee={employee} />)}
+                      : "No employees available"
+                  }
+                />
+                {getActiveFilterCount() > 0 && (
+                  <ButtonModule onClick={resetFilters} size="sm" className="mt-4">
+                    Clear All Filters
+                  </ButtonModule>
+                )}
               </div>
             ) : (
-              <div className="divide-y">
-                {employees?.map((employee: Employee) => <EmployeeListItem key={employee.id} employee={employee} />)}
+              <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th
+                        className="cursor-pointer px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 hover:bg-gray-100"
+                        onClick={() => toggleSort("fullName")}
+                      >
+                        <div className="flex items-center">
+                          Employee
+                          {getSortIcon("fullName")}
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 hover:bg-gray-100"
+                        onClick={() => toggleSort("employmentType")}
+                      >
+                        <div className="flex items-center">
+                          Status
+                          {getSortIcon("employmentType")}
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 hover:bg-gray-100"
+                        onClick={() => toggleSort("departmentName")}
+                      >
+                        <div className="flex items-center">
+                          Department
+                          {getSortIcon("departmentName")}
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 hover:bg-gray-100"
+                        onClick={() => toggleSort("position")}
+                      >
+                        <div className="flex items-center">
+                          Position
+                          {getSortIcon("position")}
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 hover:bg-gray-100"
+                        onClick={() => toggleSort("areaOfficeName")}
+                      >
+                        <div className="flex items-center">
+                          Work Location
+                          {getSortIcon("areaOfficeName")}
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 hover:bg-gray-100"
+                        onClick={() => toggleSort("accountId")}
+                      >
+                        <div className="flex items-center">
+                          Account ID
+                          {getSortIcon("accountId")}
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 hover:bg-gray-100"
+                        onClick={() => toggleSort("mustChangePassword")}
+                      >
+                        <div className="flex items-center">
+                          Password
+                          {getSortIcon("mustChangePassword")}
+                        </div>
+                      </th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 bg-white">
+                    {employees?.map((employee: Employee) => (
+                      <tr key={employee.id} className="transition-colors hover:bg-gray-50">
+                        <td className="whitespace-nowrap px-4 py-3">
+                          <div className="flex items-center">
+                            <div className="flex size-8 items-center justify-center rounded-full bg-blue-100">
+                              <span className="text-xs font-semibold text-blue-600">
+                                {employee.fullName
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")}
+                              </span>
+                            </div>
+                            <div className="ml-3">
+                              <p className="text-xs font-medium text-gray-900">{employee.fullName}</p>
+                              <p className="text-xs text-gray-500">{employee.email}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3">
+                          <div className="flex gap-1">
+                            <span
+                              className={`inline-flex w-fit items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium ${getStatusColor(
+                                employee.isActive
+                              )}`}
+                            >
+                              {getStatusIcon(employee.isActive)}
+                              {employee.isActive ? "Active" : "Inactive"}
+                            </span>
+                            {employee.employmentType && (
+                              <span
+                                className={`inline-flex w-fit rounded-full border px-2 py-0.5 text-xs font-medium ${getEmploymentTypeColor(
+                                  employee.employmentType
+                                )}`}
+                              >
+                                {employee.employmentType.replace("_", " ")}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 text-xs text-gray-700">
+                          {employee.departmentName || "—"}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 text-xs text-gray-700">
+                          {employee.position || "—"}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 text-xs text-gray-700">
+                          {employee.areaOfficeName || "—"}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3">
+                          <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
+                            {employee.accountId}
+                          </span>
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3">
+                          {employee.mustChangePassword ? (
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+                              <AlertCircle className="size-3.5" />
+                              Reset Required
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                              <CheckCircle className="size-3.5" />
+                              Active
+                            </span>
+                          )}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 text-right">
+                          <ButtonModule
+                            onClick={() => handleViewDetails(employee)}
+                            variant="outline"
+                            size="sm"
+                            className="border-gray-300"
+                          >
+                            <VscEye className="mr-2 size-4" />
+                            View
+                          </ButtonModule>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
@@ -1252,7 +1154,7 @@ const AllEmployees = () => {
           {employees && employees.length > 0 && (
             <div className="mt-4 flex w-full flex-row items-center justify-between gap-3 md:flex-row">
               <div className="flex items-center gap-1 max-sm:hidden">
-                <p className="text-sm md:text-base">Show rows</p>
+                <p className="text-sm text-gray-600 md:text-base">Show rows</p>
                 <div className="min-w-[80px]">
                   <FormSelectModule
                     label=""
@@ -1274,8 +1176,10 @@ const AllEmployees = () => {
 
               <div className="flex flex-wrap items-center justify-center md:justify-start md:gap-3">
                 <button
-                  className={`px-2 py-1 md:px-3 md:py-2 ${
-                    pagination.currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
+                  className={`rounded-md px-2 py-1 transition-colors md:px-3 md:py-2 ${
+                    pagination.currentPage === 1
+                      ? "cursor-not-allowed text-gray-400"
+                      : "text-gray-700 hover:bg-gray-100"
                   }`}
                   onClick={() => changePage(pagination.currentPage - 1)}
                   disabled={pagination.currentPage === 1}
@@ -1289,8 +1193,10 @@ const AllEmployees = () => {
                       typeof item === "number" ? (
                         <button
                           key={item}
-                          className={`flex size-6 items-center justify-center rounded-md text-xs md:h-7 md:w-8 md:text-sm ${
-                            pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                          className={`flex size-7 items-center justify-center rounded-md text-sm transition-colors md:h-8 md:w-8 ${
+                            pagination.currentPage === item
+                              ? "bg-blue-600 text-white"
+                              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                           }`}
                           onClick={() => changePage(item)}
                         >
@@ -1309,8 +1215,8 @@ const AllEmployees = () => {
                       typeof item === "number" ? (
                         <button
                           key={item}
-                          className={`flex size-6 items-center justify-center rounded-md text-xs md:w-8 ${
-                            pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                          className={`flex size-6 items-center justify-center rounded-md text-xs ${
+                            pagination.currentPage === item ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"
                           }`}
                           onClick={() => changePage(item)}
                         >
@@ -1326,10 +1232,10 @@ const AllEmployees = () => {
                 </div>
 
                 <button
-                  className={`px-2 py-1 md:px-3 md:py-2 ${
+                  className={`rounded-md px-2 py-1 transition-colors md:px-3 md:py-2 ${
                     pagination.currentPage === pagination.totalPages
                       ? "cursor-not-allowed text-gray-400"
-                      : "text-[#000000]"
+                      : "text-gray-700 hover:bg-gray-100"
                   }`}
                   onClick={() => changePage(pagination.currentPage + 1)}
                   disabled={pagination.currentPage === pagination.totalPages}
@@ -1337,8 +1243,9 @@ const AllEmployees = () => {
                   <BiSolidRightArrow className="size-4 md:size-5" />
                 </button>
               </div>
-              <p className="text-sm max-sm:hidden md:text-base">
-                Page {pagination.currentPage} of {pagination.totalPages} ({pagination.totalCount} total records)
+              <p className="text-sm text-gray-600 max-sm:hidden md:text-base">
+                Page {pagination.currentPage} of {pagination.totalPages} ({pagination.totalCount.toLocaleString()} total
+                records)
               </p>
             </div>
           )}
@@ -1350,10 +1257,10 @@ const AllEmployees = () => {
             key="desktop-filters-sidebar"
             initial={{ opacity: 1 }}
             animate={{ opacity: 1 }}
-            className="hidden w-full flex-col rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:flex 2xl:w-80 2xl:self-start"
+            className="hidden w-full flex-col rounded-md border border-gray-200 bg-white p-3 md:p-5 2xl:mt-0 2xl:flex 2xl:w-80 2xl:self-start"
           >
-            <div className="mb-4 flex shrink-0 items-center justify-between border-b pb-3 md:pb-4">
-              <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
+            <div className="mb-4 flex shrink-0 items-center justify-between border-b border-gray-200 pb-3 md:pb-4">
+              <h2 className="text-sm font-semibold text-gray-900 md:text-base">Filters & Sorting</h2>
               <button
                 onClick={resetFilters}
                 className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
@@ -1493,40 +1400,34 @@ const AllEmployees = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="mt-6 shrink-0 space-y-3 border-t pt-4">
-              <button
-                onClick={applyFilters}
-                className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
-              >
-                <Filter className="size-4" />
+            <div className="mt-6 shrink-0 space-y-3 border-t border-gray-200 pt-4">
+              <ButtonModule onClick={applyFilters} size="sm" className="w-full">
+                <Filter className="mr-2 size-4" />
                 Apply Filters
-              </button>
-              <button
-                onClick={resetFilters}
-                className="button-oulined flex w-full items-center justify-center gap-2 text-sm md:text-base"
-              >
-                <X className="size-4" />
+              </ButtonModule>
+              <ButtonModule onClick={resetFilters} variant="outline" size="sm" className="w-full">
+                <X className="mr-2 size-4" />
                 Reset All
-              </button>
+              </ButtonModule>
             </div>
 
             {/* Summary Stats */}
             <div className="mt-4 shrink-0 rounded-lg bg-gray-50 p-3 md:mt-6">
-              <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
+              <h3 className="mb-2 text-xs font-medium text-gray-900 md:text-sm">Summary</h3>
               <div className="space-y-1 text-xs md:text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Total Records:</span>
-                  <span className="font-medium">{pagination.totalCount.toLocaleString()}</span>
+                  <span className="font-medium text-gray-900">{pagination.totalCount.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Current Page:</span>
-                  <span className="font-medium">
+                  <span className="font-medium text-gray-900">
                     {pagination.currentPage} / {pagination.totalPages}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Active Filters:</span>
-                  <span className="font-medium">{getActiveFilterCount()}</span>
+                  <span className="font-medium text-gray-900">{getActiveFilterCount()}</span>
                 </div>
               </div>
             </div>

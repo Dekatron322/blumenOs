@@ -14,6 +14,7 @@ import { AppDispatch, RootState } from "lib/redux/store"
 import { clearPaymentsStatus, getPaymentsList } from "lib/redux/customersDashboardSlice"
 import Image from "next/image"
 import { ButtonModule } from "components/ui/Button/Button"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 // Payment status enum matching API
 enum PaymentStatus {
@@ -297,7 +298,6 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
-  const [showMobileSearch, setShowMobileSearch] = useState(false)
 
   // Filter dropdown states
   const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false)
@@ -561,7 +561,6 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
 
   const handleCancelSearch = () => {
     setSearchText("")
-    setShowMobileSearch(false)
   }
 
   const handleStatusFilterChange = (status: string) => {
@@ -590,7 +589,6 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
       paymentTypeId: "",
     })
     setSearchText("")
-    setShowMobileSearch(false)
     setPagination((prev) => ({ ...prev, currentPage: 1 }))
   }
 
@@ -692,7 +690,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
         transition={{ duration: 0.3 }}
       >
         <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Payments</p>
+          <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Payments</p>
           <p className="text-sm text-gray-600">View and manage all payment transactions</p>
         </div>
       </motion.div>
@@ -704,18 +702,19 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        {/* Mobile search input revealed when icon is tapped */}
-        {showMobileSearch && (
-          <div className="mb-3 sm:hidden">
-            <SearchModule
-              value={searchText}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              onCancel={handleCancelSearch}
-              placeholder="Search by reference, customer name or account number"
-              className="w-full"
-            />
-          </div>
-        )}
+        <div className="mb-3 w-full">
+          <SearchModule
+            prominent
+            prominentTitle="Search Payments"
+            prominentDescription="Find transactions quickly by reference, customer, account number, or payment details."
+            value={searchText}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            onCancel={handleCancelSearch}
+            placeholder="Search by reference, customer name or account number"
+            height="h-14"
+            className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+          />
+        </div>
 
         {/* Filters Section */}
         <motion.div
@@ -1004,26 +1003,18 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
         >
-          <motion.p
-            className="text-base font-bold text-[#202B3C]"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            {searchText || filters.status || filters.channel || filters.collectorType
-              ? "No matching payments found"
-              : "No payments available"}
-          </motion.p>
-          <motion.p
-            className="text-sm text-gray-600"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-          >
-            {searchText || filters.status || filters.channel || filters.collectorType
-              ? "Try adjusting your search or filters"
-              : "Payments will appear here once transactions are processed"}
-          </motion.p>
+          <EmptySearchState
+            title={
+              searchText || filters.status || filters.channel || filters.collectorType
+                ? "No matching payments found"
+                : "No payments available"
+            }
+            description={
+              searchText || filters.status || filters.channel || filters.collectorType
+                ? "Try adjusting your search or filters"
+                : "Payments will appear here once transactions are processed"
+            }
+          />
         </motion.div>
       ) : (
         <>

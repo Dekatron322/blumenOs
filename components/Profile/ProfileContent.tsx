@@ -177,7 +177,7 @@ export default function ProfileContent({ activeTab }: ProfileContentProps) {
 
             {/* User Info */}
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 md:text-2xl">
+              <h2 className="text-xl font-semibold text-gray-900 md:text-xl">
                 {originalData.firstName} {originalData.lastName}
               </h2>
               <p className="text-gray-600">{originalData.role}</p>

@@ -500,7 +500,7 @@ const VendTokenModal: React.FC<VendTokenModalProps> = ({ isOpen, onRequestClose,
                 alt="Paid stamp"
                 width={190}
                 height={190}
-                className="h-32 w-32 select-none sm:h-48 sm:w-48 md:h-[190px] md:w-[190px]"
+                className="size-32 select-none sm:size-48 md:h-[190px] md:w-[190px]"
                 priority
               />
             </div>
@@ -687,7 +687,7 @@ const VendTokenModal: React.FC<VendTokenModalProps> = ({ isOpen, onRequestClose,
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col gap-3 border-t border-gray-200 bg-white px-4 py-4 sm:flex-row sm:justify-end sm:px-6">
+          <div className="flex flex-col gap-3 border-t border-gray-200 bg-white p-4 sm:flex-row sm:justify-end sm:px-6">
             <ButtonModule variant="outline" onClick={() => setShowReceipt(false)} className="w-full sm:w-auto">
               Back to Token
             </ButtonModule>
@@ -863,7 +863,7 @@ const VendTokenModal: React.FC<VendTokenModalProps> = ({ isOpen, onRequestClose,
               <div className="space-y-3 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm">
                 <div className="flex flex-col gap-1 rounded-md bg-white p-3 text-center">
                   <span className="text-xs font-semibold uppercase tracking-wide text-blue-700">Electricity Token</span>
-                  <span className="select-all text-3xl font-extrabold tracking-[0.12em] text-gray-900 max-sm:text-base sm:text-3xl">
+                  <span className="select-all text-3xl font-extrabold tracking-[0.12em] text-gray-900 max-sm:text-base sm:text-2xl">
                     {tokenData.token}
                   </span>
                 </div>

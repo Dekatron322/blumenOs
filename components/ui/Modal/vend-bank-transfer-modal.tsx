@@ -165,7 +165,7 @@ const VendBankTransferModal: React.FC<VendBankTransferModalProps> = ({
         className="relative flex max-h-[90vh] w-[90vw] max-w-2xl flex-col rounded-lg bg-white shadow-2xl max-sm:h-[90vh] max-sm:max-w-full max-sm:rounded-t-3xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex flex-shrink-0 items-center justify-between border-b bg-[#F9F9F9] px-6 py-4 max-sm:px-3 max-sm:py-3">
+        <div className="flex shrink-0 items-center justify-between border-b bg-[#F9F9F9] px-6 py-4 max-sm:p-3">
           <h2 className="text-lg font-semibold text-gray-900 max-sm:text-sm">Bank Transfer Payment</h2>
           <button
             onClick={onRequestClose}
@@ -372,7 +372,7 @@ const VendBankTransferModal: React.FC<VendBankTransferModalProps> = ({
           </div> */}
         </div>
 
-        <div className="flex flex-shrink-0 gap-3 border-t bg-white px-6 py-4 max-sm:gap-2 max-sm:px-3 max-sm:py-3 sm:flex-row sm:gap-4">
+        <div className="flex shrink-0 gap-3 border-t bg-white px-6 py-4 max-sm:gap-2 max-sm:p-3 sm:flex-row sm:gap-4">
           <ButtonModule variant="secondary" className="flex w-full max-sm:text-sm" size="sm" onClick={handleCopy}>
             {isCopying ? "Copied!" : "Copy Details"}
           </ButtonModule>

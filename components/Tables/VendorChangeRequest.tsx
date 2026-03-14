@@ -18,6 +18,7 @@ import {
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { ExportCsvIcon } from "components/Icons/Icons"
 import VendorViewChangeRequestModal from "components/ui/Modal/view-vendor-change-request-modal"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface SortOption {
   label: string
@@ -88,7 +89,7 @@ const ChangeRequestListItemSkeleton = () => (
   >
     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-0">
       <div className="flex items-start gap-3 md:items-center md:gap-4">
-        <div className="size-8 flex-shrink-0 rounded-full bg-gray-200 md:size-10"></div>
+        <div className="size-8 shrink-0 rounded-full bg-gray-200 md:size-10"></div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
             <div className="h-5 w-32 rounded bg-gray-200 md:w-40"></div>
@@ -244,11 +245,11 @@ const MobileFilterSidebar = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col bg-white shadow-xl"
+            className="flex size-full max-w-sm flex-col bg-white shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header - Fixed */}
-            <div className="flex-shrink-0 border-b bg-white p-4">
+            <div className="shrink-0 border-b bg-white p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <button
@@ -365,7 +366,7 @@ const MobileFilterSidebar = ({
             </div>
 
             {/* Bottom Action Buttons - Fixed */}
-            <div className="flex-shrink-0 border-t bg-white p-4 2xl:hidden">
+            <div className="shrink-0 border-t bg-white p-4 2xl:hidden">
               <div className="flex gap-3">
                 <button
                   onClick={() => {
@@ -916,8 +917,8 @@ const VendorChangeRequests = () => {
           transition={{ duration: 0.3 }}
         >
           <div className="flex w-full flex-col py-2">
-            <div className="mb-3 flex w-full items-center justify-between gap-3">
-              <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">Vendor Change Requests</p>
+            <div className="mb-3 flex w-full flex-wrap items-center justify-between gap-3">
+              <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-xl">Vendor Change Requests</p>
 
               <div className="flex items-center gap-2">
                 {/* Mobile Filter Button */}
@@ -955,14 +956,15 @@ const VendorChangeRequests = () => {
                 </button>
 
                 {/* Desktop/Tablet search input */}
-                <div className="hidden sm:block">
+                <div className="hidden w-full sm:block">
                   <SearchModule
+                    prominent
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
                     onCancel={handleCancelSearch}
                     onSearch={handleManualSearch}
                     placeholder="Search by reference, requester, or entity label"
-                    className="w-full max-w-full md:max-w-[300px]"
+                    className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
                   />
                 </div>
 
@@ -985,6 +987,7 @@ const VendorChangeRequests = () => {
             {showMobileSearch && (
               <div className="mb-3 sm:hidden">
                 <SearchModule
+                  prominent
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   onCancel={handleCancelSearch}
@@ -1040,20 +1043,15 @@ const VendorChangeRequests = () => {
           {/* Change Request Display Area */}
           <div className="w-full">
             {changeRequests.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 md:py-12">
-                <div className="text-center">
-                  <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-gray-100 md:size-12">
-                    <VscEye className="size-5 text-gray-400 md:size-6" />
-                  </div>
-                  <h3 className="mt-3 text-base font-medium text-gray-900 md:mt-4 md:text-lg">
-                    No change requests found
-                  </h3>
-                  <p className="mt-1 text-xs text-gray-500 md:mt-2 md:text-sm">
-                    {searchText || getActiveFilterCount() > 0
+              <div className="flex items-center justify-center py-8 md:py-12">
+                <EmptySearchState
+                  title="No change requests found"
+                  description={
+                    searchText || getActiveFilterCount() > 0
                       ? "Try adjusting your filters or search criteria"
-                      : "No change requests available"}
-                  </p>
-                </div>
+                      : "No change requests available"
+                  }
+                />
               </div>
             ) : viewMode === "grid" ? (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-3">
@@ -1167,7 +1165,7 @@ const VendorChangeRequests = () => {
             className="hidden w-full flex-col rounded-md border bg-white 2xl:flex 2xl:w-80 2xl:self-start"
           >
             {/* Header - Fixed */}
-            <div className="flex-shrink-0 border-b bg-white p-3 md:p-5">
+            <div className="shrink-0 border-b bg-white p-3 md:p-5">
               <div className="flex items-center justify-between">
                 <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
                 <button
@@ -1271,7 +1269,7 @@ const VendorChangeRequests = () => {
             </div>
 
             {/* Action Buttons - Fixed */}
-            <div className="flex-shrink-0 space-y-3 border-t bg-white p-3 md:p-5">
+            <div className="shrink-0 space-y-3 border-t bg-white p-3 md:p-5">
               <button
                 onClick={applyFilters}
                 className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
@@ -1289,7 +1287,7 @@ const VendorChangeRequests = () => {
             </div>
 
             {/* Summary Stats - Fixed */}
-            <div className="flex-shrink-0 rounded-lg bg-gray-50 p-3 md:p-4">
+            <div className="shrink-0 rounded-lg bg-gray-50 p-3 md:p-4">
               <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
               <div className="space-y-1 text-xs md:text-sm">
                 <div className="flex justify-between">

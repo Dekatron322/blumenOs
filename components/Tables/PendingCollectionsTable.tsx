@@ -22,6 +22,7 @@ import {
 } from "lib/redux/agentSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import ConfirmPaymentForm from "components/Forms/ConfirmPaymentForm"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface ActionDropdownProps {
   payment: Payment
@@ -526,8 +527,22 @@ const AllPendingCollectionsTable: React.FC<AllPendingCollectionsTableProps> = ({
   return (
     <div className="w-full">
       {/* Header Section with Search and Filters */}
-      <div className="mb-4 flex items-center justify-between border-b pb-4">
-        <div className="flex items-center gap-3">
+      <div className="mb-4 border-b pb-4">
+        <div className="mb-3 w-full">
+          <SearchModule
+            prominent
+            prominentTitle="Search Pending Payments"
+            prominentDescription="Find pending transactions by reference, account, customer, or amount."
+            value={searchText}
+            onChange={handleSearch}
+            onCancel={handleCancelSearch}
+            placeholder="Search payments..."
+            height="h-14"
+            className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+            bgClassName="bg-white"
+          />
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
           {/* Mobile Filter Button */}
           {setShowMobileFilters && (
             <button
@@ -559,14 +574,6 @@ const AllPendingCollectionsTable: React.FC<AllPendingCollectionsTableProps> = ({
               )}
             </button>
           )}
-          <SearchModule
-            value={searchText}
-            onChange={handleSearch}
-            onCancel={handleCancelSearch}
-            placeholder="Search payments..."
-            className="w-full max-w-[380px]"
-            bgClassName="bg-white"
-          />
         </div>
       </div>
 
@@ -584,24 +591,14 @@ const AllPendingCollectionsTable: React.FC<AllPendingCollectionsTableProps> = ({
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
         >
-          <motion.p
-            className="text-base font-bold text-[#202B3C]"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            {searchText ? "No matching payments found" : "No payments available"}
-          </motion.p>
-          <motion.p
-            className="text-sm text-gray-600"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-          >
-            {searchText
-              ? "Try adjusting your search term"
-              : "Payments will appear here once transactions are processed"}
-          </motion.p>
+          <EmptySearchState
+            title={searchText ? "No matching payments found" : "No payments available"}
+            description={
+              searchText
+                ? "Try adjusting your search term"
+                : "Payments will appear here once transactions are processed"
+            }
+          />
         </motion.div>
       ) : (
         <>

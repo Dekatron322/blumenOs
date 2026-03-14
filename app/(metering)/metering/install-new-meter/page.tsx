@@ -914,7 +914,7 @@ const InstallNewMeterPage = () => {
                       }`}
                     >
                       <div
-                        className={`flex size-7 flex-shrink-0 items-center justify-center rounded-full ${
+                        className={`flex size-7 shrink-0 items-center justify-center rounded-full ${
                           item.step === currentStep
                             ? "bg-white text-[#004B23]"
                             : item.step < currentStep
@@ -948,7 +948,7 @@ const InstallNewMeterPage = () => {
                           {item.description}
                         </div>
                       </div>
-                      {item.step === currentStep && <ChevronRight className="size-4 flex-shrink-0" />}
+                      {item.step === currentStep && <ChevronRight className="size-4 shrink-0" />}
                     </button>
                   ))}
                 </nav>
@@ -1057,7 +1057,7 @@ const InstallNewMeterPage = () => {
         <div className="flex w-full flex-col">
           <DashboardNav />
 
-          <div className="mx-auto flex w-full flex-col px-3  py-4 2xl:container sm:px-4 md:px-6  2xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3  py-4  sm:px-4 md:px-6  ">
             {/* Page Header - Mobile Optimized */}
             <div className="mb-6">
               <div className="flex items-center justify-between gap-3">

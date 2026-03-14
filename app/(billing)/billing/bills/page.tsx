@@ -12,7 +12,7 @@ import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
 
 import { fetchAreaOffices, fetchDistributionSubstations, fetchFeeders } from "lib/redux/formDataSlice"
-import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
+import { fetchBillingPeriods, BillingPeriod } from "lib/redux/billingPeriodsSlice"
 import { clearDownloadARStatus, downloadAR, DownloadARRequestParams } from "lib/redux/postpaidSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 
@@ -297,8 +297,8 @@ export default function MeteringDashboard() {
   const [selectedAreaOffice, setSelectedAreaOffice] = useState("")
   const [selectedFeeder, setSelectedFeeder] = useState("")
   const [selectedDistributionSubstation, setSelectedDistributionSubstation] = useState("")
-  const [selectedStatus, setSelectedStatus] = useState("")
-  const [isMd, setIsMd] = useState(false)
+  const [selectedStatus, setSelectedStatus] = useState("all")
+  const [isMd, setIsMd] = useState<boolean | null>(false)
   const [isLoading, setIsLoading] = useState(false)
   const [meterData, setMeterData] = useState(generateMeterData())
 
@@ -350,6 +350,29 @@ export default function MeteringDashboard() {
       dispatch(fetchDistributionSubstations({ PageNumber: 1, PageSize: 100 }))
     }
   }, [isDownloadARModalOpen, dispatch])
+
+  // Set default billing period to most recent when data is loaded
+  useEffect(() => {
+    if (billingPeriods && billingPeriods.length > 0 && !selectedBillingPeriod) {
+      // Find the most recent billing period by year and month
+      const mostRecentPeriod = billingPeriods.reduce(
+        (mostRecent, current) => {
+          if (!mostRecent) return current
+
+          // Compare year first, then month
+          if (current.year > mostRecent.year) return current
+          if (current.year === mostRecent.year && current.month > mostRecent.month) return current
+
+          return mostRecent
+        },
+        null as BillingPeriod | null
+      )
+
+      if (mostRecentPeriod) {
+        setSelectedBillingPeriod(mostRecentPeriod.id.toString())
+      }
+    }
+  }, [billingPeriods, selectedBillingPeriod])
 
   // Search handlers for dropdowns - only update search term state
   const handleAreaOfficeSearchChange = (searchValue: string) => {
@@ -411,8 +434,8 @@ export default function MeteringDashboard() {
       ...(selectedDistributionSubstation && {
         distributionSubstationId: parseInt(selectedDistributionSubstation),
       }),
-      ...(selectedStatus && { billStatus: parseInt(selectedStatus) }),
-      isMd: isMd,
+      ...(selectedStatus && { statusCode: selectedStatus }),
+      ...(isMd === true && { isMd: isMd }),
     }
 
     try {
@@ -437,7 +460,7 @@ export default function MeteringDashboard() {
     setSelectedAreaOffice("")
     setSelectedFeeder("")
     setSelectedDistributionSubstation("")
-    setIsMd(false)
+    setIsMd(null)
   }
 
   const handleRefreshData = () => {
@@ -455,7 +478,7 @@ export default function MeteringDashboard() {
           <DashboardNav />
           <div className="w-full">
             {/* Page Header - Always Visible */}
-            <div className="flex w-full justify-between gap-6 px-3 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 sm:px-4 md:my-8 md:px-6 2xl:px-16">
+            <div className="flex w-full justify-between gap-6 px-3 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 sm:px-4 md:my-8 md:px-6 ">
               <div>
                 <h4 className="text-2xl font-semibold">Billing Engine</h4>
                 <p>Tariff management, bill generation, and billing cycles</p>
@@ -543,7 +566,6 @@ export default function MeteringDashboard() {
 
             <div className="p-4">
               <div className="space-y-4">
-                {/* Billing Period - Required */}
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-700">
                     Billing Period <span className="text-red-500">*</span>
@@ -632,32 +654,36 @@ export default function MeteringDashboard() {
 
                 {/* Bill Status - Optional */}
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700">Bill Status</label>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Status Code</label>
                   <FormSelectModule
-                    name="billStatus"
+                    name="statusCode"
                     value={selectedStatus}
                     onChange={(e) => setSelectedStatus(e.target.value)}
                     options={[
-                      { value: "", label: "All Statuses" },
-                      { value: BillStatus.Draft.toString(), label: "Draft" },
-                      { value: BillStatus.Finalized.toString(), label: "Finalized" },
-                      { value: BillStatus.Refunded.toString(), label: "Refunded" },
+                      { value: "all", label: "All" },
+                      { value: "02", label: "02" },
+                      { value: "04", label: "04" },
+                      { value: "07", label: "07" },
                     ]}
                   />
                 </div>
 
-                {/* Is MD - Optional */}
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="isMd"
-                    checked={isMd}
-                    onChange={(e) => setIsMd(e.target.checked)}
-                    className="size-4 rounded border-gray-300 text-[#004B23] focus:ring-[#004B23]"
+                {/* MD Customers - Optional */}
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">MD Customers</label>
+                  <FormSelectModule
+                    name="mdCustomers"
+                    value={isMd ? "md" : "all"}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      setIsMd(value === "md" ? true : null)
+                    }}
+                    options={[
+                      { value: "all", label: "All Customers" },
+                      { value: "md", label: "MD Only" },
+                      // { value: "non-md", label: "Non-MD Only" },
+                    ]}
                   />
-                  <label htmlFor="isMd" className="ml-2 block text-sm text-gray-700">
-                    MD Customers Only
-                  </label>
                 </div>
 
                 {/* Error Message */}

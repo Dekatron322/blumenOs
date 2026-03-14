@@ -513,7 +513,7 @@ const MapViewTab = () => {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: 40, opacity: 0 }}
             transition={{ type: "spring", damping: 25 }}
-            className="relative flex h-full w-full max-w-md flex-col overflow-hidden rounded-l-lg bg-white shadow-2xl"
+            className="relative flex size-full max-w-md flex-col overflow-hidden rounded-l-lg bg-white shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b bg-[#F9F9F9] p-4">
@@ -620,7 +620,7 @@ const MapViewTab = () => {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: 40, opacity: 0 }}
             transition={{ type: "spring", damping: 25 }}
-            className="relative flex h-full w-full max-w-md flex-col overflow-hidden rounded-l-lg bg-white shadow-2xl"
+            className="relative flex size-full max-w-md flex-col overflow-hidden rounded-l-lg bg-white shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b bg-[#F9F9F9] p-4">

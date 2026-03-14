@@ -506,11 +506,11 @@ export default function AgentManagementDashboard() {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col px-3 2xl:container sm:px-4 lg:px-6 2xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3  sm:px-4 lg:px-6 ">
             {/* Page Header - Always Visible */}
             <div className="my-4 flex w-full flex-col items-start justify-between  gap-4 md:flex-row md:gap-6">
               <div className="flex-1">
-                <h4 className="text-lg font-semibold sm:text-xl md:text-2xl">Cashier Management</h4>
+                <h4 className="text-lg font-semibold sm:text-xl md:text-xl">Cashier Management</h4>
                 <p className="text-sm text-gray-600 sm:text-base">
                   Field sales reps onboarding, commissions, and performance tracking
                 </p>

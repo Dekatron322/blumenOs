@@ -47,6 +47,7 @@ export const allLinks: LinkItem[] = [
     requiredActions: ["R"],
     children: [
       { name: "Overview", href: "/customers/overview", privilegeKey: "customers", requiredActions: ["R"] },
+      { name: "Search Customer", href: "/customers/search" },
       { name: "View Customers", href: "/customers/view-customers", privilegeKey: "customers", requiredActions: ["R"] },
       { name: "Data Quality", href: "/customers/data-quality", privilegeKey: "customers", requiredActions: ["R"] },
       { name: "Add Customers", href: "/customers/add-customers", privilegeKey: "customers", requiredActions: ["W"] },
@@ -74,6 +75,7 @@ export const allLinks: LinkItem[] = [
         privilegeKey: "identity-users",
         requiredActions: ["R"],
       },
+      { name: "Search Employee", href: "/employees/search" },
       {
         name: "View Employees",
         href: "/employees/view-employees",
@@ -102,6 +104,7 @@ export const allLinks: LinkItem[] = [
     requiredActions: ["R"],
     children: [
       { name: "Overview", href: "/billing/overview", privilegeKey: "billing-postpaid", requiredActions: ["R"] },
+      { name: "Search Postpaid Bill", href: "/billing/search" },
       { name: "Postpaid Bills", href: "/billing/bills", privilegeKey: "billing-postpaid", requiredActions: ["R"] },
       // {
       //   name: "Postpaid Meter Readings",
@@ -147,6 +150,7 @@ export const allLinks: LinkItem[] = [
     requiredActions: ["R"],
     children: [
       { name: "Overview", href: "/metering/overview", privilegeKey: "meters", requiredActions: ["R"] },
+      { name: "Search Meter", href: "/metering/search" },
       { name: "All Meters", href: "/metering/all-meters", privilegeKey: "meters", requiredActions: ["R"] },
       {
         name: "Postpaid Meter Readings",
@@ -183,6 +187,7 @@ export const allLinks: LinkItem[] = [
     requiredActions: ["R"],
     children: [
       { name: "Overview", href: "/tokens/overview", privilegeKey: "payments", requiredActions: ["R"] },
+      { name: "Search Tokens", href: "/tokens/search" },
       {
         name: "Prepaid History",
         href: "/tokens/prepaid-history",
@@ -246,6 +251,7 @@ export const allLinks: LinkItem[] = [
     requiredActions: ["R"],
     children: [
       { name: "Overview", href: "/payment/overview", privilegeKey: "payments", requiredActions: ["R"] },
+      { name: "Search Payments", href: "/payment/search" },
       { name: "All Collections", href: "/payment/all-payment", privilegeKey: "payments", requiredActions: ["R"] },
       { name: "Bulk Uploads", href: "/payment/bulk-upload", privilegeKey: "payments", requiredActions: ["R"] },
       {
@@ -296,6 +302,7 @@ export const allLinks: LinkItem[] = [
       { name: "All Debts Entries", href: "/dm/ade", privilegeKey: "payments", requiredActions: ["R"] },
       { name: "All Customer Debts", href: "/dm/all-debts", privilegeKey: "payments", requiredActions: ["R"] },
       { name: "All Debt Recovery", href: "/dm/adr", privilegeKey: "payments", requiredActions: ["R"] },
+      { name: "Promo", href: "/dm/promo", privilegeKey: "payments", requiredActions: ["R"] },
       { name: "Debt Aging", href: "/dm/aging", privilegeKey: "payments", requiredActions: ["R"] },
       { name: "Recovery Policies", href: "/dm/rp", privilegeKey: "payments", requiredActions: ["R"] },
       { name: "Add Debt", href: "/dm/add-debt", privilegeKey: "payments", requiredActions: ["W"] },

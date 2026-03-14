@@ -333,7 +333,7 @@ const CustomerPaymentPage: React.FC = () => {
       <CustomerDashboardNav />
       <div className="flex w-full">
         <div className="flex w-full flex-col">
-          <div className="mx-auto flex w-full flex-col px-3 py-4 2xl:container sm:px-4 lg:px-6 2xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3 py-4  sm:px-4 lg:px-6 ">
             <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
               <div>
                 <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">Make Payment</h1>
@@ -373,7 +373,7 @@ const CustomerPaymentPage: React.FC = () => {
                       {Array.from({ length: 5 }).map((_, index) => (
                         <div key={index} className="animate-pulse rounded-lg border border-gray-200 bg-white p-4">
                           <div className="flex items-center gap-3">
-                            <div className="h-12 w-12 rounded-lg bg-gray-300"></div>
+                            <div className="size-12 rounded-lg bg-gray-300"></div>
                             <div className="flex-1">
                               <div className="h-6 w-32 rounded bg-gray-300"></div>
                               <div className="mt-2 size-48 rounded bg-gray-300"></div>
@@ -399,7 +399,7 @@ const CustomerPaymentPage: React.FC = () => {
 
                     <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
+                        <div className="flex size-8 items-center justify-center rounded-full bg-blue-100">
                           <span className="text-blue-600">💡</span>
                         </div>
                         <div>
@@ -570,7 +570,7 @@ const CustomerPaymentPage: React.FC = () => {
                     {selectedPaymentTypeDetails && (
                       <div className="mb-6 rounded-lg border border-[#004B23]/20 bg-[#004B23]/5 p-4">
                         <div className="mb-3 flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white">
+                          <div className="flex size-10 items-center justify-center rounded-lg bg-white">
                             <div className="size-5 text-gray-700">{selectedPaymentTypeDetails.icon}</div>
                           </div>
                           <div>
@@ -781,7 +781,7 @@ const CustomerPaymentPage: React.FC = () => {
               <h2 className="mb-4 text-lg font-semibold text-gray-800">Bank Transfer Instructions</h2>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 <div className="rounded-lg border border-gray-200 p-4">
-                  <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                  <div className="mb-2 flex size-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
                     1
                   </div>
                   <h3 className="mb-2 text-sm font-medium text-gray-900">Generate Details</h3>
@@ -791,7 +791,7 @@ const CustomerPaymentPage: React.FC = () => {
                 </div>
 
                 <div className="rounded-lg border border-gray-200 p-4">
-                  <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                  <div className="mb-2 flex size-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
                     2
                   </div>
                   <h3 className="mb-2 text-sm font-medium text-gray-900">Make Transfer</h3>
@@ -801,7 +801,7 @@ const CustomerPaymentPage: React.FC = () => {
                 </div>
 
                 <div className="rounded-lg border border-gray-200 p-4">
-                  <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                  <div className="mb-2 flex size-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
                     3
                   </div>
                   <h3 className="mb-2 text-sm font-medium text-gray-900">Confirmation</h3>

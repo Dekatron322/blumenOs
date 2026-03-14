@@ -880,7 +880,7 @@ const AddEmployeePage = () => {
                       }`}
                     >
                       <div
-                        className={`flex size-7 flex-shrink-0 items-center justify-center rounded-full ${
+                        className={`flex size-7 shrink-0 items-center justify-center rounded-full ${
                           item.step === currentStep
                             ? "bg-white text-[#004B23]"
                             : item.step < currentStep
@@ -914,7 +914,7 @@ const AddEmployeePage = () => {
                           {item.description}
                         </div>
                       </div>
-                      {item.step === currentStep && <ChevronRight className="size-4 flex-shrink-0" />}
+                      {item.step === currentStep && <ChevronRight className="size-4 shrink-0" />}
                     </button>
                   ))}
                 </nav>
@@ -1005,7 +1005,7 @@ const AddEmployeePage = () => {
         <div className="flex w-full flex-col">
           <DashboardNav />
 
-          <div className="mx-auto flex w-full flex-col px-3 py-4 2xl:container sm:px-4 md:px-6 md:py-4 2xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3 py-4  sm:px-4 md:px-6 md:py-4 ">
             {/* Page Header - Mobile Optimized */}
             <div className="mb-6">
               <div className="flex items-center justify-between gap-3">
@@ -1102,7 +1102,7 @@ const AddEmployeePage = () => {
                   </button>
                   <button
                     onClick={() => setActiveTab("bulk")}
-                    className={`flex-1 rounded-tr-lg px-4 py-3 text-sm font-medium transition-colors sm:px-6 sm:py-4 ${
+                    className={`flex-1 rounded-r-lg px-4 py-3 text-sm font-medium transition-colors sm:px-6 sm:py-4 ${
                       activeTab === "bulk"
                         ? "border-b-2 border-blue-500 text-blue-600"
                         : "text-gray-500 hover:text-gray-700"

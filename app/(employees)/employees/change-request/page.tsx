@@ -396,9 +396,9 @@ export default function EmployeeChangeRequestManagement() {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col 2xl:container">
+          <div className="mx-auto flex w-full flex-col ">
             {/* Page Header - Always Visible */}
-            <div className="flex w-full justify-between gap-6 px-3 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 sm:px-4 md:my-4 md:px-6 2xl:px-16">
+            <div className="flex w-full justify-between gap-6 px-3 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 sm:px-4 md:my-4 md:px-6 ">
               <div>
                 <h4 className="text-lg font-semibold text-gray-900 sm:text-xl xl:text-2xl">Employee Change Requests</h4>
                 <p className="text-xs text-gray-600 sm:text-sm">
@@ -474,7 +474,7 @@ export default function EmployeeChangeRequestManagement() {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex w-full gap-6 px-3 max-md:flex-col max-md:px-0 max-sm:my-4 sm:px-4 md:px-6 2xl:px-16">
+            <div className="flex w-full gap-6 px-3 max-md:flex-col max-md:px-0 max-sm:my-4 sm:px-4 md:px-6 ">
               <div className="w-full">
                 {isLoading ? (
                   // Loading State

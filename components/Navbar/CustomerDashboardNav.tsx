@@ -101,7 +101,7 @@ const CustomerDashboardNav = () => {
     <>
       {/* Desktop Navigation */}
       <nav className="containerbg sticky top-0 z-50 hidden w-full border-b bg-white xl:block">
-        <div className="flexBetween mx-auto px-3 py-2 2xl:container max-sm:px-3 md:px-6 lg:px-6 2xl:px-16">
+        <div className="flexBetween mx-auto px-3 py-2  max-sm:px-3 md:px-6 lg:px-6 ">
           <SearchModule
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
@@ -168,7 +168,7 @@ const CustomerDashboardNav = () => {
       </nav>
 
       {/* Mobile Navigation */}
-      <nav className="sticky top-0 z-50 block border-b bg-[#F9f9f9] px-3 py-4 max-md:px-3 xl:hidden xl:px-16">
+      <nav className="sticky top-0 z-50 block border-b bg-[#F9f9f9] px-3 py-4 max-md:px-3 xl:hidden xl:px-6">
         <div className="flex items-center justify-between">
           <Link href="/" className="content-center">
             <Image src="/kadco.svg" alt="Dashboard" width={100} height={50} />

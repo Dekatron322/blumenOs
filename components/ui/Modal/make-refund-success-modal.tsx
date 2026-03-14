@@ -383,7 +383,7 @@ const MakeRefundSuccessModal: React.FC<MakeRefundSuccessModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-4 py-4 sm:px-6">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white p-4 sm:px-6">
           <div className="flex items-center gap-3">
             <div className="flex size-10 items-center justify-center rounded-full bg-emerald-100">
               <CheckCircle className="size-5 text-emerald-600" />
@@ -545,7 +545,7 @@ const MakeRefundSuccessModal: React.FC<MakeRefundSuccessModalProps> = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="sticky bottom-0 flex flex-col gap-3 border-t border-gray-200 bg-white px-4 py-4 sm:flex-row sm:justify-end sm:px-6">
+        <div className="sticky bottom-0 flex flex-col gap-3 border-t border-gray-200 bg-white p-4 sm:flex-row sm:justify-end sm:px-6">
           <ButtonModule variant="outline" onClick={handlePrint} className="w-full sm:w-auto">
             Print Receipt
           </ButtonModule>

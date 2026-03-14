@@ -317,7 +317,7 @@ export default function MeteringDashboard() {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col px-3 2xl:container sm:px-4 md:px-6">
+          <div className="mx-auto flex w-full flex-col px-3  sm:px-4 md:px-6">
             {/* Page Header - Always Visible */}
             <div className="flex w-full justify-between max-md:flex-col  max-sm:my-4  md:my-4">
               <div>

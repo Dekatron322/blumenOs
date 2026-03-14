@@ -29,6 +29,7 @@ import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
 import AgentChangeRequestModal from "components/ui/Modal/agent-change-request-modal"
 import PaymentReceiptModal from "components/ui/Modal/payment-receipt-modal"
+import EmptySearchState from "components/ui/EmptySearchState"
 import {
   ChangeRequestOutlineIcon,
   ExportCsvIcon,
@@ -54,7 +55,7 @@ import autoTable from "jspdf-autotable"
 const LoadingSkeleton = () => (
   <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200">
     <DashboardNav />
-    <div className="mx-auto flex w-full flex-col p-6 2xl:container">
+    <div className="mx-auto flex w-full flex-col p-6 ">
       {/* Header Skeleton */}
       <div className="mb-8 flex w-full justify-between max-sm:flex-col lg:items-center">
         <div className="flex gap-4 lg:items-center">
@@ -630,9 +631,9 @@ const AgentDetailsPage = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col 2xl:container">
+          <div className="mx-auto flex w-full flex-col ">
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-3 py-4 2xl:px-16">
+              <div className="mx-auto w-full px-3 py-4 ">
                 <div className="flex w-full items-start justify-between gap-4 max-sm:flex-col sm:items-center lg:items-center">
                   <div className="flex items-start gap-3 sm:gap-4 lg:items-center">
                     <motion.button
@@ -661,7 +662,7 @@ const AgentDetailsPage = () => {
                     </motion.button>
 
                     <div className="flex flex-col">
-                      <h1 className="text-lg font-bold text-gray-900 sm:text-xl md:text-2xl">Officer Details</h1>
+                      <h1 className="text-lg font-bold text-gray-900 sm:text-xl md:text-xl">Officer Details</h1>
                       <p className="text-sm text-gray-600 sm:text-base">Complete agent profile and management</p>
                     </div>
                   </div>
@@ -730,7 +731,7 @@ const AgentDetailsPage = () => {
               </div>
             </div>
 
-            <div className="flex w-full px-3 py-8 2xl:px-16">
+            <div className="flex w-full px-3 py-8 ">
               <div className="w-full gap-6 xl:flex">
                 {/* Left Column - Profile & Quick Actions */}
                 <div className="flex w-full flex-col space-y-6 xl:max-w-[30%]">
@@ -1542,9 +1543,11 @@ const AgentDetailsPage = () => {
                         ) : changeRequestsByAgentError ? (
                           <div className="py-8 text-center text-sm text-red-600">{changeRequestsByAgentError}</div>
                         ) : changeRequestsByAgent.length === 0 ? (
-                          <div className="py-8 text-center text-sm text-gray-500">
-                            No change requests found for this agent.
-                          </div>
+                          <EmptySearchState
+                            title="No change requests found"
+                            description="This agent has no change requests yet."
+                            className="py-8"
+                          />
                         ) : (
                           <>
                             <div className="divide-y">
@@ -1675,9 +1678,11 @@ const AgentDetailsPage = () => {
                         ) : paymentsError ? (
                           <div className="py-8 text-center text-sm text-red-600">{paymentsError}</div>
                         ) : payments.length === 0 ? (
-                          <div className="py-8 text-center text-sm text-gray-500">
-                            No payments found for this agent.
-                          </div>
+                          <EmptySearchState
+                            title="No payments found"
+                            description="No payment records are available for this agent yet."
+                            className="py-8"
+                          />
                         ) : (
                           <>
                             <div className="divide-y">

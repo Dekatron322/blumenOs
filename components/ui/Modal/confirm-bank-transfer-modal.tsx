@@ -114,7 +114,7 @@ const ConfirmBankTransferModal: React.FC<ConfirmBankTransferModalProps> = ({
             {/* Header */}
             <div className="flex items-center justify-between border-b border-gray-100 p-6">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
+                <div className="flex size-10 items-center justify-center rounded-lg bg-green-100">
                   <CheckCircle className="size-5 text-green-600" />
                 </div>
                 <div>
@@ -194,7 +194,7 @@ const ConfirmBankTransferModal: React.FC<ConfirmBankTransferModalProps> = ({
               {/* Error Message */}
               {confirmPaymentError && (
                 <div className="mt-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3">
-                  <AlertCircle className="size-4 flex-shrink-0 text-red-600" />
+                  <AlertCircle className="size-4 shrink-0 text-red-600" />
                   <p className="text-sm text-red-700">{confirmPaymentError}</p>
                 </div>
               )}
@@ -202,7 +202,7 @@ const ConfirmBankTransferModal: React.FC<ConfirmBankTransferModalProps> = ({
               {/* Success Message */}
               {confirmPaymentSuccess && (
                 <div className="mt-4 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-3">
-                  <CheckCircle className="size-4 flex-shrink-0 text-green-600" />
+                  <CheckCircle className="size-4 shrink-0 text-green-600" />
                   <p className="text-sm text-green-700">Payment confirmed successfully!</p>
                 </div>
               )}

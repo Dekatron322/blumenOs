@@ -30,7 +30,7 @@ export default function ProfileSidebar() {
   const activeTab = getActiveTab()
 
   return (
-    <div className="w-full md:w-64 md:flex-shrink-0">
+    <div className="w-full md:w-64 md:shrink-0">
       <div className="rounded-lg bg-white p-4 shadow-sm">
         <nav className="space-y-1">
           {tabs.map((tab) => {
@@ -39,13 +39,13 @@ export default function ProfileSidebar() {
               <button
                 key={tab.id}
                 onClick={() => (tab.id === "security" ? setIsPasswordModalOpen(true) : null)}
-                className={`flex w-full items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors ${
+                className={`flex w-full items-center gap-3 rounded-lg p-3 text-sm font-medium transition-colors ${
                   activeTab === tab.id
                     ? "bg-blue-50 text-blue-600"
                     : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                 }`}
               >
-                <Icon className="size-5  flex-shrink-0" />
+                <Icon className="size-5  shrink-0" />
                 <span className="truncate">{tab.label}</span>
               </button>
             )

@@ -11,6 +11,7 @@ import {
   selectCustomerMetersPagination,
   selectCustomerMetersSuccess,
 } from "lib/redux/customersDashboardSlice"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 // Component Props
 interface CustomerVendingProps {
@@ -125,7 +126,7 @@ const CustomerVending: React.FC<CustomerVendingProps> = ({
         transition={{ duration: 0.3 }}
       >
         <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">My Meters</p>
+          <p className="text-lg font-medium max-sm:pb-3 md:text-xl">My Meters</p>
           <p className="text-sm text-gray-600">Manage your electricity meters</p>
         </div>
       </motion.div>
@@ -250,7 +251,7 @@ const CustomerVending: React.FC<CustomerVendingProps> = ({
             ) : (
               <tr>
                 <td colSpan={8} className="border-b px-4 py-8 text-center text-gray-500">
-                  No meters found
+                  <EmptySearchState title="No meters found" />
                 </td>
               </tr>
             )}

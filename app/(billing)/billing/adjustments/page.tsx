@@ -25,6 +25,7 @@ import { fetchCustomers } from "lib/redux/customerSlice"
 import { VscCloudUpload, VscEye } from "react-icons/vsc"
 import ApproveAdjustmentsModal from "components/ui/Modal/ApproveAdjustmentsModal"
 import BillAdjustmentDetailsModal from "components/ui/Modal/BillAdjustmentDetailsModal"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 // Status options for filters - matching the API values
 const statusOptions = [
@@ -51,7 +52,7 @@ const LoadingSkeleton = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto w-full px-4 py-8 2xl:container max-sm:px-2 xl:px-16">
+          <div className="mx-auto w-full px-4 py-8  max-sm:px-2 xl:px-6">
             <div className="mb-6 flex w-full flex-col justify-between gap-4 lg:flex-row lg:items-center">
               <div className="flex-1">
                 <h4 className="text-2xl font-semibold">Bill Adjustments</h4>
@@ -423,7 +424,7 @@ const Adjustments: React.FC = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto w-full  px-3 py-8 2xl:container max-sm:px-2 md:px-4 lg:px-6 2xl:px-16">
+          <div className="mx-auto w-full  px-3 py-8  max-sm:px-2 md:px-4 lg:px-6 ">
             <div className="mb-6 flex w-full flex-col justify-between gap-4 lg:flex-row lg:items-center">
               <div className="flex-1">
                 <h4 className="text-2xl font-semibold">Bill Adjustments</h4>
@@ -631,7 +632,7 @@ const Adjustments: React.FC = () => {
                           <td colSpan={9} className="border-b p-8 text-center">
                             <div className="text-gray-500">
                               <FileIcon className="mx-auto mb-2 size-12 text-gray-300" />
-                              <p>No adjustments found</p>
+                              <EmptySearchState title="No adjustments found" />
                               <p className="text-sm">Try adjusting your filters or create new adjustments</p>
                             </div>
                           </td>

@@ -8,14 +8,18 @@ import { VscEye } from "react-icons/vsc"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
 import { ButtonModule } from "components/ui/Button/Button"
 import { BillsIcon, BillsIdIcon, CategoryIcon, CycleIcon, DateIcon, RevenueGeneratedIcon } from "components/Icons/Icons"
-import PdfFile from "public/pdf-file"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { fetchPostpaidBills, PostpaidBill, setPagination } from "lib/redux/postpaidSlice"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { clearFeeders, fetchFeeders } from "lib/redux/feedersSlice"
-import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
+import { ArrowLeft, ChevronDown, ChevronUp, Filter, Loader2, RefreshCw, SortAsc, SortDesc, X } from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
-import Image from "next/image"
+import EmptySearchState from "components/ui/EmptySearchState"
+import {
+  getCustomerCategoryColors,
+  getCustomerCategoryLabel,
+  getCustomerCategoryOptions,
+} from "lib/constants/customerCategories"
 
 interface SortOption {
   label: string
@@ -29,145 +33,7 @@ interface RecentBillsProps {
   onViewDetails?: (bill: PostpaidBill) => void
 }
 
-// Responsive Skeleton Components
-const BillCardSkeleton = () => (
-  <motion.div
-    className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4"
-    initial={{ opacity: 0.6 }}
-    animate={{
-      opacity: [0.6, 1, 0.6],
-      transition: {
-        duration: 1.5,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
-    }}
-  >
-    <div className="flex w-full flex-col items-start justify-between gap-3 sm:flex-row sm:items-center sm:gap-0">
-      <div className="flex-1">
-        <div className="mb-2 flex flex-wrap items-center gap-2">
-          <div className="h-5 w-32 rounded bg-gray-200 sm:w-40"></div>
-          <div className="h-6 w-20 rounded-full bg-gray-200"></div>
-          <div className="h-6 w-16 rounded-full bg-gray-200"></div>
-        </div>
-        <div className="space-y-1">
-          <div className="size-40 rounded bg-gray-200 sm:w-48"></div>
-          <div className="flex items-center gap-2">
-            <div className="size-4 rounded-full bg-gray-200"></div>
-            <div className="h-3 w-56 rounded bg-gray-200 sm:w-64"></div>
-          </div>
-        </div>
-      </div>
-      <div className="flex w-full items-center justify-between sm:w-auto sm:flex-col sm:items-end sm:justify-center sm:gap-1">
-        <div className="space-y-1 text-right">
-          <div className="h-4 w-32 rounded bg-gray-200"></div>
-          <div className="h-3 w-24 rounded bg-gray-200"></div>
-        </div>
-        <div className="h-8 w-24 rounded-md border border-gray-200 bg-white"></div>
-      </div>
-    </div>
-
-    <div className="mt-3 flex flex-wrap justify-between gap-3 border-t pt-3 sm:gap-4">
-      {[...Array(4)].map((_, i) => (
-        <div key={i} className="flex items-center gap-2">
-          <div className="size-4 rounded-full bg-gray-200 sm:size-5"></div>
-          <div className="space-y-1">
-            <div className="h-3 w-16 rounded bg-gray-200 sm:w-20"></div>
-            <div className="h-4 w-12 rounded bg-gray-200 sm:w-16"></div>
-          </div>
-        </div>
-      ))}
-    </div>
-  </motion.div>
-)
-
-const MobileBillCardSkeleton = () => (
-  <motion.div
-    className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-3"
-    initial={{ opacity: 0.6 }}
-    animate={{
-      opacity: [0.6, 1, 0.6],
-      transition: {
-        duration: 1.5,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
-    }}
-  >
-    <div className="flex items-start justify-between">
-      <div className="flex-1">
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-24 rounded bg-gray-200"></div>
-          <div className="h-5 w-16 rounded-full bg-gray-200"></div>
-        </div>
-        <div className="mt-2 space-y-1">
-          <div className="size-32 rounded bg-gray-200"></div>
-          <div className="flex items-center gap-1">
-            <div className="size-3 rounded-full bg-gray-200"></div>
-            <div className="h-3 w-40 rounded bg-gray-200"></div>
-          </div>
-        </div>
-      </div>
-      <div className="ml-2 flex flex-col items-end gap-1">
-        <div className="space-y-1 text-right">
-          <div className="h-3 w-24 rounded bg-gray-200"></div>
-          <div className="size-20 rounded bg-gray-200"></div>
-        </div>
-        <div className="h-7 w-20 rounded-md border border-gray-200 bg-white"></div>
-      </div>
-    </div>
-
-    <div className="mt-3 grid grid-cols-2 gap-2 border-t pt-3">
-      {[...Array(4)].map((_, i) => (
-        <div key={i} className="flex items-center gap-1">
-          <div className="size-3 rounded-full bg-gray-200"></div>
-          <div className="space-y-1">
-            <div className="h-2 w-12 rounded bg-gray-200"></div>
-            <div className="h-3 w-8 rounded bg-gray-200"></div>
-          </div>
-        </div>
-      ))}
-    </div>
-  </motion.div>
-)
-
-const HeaderSkeleton = () => (
-  <motion.div
-    className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-    initial={{ opacity: 0.6 }}
-    animate={{
-      opacity: [0.6, 1, 0.6],
-      transition: {
-        duration: 1.5,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
-    }}
-  >
-    <div className="h-7 w-40 rounded bg-gray-200 sm:w-48"></div>
-    <div className="flex gap-2">
-      <div className="h-9 w-20 rounded bg-gray-200 sm:w-24"></div>
-      <div className="h-9 w-28 rounded bg-gray-200 sm:w-32"></div>
-    </div>
-  </motion.div>
-)
-
-const SearchSkeleton = () => (
-  <motion.div
-    className="mb-6 h-12 w-full rounded-lg bg-gray-200 sm:w-96"
-    initial={{ opacity: 0.6 }}
-    animate={{
-      opacity: [0.6, 1, 0.6],
-      transition: {
-        duration: 1.5,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
-    }}
-  ></motion.div>
-)
-
-// Mobile & All Screens Filter Sidebar Component (up to 2xl)
+// Mobile Filter Sidebar Component
 const MobileFilterSidebar = ({
   isOpen,
   onClose,
@@ -222,7 +88,7 @@ const MobileFilterSidebar = ({
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header - Fixed at top */}
-            <div className="flex-shrink-0 border-b bg-white p-4">
+            <div className="shrink-0 border-b bg-white p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <button
@@ -389,7 +255,7 @@ const MobileFilterSidebar = ({
             </div>
 
             {/* Bottom Action Buttons - Fixed at bottom */}
-            <div className="flex-shrink-0 border-t bg-white p-4">
+            <div className="shrink-0 border-t bg-white p-4">
               <div className="flex gap-3">
                 <button
                   onClick={() => {
@@ -406,7 +272,7 @@ const MobileFilterSidebar = ({
                     resetFilters()
                     onClose()
                   }}
-                  className="button-oulined flex-1"
+                  className="button-outlined flex-1"
                 >
                   <X className="size-4" />
                   Reset All
@@ -427,14 +293,10 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
   const { areaOffices } = useAppSelector((state) => state.areaOffices)
   const { feeders } = useAppSelector((state) => state.feeders)
 
-  const [searchText, setSearchText] = useState("")
-  const [searchTrigger, setSearchTrigger] = useState(0)
+  const [searchInput, setSearchInput] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
-  const [selectedBill, setSelectedBill] = useState<PostpaidBill | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isMobileView, setIsMobileView] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [isSortExpanded, setIsSortExpanded] = useState(true)
 
   // Local state for filters to avoid too many Redux dispatches
@@ -457,18 +319,8 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
     feederId: undefined as number | undefined,
     sortBy: undefined as string | undefined,
     sortOrder: undefined as "asc" | "desc" | undefined,
+    search: undefined as string | undefined,
   })
-
-  // Check for mobile view
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobileView(window.innerWidth < 640)
-    }
-
-    checkMobile()
-    window.addEventListener("resize", checkMobile)
-    return () => window.removeEventListener("resize", checkMobile)
-  }, [])
 
   // Fetch area offices and feeders on component mount for filter dropdowns
   useEffect(() => {
@@ -493,11 +345,12 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
     }
   }, [dispatch])
 
+  // Fetch bills when filters change
   useEffect(() => {
     const fetchParams: any = {
       pageNumber: currentPage,
       pageSize: pagination.pageSize,
-      ...(searchText && { accountNumber: searchText }),
+      ...(appliedFilters.search && { accountNumber: appliedFilters.search }),
       ...(appliedFilters.period && { period: appliedFilters.period }),
       ...(appliedFilters.status !== undefined && { status: appliedFilters.status }),
       ...(appliedFilters.category !== undefined && { category: appliedFilters.category }),
@@ -508,19 +361,53 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
     }
 
     void dispatch(fetchPostpaidBills(fetchParams))
-  }, [dispatch, currentPage, pagination.pageSize, appliedFilters, searchTrigger])
+  }, [dispatch, currentPage, pagination.pageSize, appliedFilters])
 
-  const handleCancelSearch = () => {
-    setSearchText("")
-    setCurrentPage(1)
-    dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
-    setSearchTrigger((prev) => prev + 1)
+  // Handle search
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value)
   }
 
   const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      setAppliedFilters({
+        ...appliedFilters,
+        search: trimmed,
+      })
+      setCurrentPage(1)
+      dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
+    }
+  }
+
+  const handleCancelSearch = () => {
+    setSearchInput("")
+    setAppliedFilters({
+      ...appliedFilters,
+      search: undefined,
+    })
     setCurrentPage(1)
     dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
-    setSearchTrigger((prev) => prev + 1)
+  }
+
+  // Handle refresh
+  const handleRefresh = () => {
+    const fetchParams: any = {
+      pageNumber: currentPage,
+      pageSize: pagination.pageSize,
+      ...(appliedFilters.search && { accountNumber: appliedFilters.search }),
+      ...(appliedFilters.period && { period: appliedFilters.period }),
+      ...(appliedFilters.status !== undefined && { status: appliedFilters.status }),
+      ...(appliedFilters.category !== undefined && { category: appliedFilters.category }),
+      ...(appliedFilters.areaOfficeId && { areaOfficeId: appliedFilters.areaOfficeId }),
+      ...(appliedFilters.feederId && { feederId: appliedFilters.feederId }),
+      ...(appliedFilters.sortBy && { sortBy: appliedFilters.sortBy }),
+      ...(appliedFilters.sortOrder && { sortOrder: appliedFilters.sortOrder }),
+    }
+
+    void dispatch(fetchPostpaidBills(fetchParams))
   }
 
   // Generate period options
@@ -574,12 +461,7 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
   ]
 
   // Category options
-  const categoryOptions = [
-    { value: "", label: "All Categories" },
-    { value: 1, label: "Residential" },
-    { value: 2, label: "Commercial" },
-    { value: 3, label: "Industrial" },
-  ]
+  const categoryOptions = getCustomerCategoryOptions()
 
   // Area office options
   const areaOfficeOptions = [
@@ -642,6 +524,7 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
       feederId: localFilters.feederId,
       sortBy: localFilters.sortBy || undefined,
       sortOrder: localFilters.sortOrder || undefined,
+      search: searchInput.trim() || undefined,
     })
     setCurrentPage(1)
     dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
@@ -666,8 +549,9 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
       feederId: undefined,
       sortBy: undefined,
       sortOrder: undefined,
+      search: undefined,
     })
-    setSearchText("")
+    setSearchInput("")
     setCurrentPage(1)
     dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
   }
@@ -685,27 +569,11 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
   }
 
   const handleViewDetails = (bill: PostpaidBill) => {
-    // Navigate to the bill details page
     router.push(`/billing/bills/${bill.id}`)
     onViewDetails?.(bill)
   }
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false)
-    setSelectedBill(null)
-  }
-
   const formatAmount = (amount: number) => {
-    if (isMobileView) {
-      // Compact format for mobile
-      if (amount >= 1000000) {
-        return `₦${(amount / 1000000).toFixed(1)}M`
-      } else if (amount >= 1000) {
-        return `₦${(amount / 1000).toFixed(1)}K`
-      }
-      return `₦${amount.toLocaleString()}`
-    }
-
     return new Intl.NumberFormat("en-NG", {
       style: "currency",
       currency: "NGN",
@@ -726,7 +594,6 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
     }
   }
 
-  // No client-side filtering - using API filters
   const displayBills = bills
 
   const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -781,315 +648,85 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
     return items
   }
 
-  const getMobilePageItems = (): (number | string)[] => {
-    const total = totalPages
-    const current = currentPage
-    const items: (number | string)[] = []
-
-    if (total <= 4) {
-      for (let i = 1; i <= total; i += 1) {
-        items.push(i)
-      }
-      return items
-    }
-
-    if (current <= 3) {
-      items.push(1, 2, 3, "...", total)
-      return items
-    }
-
-    if (current > 3 && current < total - 2) {
-      items.push(1, "...", current, "...", total)
-      return items
-    }
-
-    items.push(1, "...", total - 2, total - 1, total)
-    return items
-  }
-
   const getStatusColor = (status: "generated" | "pending" | "approved") => {
     switch (status) {
       case "approved":
-        return "bg-green-100 text-green-800"
+        return "bg-emerald-50 text-emerald-700 border-emerald-200"
       case "generated":
-        return "bg-blue-100 text-blue-800"
+        return "bg-blue-50 text-blue-700 border-blue-200"
       case "pending":
-        return "bg-yellow-100 text-yellow-800"
+        return "bg-amber-50 text-amber-700 border-amber-200"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-700 border-gray-200"
+    }
+  }
+
+  const getStatusIcon = (status: "generated" | "pending" | "approved") => {
+    switch (status) {
+      case "approved":
+        return <span className="size-1.5 rounded-full bg-emerald-500"></span>
+      case "generated":
+        return <span className="size-1.5 rounded-full bg-blue-500"></span>
+      case "pending":
+        return <span className="size-1.5 rounded-full bg-amber-500"></span>
+      default:
+        return <span className="size-1.5 rounded-full bg-gray-500"></span>
     }
   }
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    if (isMobileView) {
-      return date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+    try {
+      const date = new Date(dateString)
+      return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+    } catch {
+      return "Invalid Date"
     }
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
   }
 
-  const BillCard = ({ bill }: { bill: PostpaidBill }) => {
-    const statusLabel = mapStatusToLabel(bill.status)
+  const formatDateTime = (dateString: string) => {
+    try {
+      const date = new Date(dateString)
+      return date.toLocaleString("en-US", {
+        month: "short",
+        day: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    } catch {
+      return "—"
+    }
+  }
+
+  // Loading state
+  if (loading && bills.length === 0) {
     return (
-      <motion.div
-        key={bill.id}
-        className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4 hover:shadow-sm sm:p-4"
-        whileHover={{ y: -2, boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)" }}
-      >
-        <div className="flex w-full flex-col items-start justify-between gap-3 sm:flex-row sm:items-center sm:gap-0">
-          <div className="flex-1">
-            <div className="mb-2 flex flex-wrap items-center gap-2">
-              <h4 className="text-sm font-semibold text-gray-900 sm:text-base">{bill.customerName}</h4>
-              <span className={`rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(statusLabel)}`}>
-                {statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1)}
-              </span>
-              <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-800">
-                Cat {bill.category}
-              </span>
-            </div>
-
-            <p className="text-sm font-medium text-gray-900 sm:text-base">{bill.customerAccountNumber}</p>
-            <div className="mt-1 flex items-center gap-2">
-              <DateIcon />
-              <p className="text-xs text-gray-600 sm:text-sm">Due: {formatDate(bill.dueDate ?? bill.period)}</p>
-            </div>
-          </div>
-
-          <div className="flex w-full items-center justify-between sm:w-auto sm:flex-col sm:items-end sm:justify-center sm:gap-1">
-            <div className="text-right text-xs sm:text-sm">
-              <p className="font-semibold text-gray-900">{formatAmount(bill.currentBillAmount)}</p>
-              <p className="text-gray-500">{bill.consumptionKwh.toLocaleString()} kWh</p>
-            </div>
-            <ButtonModule
-              variant="outline"
-              size="sm"
-              onClick={() => handleViewDetails(bill)}
-              icon={<VscEye className="size-3 sm:size-4" />}
-              iconPosition="start"
-              className="mt-1 bg-white text-xs sm:text-sm"
-            >
-              <span className="hidden sm:inline">View Details</span>
-              <span className="sm:hidden">View</span>
-            </ButtonModule>
-          </div>
+      <div className="flex items-center justify-center py-16">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="size-8 animate-spin text-blue-600" />
+          <p className="text-sm text-gray-500">Loading recent bills...</p>
         </div>
-
-        {/* Status Indicators */}
-        <div className="mt-3 flex flex-wrap justify-between gap-3 border-t pt-3 text-xs sm:gap-4 sm:text-sm">
-          <div className="flex items-center gap-2">
-            <BillsIdIcon />
-            <div>
-              <p className="text-gray-500">Bill ID</p>
-              <p className="font-medium text-gray-900">{bill.id}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <CategoryIcon />
-            <div>
-              <p className="text-gray-500">Category</p>
-              <p className="font-medium text-gray-900">Cat {bill.category}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <CycleIcon />
-            <div>
-              <p className="text-gray-500">Status</p>
-              <p
-                className={`font-medium ${
-                  statusLabel === "approved"
-                    ? "text-green-600"
-                    : statusLabel === "generated"
-                    ? "text-blue-600"
-                    : "text-yellow-600"
-                }`}
-              >
-                {isMobileView
-                  ? statusLabel.charAt(0).toUpperCase()
-                  : statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1)}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <RevenueGeneratedIcon />
-            <div>
-              <p className="text-gray-500">Amount</p>
-              <p className="font-medium text-gray-900">{formatAmount(bill.currentBillAmount)}</p>
-            </div>
-          </div>
-        </div>
-      </motion.div>
+      </div>
     )
   }
 
-  const MobileBillCard = ({ bill }: { bill: PostpaidBill }) => {
-    const statusLabel = mapStatusToLabel(bill.status)
+  // Error state
+  if (error) {
     return (
-      <motion.div
-        key={bill.id}
-        className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-3 hover:shadow-sm"
-        whileHover={{ y: -1, boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)" }}
-      >
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <h4 className="text-sm font-semibold text-gray-900">{bill.customerName}</h4>
-              <span className={`rounded-full px-1.5 py-0.5 text-xs font-medium ${getStatusColor(statusLabel)}`}>
-                {statusLabel.charAt(0).toUpperCase()}
-              </span>
-            </div>
-            <div className="mt-1 space-y-1">
-              <p className="text-xs font-medium text-gray-900">{bill.customerAccountNumber}</p>
-              <div className="flex items-center gap-1">
-                <DateIcon />
-                <p className="text-xs text-gray-600">Due: {formatDate(bill.dueDate ?? bill.period)}</p>
-              </div>
-            </div>
+      <div className="flex items-center justify-center py-16">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <div className="flex size-12 items-center justify-center rounded-full bg-red-100">
+            <X className="size-6 text-red-600" />
           </div>
-          <div className="ml-2 flex flex-col items-end gap-1">
-            <div className="text-right text-xs">
-              <p className="font-semibold text-gray-900">{formatAmount(bill.currentBillAmount)}</p>
-              <p className="text-gray-500">{bill.consumptionKwh.toLocaleString()} kWh</p>
-            </div>
-            <ButtonModule
-              variant="outline"
-              size="sm"
-              onClick={() => handleViewDetails(bill)}
-              icon={<VscEye />}
-              iconPosition="start"
-              className="bg-white text-xs"
-            >
-              View
-            </ButtonModule>
+          <div>
+            <p className="font-medium text-gray-900">Failed to load bills</p>
+            <p className="mt-1 text-sm text-gray-500">{error}</p>
           </div>
+          <ButtonModule variant="outline" size="sm" onClick={handleRefresh}>
+            <RefreshCw className="mr-2 size-4" />
+            Retry
+          </ButtonModule>
         </div>
-
-        {/* Status Indicators */}
-        <div className="mt-3 grid grid-cols-2 gap-2 border-t pt-3 text-xs">
-          <div className="flex items-center gap-1">
-            <BillsIdIcon />
-            <div>
-              <p className="text-gray-500">ID</p>
-              <p className="font-medium text-gray-900">{bill.id}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-1">
-            <CategoryIcon />
-            <div>
-              <p className="text-gray-500">Cat</p>
-              <p className="font-medium text-gray-900">{bill.category}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-1">
-            <CycleIcon />
-            <div>
-              <p className="text-gray-500">Status</p>
-              <p
-                className={`font-medium ${
-                  statusLabel === "approved"
-                    ? "text-green-600"
-                    : statusLabel === "generated"
-                    ? "text-blue-600"
-                    : "text-yellow-600"
-                }`}
-              >
-                {statusLabel.charAt(0).toUpperCase()}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-1">
-            <RevenueGeneratedIcon />
-            <div>
-              <p className="text-gray-500">Amount</p>
-              <p className="font-medium text-gray-900">{formatAmount(bill.currentBillAmount)}</p>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-    )
-  }
-
-  if (loading) {
-    return (
-      <div className="flex-3 relative mt-5 flex flex-col items-start gap-6 2xl:flex-row">
-        {/* Main Content Skeleton */}
-        <div className="w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1">
-          <HeaderSkeleton />
-
-          {/* Bill Display Area Skeleton */}
-          <div className="space-y-3 sm:space-y-4">
-            {isMobileView ? (
-              <>
-                <MobileBillCardSkeleton />
-                <MobileBillCardSkeleton />
-                <MobileBillCardSkeleton />
-              </>
-            ) : (
-              <>
-                <BillCardSkeleton />
-                <BillCardSkeleton />
-                <BillCardSkeleton />
-              </>
-            )}
-          </div>
-
-          {/* Pagination Skeleton */}
-          <motion.div
-            className="mt-6 flex flex-col items-center justify-between gap-4 sm:flex-row"
-            initial={{ opacity: 0.6 }}
-            animate={{
-              opacity: [0.6, 1, 0.6],
-              transition: {
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-              },
-            }}
-          >
-            <div className="order-2 size-40 rounded bg-gray-200 sm:order-1"></div>
-            <div className="order-1 flex items-center gap-2 sm:order-2">
-              <div className="size-8 rounded bg-gray-200"></div>
-              <div className="flex gap-1">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="size-7 rounded bg-gray-200"></div>
-                ))}
-              </div>
-              <div className="size-8 rounded bg-gray-200"></div>
-            </div>
-            <div className="order-3 hidden h-4 w-24 rounded bg-gray-200 sm:block"></div>
-          </motion.div>
-        </div>
-
-        {/* Desktop Filters Sidebar Skeleton (2xl and above) */}
-        <motion.div
-          className="hidden w-full rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:block 2xl:w-80"
-          initial={{ opacity: 0.6 }}
-          animate={{
-            opacity: [0.6, 1, 0.6],
-            transition: {
-              duration: 1.5,
-              repeat: Infinity,
-              ease: "easeInOut",
-            },
-          }}
-        >
-          <div className="border-b pb-3 md:pb-4">
-            <div className="h-6 w-32 rounded bg-gray-200 md:w-40"></div>
-          </div>
-
-          <div className="mt-4 space-y-4">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="space-y-2">
-                <div className="h-4 w-20 rounded bg-gray-200 md:w-24"></div>
-                <div className="h-9 w-full rounded bg-gray-200"></div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-6 space-y-3 border-t pt-4">
-            <div className="h-10 w-full rounded bg-gray-200"></div>
-            <div className="h-10 w-full rounded bg-gray-200"></div>
-          </div>
-        </motion.div>
       </div>
     )
   }
@@ -1097,45 +734,64 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
   return (
     <>
       <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row">
-        {/* Main Content - Recent Bills */}
-        <div
+        {/* Main Content - Bills Table */}
+        <motion.div
           className={
             showDesktopFilters
               ? "w-full rounded-md border bg-white p-3 md:p-5 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
               : "w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1"
           }
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4 }}
         >
-          <div className="flex flex-col py-2">
-            <div className="mb-3 flex w-full items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                {/* Filter Button for ALL screens up to 2xl */}
-                <button
-                  onClick={() => setShowMobileFilters(true)}
-                  className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
-                >
-                  <Filter className="size-4" />
-                  Filters
-                  {getActiveFilterCount() > 0 && (
-                    <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
-                      {getActiveFilterCount()}
-                    </span>
-                  )}
-                </button>
+          {/* Search Priority Section */}
+          <div className="mb-4 rounded-xl border border-gray-200 bg-gradient-to-r from-green-50/60 to-white p-4 shadow-sm">
+            <div className="mb-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#004B23]">Primary action</p>
+              <h2 className="text-base font-semibold text-gray-900 sm:text-lg">Search Recent Bills</h2>
+              <p className="text-xs text-gray-600 sm:text-sm">
+                Find records quickly by account number, customer name, period, or status.
+              </p>
+            </div>
 
-                <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">Recent Bills</p>
-              </div>
+            <SearchModule
+              value={searchInput}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              onCancel={handleCancelSearch}
+              onSearch={handleManualSearch}
+              placeholder="Type account number, customer name, period, or status..."
+              height="h-14"
+              className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+            />
+          </div>
 
-              <div className="flex items-center gap-2">
-                {/* Active filters badge - Desktop only (2xl and above) */}
+          {/* Filter Actions */}
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 sm:text-xl">Recent Bills</h3>
+              <p className="text-sm text-gray-500">
+                {totalRecords} bill(s) found • Page {currentPage} of {totalPages || 1}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {/* Filter Button for screens below 2xl */}
+              <button
+                onClick={() => setShowMobileFilters(true)}
+                className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
+              >
+                <Filter className="size-4" />
+                Filters
                 {getActiveFilterCount() > 0 && (
-                  <div className="hidden items-center gap-2 2xl:flex">
-                    <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
-                      {getActiveFilterCount()} active filter{getActiveFilterCount() !== 1 ? "s" : ""}
-                    </span>
-                  </div>
+                  <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
+                    {getActiveFilterCount()}
+                  </span>
                 )}
+              </button>
 
-                {/* Hide/Show Filters button - Desktop only (2xl and above) */}
+              {/* Desktop Actions */}
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setShowDesktopFilters((prev) => !prev)}
@@ -1145,167 +801,213 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
                   {showDesktopFilters ? "Hide filters" : "Show filters"}
                 </button>
               </div>
+              <button
+                onClick={handleRefresh}
+                disabled={loading}
+                className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <RefreshCw className={`mr-2 size-4 ${loading ? "animate-spin" : ""}`} />
+                Refresh
+              </button>
             </div>
           </div>
 
-          {/* Search */}
-          <div className="mb-4 sm:mb-6">
-            <SearchModule
-              value={searchText}
-              onChange={(e) => {
-                setSearchText(e.target.value)
-              }}
-              onCancel={handleCancelSearch}
-              onSearch={handleManualSearch}
-              placeholder="Search bills..."
-              className="w-full sm:w-96"
-            />
+          {/* Bills Table */}
+          <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Customer
+                  </th>
+                  <th className="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Account No
+                  </th>
+                  <th className="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Status
+                  </th>
+                  <th className="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Category
+                  </th>
+                  <th className="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Period
+                  </th>
+                  <th className="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Amount
+                  </th>
+                  <th className="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Due Date
+                  </th>
+                  <th className="whitespace-nowrap px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 bg-white">
+                {displayBills.map((bill) => {
+                  const statusLabel = mapStatusToLabel(bill.status)
+                  return (
+                    <tr key={bill.id} className="transition-colors hover:bg-gray-50">
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="text-gray-400">
+                            <BillsIcon />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{bill.customerName}</p>
+                            {/* <p className="text-xs text-gray-500">ID: {bill.id}</p> */}
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <p className="text-sm text-gray-700">{bill.customerAccountNumber}</p>
+                      </td>
+
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <span
+                          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${getStatusColor(
+                            statusLabel
+                          )}`}
+                        >
+                          {getStatusIcon(statusLabel)}
+                          {statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1)}
+                        </span>
+                      </td>
+
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <span
+                          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${
+                            getCustomerCategoryColors(bill.category).bg
+                          } ${getCustomerCategoryColors(bill.category).text} ${
+                            getCustomerCategoryColors(bill.category).border
+                          }`}
+                        >
+                          {getCustomerCategoryLabel(bill.category)}
+                        </span>
+                      </td>
+
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <p className="text-sm text-gray-700">{bill.period}</p>
+                      </td>
+
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <p className="text-sm font-medium text-gray-900">{formatAmount(bill.currentBillAmount)}</p>
+                        <p className="text-xs text-gray-500">{bill.consumptionKwh.toLocaleString()} kWh</p>
+                      </td>
+
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <p className="text-sm text-gray-700">{formatDate(bill.dueDate || bill.period)}</p>
+                      </td>
+
+                      <td className="whitespace-nowrap px-4 py-3 text-right">
+                        <ButtonModule
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewDetails(bill)}
+                          icon={<VscEye className="size-3.5" />}
+                          iconPosition="start"
+                          className="bg-white"
+                        >
+                          View
+                        </ButtonModule>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
-
-          {/* Loading State */}
-          {loading && (
-            <div className="space-y-3 sm:space-y-4">
-              {isMobileView ? (
-                <>
-                  <MobileBillCardSkeleton />
-                  <MobileBillCardSkeleton />
-                  <MobileBillCardSkeleton />
-                </>
-              ) : (
-                <>
-                  <BillCardSkeleton />
-                  <BillCardSkeleton />
-                  <BillCardSkeleton />
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Error State */}
-          {!loading && error && (
-            <div className="rounded-lg bg-red-50 p-3 sm:p-4">
-              <p className="text-xs text-red-600 sm:text-sm">Error loading bills: {error}</p>
-            </div>
-          )}
 
           {/* Empty State */}
-          {!loading && !error && displayBills.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-8 sm:py-12">
-              <div className="text-center">
-                <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-gray-100 sm:size-16">
-                  <BillsIcon />
-                </div>
-                <h3 className="mt-3 text-base font-medium text-gray-900 sm:mt-4 sm:text-lg">No Bills Found</h3>
-                <p className="mt-1 text-xs text-gray-500 sm:mt-2 sm:text-sm">
-                  {getActiveFilterCount() > 0 || searchText.trim()
-                    ? "Try adjusting your search criteria or filters"
-                    : "No bills available"}
-                </p>
+          {displayBills.length === 0 && !loading && (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="flex size-16 items-center justify-center rounded-full bg-gray-100">
+                <BillsIcon />
               </div>
+              <h3 className="mt-4 text-base font-medium text-gray-900">No Bills Found</h3>
+              <EmptySearchState
+                title={
+                  getActiveFilterCount() > 0 || searchInput.trim()
+                    ? "Try adjusting your search criteria or filters"
+                    : "No bills available"
+                }
+              />
             </div>
           )}
 
-          {/* Bills List */}
-          {!loading && !error && displayBills.length > 0 && (
-            <>
-              <div className="space-y-3 sm:space-y-4">
-                {displayBills.map((bill) =>
-                  isMobileView ? <MobileBillCard key={bill.id} bill={bill} /> : <BillCard key={bill.id} bill={bill} />
-                )}
+          {/* Pagination */}
+          {displayBills.length > 0 && totalPages > 1 && (
+            <div className="mt-4 flex flex-col items-center justify-between gap-3 border-t pt-4 sm:flex-row">
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-gray-500">Show</p>
+                <select
+                  value={pagination.pageSize}
+                  onChange={handleRowsChange}
+                  className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+                <p className="text-sm text-gray-500">entries</p>
               </div>
 
-              {/* Pagination */}
-              <div className="mt-4 flex w-full flex-col items-center justify-between gap-3 border-t pt-4 sm:flex-row">
-                <div className="flex items-center gap-1 max-sm:hidden">
-                  <p className="text-xs sm:text-sm">Show rows</p>
-                  <select
-                    value={pagination.pageSize}
-                    onChange={handleRowsChange}
-                    className="bg-[#F2F2F2] p-1 text-xs sm:text-sm"
-                  >
-                    <option value={5}>5</option>
-                    <option value={10}>10</option>
-                    <option value={20}>20</option>
-                    <option value={50}>50</option>
-                  </select>
+              <div className="flex items-center gap-2">
+                <button
+                  className={`inline-flex size-8 items-center justify-center rounded-md border ${
+                    currentPage === 1
+                      ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400"
+                      : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                  }`}
+                  onClick={() => changePage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  <BiSolidLeftArrow className="size-3" />
+                </button>
+
+                <div className="flex items-center gap-1">
+                  {getPageItems().map((item, index) => (
+                    <button
+                      key={index}
+                      className={`inline-flex size-8 items-center justify-center rounded-md text-sm ${
+                        item === currentPage
+                          ? "bg-black text-white"
+                          : item === "..."
+                          ? "cursor-default bg-transparent text-gray-400"
+                          : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                      }`}
+                      onClick={() => (typeof item === "number" ? changePage(item) : null)}
+                      disabled={item === "..." || item === currentPage}
+                    >
+                      {item}
+                    </button>
+                  ))}
                 </div>
 
-                <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-                  <button
-                    className={`px-2 py-1 sm:px-3 sm:py-2 ${
-                      currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
-                    }`}
-                    onClick={() => changePage(currentPage - 1)}
-                    disabled={currentPage === 1}
-                  >
-                    <BiSolidLeftArrow className="size-4 sm:size-5" />
-                  </button>
-
-                  <div className="flex items-center gap-1 sm:gap-2">
-                    <div className="hidden items-center gap-1 sm:flex sm:gap-2">
-                      {getPageItems().map((item, index) =>
-                        typeof item === "number" ? (
-                          <button
-                            key={item}
-                            className={`flex size-6 items-center justify-center rounded-md text-xs sm:h-7 sm:w-8 sm:text-sm ${
-                              currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
-                            }`}
-                            onClick={() => changePage(item)}
-                          >
-                            {item}
-                          </button>
-                        ) : (
-                          <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
-                            {item}
-                          </span>
-                        )
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-1 sm:hidden">
-                      {getMobilePageItems().map((item, index) =>
-                        typeof item === "number" ? (
-                          <button
-                            key={item}
-                            className={`flex size-6 items-center justify-center rounded-md text-xs ${
-                              currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
-                            }`}
-                            onClick={() => changePage(item)}
-                          >
-                            {item}
-                          </button>
-                        ) : (
-                          <span key={`ellipsis-${index}`} className="px-1 text-xs text-gray-500">
-                            {item}
-                          </span>
-                        )
-                      )}
-                    </div>
-                  </div>
-
-                  <button
-                    className={`px-2 py-1 sm:px-3 sm:py-2 ${
-                      currentPage === totalPages || totalPages === 0
-                        ? "cursor-not-allowed text-gray-400"
-                        : "text-[#000000]"
-                    }`}
-                    onClick={() => changePage(currentPage + 1)}
-                    disabled={currentPage === totalPages || totalPages === 0}
-                  >
-                    <BiSolidRightArrow className="size-4 sm:size-5" />
-                  </button>
-                </div>
-
-                <p className="text-center text-xs text-gray-600 sm:text-right sm:text-sm">
-                  Page {currentPage} of {totalPages || 1} ({totalRecords.toLocaleString()} total bills)
-                  {(getActiveFilterCount() > 0 || searchText.trim()) && " - filtered"}
-                </p>
+                <button
+                  className={`inline-flex size-8 items-center justify-center rounded-md border ${
+                    currentPage === totalPages || totalPages === 0
+                      ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400"
+                      : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                  }`}
+                  onClick={() => changePage(currentPage + 1)}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                >
+                  <BiSolidRightArrow className="size-3" />
+                </button>
               </div>
-            </>
+
+              <p className="text-sm text-gray-500">
+                Showing {(currentPage - 1) * pagination.pageSize + 1} to{" "}
+                {Math.min(currentPage * pagination.pageSize, totalRecords)} of {totalRecords} entries
+              </p>
+            </div>
           )}
-        </div>
+        </motion.div>
 
-        {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
+        {/* Desktop Filters Sidebar (2xl and above) - Toggleable */}
         {showDesktopFilters && (
           <motion.div
             key="desktop-filters-sidebar"
@@ -1469,7 +1171,7 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
               </button>
               <button
                 onClick={resetFilters}
-                className="button-oulined flex w-full items-center justify-center gap-2 text-sm md:text-base"
+                className="button-outlined flex w-full items-center justify-center gap-2 text-sm md:text-base"
               >
                 <X className="size-4" />
                 Reset All

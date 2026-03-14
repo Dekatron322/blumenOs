@@ -418,7 +418,7 @@ const TokenDisplayModal: React.FC<TokenDisplayModalProps> = ({
                 alt="Paid stamp"
                 width={190}
                 height={190}
-                className="h-24 w-24 select-none max-sm:h-20 max-sm:w-20 sm:h-48 sm:w-48 md:h-[190px] md:w-[190px]"
+                className="h-24 w-24 select-none max-sm:h-20 max-sm:w-20 sm:size-48 md:h-[190px] md:w-[190px]"
                 priority
               />
             </div>
@@ -590,7 +590,7 @@ const TokenDisplayModal: React.FC<TokenDisplayModalProps> = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col gap-3 border-t border-gray-200 bg-white px-4 py-4 max-sm:gap-2 max-sm:px-3 max-sm:py-3 sm:flex-row sm:justify-end sm:px-6">
+          <div className="flex flex-col gap-3 border-t border-gray-200 bg-white p-4 max-sm:gap-2 max-sm:p-3 sm:flex-row sm:justify-end sm:px-6">
             <ButtonModule
               variant="outline"
               onClick={() => setShowReceipt(false)}
@@ -635,7 +635,7 @@ const TokenDisplayModal: React.FC<TokenDisplayModalProps> = ({
         className="relative w-[90vw] max-w-2xl rounded-lg bg-white shadow-2xl max-sm:flex max-sm:h-[90vh] max-sm:max-w-full max-sm:flex-col max-sm:rounded-t-3xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b bg-[#F9F9F9] px-6 py-4 max-sm:flex-shrink-0 max-sm:px-3 max-sm:py-3">
+        <div className="flex items-center justify-between border-b bg-[#F9F9F9] px-6 py-4 max-sm:shrink-0 max-sm:p-3">
           <h2 className="text-lg font-semibold text-gray-900  max-sm:text-sm">Electricity Token Generated</h2>
           <button
             onClick={onRequestClose}
@@ -732,7 +732,7 @@ const TokenDisplayModal: React.FC<TokenDisplayModalProps> = ({
               {/* Instructions */}
               <div className="rounded-md border border-blue-200 bg-blue-50 p-3">
                 <div className="flex">
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     <svg className="size-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                       <path
                         fillRule="evenodd"
@@ -760,7 +760,7 @@ const TokenDisplayModal: React.FC<TokenDisplayModalProps> = ({
           {/* Important Notes */}
           <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3">
             <div className="flex">
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 <svg className="size-4 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
                   <path
                     fillRule="evenodd"

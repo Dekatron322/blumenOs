@@ -29,6 +29,7 @@ import { API_ENDPOINTS, buildApiUrl } from "lib/config/api"
 import { api } from "lib/redux/authSlice"
 import VendTokenModal from "components/ui/Modal/vend-token-modal"
 import CollectPaymentReceiptModal from "components/ui/Modal/collect-payment-receipt-modal"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface ActionDropdownProps {
   payment: Payment
@@ -1226,18 +1227,22 @@ const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({
       {/* Header Section with Title, Search and Filters */}
       <div className="mb-4 space-y-4">
         {/* Title Row */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h4 className="text-xl font-semibold text-gray-900 md:text-2xl">Payments</h4>
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center border-b">
+        <div className="flex flex-col gap-4">
+          <h4 className="text-xl font-semibold text-gray-900 md:text-xl">Payments</h4>
+          <div className="flex w-full flex-wrap items-center gap-2">
+            <div className="w-full">
               <SearchModule
+                prominent
+                prominentTitle="Search Payments"
+                prominentDescription="Find payment transactions by reference, account, customer, or channel."
                 value={searchInput}
                 onChange={handleSearch}
                 onCancel={handleCancelSearch}
                 onSearch={handleManualSearch}
                 placeholder="Search payments..."
-                className="w-full max-w-md"
-                bgClassName="bg-gray-50"
+                height="h-14"
+                className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+                bgClassName="bg-white"
               />
             </div>
             {/* Mobile Filter Button */}
@@ -1611,24 +1616,14 @@ const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
         >
-          <motion.p
-            className="text-base font-bold text-[#202B3C]"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            {searchText ? "No matching payments found" : "No payments available"}
-          </motion.p>
-          <motion.p
-            className="text-sm text-gray-600"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-          >
-            {searchText
-              ? "Try adjusting your search term"
-              : "Payments will appear here once transactions are processed"}
-          </motion.p>
+          <EmptySearchState
+            title={searchText ? "No matching payments found" : "No payments available"}
+            description={
+              searchText
+                ? "Try adjusting your search term"
+                : "Payments will appear here once transactions are processed"
+            }
+          />
         </motion.div>
       ) : (
         <>

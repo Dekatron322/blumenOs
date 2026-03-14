@@ -505,9 +505,9 @@ const VendorDetailsPage = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col 2xl:container">
+          <div className="mx-auto flex w-full flex-col ">
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-3 py-4 2xl:px-16">
+              <div className="mx-auto w-full px-3 py-4 ">
                 <div className="flex w-full items-center justify-between max-sm:flex-col lg:items-center">
                   <div className="flex gap-4 lg:items-center">
                     <motion.button
@@ -579,7 +579,7 @@ const VendorDetailsPage = () => {
               </div>
             </div>
 
-            <div className="flex w-full px-3 py-8 2xl:px-16">
+            <div className="flex w-full px-3 py-8 ">
               <div className="w-full gap-6 xl:flex">
                 {/* Left Column - Profile & Quick Actions */}
                 <div className="flex w-full flex-col space-y-6 xl:max-w-[30%]">

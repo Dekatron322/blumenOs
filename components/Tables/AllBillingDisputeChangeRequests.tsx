@@ -14,6 +14,7 @@ import { ChevronDown } from "lucide-react"
 import { ExportCsvIcon } from "components/Icons/Icons"
 import ViewBillingDisputeChangeRequestModal from "components/ui/Modal/view-billing-dispute-change-request-modal"
 import Image from "next/image"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 type SortOrder = "asc" | "desc" | null
 
@@ -601,12 +602,12 @@ const AllBillingDisputeChangeRequests = () => {
         {/* Main Content - Change Requests List/Grid */}
         <div className="w-full rounded-md border bg-white p-3 md:p-5">
           <div className="flex w-full flex-col py-2">
-            <div className="mb-3 flex w-full items-center justify-between gap-3">
-              <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">
+            <div className="mb-3 flex w-full flex-wrap items-center justify-between gap-3">
+              <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-xl">
                 Billing Dispute Change Requests
               </p>
 
-              <div className="flex items-center gap-2">
+              <div className="flex w-full flex-wrap items-center gap-2">
                 {/* Mobile search icon button */}
                 <button
                   type="button"
@@ -618,14 +619,15 @@ const AllBillingDisputeChangeRequests = () => {
                 </button>
 
                 {/* Desktop/Tablet search input */}
-                <div className="hidden sm:block">
+                <div className="hidden w-full sm:block">
                   <SearchModule
+                    prominent
                     value={searchText}
                     onChange={(e) => setSearchText(e.target.value)}
                     onCancel={handleCancelSearch}
                     onSearch={handleManualSearch}
                     placeholder="Search by reference, requester, or entity label"
-                    className="w-full max-w-full md:max-w-[300px]"
+                    className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
                   />
                 </div>
 
@@ -648,6 +650,7 @@ const AllBillingDisputeChangeRequests = () => {
             {showMobileSearch && (
               <div className="mb-3 sm:hidden">
                 <SearchModule
+                  prominent
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
                   onCancel={handleCancelSearch}
@@ -781,20 +784,15 @@ const AllBillingDisputeChangeRequests = () => {
           {/* Change Request Display Area */}
           <div className="w-full">
             {changeRequests.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 md:py-12">
-                <div className="text-center">
-                  <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-gray-100 md:size-12">
-                    <VscEye className="size-5 text-gray-400 md:size-6" />
-                  </div>
-                  <h3 className="mt-3 text-base font-medium text-gray-900 md:mt-4 md:text-lg">
-                    No change requests found
-                  </h3>
-                  <p className="mt-1 text-xs text-gray-500 md:mt-2 md:text-sm">
-                    {searchText || selectedStatus || selectedSource
+              <div className="flex items-center justify-center py-8 md:py-12">
+                <EmptySearchState
+                  title="No change requests found"
+                  description={
+                    searchText || selectedStatus || selectedSource
                       ? "Try adjusting your filters or search criteria"
-                      : "No change requests available"}
-                  </p>
-                </div>
+                      : "No change requests available"
+                  }
+                />
               </div>
             ) : viewMode === "grid" ? (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-3">

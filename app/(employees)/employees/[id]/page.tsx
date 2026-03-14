@@ -5,18 +5,29 @@ import { useParams, useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import {
   AlertCircle,
+  ArrowLeft,
+  Calendar,
   CheckCircle,
   ChevronDown,
+  CloudUpload,
+  Download,
   Edit3,
   ExternalLink,
+  FileSpreadsheet,
+  FileText,
+  Info,
+  Loader2,
   Mail,
   MapPin,
   Phone,
   Power,
   PowerOff,
+  RefreshCw,
   Share2,
   Shield,
+  Upload,
   User,
+  X,
 } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import SendReminderModal from "components/ui/Modal/send-reminder-modal"
@@ -124,7 +135,7 @@ const ChangeRequestCard = ({
   const sourceConfig = getSourceConfig(changeRequest.source || 1)
 
   return (
-    <div className="mt-3 rounded-lg border bg-[#f9f9f9] p-4 shadow-sm transition-all hover:shadow-md">
+    <div className="rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-gray-300">
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
           <div className="flex size-10 items-center justify-center rounded-full bg-blue-100 sm:size-12">
@@ -175,14 +186,14 @@ const ChangeRequestCard = ({
         </div>
       </div>
 
-      <div className="mt-3 border-t pt-3">
+      <div className="mt-3 border-t border-gray-100 pt-3">
         <p className="text-xs text-gray-500">Entity ID: {changeRequest.entityId}</p>
       </div>
 
       <div className="mt-3 flex gap-2">
         <button
           onClick={() => onViewDetails(changeRequest)}
-          className="button-oulined flex flex-1 items-center justify-center gap-2 bg-white text-sm transition-all duration-300 ease-in-out focus-within:ring-2 focus-within:ring-[#004B23] focus-within:ring-offset-2 hover:border-[#004B23] hover:bg-[#f9f9f9] sm:text-base"
+          className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#004B23] focus:ring-offset-2"
         >
           <VscEye className="size-4" />
           View Details
@@ -235,7 +246,7 @@ const ChangeRequestListItem = ({
   const sourceConfig = getSourceConfig(changeRequest.source || 1)
 
   return (
-    <div className="border-b bg-white p-4 transition-all hover:bg-gray-50">
+    <div className="border-b border-gray-100 bg-white p-4 transition-all hover:bg-gray-50">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <div className="flex size-10 items-center justify-center rounded-full bg-blue-100 max-sm:hidden">
@@ -284,7 +295,7 @@ const ChangeRequestListItem = ({
           <div className="flex items-center gap-2">
             <button
               onClick={() => onViewDetails(changeRequest)}
-              className="button-oulined flex items-center gap-2 text-sm"
+              className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#004B23] focus:ring-offset-2"
             >
               <VscEye className="size-4" />
               <span className="max-sm:hidden">View</span>
@@ -489,7 +500,7 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.5 }}
-        className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
+        className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
       >
         <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
           <UpdateUserOutlineIcon />
@@ -497,16 +508,16 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
         </h3>
         <div className="animate-pulse">
           <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:gap-4">
-            <div className="h-10 w-full rounded bg-gray-200 sm:w-80"></div>
+            <div className="h-10 w-full rounded-lg bg-gray-200 sm:w-80"></div>
             <div className="flex gap-2">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-10 w-20 rounded bg-gray-200 sm:w-24"></div>
+                <div key={i} className="h-10 w-20 rounded-lg bg-gray-200 sm:w-24"></div>
               ))}
             </div>
           </div>
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-20 rounded bg-gray-200"></div>
+              <div key={i} className="h-20 rounded-lg bg-gray-200"></div>
             ))}
           </div>
         </div>
@@ -520,7 +531,7 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.5 }}
-        className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
+        className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
       >
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
@@ -528,7 +539,7 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
             Change Requests
           </h3>
           <button
-            className="button-oulined flex items-center gap-2 border-[#2563EB] bg-[#DBEAFE] text-sm hover:border-[#2563EB] hover:bg-[#DBEAFE] sm:text-base"
+            className="flex items-center gap-2 rounded-lg border border-[#2563EB] bg-[#DBEAFE] px-4 py-2 text-sm text-[#2563EB] transition-colors hover:bg-[#bfdbfe] disabled:cursor-not-allowed disabled:opacity-50 sm:text-base"
             onClick={() => {
               /* TODO: Implement CSV export for employee change requests */
             }}
@@ -552,14 +563,22 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
           <div className="flex flex-wrap gap-2">
             <div className="flex gap-2">
               <button
-                className={`button-oulined text-sm ${viewMode === "grid" ? "bg-[#f9f9f9]" : ""}`}
+                className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${
+                  viewMode === "grid"
+                    ? "border-[#004B23] bg-[#e9f5ef] text-[#004B23]"
+                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                }`}
                 onClick={() => setViewMode("grid")}
               >
                 <MdGridView className="size-4" />
                 <p className="max-sm:hidden">Grid</p>
               </button>
               <button
-                className={`button-oulined text-sm ${viewMode === "list" ? "bg-[#f9f9f9]" : ""}`}
+                className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${
+                  viewMode === "list"
+                    ? "border-[#004B23] bg-[#e9f5ef] text-[#004B23]"
+                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                }`}
                 onClick={() => setViewMode("list")}
               >
                 <MdFormatListBulleted className="size-4" />
@@ -571,7 +590,7 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
             <div className="relative" data-dropdown-root="status-filter">
               <button
                 type="button"
-                className="button-oulined flex items-center gap-2 text-sm"
+                className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#004B23] focus:ring-offset-2"
                 onClick={() => setIsStatusOpen((v) => !v)}
                 aria-haspopup="menu"
                 aria-expanded={isStatusOpen}
@@ -586,12 +605,12 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
                 />
               </button>
               {isStatusOpen && (
-                <div className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 sm:w-64">
+                <div className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 sm:w-64">
                   <div className="py-1">
                     {statusOptions.map((option) => (
                       <button
                         key={option.value}
-                        className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-300 ease-in-out hover:bg-gray-50 ${
+                        className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50 ${
                           localFilters.selectedStatus === option.value ? "bg-gray-50" : ""
                         }`}
                         onClick={() => {
@@ -611,7 +630,7 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
             <div className="relative" data-dropdown-root="source-filter">
               <button
                 type="button"
-                className="button-oulined flex items-center gap-2 text-sm"
+                className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#004B23] focus:ring-offset-2"
                 onClick={() => setIsSourceOpen((v) => !v)}
                 aria-haspopup="menu"
                 aria-expanded={isSourceOpen}
@@ -626,12 +645,12 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
                 />
               </button>
               {isSourceOpen && (
-                <div className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 sm:w-64">
+                <div className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 sm:w-64">
                   <div className="py-1">
                     {sourceOptions.map((option) => (
                       <button
                         key={option.value}
-                        className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-300 ease-in-out hover:bg-gray-50 ${
+                        className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50 ${
                           localFilters.selectedSource === option.value ? "bg-gray-50" : ""
                         }`}
                         onClick={() => {
@@ -648,10 +667,16 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
             </div>
 
             {/* Apply Filters Button */}
-            <button onClick={handleApplyFilters} className="button-filled flex items-center gap-2 text-sm">
+            <button
+              onClick={handleApplyFilters}
+              className="flex items-center gap-2 rounded-lg bg-[#004B23] px-3 py-2 text-sm text-white transition-colors hover:bg-[#003618] focus:outline-none focus:ring-2 focus:ring-[#004B23] focus:ring-offset-2"
+            >
               Apply Filters
             </button>
-            <button onClick={handleResetFilters} className="button-oulined flex items-center gap-2 text-sm">
+            <button
+              onClick={handleResetFilters}
+              className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#004B23] focus:ring-offset-2"
+            >
               Reset
             </button>
           </div>
@@ -680,7 +705,7 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
             ))}
           </div>
         ) : (
-          <div className="divide-y">
+          <div className="divide-y divide-gray-100">
             {changeRequestsByEmployee.map((changeRequest: ChangeRequestListItemType) => (
               <ChangeRequestListItem
                 key={changeRequest.publicId}
@@ -700,7 +725,7 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
               <select
                 value={changeRequestsByEmployeePagination.pageSize}
                 onChange={handleRowsChange}
-                className="bg-[#F2F2F2] p-1 text-sm sm:text-base"
+                className="rounded-lg border border-gray-300 bg-white p-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#004B23] sm:text-base"
               >
                 <option value={6}>6</option>
                 <option value={12}>12</option>
@@ -712,8 +737,10 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
 
             <div className="order-1 flex items-center justify-center gap-2 sm:order-2 sm:gap-3">
               <button
-                className={`px-2 py-1 sm:px-3 sm:py-2 ${
-                  currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
+                className={`rounded-lg border border-gray-300 p-2 transition-colors ${
+                  currentPage === 1
+                    ? "cursor-not-allowed bg-gray-100 text-gray-400"
+                    : "bg-white text-gray-700 hover:bg-gray-50"
                 }`}
                 onClick={() => changePage(currentPage - 1)}
                 disabled={currentPage === 1}
@@ -728,8 +755,10 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
                     typeof item === "number" ? (
                       <button
                         key={item}
-                        className={`flex size-6 items-center justify-center rounded-md text-xs sm:h-7 sm:w-8 sm:text-sm ${
-                          currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                        className={`flex size-8 items-center justify-center rounded-lg text-sm transition-colors ${
+                          currentPage === item
+                            ? "bg-[#004B23] text-white"
+                            : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                         }`}
                         onClick={() => changePage(item)}
                       >
@@ -749,15 +778,17 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
                     typeof item === "number" ? (
                       <button
                         key={item}
-                        className={`flex size-6 items-center justify-center rounded-md text-xs ${
-                          currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                        className={`flex size-8 items-center justify-center rounded-lg text-sm transition-colors ${
+                          currentPage === item
+                            ? "bg-[#004B23] text-white"
+                            : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                         }`}
                         onClick={() => changePage(item)}
                       >
                         {item}
                       </button>
                     ) : (
-                      <span key={`ellipsis-${index}`} className="px-1 text-xs text-gray-500">
+                      <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
                         {item}
                       </span>
                     )
@@ -766,8 +797,10 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
               </div>
 
               <button
-                className={`px-2 py-1 sm:px-3 sm:py-2 ${
-                  currentPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
+                className={`rounded-lg border border-gray-300 p-2 transition-colors ${
+                  currentPage === totalPages
+                    ? "cursor-not-allowed bg-gray-100 text-gray-400"
+                    : "bg-white text-gray-700 hover:bg-gray-50"
                 }`}
                 onClick={() => changePage(currentPage + 1)}
                 disabled={currentPage === totalPages}
@@ -1139,88 +1172,87 @@ const EmployeeDetailsPage = () => {
   const tenure = calculateTenure(employeeDetails.createdAt || new Date().toISOString())
 
   return (
-    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+    <section className="min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100 pb-24 sm:pb-20">
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col 2xl:container">
-            <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-3 py-4  sm:px-4 md:px-6 2xl:px-16">
-                <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center gap-4">
-                    <motion.button
-                      type="button"
-                      onClick={() => router.back()}
-                      className="flex size-8 items-center justify-center rounded-md border border-gray-200 bg-[#f9f9f9] text-gray-700 hover:bg-gray-50 sm:size-9"
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.2 }}
-                      aria-label="Go back"
-                      title="Go back"
-                    >
-                      <svg
-                        width="1em"
-                        height="1em"
-                        viewBox="0 0 17 17"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="new-arrow-right rotate-180 transform"
-                      >
-                        <path
-                          d="M9.1497 0.80204C9.26529 3.95101 13.2299 6.51557 16.1451 8.0308L16.1447 9.43036C13.2285 10.7142 9.37889 13.1647 9.37789 16.1971L7.27855 16.1978C7.16304 12.8156 10.6627 10.4818 13.1122 9.66462L0.049716 9.43565L0.0504065 7.33631L13.1129 7.56528C10.5473 6.86634 6.93261 4.18504 7.05036 0.80273L9.1497 0.80204Z"
-                          fill="currentColor"
-                        ></path>
-                      </svg>
-                    </motion.button>
 
-                    <div>
-                      <h1 className="text-lg font-bold text-gray-900 sm:text-xl xl:text-2xl">Employee Details</h1>
-                      <p className="text-xs text-gray-600 sm:text-sm">Complete overview and management</p>
-                    </div>
-                  </div>
+          <div className="w-full px-4 py-6 sm:px-6 lg:px-8">
+            {/* Page Header */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="mb-8"
+            >
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-4">
+                  <motion.button
+                    type="button"
+                    onClick={() => router.back()}
+                    className="flex size-10 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#004B23] focus:ring-offset-2"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.2 }}
+                    aria-label="Go back"
+                    title="Go back"
+                  >
+                    <ArrowLeft className="size-5" />
+                  </motion.button>
 
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <ButtonModule
-                      variant="secondary"
-                      size="sm"
-                      className="flex items-center gap-2 text-sm"
-                      onClick={exportToPDF}
-                      disabled={isExporting}
-                    >
-                      <ExportOutlineIcon className="size-3 sm:size-4" />
-                      <span className="max-sm:hidden">{isExporting ? "Exporting..." : "Export"}</span>
-                      <span className="sm:hidden">Export</span>
-                    </ButtonModule>
-
-                    {canUpdate ? (
-                      <ButtonModule
-                        variant="primary"
-                        size="sm"
-                        className="flex items-center gap-2 text-sm"
-                        onClick={() => router.push(`/employees/update-employee?id=${employeeId}`)}
-                      >
-                        <Edit3 className="size-3 sm:size-4" />
-                        <span className="max-sm:hidden">Edit</span>
-                        <span className="sm:hidden">Edit</span>
-                      </ButtonModule>
-                    ) : (
-                      <ButtonModule
-                        variant="primary"
-                        size="sm"
-                        className="flex items-center gap-2 text-sm"
-                        onClick={() => openModal("changeRequest")}
-                      >
-                        <Edit3 className="size-3 sm:size-4" />
-                        <span className="max-sm:hidden">Change Request</span>
-                        <span className="sm:hidden">Request</span>
-                      </ButtonModule>
-                    )}
+                  <div>
+                    <h1 className="text-2xl font-bold text-gray-900 sm:text-2xl">Employee Details</h1>
+                    <p className="mt-1 text-sm text-gray-600">Complete overview and management</p>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            <div className="flex w-full px-3 py-6 sm:px-4 sm:py-8 md:px-6 2xl:px-16">
+                <div className="flex items-center gap-3">
+                  <ButtonModule
+                    variant="secondary"
+                    size="sm"
+                    className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50"
+                    onClick={exportToPDF}
+                    disabled={isExporting}
+                  >
+                    <ExportOutlineIcon className="size-4" />
+                    <span className="max-sm:hidden">{isExporting ? "Exporting..." : "Export"}</span>
+                    <span className="sm:hidden">Export</span>
+                  </ButtonModule>
+
+                  {canUpdate ? (
+                    <ButtonModule
+                      variant="primary"
+                      size="sm"
+                      className="flex items-center gap-2 rounded-lg bg-[#004B23] px-4 py-2 text-sm text-white transition-colors hover:bg-[#003618] focus:outline-none focus:ring-2 focus:ring-[#004B23] focus:ring-offset-2"
+                      onClick={() => router.push(`/employees/update-employee?id=${employeeId}`)}
+                    >
+                      <Edit3 className="size-4" />
+                      <span className="max-sm:hidden">Edit</span>
+                      <span className="sm:hidden">Edit</span>
+                    </ButtonModule>
+                  ) : (
+                    <ButtonModule
+                      variant="primary"
+                      size="sm"
+                      className="flex items-center gap-2 rounded-lg bg-[#004B23] px-4 py-2 text-sm text-white transition-colors hover:bg-[#003618] focus:outline-none focus:ring-2 focus:ring-[#004B23] focus:ring-offset-2"
+                      onClick={() => openModal("changeRequest")}
+                    >
+                      <Edit3 className="size-4" />
+                      <span className="max-sm:hidden">Change Request</span>
+                      <span className="sm:hidden">Request</span>
+                    </ButtonModule>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Main Content */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="overflow-hidden rounded-xl border border-gray-200/60 bg-transparent"
+            >
               <div className="flex w-full flex-col gap-6 xl:flex-row">
                 {/* Left Column - Profile & Quick Actions */}
                 <div className="flex w-full flex-col space-y-6 xl:w-[30%]">
@@ -1228,56 +1260,79 @@ const EmployeeDetailsPage = () => {
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
+                    className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
                   >
-                    <div className="text-center">
-                      <div className="relative inline-block">
-                        <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-[#f9f9f9] text-2xl font-bold text-[#004B23] sm:size-20 sm:text-3xl">
-                          {employeeDetails.fullName
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </div>
-                        <div
-                          className={`absolute -right-1 bottom-1 ${statusConfig.bg} ${statusConfig.border} rounded-full border-2 p-1 sm:p-1.5`}
-                        >
-                          <StatusIcon className={`size-3 ${statusConfig.color} sm:size-4`} />
-                        </div>
-                      </div>
-
-                      <h2 className="mb-2 text-lg font-bold text-gray-900 sm:text-xl">{employeeDetails.fullName}</h2>
-                      <p className="mb-4 text-sm text-gray-600 sm:text-base">Employee #{employeeDetails.employeeId}</p>
-
-                      <div className="mb-6 flex flex-wrap justify-center gap-2">
-                        <div
-                          className={`rounded-full px-3 py-1.5 text-xs font-medium ${statusConfig.bg} ${statusConfig.color} sm:text-sm`}
-                        >
-                          {statusConfig.label}
-                        </div>
-                        <div
-                          className={`rounded-full px-3 py-1.5 text-xs font-medium ${employmentTypeConfig.bg} ${employmentTypeConfig.color} sm:text-sm`}
-                        >
-                          {employeeDetails.employmentType?.replace("_", " ") ?? "FULL TIME"}
-                        </div>
-                        {employeeDetails.mustChangePassword && (
-                          <div className="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-600 sm:text-sm">
-                            Password Reset
+                    <div className="bg-gradient-to-r from-[#004B23] to-[#006633] p-6">
+                      <div className="text-center">
+                        <div className="relative inline-block">
+                          <div className="mx-auto mb-4 flex size-20 items-center justify-center rounded-full bg-white/20 text-2xl font-bold text-white backdrop-blur-sm">
+                            {employeeDetails.fullName
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")}
                           </div>
-                        )}
-                      </div>
+                          <div
+                            className={`absolute -right-1 bottom-1 ${statusConfig.bg} ${statusConfig.border} rounded-full border-2 p-1.5`}
+                          >
+                            <StatusIcon className={`size-4 ${statusConfig.color}`} />
+                          </div>
+                        </div>
 
-                      <div className="space-y-3 text-xs sm:text-sm">
-                        <div className="flex items-center gap-3 text-gray-600">
-                          <PhoneOutlineIcon />
-                          {formatPhoneNumber(employeeDetails.phoneNumber)}
+                        <h2 className="mb-1 text-xl font-bold text-white">{employeeDetails.fullName}</h2>
+                        <p className="mb-4 text-sm text-white/80">Employee #{employeeDetails.employeeId}</p>
+
+                        <div className="mb-6 flex flex-wrap justify-center gap-2">
+                          <div
+                            className={`rounded-full px-3 py-1.5 text-xs font-medium ${statusConfig.bg} ${statusConfig.color}`}
+                          >
+                            {statusConfig.label}
+                          </div>
+                          <div
+                            className={`rounded-full px-3 py-1.5 text-xs font-medium ${employmentTypeConfig.bg} ${employmentTypeConfig.color}`}
+                          >
+                            {employeeDetails.employmentType?.replace("_", " ") ?? "FULL TIME"}
+                          </div>
+                          {employeeDetails.mustChangePassword && (
+                            <div className="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-600">
+                              Password Reset
+                            </div>
+                          )}
                         </div>
-                        <div className="flex items-center gap-3 text-gray-600">
-                          <EmailOutlineIcon />
-                          {employeeDetails.email}
+                      </div>
+                    </div>
+
+                    <div className="p-6">
+                      <div className="space-y-4 text-sm">
+                        <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-3">
+                          <div className="flex size-8 items-center justify-center rounded-lg bg-blue-100">
+                            <PhoneOutlineIcon />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-xs font-medium text-gray-600">Phone</p>
+                            <p className="text-sm font-semibold text-gray-900">
+                              {formatPhoneNumber(employeeDetails.phoneNumber)}
+                            </p>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-3 text-gray-600">
-                          <MapOutlineIcon className="size-4" />
-                          {employeeDetails.areaOfficeName || "Not specified"}
+                        <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-3">
+                          <div className="flex size-8 items-center justify-center rounded-lg bg-green-100">
+                            <EmailOutlineIcon />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-xs font-medium text-gray-600">Email</p>
+                            <p className="text-sm font-semibold text-gray-900">{employeeDetails.email}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-3">
+                          <div className="flex size-8 items-center justify-center rounded-lg bg-purple-100">
+                            <MapOutlineIcon className="size-4 text-purple-600" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-xs font-medium text-gray-600">Area Office</p>
+                            <p className="text-sm font-semibold text-gray-900">
+                              {employeeDetails.areaOfficeName || "Not specified"}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1289,40 +1344,66 @@ const EmployeeDetailsPage = () => {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.1 }}
-                      className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
+                      className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
                     >
-                      <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-900 sm:text-base">
-                        <SettingOutlineIcon />
-                        Quick Actions
-                      </h3>
-                      <div className="flex gap-3 max-sm:flex-col max-sm:gap-3 sm:flex 2xl:flex-col">
-                        <ButtonModule
-                          variant="outline"
-                          size="md"
-                          className="w-full justify-start gap-3 text-sm"
-                          onClick={() => openModal("reminder")}
-                        >
-                          <NotificationOutlineIcon />
-                          Send Reminder
-                        </ButtonModule>
-                        <ButtonModule
-                          variant="primary"
-                          size="md"
-                          className="w-full justify-start gap-3 text-sm"
-                          onClick={() => openModal("resetPassword")}
-                        >
-                          <PasswordOutlineIcon size={18} className="sm:size-5" />
-                          Reset Password
-                        </ButtonModule>
-                        <ButtonModule
-                          variant={employeeDetails.isActive ? "danger" : "primary"}
-                          size="md"
-                          className="w-full justify-start gap-3 text-sm"
-                          onClick={() => openModal(employeeDetails.isActive ? "suspend" : "activate")}
-                        >
-                          {employeeDetails.isActive ? <PowerOff className="size-4" /> : <Power className="size-4" />}
-                          {employeeDetails.isActive ? "Deactivate" : "Activate"}
-                        </ButtonModule>
+                      <div className="border-b border-gray-200 bg-gray-50 p-4">
+                        <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
+                          <SettingOutlineIcon />
+                          Quick Actions
+                        </h3>
+                      </div>
+                      <div className="p-4">
+                        <div className="grid grid-cols-1 gap-3">
+                          <ButtonModule
+                            variant="outline"
+                            size="md"
+                            onClick={() => openModal("reminder")}
+                            className="w-full justify-start"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="flex size-8 items-center justify-center rounded-lg bg-blue-100">
+                                <NotificationOutlineIcon />
+                              </div>
+                              <div className="flex-1 text-left">
+                                <p className="font-medium">Send Reminder</p>
+                              </div>
+                            </div>
+                          </ButtonModule>
+                          <ButtonModule
+                            variant="outline"
+                            size="md"
+                            onClick={() => openModal("resetPassword")}
+                            className="w-full justify-start"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="flex size-8 items-center justify-center rounded-lg bg-amber-100">
+                                <PasswordOutlineIcon size={18} className="text-amber-600" />
+                              </div>
+                              <div className="flex-1 text-left">
+                                <p className="font-medium">Reset Password</p>
+                              </div>
+                            </div>
+                          </ButtonModule>
+                          <ButtonModule
+                            variant={employeeDetails.isActive ? "danger" : "primary"}
+                            size="md"
+                            onClick={() => openModal(employeeDetails.isActive ? "suspend" : "activate")}
+                            className="w-full justify-start"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="flex size-8 items-center justify-center rounded-lg bg-white/20">
+                                {employeeDetails.isActive ? (
+                                  <PowerOff className="size-4" />
+                                ) : (
+                                  <Power className="size-4" />
+                                )}
+                              </div>
+                              <div className="flex-1 text-left">
+                                <p className="font-medium">{employeeDetails.isActive ? "Deactivate" : "Activate"}</p>
+                              </div>
+                            </div>
+                          </ButtonModule>
+                        </div>
                       </div>
                     </motion.div>
                   )}
@@ -1333,28 +1414,42 @@ const EmployeeDetailsPage = () => {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.15 }}
-                      className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
+                      className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
                     >
-                      <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-900 sm:text-base">
-                        <UserRoleIcon className="size-4 sm:size-5" />
-                        Roles & Permissions
-                      </h3>
-                      <div className="space-y-3">
-                        {employeeDetails.roles.map((role, index) => (
-                          <div
-                            key={role.roleId}
-                            className="group cursor-pointer rounded-lg bg-[#f9f9f9] p-3 transition-all hover:bg-gray-100 hover:shadow-sm"
-                            onClick={() => router.push(`/roles/details/${role.roleId}`)}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <div className="text-sm font-medium text-gray-900 sm:text-base">{role.name}</div>
-                                <div className="text-xs text-gray-600 sm:text-sm">{role.category}</div>
+                      <div className="border-b border-gray-200 bg-gray-50 p-4">
+                        <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
+                          <UserRoleIcon className="size-5" />
+                          Roles & Permissions
+                        </h3>
+                      </div>
+                      <div className="p-4">
+                        <div className="space-y-3">
+                          {employeeDetails.roles.map((role, index) => (
+                            <motion.div
+                              key={role.roleId}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: 0.1 * index }}
+                              className="group cursor-pointer rounded-lg border border-gray-200 bg-[#f9f9f9] p-4 transition-all hover:border-blue-300 hover:bg-blue-50"
+                              onClick={() => router.push(`/roles/details/${role.roleId}`)}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <div className="flex size-8 items-center justify-center rounded-lg bg-blue-100">
+                                      <Shield className="size-4 text-blue-600" />
+                                    </div>
+                                    <div>
+                                      <div className="text-sm font-medium text-gray-900">{role.name}</div>
+                                      <div className="text-xs text-gray-600">{role.category}</div>
+                                    </div>
+                                  </div>
+                                </div>
+                                <ExternalLink className="size-4 text-blue-500 transition-all group-hover:translate-x-1" />
                               </div>
-                              <ExternalLink className="size-4 text-blue-500 transition-all" />
-                            </div>
-                          </div>
-                        ))}
+                            </motion.div>
+                          ))}
+                        </div>
                       </div>
                     </motion.div>
                   )}
@@ -1366,76 +1461,187 @@ const EmployeeDetailsPage = () => {
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
+                    className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
                   >
-                    <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                      <EmployeeInfoIcon />
-                      Employment Information
-                    </h3>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                      <div className="space-y-4">
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Employee ID</label>
-                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                            {employeeDetails.employeeId}
-                          </p>
-                        </div>
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Position</label>
-                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                            {employeeDetails.position || "Not specified"}
-                          </p>
-                        </div>
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Account ID</label>
-                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                            {employeeDetails.accountId}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="space-y-4">
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Department</label>
-                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                            {employeeDetails.departmentName || "Not assigned"}
-                          </p>
-                        </div>
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Employment Type</label>
-                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                            {employeeDetails.employmentType?.replace("_", " ") ?? "FULL TIME"}
-                          </p>
-                        </div>
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Area Office</label>
-                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                            {employeeDetails.areaOfficeName || "Not specified"}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-4">
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Supervisor</label>
-                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                            {employeeDetails.supervisorName || "Not assigned"}
-                          </p>
-                        </div>
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Status</label>
-                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                            <span className={`inline-flex items-center gap-1 ${statusConfig.color}`}>
-                              <StatusIcon className="size-4" />
-                              {statusConfig.label}
-                            </span>
-                          </p>
-                        </div>
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Password Reset</label>
-                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                            {employeeDetails.mustChangePassword ? "Required" : "Not required"}
-                          </p>
-                        </div>
+                    <div className="border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white p-4">
+                      <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                        <EmployeeInfoIcon />
+                        Employment Information
+                      </h3>
+                    </div>
+                    <div className="p-6">
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.1 }}
+                          className="group rounded-lg border border-gray-100 bg-[#f9f9f9] p-4 transition-all hover:border-blue-300 hover:bg-blue-50/50"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex size-8 items-center justify-center rounded-lg bg-blue-100 transition-colors group-hover:bg-blue-200">
+                              <span className="text-xs font-bold text-blue-600">ID</span>
+                            </div>
+                            <div className="flex-1">
+                              <label className="text-xs font-medium text-gray-600">Employee ID</label>
+                              <p className="mt-1 text-sm font-semibold text-gray-900">{employeeDetails.employeeId}</p>
+                            </div>
+                          </div>
+                        </motion.div>
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.2 }}
+                          className="group rounded-lg border border-gray-100 bg-[#f9f9f9] p-4 transition-all hover:border-blue-300 hover:bg-blue-50/50"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex size-8 items-center justify-center rounded-lg bg-purple-100 transition-colors group-hover:bg-purple-200">
+                              <span className="text-xs font-bold text-purple-600">POS</span>
+                            </div>
+                            <div className="flex-1">
+                              <label className="text-xs font-medium text-gray-600">Position</label>
+                              <p className="mt-1 text-sm font-semibold text-gray-900">
+                                {employeeDetails.position || "Not specified"}
+                              </p>
+                            </div>
+                          </div>
+                        </motion.div>
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.3 }}
+                          className="group rounded-lg border border-gray-100 bg-[#f9f9f9] p-4 transition-all hover:border-blue-300 hover:bg-blue-50/50"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex size-8 items-center justify-center rounded-lg bg-green-100 transition-colors group-hover:bg-green-200">
+                              <span className="text-xs font-bold text-green-600">ACC</span>
+                            </div>
+                            <div className="flex-1">
+                              <label className="text-xs font-medium text-gray-600">Account ID</label>
+                              <p className="mt-1 text-sm font-semibold text-gray-900">{employeeDetails.accountId}</p>
+                            </div>
+                          </div>
+                        </motion.div>
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.4 }}
+                          className="group rounded-lg border border-gray-100 bg-[#f9f9f9] p-4 transition-all hover:border-blue-300 hover:bg-blue-50/50"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex size-8 items-center justify-center rounded-lg bg-orange-100 transition-colors group-hover:bg-orange-200">
+                              <span className="text-xs font-bold text-orange-600">DEP</span>
+                            </div>
+                            <div className="flex-1">
+                              <label className="text-xs font-medium text-gray-600">Department</label>
+                              <p className="mt-1 text-sm font-semibold text-gray-900">
+                                {employeeDetails.departmentName || "Not assigned"}
+                              </p>
+                            </div>
+                          </div>
+                        </motion.div>
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.5 }}
+                          className="group rounded-lg border border-gray-100 bg-[#f9f9f9] p-4 transition-all hover:border-blue-300 hover:bg-blue-50/50"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex size-8 items-center justify-center rounded-lg bg-amber-100 transition-colors group-hover:bg-amber-200">
+                              <span className="text-xs font-bold text-amber-600">TYPE</span>
+                            </div>
+                            <div className="flex-1">
+                              <label className="text-xs font-medium text-gray-600">Employment Type</label>
+                              <p className="mt-1 text-sm font-semibold text-gray-900">
+                                {employeeDetails.employmentType?.replace("_", " ") ?? "FULL TIME"}
+                              </p>
+                            </div>
+                          </div>
+                        </motion.div>
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.6 }}
+                          className="group rounded-lg border border-gray-100 bg-[#f9f9f9] p-4 transition-all hover:border-blue-300 hover:bg-blue-50/50"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex size-8 items-center justify-center rounded-lg bg-indigo-100 transition-colors group-hover:bg-indigo-200">
+                              <span className="text-xs font-bold text-indigo-600">AREA</span>
+                            </div>
+                            <div className="flex-1">
+                              <label className="text-xs font-medium text-gray-600">Area Office</label>
+                              <p className="mt-1 text-sm font-semibold text-gray-900">
+                                {employeeDetails.areaOfficeName || "Not specified"}
+                              </p>
+                            </div>
+                          </div>
+                        </motion.div>
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.7 }}
+                          className="group rounded-lg border border-gray-100 bg-[#f9f9f9] p-4 transition-all hover:border-blue-300 hover:bg-blue-50/50"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex size-8 items-center justify-center rounded-lg bg-pink-100 transition-colors group-hover:bg-pink-200">
+                              <span className="text-xs font-bold text-pink-600">SUP</span>
+                            </div>
+                            <div className="flex-1">
+                              <label className="text-xs font-medium text-gray-600">Supervisor</label>
+                              <p className="mt-1 text-sm font-semibold text-gray-900">
+                                {employeeDetails.supervisorName || "Not assigned"}
+                              </p>
+                            </div>
+                          </div>
+                        </motion.div>
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.8 }}
+                          className="group rounded-lg border border-gray-100 bg-[#f9f9f9] p-4 transition-all hover:border-blue-300 hover:bg-blue-50/50"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex size-8 items-center justify-center rounded-lg bg-red-100 transition-colors group-hover:bg-red-200">
+                              <StatusIcon className="size-4 text-red-600" />
+                            </div>
+                            <div className="flex-1">
+                              <label className="text-xs font-medium text-gray-600">Status</label>
+                              <div className="mt-1">
+                                <span
+                                  className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${statusConfig.bg} ${statusConfig.color}`}
+                                >
+                                  <StatusIcon className="size-3" />
+                                  {statusConfig.label}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.9 }}
+                          className="group rounded-lg border border-gray-100 bg-[#f9f9f9] p-4 transition-all hover:border-blue-300 hover:bg-blue-50/50"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex size-8 items-center justify-center rounded-lg bg-gray-100 transition-colors group-hover:bg-gray-200">
+                              <span className="text-xs font-bold text-gray-600">PWD</span>
+                            </div>
+                            <div className="flex-1">
+                              <label className="text-xs font-medium text-gray-600">Password Reset</label>
+                              <div className="mt-1">
+                                <span
+                                  className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${
+                                    employeeDetails.mustChangePassword
+                                      ? "bg-amber-100 text-amber-700"
+                                      : "bg-emerald-100 text-emerald-700"
+                                  }`}
+                                >
+                                  {employeeDetails.mustChangePassword ? "Required" : "Not required"}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
                       </div>
                     </div>
                   </motion.div>
@@ -1445,78 +1651,117 @@ const EmployeeDetailsPage = () => {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
+                    className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
                   >
-                    <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                      <User className="size-5" />
-                      Contact & Personal Details
-                    </h3>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <div className="flex size-8 items-center justify-center rounded-lg bg-blue-100 sm:size-10">
-                            <Phone className="size-4 text-blue-600 sm:size-5" />
-                          </div>
-                          <div>
-                            <label className="text-xs font-medium text-gray-600 sm:text-sm">Phone Number</label>
-                            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
-                              <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                                {formatPhoneNumber(employeeDetails.phoneNumber)}
-                              </p>
-                              <div className="text-xs">
-                                {employeeDetails.isPhoneVerified ? (
-                                  <span className="text-emerald-600">✓ Verified</span>
-                                ) : (
-                                  <span className="text-amber-600">Not verified</span>
-                                )}
+                    <div className="border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white p-4">
+                      <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                        <User className="size-5" />
+                        Contact & Personal Details
+                      </h3>
+                    </div>
+                    <div className="p-6">
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.1 }}
+                          className="group rounded-lg border border-gray-100 bg-[#f9f9f9] p-4 transition-all hover:border-blue-300 hover:bg-blue-50/50"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex size-10 items-center justify-center rounded-lg bg-blue-100 transition-colors group-hover:bg-blue-200">
+                              <Phone className="size-4 text-blue-600" />
+                            </div>
+                            <div className="flex-1">
+                              <label className="text-xs font-medium text-gray-600">Phone Number</label>
+
+                              <div className="mt-1 flex justify-between gap-2">
+                                <p className="text-sm font-semibold text-gray-900">
+                                  {formatPhoneNumber(employeeDetails.phoneNumber)}
+                                </p>
+                                <div>
+                                  {employeeDetails.isPhoneVerified ? (
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700">
+                                      <CheckCircle className="size-3" />
+                                      Verified
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700">
+                                      <AlertCircle className="size-3" />
+                                      Not verified
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <div className="flex size-8 items-center justify-center rounded-lg bg-green-100 sm:size-10">
-                            <Mail className="size-4 text-green-600 sm:size-5" />
-                          </div>
-                          <div>
-                            <label className="text-xs font-medium text-gray-600 sm:text-sm">Email Address</label>
-                            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
-                              <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                                {employeeDetails.email}
-                              </p>
-                              <div className="text-xs">
-                                {employeeDetails.isEmailVerified ? (
-                                  <span className="text-emerald-600">✓ Verified</span>
-                                ) : (
-                                  <span className="text-amber-600">Not verified</span>
-                                )}
+                        </motion.div>
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.2 }}
+                          className="group rounded-lg border border-gray-100 bg-[#f9f9f9] p-4 transition-all hover:border-blue-300 hover:bg-blue-50/50"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex size-10 items-center justify-center rounded-lg bg-green-100 transition-colors group-hover:bg-green-200">
+                              <Mail className="size-4 text-green-600" />
+                            </div>
+                            <div className="flex-1">
+                              <label className="text-xs font-medium text-gray-600">Email Address</label>
+                              <div className="mt-1 flex items-center justify-between">
+                                <p className="text-sm font-semibold text-gray-900">{employeeDetails.email}</p>
+                                <div>
+                                  {employeeDetails.isEmailVerified ? (
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700">
+                                      <CheckCircle className="size-3" />
+                                      Verified
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700">
+                                      <AlertCircle className="size-3" />
+                                      Not verified
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      </div>
-                      <div className="space-y-4">
-                        <div className="flex items-start gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <div className="flex size-8 items-center justify-center rounded-lg bg-purple-100 sm:size-10">
-                            <MapPin className="size-4 text-purple-600 sm:size-5" />
+                        </motion.div>
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.3 }}
+                          className="group rounded-lg border border-gray-100 bg-[#f9f9f9] p-4 transition-all hover:border-blue-300 hover:bg-blue-50/50"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex size-10 items-center justify-center rounded-lg bg-purple-100 transition-colors group-hover:bg-purple-200">
+                              <MapPin className="size-4 text-purple-600" />
+                            </div>
+                            <div className="flex-1">
+                              <label className="text-xs font-medium text-gray-600">Address</label>
+                              <p className="mt-1 text-sm font-semibold text-gray-900">
+                                {employeeDetails.address || "Not provided"}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <label className="text-xs font-medium text-gray-600 sm:text-sm">Address</label>
-                            <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                              {employeeDetails.address || "Not provided"}
-                            </p>
+                        </motion.div>
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.4 }}
+                          className="group rounded-lg border border-gray-100 bg-[#f9f9f9] p-4 transition-all hover:border-blue-300 hover:bg-blue-50/50"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex size-10 items-center justify-center rounded-lg bg-red-100 transition-colors group-hover:bg-red-200">
+                              <Shield className="size-4 text-red-600" />
+                            </div>
+                            <div className="flex-1">
+                              <label className="text-xs font-medium text-gray-600">Emergency Contact</label>
+                              <p className="mt-1 text-sm font-semibold text-gray-900">
+                                {employeeDetails.emergencyContact || "Not provided"}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <div className="flex size-8 items-center justify-center rounded-lg bg-red-100 sm:size-10">
-                            <Shield className="size-4 text-red-600 sm:size-5" />
-                          </div>
-                          <div>
-                            <label className="text-xs font-medium text-gray-600 sm:text-sm">Emergency Contact</label>
-                            <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                              {employeeDetails.emergencyContact || "Not provided"}
-                            </p>
-                          </div>
-                        </div>
+                        </motion.div>
                       </div>
                     </div>
                   </motion.div>
@@ -1527,36 +1772,70 @@ const EmployeeDetailsPage = () => {
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.2 }}
-                      className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
+                      className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
                     >
-                      <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                        <DepartmentInfoIcon />
-                        Department Information
-                      </h3>
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        <div className="space-y-4">
-                          <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                            <label className="text-xs font-medium text-gray-600 sm:text-sm">Department</label>
-                            <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                              {employeeDetails.departmentName}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="space-y-4">
-                          <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                            <label className="text-xs font-medium text-gray-600 sm:text-sm">Area Office</label>
-                            <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                              {employeeDetails.areaOfficeName || "Not specified"}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="space-y-4">
-                          <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                            <label className="text-xs font-medium text-gray-600 sm:text-sm">Supervisor</label>
-                            <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                              {employeeDetails.supervisorName || "Not assigned"}
-                            </p>
-                          </div>
+                      <div className="border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white p-4">
+                        <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                          <DepartmentInfoIcon />
+                          Department Information
+                        </h3>
+                      </div>
+                      <div className="p-6">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1 }}
+                            className="group rounded-lg border border-gray-100 bg-[#f9f9f9] p-4 transition-all hover:border-blue-300 hover:bg-blue-50/50"
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="flex size-8 items-center justify-center rounded-lg bg-orange-100 transition-colors group-hover:bg-orange-200">
+                                <span className="text-xs font-bold text-orange-600">DEP</span>
+                              </div>
+                              <div className="flex-1">
+                                <label className="text-xs font-medium text-gray-600">Department</label>
+                                <p className="mt-1 text-sm font-semibold text-gray-900">
+                                  {employeeDetails.departmentName}
+                                </p>
+                              </div>
+                            </div>
+                          </motion.div>
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="group rounded-lg border border-gray-100 bg-[#f9f9f9] p-4 transition-all hover:border-blue-300 hover:bg-blue-50/50"
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="flex size-8 items-center justify-center rounded-lg bg-indigo-100 transition-colors group-hover:bg-indigo-200">
+                                <span className="text-xs font-bold text-indigo-600">AREA</span>
+                              </div>
+                              <div className="flex-1">
+                                <label className="text-xs font-medium text-gray-600">Area Office</label>
+                                <p className="mt-1 text-sm font-semibold text-gray-900">
+                                  {employeeDetails.areaOfficeName || "Not specified"}
+                                </p>
+                              </div>
+                            </div>
+                          </motion.div>
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3 }}
+                            className="group rounded-lg border border-gray-100 bg-[#f9f9f9] p-4 transition-all hover:border-blue-300 hover:bg-blue-50/50"
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="flex size-8 items-center justify-center rounded-lg bg-pink-100 transition-colors group-hover:bg-pink-200">
+                                <span className="text-xs font-bold text-pink-600">SUP</span>
+                              </div>
+                              <div className="flex-1">
+                                <label className="text-xs font-medium text-gray-600">Supervisor</label>
+                                <p className="mt-1 text-sm font-semibold text-gray-900">
+                                  {employeeDetails.supervisorName || "Not assigned"}
+                                </p>
+                              </div>
+                            </div>
+                          </motion.div>
                         </div>
                       </div>
                     </motion.div>
@@ -1567,36 +1846,70 @@ const EmployeeDetailsPage = () => {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
+                    className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
                   >
-                    <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                      <CalendarOutlineIcon />
-                      System Information
-                    </h3>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                      <div className="space-y-4">
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Account Created</label>
-                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                            {formatDate(employeeDetails.createdAt)}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="space-y-4">
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Account Updated</label>
-                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                            {formatDate(employeeDetails.updatedAt)}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="space-y-4">
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Last Login</label>
-                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                            {formatDate(employeeDetails.lastLoginAt)}
-                          </p>
-                        </div>
+                    <div className="border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white p-4">
+                      <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                        <CalendarOutlineIcon />
+                        System Information
+                      </h3>
+                    </div>
+                    <div className="p-6">
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.1 }}
+                          className="group rounded-lg border border-gray-100 bg-[#f9f9f9] p-4 transition-all hover:border-blue-300 hover:bg-blue-50/50"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex size-8 items-center justify-center rounded-lg bg-green-100 transition-colors group-hover:bg-green-200">
+                              <span className="text-xs font-bold text-green-600">+</span>
+                            </div>
+                            <div className="flex-1">
+                              <label className="text-xs font-medium text-gray-600">Account Created</label>
+                              <p className="mt-1 text-sm font-semibold text-gray-900">
+                                {formatDate(employeeDetails.createdAt)}
+                              </p>
+                            </div>
+                          </div>
+                        </motion.div>
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.2 }}
+                          className="group rounded-lg border border-gray-100 bg-[#f9f9f9] p-4 transition-all hover:border-blue-300 hover:bg-blue-50/50"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex size-8 items-center justify-center rounded-lg bg-blue-100 transition-colors group-hover:bg-blue-200">
+                              <span className="text-xs font-bold text-blue-600">↻</span>
+                            </div>
+                            <div className="flex-1">
+                              <label className="text-xs font-medium text-gray-600">Account Updated</label>
+                              <p className="mt-1 text-sm font-semibold text-gray-900">
+                                {formatDate(employeeDetails.updatedAt)}
+                              </p>
+                            </div>
+                          </div>
+                        </motion.div>
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.3 }}
+                          className="group rounded-lg border border-gray-100 bg-[#f9f9f9] p-4 transition-all hover:border-blue-300 hover:bg-blue-50/50"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex size-8 items-center justify-center rounded-lg bg-purple-100 transition-colors group-hover:bg-purple-200">
+                              <span className="text-xs font-bold text-purple-600">👤</span>
+                            </div>
+                            <div className="flex-1">
+                              <label className="text-xs font-medium text-gray-600">Last Login</label>
+                              <p className="mt-1 text-sm font-semibold text-gray-900">
+                                {formatDate(employeeDetails.lastLoginAt)}
+                              </p>
+                            </div>
+                          </div>
+                        </motion.div>
                       </div>
                     </div>
                   </motion.div>
@@ -1607,33 +1920,55 @@ const EmployeeDetailsPage = () => {
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.4 }}
-                      className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
+                      className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
                     >
-                      <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                        <VerifyOutlineIcon />
-                        System Privileges
-                      </h3>
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        {employeeDetails.privileges.map((privilege, index) => (
-                          <div key={index} className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                            <div className="text-sm font-medium text-gray-900 sm:text-base">{privilege.name}</div>
-                            <div className="text-xs text-gray-600 sm:text-sm">{privilege.category}</div>
-                            {privilege.actions && privilege.actions.length > 0 && (
-                              <div className="mt-2 flex flex-wrap gap-1">
-                                {privilege.actions.map((action, actionIndex) => (
-                                  <span
-                                    key={actionIndex}
-                                    className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800"
-                                  >
-                                    {({ E: "Execute", R: "Read", U: "Update", W: "Write" } as Record<string, string>)[
-                                      action
-                                    ] || action}
-                                  </span>
-                                ))}
+                      <div className="border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white p-4">
+                        <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                          <VerifyOutlineIcon />
+                          System Privileges
+                        </h3>
+                      </div>
+                      <div className="p-6">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                          {employeeDetails.privileges.map((privilege, index) => (
+                            <motion.div
+                              key={index}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: 0.05 * index }}
+                              className="group rounded-lg border border-gray-100 bg-[#f9f9f9] p-4 transition-all hover:border-blue-300 hover:bg-blue-50/50"
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex-1">
+                                  <div className="mb-2 flex items-center gap-2">
+                                    <div className="flex size-6 items-center justify-center rounded-lg bg-blue-100 transition-colors group-hover:bg-blue-200">
+                                      <Shield className="size-3 text-blue-600" />
+                                    </div>
+                                    <div className="text-sm font-medium text-gray-900">{privilege.name}</div>
+                                  </div>
+                                  <div className="mb-3 text-xs text-gray-600">{privilege.category}</div>
+                                  {privilege.actions && privilege.actions.length > 0 && (
+                                    <div className="flex flex-wrap gap-1">
+                                      {privilege.actions.map((action, actionIndex) => (
+                                        <span
+                                          key={actionIndex}
+                                          className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 transition-colors group-hover:bg-blue-200"
+                                        >
+                                          {(
+                                            { E: "Execute", R: "Read", U: "Update", W: "Write" } as Record<
+                                              string,
+                                              string
+                                            >
+                                          )[action] || action}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                            )}
-                          </div>
-                        ))}
+                            </motion.div>
+                          ))}
+                        </div>
                       </div>
                     </motion.div>
                   )}
@@ -1642,7 +1977,7 @@ const EmployeeDetailsPage = () => {
                   <EmployeeChangeRequestsSection employeeId={employeeDetails.id} />
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </div>
@@ -1692,97 +2027,176 @@ const EmployeeDetailsPage = () => {
         employeeId={employeeDetails.id}
         employeeName={employeeDetails.fullName}
       />
+
+      {/* Mobile Bottom Navigation */}
+      <motion.div
+        initial={{ y: 100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.6 }}
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 p-4 shadow-lg backdrop-blur-sm sm:hidden"
+      >
+        <div className="flex flex-col gap-3">
+          <div className="grid grid-cols-2 gap-3">
+            <ButtonModule
+              variant="outline"
+              size="sm"
+              className="flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-700 transition-colors hover:bg-gray-50"
+              onClick={() => router.push("/employees")}
+            >
+              <ArrowLeft className="size-4" />
+              <span>Back</span>
+            </ButtonModule>
+            <ButtonModule
+              variant="secondary"
+              size="sm"
+              className="flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-700 transition-colors hover:bg-gray-50"
+              onClick={exportToPDF}
+              disabled={isExporting}
+            >
+              <ExportOutlineIcon className="size-4" />
+              <span>{isExporting ? "Exporting..." : "Export"}</span>
+            </ButtonModule>
+          </div>
+          {canUpdate ? (
+            <ButtonModule
+              variant="primary"
+              size="sm"
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#004B23] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[#003618]"
+              onClick={() => router.push(`/employees/update-employee?id=${employeeId}`)}
+            >
+              <Edit3 className="size-4" />
+              <span>Edit Employee</span>
+            </ButtonModule>
+          ) : (
+            <ButtonModule
+              variant="primary"
+              size="sm"
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#004B23] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[#003618]"
+              onClick={() => openModal("changeRequest")}
+            >
+              <Edit3 className="size-4" />
+              <span>Request Change</span>
+            </ButtonModule>
+          )}
+        </div>
+      </motion.div>
     </section>
   )
 }
 
 // LoadingSkeleton component
 const LoadingSkeleton = () => (
-  <div className="min-h-screen bg-gradient-to-br from-[#f9f9f9] to-gray-100">
+  <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
     <DashboardNav />
-    <div className="container mx-auto p-4 sm:p-6">
+    <div className="w-full px-4 py-6 sm:px-6 lg:px-8">
       {/* Header Skeleton */}
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-4">
-          <div className="size-8 rounded-md bg-gray-200 sm:size-9"></div>
-          <div>
-            <div className="mb-2 h-6 w-32 rounded bg-gray-200 sm:h-8 sm:w-40"></div>
-            <div className="size-40 rounded bg-gray-200 sm:w-48"></div>
-          </div>
-        </div>
-        <div className="flex gap-2 sm:gap-3">
-          <div className="h-9 w-20 rounded bg-gray-200 sm:w-24"></div>
-          <div className="h-9 w-20 rounded bg-gray-200 sm:w-24"></div>
-          <div className="h-9 w-20 rounded bg-gray-200 sm:w-24"></div>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-6 xl:flex-row">
-        {/* Left Column Skeleton */}
-        <div className="w-full space-y-6 xl:w-[30%]">
-          {/* Profile Card Skeleton */}
-          <div className="animate-pulse rounded-lg border border-gray-200 bg-white p-4 sm:p-6">
-            <div className="text-center">
-              <div className="relative mx-auto mb-4">
-                <div className="mx-auto size-16 rounded-full bg-gray-200 sm:size-20"></div>
-                <div className="absolute -right-1 bottom-1 size-5 rounded-full bg-gray-200 sm:size-6"></div>
-              </div>
-              <div className="mx-auto mb-2 h-6 w-32 rounded bg-gray-200 sm:h-7"></div>
-              <div className="mx-auto mb-4 h-4 w-24 rounded bg-gray-200"></div>
-              <div className="mb-6 flex justify-center gap-2">
-                <div className="h-6 w-16 rounded-full bg-gray-200 sm:w-20"></div>
-                <div className="h-6 w-16 rounded-full bg-gray-200 sm:w-20"></div>
-              </div>
-              <div className="space-y-3">
-                <div className="h-4 w-full rounded bg-gray-200"></div>
-                <div className="h-4 w-full rounded bg-gray-200"></div>
-                <div className="h-4 w-full rounded bg-gray-200"></div>
-              </div>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="size-10 animate-pulse rounded-lg bg-gray-200"></div>
+            <div>
+              <div className="mb-2 h-7 w-40 animate-pulse rounded-lg bg-gray-200"></div>
+              <div className="h-5 w-48 animate-pulse rounded-lg bg-gray-200"></div>
             </div>
           </div>
-
-          {/* Quick Actions Skeleton */}
-          <div className="animate-pulse rounded-lg border border-gray-200 bg-white p-4 sm:p-6">
-            <div className="mb-4 h-5 w-32 rounded bg-gray-200 sm:h-6"></div>
-            <div className="space-y-3">
-              <div className="h-9 w-full rounded bg-gray-200 sm:h-10"></div>
-              <div className="h-9 w-full rounded bg-gray-200 sm:h-10"></div>
-              <div className="h-9 w-full rounded bg-gray-200 sm:h-10"></div>
-            </div>
-          </div>
-
-          {/* Roles Skeleton */}
-          <div className="animate-pulse rounded-lg border border-gray-200 bg-white p-4 sm:p-6">
-            <div className="mb-4 h-5 w-32 rounded bg-gray-200 sm:h-6"></div>
-            <div className="space-y-3">
-              <div className="h-16 w-full rounded bg-gray-200"></div>
-            </div>
+          <div className="flex gap-3">
+            <div className="h-10 w-24 animate-pulse rounded-lg bg-gray-200"></div>
+            <div className="h-10 w-24 animate-pulse rounded-lg bg-gray-200"></div>
           </div>
         </div>
+      </motion.div>
 
-        {/* Right Column Skeleton */}
-        <div className="flex-1 space-y-6">
-          {[1, 2, 3, 4, 5].map((item) => (
-            <div key={item} className="animate-pulse rounded-lg border border-gray-200 bg-white p-4 sm:p-6">
-              <div className="mb-6 h-6 w-40 rounded bg-gray-200 sm:w-48"></div>
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <div className="space-y-4">
-                  <div className="h-4 w-32 rounded bg-gray-200"></div>
-                  <div className="h-4 w-32 rounded bg-gray-200"></div>
-                </div>
-                <div className="space-y-4">
-                  <div className="h-4 w-32 rounded bg-gray-200"></div>
-                  <div className="h-4 w-32 rounded bg-gray-200"></div>
-                </div>
-                <div className="space-y-4">
-                  <div className="h-4 w-32 rounded bg-gray-200"></div>
-                  <div className="h-4 w-32 rounded bg-gray-200"></div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="overflow-hidden rounded-xl border border-gray-200/60 bg-transparent"
+      >
+        <div className="flex flex-col gap-6 xl:flex-row">
+          {/* Left Column Skeleton */}
+          <div className="w-full space-y-6 xl:w-[30%]">
+            {/* Profile Card Skeleton */}
+            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+              <div className="animate-pulse bg-gradient-to-r from-gray-200 to-gray-300 p-6">
+                <div className="text-center">
+                  <div className="relative mx-auto mb-4">
+                    <div className="mx-auto size-20 animate-pulse rounded-full bg-white/30"></div>
+                    <div className="absolute -right-1 bottom-1 size-6 animate-pulse rounded-full bg-white/50"></div>
+                  </div>
+                  <div className="mx-auto mb-2 h-6 w-40 animate-pulse rounded-lg bg-white/30"></div>
+                  <div className="mx-auto mb-4 h-4 w-32 animate-pulse rounded-lg bg-white/20"></div>
+                  <div className="mb-6 flex justify-center gap-2">
+                    <div className="h-6 w-20 animate-pulse rounded-full bg-white/30"></div>
+                    <div className="h-6 w-20 animate-pulse rounded-full bg-white/30"></div>
+                  </div>
                 </div>
               </div>
+              <div className="space-y-4 p-6">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-3">
+                    <div className="size-8 animate-pulse rounded-lg bg-gray-200"></div>
+                    <div className="flex-1">
+                      <div className="mb-1 h-3 w-16 animate-pulse rounded-lg bg-gray-200"></div>
+                      <div className="h-4 w-24 animate-pulse rounded-lg bg-gray-200"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
+
+            {/* Quick Actions Skeleton */}
+            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+              <div className="border-b border-gray-200 bg-gray-50 p-4">
+                <div className="h-6 w-32 animate-pulse rounded-lg bg-gray-200"></div>
+              </div>
+              <div className="space-y-3 p-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center gap-3 rounded-lg border border-gray-300 bg-white p-3">
+                    <div className="size-8 animate-pulse rounded-lg bg-gray-200"></div>
+                    <div className="flex-1">
+                      <div className="mb-1 h-4 w-24 animate-pulse rounded-lg bg-gray-200"></div>
+                      <div className="size-32 animate-pulse rounded-lg bg-gray-200"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column Skeleton */}
+          <div className="flex-1 space-y-6">
+            {[1, 2, 3, 4, 5].map((item) => (
+              <div key={item} className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <div className="border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white p-4">
+                  <div className="h-6 w-48 animate-pulse rounded-lg bg-gray-200"></div>
+                </div>
+                <div className="p-6">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    <div className="space-y-4">
+                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                        <div className="mb-2 h-3 w-20 animate-pulse rounded-lg bg-gray-200"></div>
+                        <div className="h-4 w-32 animate-pulse rounded-lg bg-gray-200"></div>
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                        <div className="mb-2 h-3 w-24 animate-pulse rounded-lg bg-gray-200"></div>
+                        <div className="h-4 w-28 animate-pulse rounded-lg bg-gray-200"></div>
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                        <div className="mb-2 h-3 w-16 animate-pulse rounded-lg bg-gray-200"></div>
+                        <div className="h-4 w-24 animate-pulse rounded-lg bg-gray-200"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   </div>
 )

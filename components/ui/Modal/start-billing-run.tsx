@@ -221,7 +221,7 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
           </div>
           <button
             onClick={onRequestClose}
-            className="ml-3 flex size-8 flex-shrink-0 items-center justify-center rounded-full bg-white text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600"
+            className="ml-3 flex size-8 shrink-0 items-center justify-center rounded-full bg-white text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600"
             aria-label="Close modal"
           >
             <X className="size-4" />
@@ -292,7 +292,7 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
           {/* Warning Message */}
           <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 max-sm:hidden sm:mb-6 sm:p-4">
             <div className="flex">
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 <AlertTriangle className="size-5 text-amber-400" />
               </div>
               <div className="ml-3">
@@ -389,7 +389,7 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
                 className="rounded-lg border border-red-200 bg-red-50 p-3 sm:p-4"
               >
                 <div className="flex items-start">
-                  <AlertCircle className="mr-2 mt-0.5 size-5 flex-shrink-0 text-red-400" />
+                  <AlertCircle className="mr-2 mt-0.5 size-5 shrink-0 text-red-400" />
                   <span className="text-sm text-red-700">{error}</span>
                 </div>
               </motion.div>
@@ -439,7 +439,7 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
 
               {!isConfirmed && (formData.billingPeriodId || formData.areaOfficeId) && (
                 <div className="mt-3 flex items-start gap-2 text-sm text-amber-600">
-                  <AlertTriangle className="size-4 flex-shrink-0" />
+                  <AlertTriangle className="size-4 shrink-0" />
                   <span>You must confirm this action to proceed</span>
                 </div>
               )}

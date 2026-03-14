@@ -20,6 +20,7 @@ import { fetchInjectionSubstations } from "lib/redux/injectionSubstationSlice"
 import { fetchFeeders } from "lib/redux/feedersSlice"
 import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface ActionDropdownProps {
   substation: DistributionSubstation
@@ -232,7 +233,7 @@ const DistributionStationTab: React.FC = () => {
   const [searchInput, setSearchInput] = useState("")
   const [searchText, setSearchText] = useState("")
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [isSortExpanded, setIsSortExpanded] = useState(true)
 
   // Local filter state (not applied yet)
@@ -420,8 +421,10 @@ const DistributionStationTab: React.FC = () => {
 
   // Apply all filters at once
   const applyFilters = () => {
+    const normalizedSearch = searchInput.trim()
+    setSearchText(normalizedSearch)
     setAppliedFilters({
-      searchText: searchText.trim(),
+      searchText: normalizedSearch,
       companyId: localFilters.companyId,
       areaOfficeId: localFilters.areaOfficeId,
       injectionSubstationId: localFilters.injectionSubstationId,
@@ -482,18 +485,12 @@ const DistributionStationTab: React.FC = () => {
 
   const handleManualSearch = () => {
     const trimmed = searchInput.trim()
-    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
-
-    if (shouldUpdate) {
-      setSearchText(trimmed)
-      // Apply filters immediately to trigger API call with search parameter
-      setAppliedFilters((prev) => ({
-        ...prev,
-        searchText: trimmed,
-      }))
-      // Reset to first page when searching
-      dispatch(setPagination({ page: 1, pageSize }))
-    }
+    setSearchText(trimmed)
+    setAppliedFilters((prev) => ({
+      ...prev,
+      searchText: trimmed,
+    }))
+    dispatch(setPagination({ page: 1, pageSize }))
   }
 
   const handleCancelSearch = () => {
@@ -780,40 +777,31 @@ const DistributionStationTab: React.FC = () => {
           }
         >
           <motion.div
-            className="items-center justify-between border-b py-2 md:flex md:py-4"
+            className="space-y-4 border-b py-2 md:py-4"
             initial={{ y: -10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="mb-3 flex items-center gap-3 md:mb-0">
-              {/* Filter Button for ALL screens up to 2xl */}
-              <button
-                onClick={() => setShowMobileFilters(true)}
-                className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
-              >
-                <Filter className="size-4" />
-                Filters
-                {getActiveFilterCount() > 0 && (
-                  <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
-                    {getActiveFilterCount()}
-                  </span>
-                )}
-              </button>
-              <div>
-                <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Distribution Stations</p>
-                <p className="text-sm text-gray-600">Monitor and manage distribution station infrastructure</p>
+            <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+              <div className="flex items-center gap-3">
+                {/* Filter Button for ALL screens up to 2xl */}
+                <button
+                  onClick={() => setShowMobileFilters(true)}
+                  className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
+                >
+                  <Filter className="size-4" />
+                  Filters
+                  {getActiveFilterCount() > 0 && (
+                    <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
+                      {getActiveFilterCount()}
+                    </span>
+                  )}
+                </button>
+                <div>
+                  <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Distribution Stations</p>
+                  <p className="text-sm text-gray-600">Monitor and manage distribution station infrastructure</p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <SearchModule
-                value={searchInput}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                onCancel={handleCancelSearch}
-                onSearch={handleManualSearch}
-                placeholder="Search distribution substations..."
-                className="w-full max-w-[300px]"
-                bgClassName="bg-white"
-              />
 
               {/* Hide/Show Filters button - Desktop only (2xl and above) */}
               <button
@@ -825,6 +813,22 @@ const DistributionStationTab: React.FC = () => {
                 {showDesktopFilters ? "Hide filters" : "Show filters"}
               </button>
             </div>
+
+            <div className="w-full">
+              <SearchModule
+                prominent
+                prominentTitle="Search Distribution Stations"
+                prominentDescription="Find distribution stations quickly by code, feeder, location, or status."
+                value={searchInput}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                onCancel={handleCancelSearch}
+                onSearch={handleManualSearch}
+                placeholder="Search distribution substations..."
+                height="h-14"
+                className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+                bgClassName="bg-white"
+              />
+            </div>
           </motion.div>
 
           {filteredSubstations.length === 0 ? (
@@ -834,16 +838,9 @@ const DistributionStationTab: React.FC = () => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4 }}
             >
-              <motion.p
-                className="text-base font-bold text-[#202B3C]"
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.2 }}
-              >
-                {appliedFilters.searchText || getActiveFilterCount() > 0
+              <EmptySearchState title={appliedFilters.searchText || getActiveFilterCount() > 0
                   ? "No matching distribution substations found"
-                  : "No distribution substations available"}
-              </motion.p>
+                  : "No distribution substations available"} />
             </motion.div>
           ) : (
             <>

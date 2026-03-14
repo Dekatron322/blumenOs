@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
 import { SearchModule } from "components/ui/Search/search-module"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface Transformer {
   id: string
@@ -379,6 +380,7 @@ const mockTransformers: Transformer[] = [
 const TransformersTab: React.FC = () => {
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
+  const [searchInput, setSearchInput] = useState("")
   const [searchText, setSearchText] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedTransformer, setSelectedTransformer] = useState<Transformer | null>(null)
@@ -388,8 +390,38 @@ const TransformersTab: React.FC = () => {
   const isLoading = false
   const isError = false
   const transformers = mockTransformers
-  const totalRecords = transformers.length
+  const filteredTransformers = React.useMemo(() => {
+    const query = searchText.trim().toLowerCase()
+    if (!query) return transformers
+
+    return transformers.filter((transformer) =>
+      [
+        transformer.id,
+        transformer.name,
+        transformer.location,
+        transformer.capacity,
+        transformer.status,
+        transformer.lastMaintenance,
+        transformer.customers.toString(),
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(query)
+    )
+  }, [transformers, searchText])
+  const totalRecords = filteredTransformers.length
   const totalPages = Math.ceil(totalRecords / pageSize)
+  const safeTotalPages = Math.max(1, totalPages)
+  const paginatedTransformers = React.useMemo(() => {
+    const start = (currentPage - 1) * pageSize
+    return filteredTransformers.slice(start, start + pageSize)
+  }, [filteredTransformers, currentPage, pageSize])
+
+  useEffect(() => {
+    if (currentPage > safeTotalPages) {
+      setCurrentPage(safeTotalPages)
+    }
+  }, [currentPage, safeTotalPages])
 
   const getStatusStyle = (status: Transformer["status"]) => {
     switch (status) {
@@ -423,12 +455,17 @@ const TransformersTab: React.FC = () => {
   }
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchText(e.target.value)
+    setSearchInput(e.target.value)
+  }
+
+  const handleManualSearch = () => {
+    setSearchText(searchInput.trim())
     setCurrentPage(1)
   }
 
   const handleCancelSearch = () => {
     setSearchText("")
+    setSearchInput("")
     setCurrentPage(1)
   }
 
@@ -440,42 +477,40 @@ const TransformersTab: React.FC = () => {
   return (
     <motion.div className="relative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
       <motion.div
-        className="items-center justify-between border-b py-2 md:flex md:py-4"
+        className="space-y-4 border-b py-2 md:py-4"
         initial={{ y: -10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.3 }}
       >
         <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Transformer Inventory</p>
+          <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Transformer Inventory</p>
           <p className="text-sm text-gray-600">Manage and monitor transformer assets across the network</p>
         </div>
-        <div className="flex gap-4">
+        <div className="w-full">
           <SearchModule
-            value={searchText}
+            prominent
+            prominentTitle="Search Transformers"
+            prominentDescription="Find transformers quickly by name, location, capacity, or operational status."
+            value={searchInput}
             onChange={handleSearch}
             onCancel={handleCancelSearch}
+            onSearch={handleManualSearch}
             placeholder="Search transformers..."
-            className="w-[380px]"
+            height="h-14"
+            className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
             bgClassName="bg-white"
           />
         </div>
       </motion.div>
 
-      {transformers.length === 0 ? (
+      {filteredTransformers.length === 0 ? (
         <motion.div
           className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
         >
-          <motion.p
-            className="text-base font-bold text-[#202B3C]"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            {searchText ? "No matching transformers found" : "No transformers available"}
-          </motion.p>
+          <EmptySearchState title={searchText ? "No matching transformers found" : "No transformers available"} />
         </motion.div>
       ) : (
         <>
@@ -549,7 +584,7 @@ const TransformersTab: React.FC = () => {
               </thead>
               <tbody>
                 <AnimatePresence>
-                  {transformers.map((transformer, index) => (
+                  {paginatedTransformers.map((transformer, index) => (
                     <motion.tr
                       key={transformer.id}
                       initial={{ opacity: 0, y: 10 }}
@@ -601,7 +636,7 @@ const TransformersTab: React.FC = () => {
             transition={{ duration: 0.4, delay: 0.2 }}
           >
             <div className="text-sm text-gray-700">
-              Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalRecords)} of{" "}
+              Showing {totalRecords === 0 ? 0 : (currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalRecords)} of{" "}
               {totalRecords} entries
             </div>
             <div className="flex items-center gap-2">
@@ -668,12 +703,12 @@ const TransformersTab: React.FC = () => {
 
               <motion.button
                 onClick={() => paginate(currentPage + 1)}
-                disabled={currentPage === totalPages}
+                disabled={currentPage === safeTotalPages}
                 className={`flex items-center justify-center rounded-md p-2 ${
-                  currentPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
+                  currentPage === safeTotalPages ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
                 }`}
-                whileHover={{ scale: currentPage === totalPages ? 1 : 1.1 }}
-                whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
+                whileHover={{ scale: currentPage === safeTotalPages ? 1 : 1.1 }}
+                whileTap={{ scale: currentPage === safeTotalPages ? 1 : 0.95 }}
               >
                 <MdOutlineArrowForwardIos />
               </motion.button>

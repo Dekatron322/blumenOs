@@ -4,10 +4,546 @@ import React, { useEffect, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { SearchModule } from "components/ui/Search/search-module"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
-import { HiChevronDown, HiChevronUp, HiFilter, HiRefresh } from "react-icons/hi"
+import { HiRefresh } from "react-icons/hi"
+import {
+  AlertCircle,
+  Award,
+  ChevronDown,
+  CreditCard,
+  DollarSign,
+  Medal,
+  PieChart,
+  RefreshCw,
+  Star,
+  Target,
+  TrendingDown,
+  TrendingUp,
+  Users,
+  Zap,
+} from "lucide-react"
 
 import { clearTopPerformers, fetchTopPerformers, TopPerformersRequest } from "lib/redux/paymentSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+
+// Modern Analytics Card Component
+const AnalyticsCard = ({
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  color = "blue",
+  trend,
+  trendValue,
+}: {
+  title: string
+  value: string | number
+  subtitle?: string
+  icon: React.ElementType
+  color?: "blue" | "green" | "purple" | "amber" | "emerald" | "red"
+  trend?: "up" | "down"
+  trendValue?: string
+}) => {
+  const colorClasses = {
+    blue: "bg-blue-50 text-blue-700 border-blue-200",
+    green: "bg-green-50 text-green-700 border-green-200",
+    purple: "bg-purple-50 text-purple-700 border-purple-200",
+    amber: "bg-amber-50 text-amber-700 border-amber-200",
+    emerald: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    red: "bg-red-50 text-red-700 border-red-200",
+  }
+
+  const iconColors = {
+    blue: "text-blue-600",
+    green: "text-green-600",
+    purple: "text-purple-600",
+    amber: "text-amber-600",
+    emerald: "text-emerald-600",
+    red: "text-red-600",
+  }
+
+  return (
+    <motion.div
+      whileHover={{ y: -2 }}
+      className="rounded-xl border border-gray-200 bg-white p-5 transition-all hover:border-gray-300 hover:shadow-sm"
+    >
+      <div className="flex items-start justify-between">
+        <div className={`rounded-lg p-2.5 ${colorClasses[color].split(" ")[0]}`}>
+          <Icon className={`size-5 ${iconColors[color]}`} />
+        </div>
+        {trend && (
+          <span
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${
+              trend === "up" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+            }`}
+          >
+            {trend === "up" ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
+            {trendValue}
+          </span>
+        )}
+      </div>
+
+      <div className="mt-3">
+        <p className="text-sm text-gray-600">{title}</p>
+        <p className="mt-1 text-2xl font-semibold text-gray-900">{value.toLocaleString()}</p>
+        {subtitle && <p className="mt-1 text-xs text-gray-500">{subtitle}</p>}
+      </div>
+    </motion.div>
+  )
+}
+
+// Modern Skeleton Loader for Analytics Cards
+const AnalyticsCardSkeleton = () => (
+  <motion.div
+    className="rounded-xl border border-gray-200 bg-white p-5"
+    initial={{ opacity: 0.6 }}
+    animate={{
+      opacity: [0.6, 1, 0.6],
+      transition: {
+        duration: 1.5,
+        repeat: Infinity,
+        ease: "easeInOut",
+      },
+    }}
+  >
+    <div className="flex items-start justify-between">
+      <div className="size-10 rounded-lg bg-gray-200"></div>
+      <div className="h-6 w-16 rounded-full bg-gray-200"></div>
+    </div>
+    <div className="mt-3 space-y-2">
+      <div className="h-4 w-24 rounded bg-gray-200"></div>
+      <div className="h-8 w-32 rounded bg-gray-200"></div>
+      <div className="h-3 w-20 rounded bg-gray-200"></div>
+    </div>
+  </motion.div>
+)
+
+// Loading Skeleton for Performers List
+const PerformersListSkeleton = () => (
+  <div className="space-y-2">
+    {[1, 2, 3, 4, 5].map((item) => (
+      <motion.div
+        key={item}
+        className="flex items-center justify-between rounded-lg border border-gray-100 bg-white p-3"
+        initial={{ opacity: 0.6 }}
+        animate={{
+          opacity: [0.6, 1, 0.6],
+          transition: {
+            duration: 1.5,
+            repeat: Infinity,
+            ease: "easeInOut",
+          },
+        }}
+      >
+        <div className="flex items-center gap-3">
+          <div className="size-8 rounded-full bg-gray-200"></div>
+          <div>
+            <div className="h-4 w-24 rounded bg-gray-200"></div>
+            <div className="mt-1 h-3 w-16 rounded bg-gray-200"></div>
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="h-4 w-20 rounded bg-gray-200"></div>
+          <div className="mt-1 h-3 w-12 rounded bg-gray-200"></div>
+        </div>
+      </motion.div>
+    ))}
+  </div>
+)
+
+// Time Range Distribution Component (similar to Employee Department Categories)
+const TimeRangeDistribution = ({
+  performers,
+  timeRange,
+  agentType,
+}: {
+  performers: any[]
+  timeRange: string
+  agentType: string
+}) => {
+  const [showAll, setShowAll] = useState(false)
+  const formatNumber = (num: number) => num?.toLocaleString() || "0"
+
+  if (!performers || performers.length === 0) return null
+
+  const displayPerformers = showAll ? performers : performers.slice(0, 3)
+  const totalAmount = performers.reduce((sum, p) => sum + p.amount, 0)
+  const totalTransactions = performers.reduce((sum, p) => sum + p.count, 0)
+
+  const categories = displayPerformers.map((performer, index) => ({
+    name:
+      index === 0 ? "Top Performer" : index === 1 ? "Second Place" : index === 2 ? "Third Place" : `Rank ${index + 1}`,
+    count: performer.amount || 0,
+    percentage: Math.round((performer.amount / totalAmount) * 100) || 0,
+    color: index === 0 ? "yellow" : index === 1 ? "gray" : index === 2 ? "orange" : "blue",
+    icon: index === 0 ? Medal : index === 1 ? Award : index === 2 ? Star : Target,
+    description: performer.name || "N/A",
+    value: performer.count || 0,
+  }))
+
+  const colorClasses = {
+    yellow: {
+      bg: "bg-yellow-50",
+      text: "text-yellow-700",
+      border: "border-yellow-200",
+      light: "bg-yellow-100",
+      dark: "bg-yellow-600",
+      gradient: "from-yellow-500 to-yellow-600",
+    },
+    gray: {
+      bg: "bg-gray-50",
+      text: "text-gray-700",
+      border: "border-gray-200",
+      light: "bg-gray-100",
+      dark: "bg-gray-600",
+      gradient: "from-gray-500 to-gray-600",
+    },
+    orange: {
+      bg: "bg-orange-50",
+      text: "text-orange-700",
+      border: "border-orange-200",
+      light: "bg-orange-100",
+      dark: "bg-orange-600",
+      gradient: "from-orange-500 to-orange-600",
+    },
+    blue: {
+      bg: "bg-blue-50",
+      text: "text-blue-700",
+      border: "border-blue-200",
+      light: "bg-blue-100",
+      dark: "bg-blue-600",
+      gradient: "from-blue-500 to-blue-600",
+    },
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mt-6 rounded-xl border border-gray-200 bg-white p-5"
+    >
+      {/* Header */}
+      <div className="mb-4 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
+        <div className="flex items-center gap-2">
+          <div className="rounded-lg bg-blue-100 p-2">
+            <PieChart className="size-5 text-blue-700" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">Performance Distribution</h2>
+            <p className="text-sm text-gray-600">Top performers breakdown for {timeRange}</p>
+          </div>
+        </div>
+        <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700">
+          Total: {formatNumber(totalTransactions)} transactions
+        </span>
+      </div>
+
+      {/* Categories Grid */}
+      <div
+        className={`grid gap-4 ${displayPerformers.length <= 3 ? "lg:grid-cols-3" : "md:grid-cols-2 lg:grid-cols-3"}`}
+      >
+        {categories.map((category, index) => {
+          const colors = colorClasses[category.color as keyof typeof colorClasses]
+          const Icon = category.icon
+
+          if (category.count === 0) return null
+
+          return (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="group rounded-lg border border-gray-100 bg-white p-4 transition-all hover:border-gray-200 hover:shadow-sm"
+            >
+              {/* Header */}
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2">
+                  <div className={`rounded-lg p-2 ${colors.bg}`}>
+                    <Icon className={`size-4 ${colors.text}`} />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900">{category.name}</h3>
+                    <p className="text-xs text-gray-500">{category.description}</p>
+                  </div>
+                </div>
+                <span className={`text-sm font-semibold ${colors.text}`}>
+                  {new Intl.NumberFormat("en-NG", {
+                    style: "currency",
+                    currency: "NGN",
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  }).format(category.count)}
+                </span>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="mt-3">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-600">Share of total</span>
+                  <span className="font-medium text-gray-900">{category.percentage}%</span>
+                </div>
+                <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${category.percentage}%` }}
+                    transition={{ duration: 0.5, delay: index * 0.1 + 0.3 }}
+                    className={`h-full rounded-full bg-gradient-to-r ${colors.gradient}`}
+                  />
+                </div>
+              </div>
+
+              {/* Transaction Count */}
+              <div className="mt-3">
+                <div className="flex items-center justify-between rounded-lg bg-gray-50 p-2">
+                  <span className="text-xs text-gray-600">Transactions</span>
+                  <span className="text-sm font-semibold text-gray-900">{formatNumber(category.value)}</span>
+                </div>
+              </div>
+            </motion.div>
+          )
+        })}
+      </div>
+
+      {/* Show More/Less Button */}
+      {performers.length > 3 && (
+        <div className="mt-6 flex justify-center">
+          <button
+            onClick={() => setShowAll(!showAll)}
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+          >
+            {showAll ? (
+              <>
+                <ChevronDown className="size-4 rotate-180" />
+                Show Less
+              </>
+            ) : (
+              <>
+                <ChevronDown className="size-4" />
+                Show More ({performers.length - 3} more)
+              </>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* Summary Stats Row */}
+      <div className="mt-4 grid grid-cols-1 gap-4 rounded-lg bg-gray-50 p-4 md:grid-cols-2">
+        {/* Left Column - Volume Stats */}
+        <div>
+          <h4 className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-600">Volume Statistics</h4>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between rounded-lg bg-white p-2">
+              <div className="flex items-center gap-2">
+                <div className="rounded-full bg-purple-100 p-1">
+                  <DollarSign className="size-3 text-purple-700" />
+                </div>
+                <span className="text-sm text-gray-700">Total Volume</span>
+              </div>
+              <span className="text-sm font-semibold text-gray-900">
+                {new Intl.NumberFormat("en-NG", {
+                  style: "currency",
+                  currency: "NGN",
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0,
+                }).format(totalAmount)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg bg-white p-2">
+              <div className="flex items-center gap-2">
+                <div className="rounded-full bg-emerald-100 p-1">
+                  <CreditCard className="size-3 text-emerald-700" />
+                </div>
+                <span className="text-sm text-gray-700">Total Transactions</span>
+              </div>
+              <span className="text-sm font-semibold text-gray-900">{formatNumber(totalTransactions)}</span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg bg-white p-2">
+              <div className="flex items-center gap-2">
+                <div className="rounded-full bg-blue-100 p-1">
+                  <Target className="size-3 text-blue-700" />
+                </div>
+                <span className="text-sm text-gray-700">Average Transaction</span>
+              </div>
+              <span className="text-sm font-semibold text-gray-900">
+                {new Intl.NumberFormat("en-NG", {
+                  style: "currency",
+                  currency: "NGN",
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0,
+                }).format(totalTransactions > 0 ? Math.round(totalAmount / totalTransactions) : 0)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column - Performance Stats */}
+        <div>
+          <h4 className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-600">Performance Metrics</h4>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between rounded-lg bg-white p-2">
+              <div className="flex items-center gap-2">
+                <div className="rounded-full bg-emerald-100 p-1">
+                  <TrendingUp className="size-3 text-emerald-700" />
+                </div>
+                <span className="text-sm text-gray-700">Top Performer Share</span>
+              </div>
+              <span className="text-sm font-semibold text-gray-900">
+                {Math.round((performers[0]?.amount / totalAmount) * 100)}%
+              </span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg bg-white p-2">
+              <div className="flex items-center gap-2">
+                <div className="rounded-full bg-blue-100 p-1">
+                  <Users className="size-3 text-blue-700" />
+                </div>
+                <span className="text-sm text-gray-700">Active Performers</span>
+              </div>
+              <span className="text-sm font-semibold text-gray-900">{performers.length}</span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg bg-white p-2">
+              <div className="flex items-center gap-2">
+                <div className="rounded-full bg-amber-100 p-1">
+                  <Zap className="size-3 text-amber-700" />
+                </div>
+                <span className="text-sm text-gray-700">Performance Gap</span>
+              </div>
+              <span className="text-sm font-semibold text-gray-900">
+                {performers.length > 1
+                  ? new Intl.NumberFormat("en-NG", {
+                      style: "currency",
+                      currency: "NGN",
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 0,
+                    }).format(performers[0]?.amount - (performers[1]?.amount || 0))
+                  : "N/A"}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+// Error Display Component
+const ErrorDisplay = ({ error, onRetry }: { error: string; onRetry: () => void }) => (
+  <motion.div
+    initial={{ opacity: 0, y: -10 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -10 }}
+    className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4"
+  >
+    <div className="flex items-start gap-3">
+      <AlertCircle className="mt-0.5 size-5 shrink-0 text-red-600" />
+      <div className="flex-1">
+        <p className="font-medium text-red-900">Failed to load top performers</p>
+        <p className="text-sm text-red-700">{error}</p>
+      </div>
+      <button
+        onClick={onRetry}
+        className="flex items-center gap-1.5 rounded-lg bg-red-100 px-3 py-1.5 text-sm font-medium text-red-800 hover:bg-red-200"
+      >
+        <RefreshCw className="size-4" />
+        Retry
+      </button>
+    </div>
+  </motion.div>
+)
+
+// Empty State Component
+const EmptyState = ({
+  timeRange,
+  agentType,
+  onViewAll,
+}: {
+  timeRange: string
+  agentType: string
+  onViewAll: () => void
+}) => (
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white p-12"
+  >
+    <div className="text-center">
+      <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-gray-100">
+        <Users className="size-8 text-gray-400" />
+      </div>
+      <h3 className="text-lg font-medium text-gray-900">No {agentType} found</h3>
+      <p className="mt-2 text-sm text-gray-500">
+        No {agentType} data available for {timeRange.toLowerCase()}.
+      </p>
+      <div className="mt-6">
+        <button
+          onClick={onViewAll}
+          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+        >
+          View All Time Data
+        </button>
+      </div>
+    </div>
+  </motion.div>
+)
+
+// Dropdown Popover Component (for time range)
+const DropdownPopover = ({
+  options,
+  selectedValue,
+  onSelect,
+  children,
+}: {
+  options: { value: string; label: string }[]
+  selectedValue: string
+  onSelect: (value: string) => void
+  children: React.ReactNode
+}) => {
+  const [isOpen, setIsOpen] = useState(false)
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+      >
+        {children}
+        <ChevronDown className={`size-4 text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="absolute right-0 z-20 mt-1 min-w-[120px] overflow-hidden rounded-lg border border-gray-200 bg-white py-1 text-sm shadow-lg"
+            >
+              {options.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    onSelect(option.value)
+                    setIsOpen(false)
+                  }}
+                  className={`block w-full px-3 py-2 text-left text-xs transition-colors ${
+                    option.value === selectedValue
+                      ? "bg-blue-50 font-medium text-blue-700"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
 
 const PerformingAgents = () => {
   const dispatch = useAppDispatch()
@@ -17,10 +553,6 @@ const PerformingAgents = () => {
 
   const [searchText, setSearchText] = useState("")
   const [searchInput, setSearchInput] = useState("")
-  const [selectedDispute, setSelectedDispute] = useState<any>(null)
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  const [showSidebar, setShowSidebar] = useState(true)
-  const [showMobileActions, setShowMobileActions] = useState(false)
   const [selectedTimeRange, setSelectedTimeRange] = useState("thisMonth")
   const [agentType, setAgentType] = useState("agents") // "agents" or "vendors"
 
@@ -100,70 +632,6 @@ const PerformingAgents = () => {
     }
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "bg-yellow-100 text-yellow-800"
-      case "under-review":
-        return "bg-blue-100 text-blue-800"
-      case "resolved":
-        return "bg-green-100 text-green-800"
-      case "rejected":
-        return "bg-red-100 text-red-800"
-      case "escalated":
-        return "bg-purple-100 text-purple-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
-  }
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "low":
-        return "bg-green-100 text-green-800"
-      case "medium":
-        return "bg-yellow-100 text-yellow-800"
-      case "high":
-        return "bg-orange-100 text-orange-800"
-      case "critical":
-        return "bg-red-100 text-red-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
-  }
-
-  const getDisputeTypeColor = (type: string) => {
-    switch (type) {
-      case "double-charge":
-        return "bg-red-100 text-red-800"
-      case "service-not-rendered":
-        return "bg-orange-100 text-orange-800"
-      case "incorrect-amount":
-        return "bg-blue-100 text-blue-800"
-      case "unauthorized-transaction":
-        return "bg-purple-100 text-purple-800"
-      case "other":
-        return "bg-gray-100 text-gray-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
-  }
-
-  const getPaymentMethodColor = (method: string) => {
-    switch (method) {
-      case "Bank Transfer":
-        return "bg-blue-100 text-blue-800"
-      case "Mobile Money":
-        return "bg-purple-100 text-purple-800"
-      case "POS Agent":
-        return "bg-orange-100 text-orange-800"
-      case "Card Payment":
-        return "bg-green-100 text-green-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
-  }
-
   // Get current performers based on selected type
   const getCurrentPerformers = () => {
     if (!topPerformers || !topPerformers.windows || topPerformers.windows.length === 0) {
@@ -198,264 +666,15 @@ const PerformingAgents = () => {
   // Get performers for display
   const performers = getCurrentPerformers()
 
-  // Close dropdown when clicking outside
-  React.useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (!(event.target as Element).closest(".action-dropdown")) {
-        setIsDropdownOpen(false)
-        setSelectedDispute(null)
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [])
-
-  // Auto-hide sidebar on mobile
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 1024) {
-        setShowSidebar(false)
-      } else {
-        setShowSidebar(true)
-      }
-    }
-
-    handleResize()
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
-  }, [])
-
-  // Loading skeleton for performers
-  const LoadingSkeleton = () => (
-    <div className="space-y-3 md:space-y-4">
-      {[1, 2, 3, 4, 5].map((item) => (
-        <div key={item} className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4">
-          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-            <div className="flex-1">
-              <div className="mb-4 flex items-center gap-3">
-                <div className="size-10 rounded-full bg-gray-300"></div>
-                <div className="flex-1">
-                  <div className="mb-2 h-4 w-32 rounded bg-gray-300"></div>
-                  <div className="h-3 w-24 rounded bg-gray-300"></div>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div className="h-3 w-full rounded bg-gray-300"></div>
-                <div className="h-3 w-full rounded bg-gray-300"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-
-  // Error display
-  const ErrorDisplay = () => (
-    <div className="rounded-lg border border-red-200 bg-red-50 p-4 md:p-6">
-      <div className="flex items-start">
-        <div className="ml-3">
-          <h3 className="text-sm font-medium text-red-800 md:text-base">Failed to load top performers</h3>
-          <div className="mt-2 text-sm text-red-700">
-            <p>{topPerformersError}</p>
-            <button
-              onClick={loadTopPerformers}
-              className="mt-3 inline-flex items-center gap-2 rounded-lg bg-red-100 px-3 py-1.5 text-sm font-medium text-red-800 hover:bg-red-200"
-            >
-              <HiRefresh className="size-4" />
-              Try Again
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-
-  // Empty state
-  const EmptyState = () => (
-    <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
-      <div className="mx-auto max-w-md">
-        <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-gray-200">
-          <HiFilter className="size-6 text-gray-500" />
-        </div>
-        <h3 className="text-sm font-medium text-gray-900 md:text-base">
-          No {agentType === "agents" ? "agents" : "vendors"} found
-        </h3>
-        <p className="mt-1 text-sm text-gray-500">
-          No {agentType === "agents" ? "agents" : "vendors"} data available for {getTimeRangeLabel().toLowerCase()}.
-        </p>
-        <button
-          onClick={() => setSelectedTimeRange("allTime")}
-          className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
-          View All Time Data
-        </button>
-      </div>
-    </div>
-  )
-
-  const PerformerCard = ({ performer, index, rank }: { performer: any; index: number; rank: number }) => (
-    <motion.div
-      key={performer.id}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.1 }}
-      className="rounded-lg border border-gray-200 bg-white p-4 transition-all hover:shadow-sm md:p-5"
-    >
-      <div className="flex items-start gap-4">
-        {/* Rank Badge */}
-        <div
-          className={`flex size-10 shrink-0 items-center justify-center rounded-full text-lg font-bold md:size-12 ${
-            rank === 1
-              ? "bg-yellow-100 text-yellow-800"
-              : rank === 2
-              ? "bg-gray-100 text-gray-800"
-              : rank === 3
-              ? "bg-orange-100 text-orange-800"
-              : "bg-blue-100 text-blue-800"
-          }`}
-        >
-          #{rank}
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between md:gap-3">
-            <div className="min-w-0">
-              <h4 className="truncate text-sm font-semibold text-gray-900 md:text-base">{performer.name}</h4>
-              {/* <p className="mt-0.5 text-xs text-gray-500 md:text-sm">ID: {performer.id}</p> */}
-            </div>
-            <div className="mt-2 flex flex-wrap gap-2 md:mt-0 md:flex-col md:items-end">
-              <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-800">
-                {performer.count} {performer.count === 1 ? "payment" : "payments"}
-              </span>
-            </div>
-          </div>
-
-          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
-            <div>
-              <p className="mb-1 text-xs text-gray-500 md:text-sm">Total Amount:</p>
-              <p className="text-lg font-bold text-gray-900 md:text-xl">{formatCurrency(performer.amount)}</p>
-            </div>
-            <div>
-              <p className="mb-1 text-xs text-gray-500 md:text-sm">Average Per Transaction:</p>
-              <p className="text-sm font-medium text-gray-900 md:text-base">
-                {formatCurrency(performer.count > 0 ? Math.round(performer.amount / performer.count) : 0)}
-              </p>
-            </div>
-          </div>
-
-          {/* Progress bar */}
-          <div className="mt-4">
-            <div className="mb-1 flex justify-between text-xs text-gray-500">
-              <span>Performance Score</span>
-              <span>{Math.round((performer.count / (performers[0]?.count || 1)) * 100)}%</span>
-            </div>
-            <div className="h-2 overflow-hidden rounded-full bg-gray-200">
-              <div
-                className={`h-full rounded-full ${
-                  rank === 1
-                    ? "bg-yellow-500"
-                    : rank === 2
-                    ? "bg-gray-500"
-                    : rank === 3
-                    ? "bg-orange-500"
-                    : "bg-blue-500"
-                }`}
-                style={{
-                  width: `${Math.min(100, Math.round((performer.count / (performers[0]?.count || 1)) * 100))}%`,
-                }}
-              ></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  )
-
-  const StatCard = ({
-    title,
-    items,
-  }: {
-    title: string
-    items: Array<{ label: string; value: string; color: string; count: number }>
-  }) => (
-    <div className="rounded-lg border border-gray-200 bg-white p-3 md:p-4 lg:p-6">
-      <h3 className="mb-3 text-sm font-semibold text-gray-900 md:text-base lg:text-lg">{title}</h3>
-      <div className="space-y-2 md:space-y-3 lg:space-y-4">
-        {items.map((item, index) => (
-          <div key={index} className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className={`size-2 rounded-full ${item.color} md:size-3`}></div>
-              <span className="text-xs text-gray-700 md:text-sm">{item.label}</span>
-            </div>
-            <span className={`text-xs font-semibold md:text-sm ${item.color.replace("bg-", "text-")}`}>
-              {item.count} {item.count === 1 ? "dispute" : "disputes"}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-
-  const QuickActionsCard = () => (
-    <div className="rounded-lg border border-gray-200 bg-white p-3 md:p-4 lg:p-6">
-      <h3 className="mb-3 text-sm font-semibold text-gray-900 md:text-base lg:text-lg">Quick Actions</h3>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-1 sm:gap-2 md:gap-3">
-        <button className="w-full rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700 sm:py-2.5 md:px-4 md:py-2 md:text-sm">
-          View All Reports
-        </button>
-        <button className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 sm:py-2.5 md:px-4 md:py-2 md:text-sm">
-          Export Data
-        </button>
-        <button className="col-span-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 sm:col-span-1 sm:py-2.5 md:px-4 md:py-2 md:text-sm">
-          Analytics Dashboard
-        </button>
-      </div>
-    </div>
-  )
-
-  const MobileQuickActions = () => (
-    <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-full bg-white shadow-lg ring-1 ring-gray-200 md:hidden">
-      <div className="flex items-center gap-1 p-1">
-        <button
-          onClick={() => setShowMobileActions(!showMobileActions)}
-          className="flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-          aria-label="Quick actions"
-        >
-          <span>Actions</span>
-          {showMobileActions ? <HiChevronUp className="size-4" /> : <HiChevronDown className="size-4" />}
-        </button>
-      </div>
-
-      {showMobileActions && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="absolute bottom-full left-0 mb-2 w-48 rounded-lg border border-gray-200 bg-white p-2 shadow-lg"
-        >
-          <button className="mb-1 w-full rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700">
-            View All Reports
-          </button>
-          <button className="mb-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-            Export Data
-          </button>
-          <button className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-            Analytics Dashboard
-          </button>
-        </motion.div>
-      )}
-    </div>
-  )
-
-  // Summary statistics
+  // Calculate summary stats for analytics cards
   const getSummaryStats = () => {
     if (!performers || performers.length === 0) {
       return {
         totalAmount: 0,
         totalTransactions: 0,
         avgTransaction: 0,
-        topPerformerName: "N/A",
+        topPerformerAmount: 0,
+        uniquePerformers: 0,
       }
     }
 
@@ -467,129 +686,125 @@ const PerformingAgents = () => {
       totalAmount,
       totalTransactions,
       avgTransaction: Math.round(avgTransaction),
-      topPerformerName: performers[0]?.name || "N/A",
+      topPerformerAmount: performers[0]?.amount || 0,
+      uniquePerformers: performers.length,
     }
   }
 
   const stats = getSummaryStats()
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="flex flex-col gap-4 lg:flex-row lg:gap-6"
-    >
-      {/* Left Column - Top Performers List */}
-      <div className="flex-1">
-        <div className="rounded-lg border bg-white p-3 md:p-4 lg:p-6">
-          <div className="mb-4 flex flex-col gap-3 md:mb-6 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-center justify-between md:block">
-              <div className="flex items-center gap-2">
-                <h3 className="text-base font-semibold md:text-lg">Top Performers</h3>
-                <div className="flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
-                  <span>{getTimeRangeLabel()}</span>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowSidebar(!showSidebar)}
-                className="flex items-center gap-1 rounded-lg border border-gray-200 px-2 py-1.5 text-xs hover:bg-gray-50 md:hidden"
-                aria-label="Toggle sidebar"
-              >
-                <span>Stats</span>
-                {showSidebar ? <HiChevronUp className="size-3" /> : <HiChevronDown className="size-3" />}
-              </button>
+    <section className="w-full bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="w-full px-4 py-6 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 sm:text-2xl">Top Performers</h1>
+              <p className="mt-1 text-sm text-gray-600">Track and analyze agent and vendor performance</p>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
-              {/* Time Range Filter */}
-              <FormSelectModule
-                name="timeRange"
-                value={selectedTimeRange}
-                onChange={(e) => setSelectedTimeRange(e.target.value)}
-                options={timeRanges}
-                className="w-full sm:w-auto"
-                controlClassName="h-[38px] text-xs md:text-sm"
-              />
-
+            {/* Header Actions */}
+            <div className="flex items-center gap-3">
               {/* Agent/Vendor Toggle */}
-              <div className="flex items-center rounded-lg border border-gray-200 bg-white p-1">
+              <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white p-1">
                 <button
                   onClick={() => setAgentType("agents")}
-                  className={`rounded px-3 py-1.5 text-xs font-medium md:text-sm ${
-                    agentType === "agents" ? "bg-blue-600 text-white" : "text-gray-700 hover:bg-gray-100"
+                  className={`rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                    agentType === "agents" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"
                   }`}
                 >
                   Agents
                 </button>
                 {/* <button
                   onClick={() => setAgentType("vendors")}
-                  className={`rounded px-3 py-1.5 text-xs font-medium md:text-sm ${
-                    agentType === "vendors" ? "bg-blue-600 text-white" : "text-gray-700 hover:bg-gray-100"
+                  className={`rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                    agentType === "vendors" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"
                   }`}
                 >
                   Vendors
                 </button> */}
               </div>
 
-              <div className="flex-1 md:max-w-md">
-                <SearchModule
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  onCancel={handleCancelSearch}
-                  onSearch={handleManualSearch}
-                  placeholder={`Search ${agentType}...`}
-                  className="w-full"
-                />
-              </div>
+              {/* Time Range Dropdown */}
+              <DropdownPopover options={timeRanges} selectedValue={selectedTimeRange} onSelect={setSelectedTimeRange}>
+                {timeRanges.find((r) => r.id === selectedTimeRange)?.label}
+              </DropdownPopover>
 
               {/* Refresh Button */}
               <button
                 onClick={loadTopPerformers}
                 disabled={topPerformersLoading}
-                className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs hover:bg-gray-50 disabled:opacity-50 md:text-sm"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
               >
-                <HiRefresh className={`size-3 md:size-4 ${topPerformersLoading ? "animate-spin" : ""}`} />
-                <span>Refresh</span>
+                <RefreshCw className={`size-4 ${topPerformersLoading ? "animate-spin" : ""}`} />
+                Refresh
               </button>
             </div>
           </div>
+        </div>
 
-          {/* Loading State */}
-          {topPerformersLoading && <LoadingSkeleton />}
+        {/* Error Message */}
+        <AnimatePresence>
+          {topPerformersError && <ErrorDisplay error={topPerformersError} onRetry={loadTopPerformers} />}
+        </AnimatePresence>
 
-          {/* Error State */}
-          {topPerformersError && <ErrorDisplay />}
+        {/* Analytics Cards Row */}
+        {!topPerformersLoading && performers.length > 0 && (
+          <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <AnalyticsCard
+              title="Total Volume"
+              value={formatCurrency(stats.totalAmount)}
+              subtitle="All transactions value"
+              icon={DollarSign}
+              color="blue"
+            />
+            <AnalyticsCard
+              title="Transactions"
+              value={stats.totalTransactions}
+              subtitle={`${performers.length} active performers`}
+              icon={CreditCard}
+              color="green"
+            />
+            <AnalyticsCard
+              title="Average Transaction"
+              value={formatCurrency(stats.avgTransaction)}
+              subtitle="Per transaction average"
+              icon={Target}
+              color="purple"
+            />
+            <AnalyticsCard
+              title="Top Performer"
+              value={formatCurrency(stats.topPerformerAmount)}
+              subtitle={performers[0]?.name || "N/A"}
+              icon={Medal}
+              color="amber"
+            />
+          </div>
+        )}
 
-          {/* Empty State */}
-          {!topPerformersLoading && !topPerformersError && performers.length === 0 && <EmptyState />}
+        {/* Analytics Cards Skeleton */}
+        {topPerformersLoading && !performers.length && (
+          <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+              <AnalyticsCardSkeleton key={i} />
+            ))}
+          </div>
+        )}
 
-          {/* Success State - Performers List */}
+        {/* Main Content - Two Column Layout */}
+        <div className="flex flex-col gap-6 lg:flex-row">
+          {/* Left Column - Performers List */}
+
+          {/* Right Column - Performance Distribution */}
           {!topPerformersLoading && !topPerformersError && performers.length > 0 && (
-            <div className="space-y-3 md:space-y-4">
-              {performers.map((performer, index) => (
-                <PerformerCard key={performer.id} performer={performer} index={index} rank={index + 1} />
-              ))}
+            <div className="lg:w-full">
+              <TimeRangeDistribution performers={performers} timeRange={getTimeRangeLabel()} agentType={agentType} />
             </div>
           )}
         </div>
       </div>
-
-      {/* Right Column - Statistics */}
-
-      {/* Mobile Quick Actions Button */}
-      <MobileQuickActions />
-
-      {/* Mobile Toggle Sidebar Button */}
-      <button
-        onClick={() => setShowSidebar(!showSidebar)}
-        className="fixed bottom-4 right-4 z-40 flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-lg hover:bg-blue-700 lg:hidden"
-        aria-label="Toggle sidebar"
-      >
-        <span>{showSidebar ? "Hide" : "Show"} Stats</span>
-        {showSidebar ? <HiChevronUp className="size-4" /> : <HiChevronDown className="size-4" />}
-      </button>
-    </motion.div>
+    </section>
   )
 }
 

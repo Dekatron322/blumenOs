@@ -1,8 +1,52 @@
 "use client"
+
 import React from "react"
-import { motion } from "framer-motion"
-import { Building, Calendar, ChevronDown, History, Mail, MapPin, Phone, User, Zap } from "lucide-react"
+import { AnimatePresence, motion } from "framer-motion"
+import {
+  Activity,
+  AlertCircle,
+  AlertTriangle,
+  AtSign,
+  Award,
+  BarChart3,
+  Briefcase,
+  Building,
+  Calendar,
+  CheckCircle,
+  ChevronDown,
+  Clock,
+  Cpu,
+  CreditCard,
+  Fingerprint,
+  Gauge,
+  Globe,
+  HardDrive,
+  Hash,
+  HelpCircle,
+  History,
+  Home,
+  Layers,
+  Loader2,
+  Mail,
+  Map,
+  MapPin,
+  Package,
+  Phone,
+  PhoneCall,
+  RefreshCw,
+  Scale,
+  Shield,
+  Tag,
+  Thermometer,
+  User,
+  UserCircle,
+  Users,
+  Wrench,
+  X,
+  Zap,
+} from "lucide-react"
 import { MeteringOutlineIcon } from "components/Icons/Icons"
+import { VscAdd } from "react-icons/vsc"
 
 interface Asset {
   serialNo: number
@@ -78,15 +122,15 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
   const getMeterStatusStyle = (status: number) => {
     switch (status) {
       case 1: // Active
-        return "bg-emerald-50 text-emerald-700"
+        return "bg-emerald-50 text-emerald-700 border-emerald-200"
       case 2: // Deactivated
-        return "bg-amber-50 text-amber-700"
+        return "bg-amber-50 text-amber-700 border-amber-200"
       case 3: // Suspended
-        return "bg-red-50 text-red-700"
+        return "bg-red-50 text-red-700 border-red-200"
       case 4: // Retired
-        return "bg-red-50 text-red-600"
+        return "bg-red-50 text-red-600 border-red-200"
       default:
-        return "bg-gray-100 text-gray-700"
+        return "bg-gray-100 text-gray-700 border-gray-200"
     }
   }
 
@@ -111,6 +155,27 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
     }
   }
 
+  const getMeterStateIcon = (state: number) => {
+    switch (state) {
+      case 1:
+        return <CheckCircle className="size-3 text-emerald-600" />
+      case 2:
+        return <AlertTriangle className="size-3 text-amber-600" />
+      case 3:
+        return <AlertCircle className="size-3 text-orange-600" />
+      case 4:
+        return <X className="size-3 text-red-600" />
+      case 5:
+        return <HelpCircle className="size-3 text-gray-600" />
+      case 6:
+        return <AlertTriangle className="size-3 text-red-600" />
+      case 7:
+        return <User className="size-3 text-blue-600" />
+      default:
+        return <HelpCircle className="size-3 text-gray-600" />
+    }
+  }
+
   const meters = currentCustomer?.meters ?? []
   const [expandedMeterId, setExpandedMeterId] = React.useState<number | null>(meters[0]?.id ?? null)
 
@@ -121,10 +186,10 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
   const meterStats = React.useMemo(() => {
     if (!meters.length) {
       return [
-        { label: "Total Meters", value: 0 },
-        { label: "Active", value: 0 },
-        { label: "Smart", value: 0 },
-        { label: "Prepaid", value: 0 },
+        { label: "Total Meters", value: 0, icon: HardDrive, color: "blue" },
+        { label: "Active", value: 0, icon: Activity, color: "emerald" },
+        { label: "Smart", value: 0, icon: Cpu, color: "indigo" },
+        { label: "Prepaid", value: 0, icon: CreditCard, color: "purple" },
       ]
     }
 
@@ -133,10 +198,10 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
     const prepaidCount = meters.filter((meter: any) => meter.meterType === 1).length
 
     return [
-      { label: "Total Meters", value: meters.length },
-      { label: "Active", value: activeCount },
-      { label: "Smart", value: smartCount },
-      { label: "Prepaid", value: prepaidCount },
+      { label: "Total Meters", value: meters.length, icon: HardDrive, color: "blue" },
+      { label: "Active", value: activeCount, icon: Activity, color: "emerald" },
+      { label: "Smart", value: smartCount, icon: Cpu, color: "indigo" },
+      { label: "Prepaid", value: prepaidCount, icon: CreditCard, color: "purple" },
     ]
   }, [meters])
 
@@ -146,803 +211,1199 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
 
   const renderMeterDetails = (meter: any) => {
     const statusChips = [
-      meter.meterCategory && { label: meter.meterCategory, className: "bg-blue-50 text-blue-700" },
+      meter.meterCategory && {
+        label: meter.meterCategory,
+        icon: Tag,
+        color: "blue",
+      },
       {
         label: getMeterStatusLabel(meter.status),
-        className: getMeterStatusStyle(meter.status),
+        icon: Activity,
+        color: meter.status === 1 ? "emerald" : meter.status === 2 ? "amber" : meter.status === 3 ? "red" : "gray",
       },
       {
         label: getMeterStateLabel(meter.meterState),
-        className: "bg-purple-50 text-purple-700",
+        icon: getMeterStateIcon,
+        color: "purple",
       },
-      meter.isSmart && { label: "Smart", className: "bg-indigo-50 text-indigo-700" },
-    ].filter(Boolean) as { label: string; className: string }[]
+      meter.isSmart && {
+        label: "Smart Meter",
+        icon: Cpu,
+        color: "indigo",
+      },
+    ].filter(Boolean) as { label: string; icon: any; color: string }[]
+
+    const getColorClasses = (color: string) => {
+      const colorMap: Record<string, { bg: string; text: string; border: string }> = {
+        blue: { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" },
+        emerald: { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" },
+        amber: { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" },
+        red: { bg: "bg-red-50", text: "text-red-700", border: "border-red-200" },
+        purple: { bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-200" },
+        indigo: { bg: "bg-indigo-50", text: "text-indigo-700", border: "border-indigo-200" },
+        gray: { bg: "bg-gray-50", text: "text-gray-700", border: "border-gray-200" },
+      }
+      return colorMap[color] || colorMap.gray || { bg: "bg-gray-50", text: "text-gray-700", border: "border-gray-200" }
+    }
 
     const infoGroups = [
       {
         title: "Identity & Lifecycle",
+        icon: Fingerprint,
         items: [
-          { label: "Serial", value: meter.serialNumber || "N/A" },
-          { label: "Meter Number", value: meter.drn || "N/A" },
-          { label: "Seal", value: meter.sealNumber || "N/A" },
-          { label: "Pole", value: meter.poleNumber || "N/A" },
+          { label: "Serial Number", value: meter.serialNumber || "N/A", icon: Hash },
+          { label: "Meter Number", value: meter.drn || "N/A", icon: Fingerprint },
+          { label: "Seal Number", value: meter.sealNumber || "N/A", icon: Shield },
+          { label: "Pole Number", value: meter.poleNumber || "N/A", icon: MapPin },
           {
-            label: "Installed",
+            label: "Installation Date",
             value: meter.installationDate ? formatDate(meter.installationDate) : "N/A",
+            icon: Calendar,
           },
-          { label: "First Reading", value: meter.firstReading ?? "N/A" },
+          { label: "First Reading", value: meter.firstReading ?? "N/A", icon: Gauge },
           {
             label: "Last Vending",
             value: meter.lastVendingDate ? formatDate(meter.lastVendingDate) : "N/A",
+            icon: CreditCard,
           },
         ],
       },
       {
-        title: "Technical",
+        title: "Technical Specifications",
+        icon: Cpu,
         items: [
-          { label: "SGC", value: meter.sgc || "N/A" },
-          { label: "KRN", value: meter.krn || "N/A" },
-          { label: "TI", value: meter.ti || "N/A" },
-          { label: "EA", value: meter.ea || "N/A" },
-          { label: "TCT", value: meter.tct || "N/A" },
-          { label: "KEN", value: meter.ken || "N/A" },
-          { label: "MFR", value: meter.mfrCode || "N/A" },
+          { label: "SGC", value: meter.sgc || "N/A", icon: Hash },
+          { label: "KRN", value: meter.krn || "N/A", icon: Hash },
+          { label: "TI", value: meter.ti || "N/A", icon: Hash },
+          { label: "EA", value: meter.ea || "N/A", icon: Hash },
+          { label: "TCT", value: meter.tct || "N/A", icon: Thermometer },
+          { label: "KEN", value: meter.ken || "N/A", icon: Hash },
+          { label: "MFR", value: meter.mfrCode || "N/A", icon: Award },
         ],
       },
     ]
 
     return (
-      <div className="border-t border-gray-100 bg-gray-50 px-4 py-5 sm:px-6">
+      <motion.div
+        initial={{ opacity: 0, height: 0 }}
+        animate={{ opacity: 1, height: "auto" }}
+        exit={{ opacity: 0, height: 0 }}
+        transition={{ duration: 0.2 }}
+        className="border-t border-gray-100 bg-gray-50/80 px-4 py-5 sm:px-6"
+      >
         <div className="flex flex-wrap gap-2">
-          {statusChips.map((chip) => (
-            <span
-              key={`${meter.id}-${chip.label}`}
-              className={`rounded-full px-3 py-1 text-xs font-medium ${chip.className}`}
-            >
-              {chip.label}
-            </span>
-          ))}
+          {statusChips.map((chip) => {
+            const colors = getColorClasses(chip.color)
+            return (
+              <span
+                key={`${meter.id}-${chip.label}`}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${colors.bg} ${colors.text} ${colors.border}`}
+              >
+                {typeof chip.icon === "function" ? chip.icon(meter.meterState) : <chip.icon className="size-3" />}
+                {chip.label}
+              </span>
+            )
+          })}
         </div>
-        <div className="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-2">
+
+        <div className="mt-5 grid gap-5 md:grid-cols-2">
           {infoGroups.map((group) => (
-            <div key={`${meter.id}-${group.title}`} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-50">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{group.title}</p>
-              <dl className="mt-3 space-y-3">
+            <motion.div
+              key={`${meter.id}-${group.title}`}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+              className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+            >
+              <div className="mb-3 flex items-center gap-2">
+                <div className="rounded-lg bg-gray-100 p-1.5">
+                  <group.icon className="size-4 text-gray-600" />
+                </div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-600">{group.title}</p>
+              </div>
+              <dl className="space-y-2.5">
                 {group.items.map((item) => (
-                  <div key={`${group.title}-${item.label}`} className="flex items-center justify-between gap-3">
-                    <dt className="text-xs font-medium text-gray-500">{item.label}</dt>
-                    <dd className="text-right text-sm font-semibold text-gray-900">{item.value}</dd>
+                  <div
+                    key={`${group.title}-${item.label}`}
+                    className="flex items-center justify-between border-b border-gray-100 pb-1.5 last:border-0 last:pb-0"
+                  >
+                    <dt className="flex items-center gap-1.5 text-xs text-gray-500">
+                      <item.icon className="size-3 text-gray-400" />
+                      {item.label}
+                    </dt>
+                    <dd className="truncate text-right text-sm font-medium text-gray-900" title={item.value}>
+                      {item.value}
+                    </dd>
                   </div>
                 ))}
               </dl>
-            </div>
+            </motion.div>
           ))}
         </div>
-      </div>
+      </motion.div>
     )
   }
 
   return (
-    <>
-      {/* Customer Overview */}
+    <div className="space-y-6">
+      {/* Customer Overview - Hero Section */}
       <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="overflow-hidden rounded-xl border border-gray-200 bg-gradient-to-br from-white to-gray-50/50 shadow-sm"
       >
-        <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-          <User className="size-5" />
-          Customer Overview
-        </h3>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2">
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">Customer Number</label>
-            <p className="text-sm font-semibold text-gray-900">{currentCustomer.customerNumber}</p>
-          </div>
-
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">Account Number</label>
-            <p className="text-sm font-semibold text-gray-900">{currentCustomer.accountNumber}</p>
-          </div>
-          {/* <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">Auto Number</label>
-            <p className="text-sm text-gray-900">{currentCustomer.autoNumber}</p>
-          </div> */}
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <div className="text-sm font-medium text-gray-500">Status Code</div>
-            <p
-              className={`inline-flex rounded-full px-2 py-1 text-xs font-medium
+        {/* Header with gradient */}
+        <div className="border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-blue-100 p-2.5">
+                <User className="size-5 text-blue-700" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">Customer Overview</h2>
+                <p className="text-sm text-gray-600">Basic customer identification and status</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium
                 ${
                   currentCustomer.statusCode === "ACTIVE"
-                    ? "bg-emerald-50 text-emerald-700"
+                    ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
                     : currentCustomer.statusCode === "SUSPENDED"
-                    ? "bg-red-50 text-red-700"
+                    ? "border border-red-200 bg-red-50 text-red-700"
                     : currentCustomer.statusCode === "INACTIVE"
-                    ? "bg-amber-50 text-amber-700"
-                    : "bg-gray-100 text-gray-700"
+                    ? "border border-amber-200 bg-amber-50 text-amber-700"
+                    : "border border-gray-200 bg-gray-100 text-gray-700"
                 }
               `}
-            >
-              {getStatusLabel(currentCustomer.statusCode)}
-            </p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9f9f9] p-4">
-            <label className="text-sm font-medium text-gray-500">Customer Type</label>
-            <div className="flex flex-wrap gap-1">
-              <span
-                className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                  currentCustomer.isPPM ? "bg-blue-50 text-blue-700" : "bg-purple-50 text-purple-700"
-                }`}
               >
-                {currentCustomer.isPPM ? "PREPAID" : "POSTPAID"}
+                <Activity className="size-3" />
+                {getStatusLabel(currentCustomer.statusCode)}
               </span>
-              {currentCustomer.isCustomerNew && (
-                <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700">
-                  NEW
-                </span>
-              )}
-              {currentCustomer.isPostEnumerated && (
-                <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
-                  POST ENUMERATED
-                </span>
-              )}
-              {currentCustomer.isPPM && (
-                <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
-                  Prepaid Meter
-                </span>
-              )}
-              {currentCustomer.isMD && (
-                <span className="inline-flex items-center rounded-full bg-orange-50 px-2 py-1 text-xs font-medium text-orange-700">
-                  MD Customer
-                </span>
-              )}
-              {currentCustomer.isUrban && (
-                <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700">
-                  Urban Area
-                </span>
-              )}
-              {currentCustomer.isHRB && (
-                <span className="inline-flex items-center rounded-full bg-purple-50 px-2 py-1 text-xs font-medium text-purple-700">
-                  HRB Customer
-                </span>
-              )}
             </div>
-            {/* <div className="mt-2 flex flex-wrap gap-1"></div> */}
           </div>
-          {/* <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">Ready for Extraction</label>
-            <p className="text-sm text-gray-900">{currentCustomer.isReadyforExtraction ? "Yes" : "No"}</p>
-          </div> */}
+        </div>
+
+        {/* Content */}
+        <div className="p-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-2">
+            <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-blue-300 hover:shadow-sm">
+              <div className="flex items-center gap-2 text-gray-500 group-hover:text-blue-600">
+                <Hash className="size-4" />
+                <span className="text-xs font-medium uppercase tracking-wider">Customer Number</span>
+              </div>
+              <p className="mt-2 truncate text-base font-semibold text-gray-900" title={currentCustomer.customerNumber}>
+                {currentCustomer.customerNumber}
+              </p>
+            </div>
+
+            <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-blue-300 hover:shadow-sm">
+              <div className="flex items-center gap-2 text-gray-500 group-hover:text-blue-600">
+                <Fingerprint className="size-4" />
+                <span className="text-xs font-medium uppercase tracking-wider">Account Number</span>
+              </div>
+              <p className="mt-2 truncate text-base font-semibold text-gray-900" title={currentCustomer.accountNumber}>
+                {currentCustomer.accountNumber}
+              </p>
+            </div>
+
+            <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-blue-300 hover:shadow-sm">
+              <div className="flex items-center gap-2 text-gray-500 group-hover:text-blue-600">
+                <Briefcase className="size-4" />
+                <span className="text-xs font-medium uppercase tracking-wider">Customer Type</span>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                <span
+                  className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
+                    currentCustomer.isPPM
+                      ? "border border-blue-200 bg-blue-50 text-blue-700"
+                      : "border border-purple-200 bg-purple-50 text-purple-700"
+                  }`}
+                >
+                  <CreditCard className="size-3" />
+                  {currentCustomer.isPPM ? "PREPAID" : "POSTPAID"}
+                </span>
+                {currentCustomer.isCustomerNew && (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
+                    <CheckCircle className="size-3" />
+                    NEW
+                  </span>
+                )}
+                {currentCustomer.isPostEnumerated && (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
+                    <Layers className="size-3" />
+                    POST ENUMERATED
+                  </span>
+                )}
+                {currentCustomer.isMD && (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 text-xs font-medium text-orange-700">
+                    <Zap className="size-3" />
+                    MD CUSTOMER
+                  </span>
+                )}
+                {currentCustomer.isUrban && (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
+                    <Building className="size-3" />
+                    URBAN
+                  </span>
+                )}
+                {currentCustomer.isHRB && (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-purple-200 bg-purple-50 px-2.5 py-1 text-xs font-medium text-purple-700">
+                    <Award className="size-3" />
+                    HRB
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-blue-300 hover:shadow-sm">
+              <div className="flex items-center gap-2 text-gray-500 group-hover:text-blue-600">
+                <UserCircle className="size-4" />
+                <span className="text-xs font-medium uppercase tracking-wider">Customer Category</span>
+              </div>
+              <p className="mt-2 truncate text-base font-semibold text-gray-900" title={currentCustomer.category?.name}>
+                {currentCustomer.category?.name || "N/A"}
+              </p>
+            </div>
+          </div>
         </div>
       </motion.div>
 
       {/* Personal Information */}
       <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.1 }}
-        className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
+        className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
       >
-        <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-          <User className="size-5" />
-          Personal Information
-        </h3>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2">
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">Full Name</label>
-            <p className="text-sm font-semibold text-gray-900">{currentCustomer.fullName}</p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">Phone Number</label>
-            <div className="flex items-center gap-2">
-              <Phone className="size-4 text-gray-400" />
-              <p className="text-sm text-gray-900">{currentCustomer.phoneNumber}</p>
+        <div className="border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-purple-100 p-2.5">
+              <User className="size-5 text-purple-700" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Personal Information</h2>
+              <p className="text-sm text-gray-600">Contact details and demographics</p>
             </div>
           </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">Office Phone</label>
-            <div className="flex items-center gap-2">
-              <Phone className="size-4 text-gray-400" />
-              <p className="text-sm text-gray-900">{currentCustomer.phoneOffice || "N/A"}</p>
+        </div>
+
+        <div className="p-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-purple-300 hover:shadow-sm">
+              <div className="flex items-center gap-2 text-gray-500 group-hover:text-purple-600">
+                <User className="size-4" />
+                <span className="text-xs font-medium uppercase tracking-wider">Full Name</span>
+              </div>
+              <p className="mt-2 truncate text-base font-semibold text-gray-900" title={currentCustomer.fullName}>
+                {currentCustomer.fullName}
+              </p>
             </div>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">Email</label>
-            <div className="flex items-center gap-2">
-              <Mail className="size-4 text-gray-400" />
-              <p className="text-sm text-gray-900">{currentCustomer.email}</p>
+
+            <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-purple-300 hover:shadow-sm">
+              <div className="flex items-center gap-2 text-gray-500 group-hover:text-purple-600">
+                <Phone className="size-4" />
+                <span className="text-xs font-medium uppercase tracking-wider">Phone Number</span>
+              </div>
+              <div className="mt-2 flex items-center gap-2">
+                <PhoneCall className="size-4 text-gray-400" />
+                <p className="truncate text-base font-semibold text-gray-900" title={currentCustomer.phoneNumber}>
+                  {currentCustomer.phoneNumber}
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">Customer Category</label>
-            <p className="text-sm text-gray-900">{currentCustomer.category?.name || "N/A"}</p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">Gender</label>
-            <p className="text-sm text-gray-900">{currentCustomer.gender || "N/A"}</p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">Last Login</label>
-            <p className="text-sm text-gray-900">{formatDateTime(currentCustomer.lastLoginAt)}</p>
+
+            <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-purple-300 hover:shadow-sm">
+              <div className="flex items-center gap-2 text-gray-500 group-hover:text-purple-600">
+                <Phone className="size-4" />
+                <span className="text-xs font-medium uppercase tracking-wider">Office Phone</span>
+              </div>
+              <div className="mt-2 flex items-center gap-2">
+                <PhoneCall className="size-4 text-gray-400" />
+                <p className="truncate text-base font-semibold text-gray-900" title={currentCustomer.phoneOffice}>
+                  {currentCustomer.phoneOffice || "N/A"}
+                </p>
+              </div>
+            </div>
+
+            <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-purple-300 hover:shadow-sm">
+              <div className="flex items-center gap-2 text-gray-500 group-hover:text-purple-600">
+                <Mail className="size-4" />
+                <span className="text-xs font-medium uppercase tracking-wider">Email</span>
+              </div>
+              <div className="mt-2 flex items-center gap-2">
+                <AtSign className="size-4 text-gray-400" />
+                <p className="truncate text-base font-semibold text-gray-900" title={currentCustomer.email}>
+                  {currentCustomer.email}
+                </p>
+              </div>
+            </div>
+
+            <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-purple-300 hover:shadow-sm">
+              <div className="flex items-center gap-2 text-gray-500 group-hover:text-purple-600">
+                <UserCircle className="size-4" />
+                <span className="text-xs font-medium uppercase tracking-wider">Gender</span>
+              </div>
+              <p className="mt-2 truncate text-base font-semibold text-gray-900" title={currentCustomer.gender}>
+                {currentCustomer.gender || "N/A"}
+              </p>
+            </div>
+
+            <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-purple-300 hover:shadow-sm">
+              <div className="flex items-center gap-2 text-gray-500 group-hover:text-purple-600">
+                <Clock className="size-4" />
+                <span className="text-xs font-medium uppercase tracking-wider">Last Login</span>
+              </div>
+              <p
+                className="mt-2 truncate text-base font-semibold text-gray-900"
+                title={formatDateTime(currentCustomer.lastLoginAt)}
+              >
+                {formatDateTime(currentCustomer.lastLoginAt)}
+              </p>
+            </div>
           </div>
         </div>
       </motion.div>
 
-      {/* Address Information */}
+      {/* Address Information with Map */}
       <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.15 }}
-        className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.15 }}
+        className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
       >
-        <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-          <MapPin className="size-5" />
-          Address Information
-        </h3>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div className="space-y-4 ">
-            <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-              <label className="text-sm font-medium text-gray-500">Primary Address</label>
-              <p className="text-sm text-gray-900">{currentCustomer.address}</p>
+        <div className="border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-emerald-100 p-2.5">
+              <MapPin className="size-5 text-emerald-700" />
             </div>
-            <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-              <label className="text-sm font-medium text-gray-500">Secondary Address</label>
-              <p className="text-sm text-gray-900">{currentCustomer.addressTwo || "N/A"}</p>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-                <label className="text-sm font-medium text-gray-500">City</label>
-                <p className="text-sm text-gray-900">{currentCustomer.city}</p>
-              </div>
-              <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-                <label className="text-sm font-medium text-gray-500">State</label>
-                <p className="text-sm text-gray-900">{currentCustomer.provinceName || "N/A"}</p>
-              </div>
-            </div>
-          </div>
-          <div className="space-y-4">
-            <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-              <label className="text-sm font-medium text-gray-500">LGA</label>
-              <p className="text-sm text-gray-900">{currentCustomer.lga || "N/A"}</p>
-            </div>
-            <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs text-gray-500">Latitude</label>
-                  <p className="text-sm text-gray-900">{currentCustomer.latitude || "N/A"}</p>
-                </div>
-                <div>
-                  <label className="text-xs text-gray-500">Longitude</label>
-                  <p className="text-sm text-gray-900">{currentCustomer.longitude || "N/A"}</p>
-                </div>
-              </div>
-            </div>
-            <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-              <label className="text-sm font-medium text-gray-500">Service Center</label>
-              <p className="text-sm text-gray-900">{currentCustomer.serviceCenterName}</p>
-            </div>
-            <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-              <label className="text-sm font-medium text-gray-500">VAT Waived</label>
-              <p className="text-sm text-gray-900">{currentCustomer.isVATWaved ? "Yes" : "No"}</p>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Address Information</h2>
+              <p className="text-sm text-gray-600">Location and geographic data</p>
             </div>
           </div>
         </div>
 
-        {/* Map */}
-        {currentCustomer.latitude && currentCustomer.longitude && (
-          <div className="mt-6">
-            <div className="overflow-hidden rounded-lg border border-gray-200">
-              <iframe
-                title="Customer location map"
-                width="100%"
-                height="220"
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                src={`https://www.google.com/maps?q=${currentCustomer.latitude},${currentCustomer.longitude}&z=15&output=embed`}
-              ></iframe>
-            </div>
-          </div>
-        )}
-
-        {/* Location Change History */}
-        {currentCustomer.accountNumberHistory && currentCustomer.accountNumberHistory.length > 0 && (
-          <div className="mt-6">
-            <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
-              <MapPin className="size-5" />
-              Location Change History
-            </h3>
-            <div className="space-y-3">
-              {currentCustomer.accountNumberHistory.map((history: AccountNumberHistory, index: number) => (
-                <div key={index} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                  <div className="mb-3 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="size-4 text-gray-500" />
-                      <span className="text-sm font-medium text-gray-900">
-                        {new Date(history.requestedAtUtc).toLocaleDateString(undefined, {
-                          year: "numeric",
-                          month: "short",
-                          day: "2-digit",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
-                    </div>
-                    <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
-                      Account Change
-                    </span>
+        <div className="p-6">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            {/* Address Details */}
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-emerald-300 hover:shadow-sm">
+                  <div className="flex items-center gap-2 text-gray-500 group-hover:text-emerald-600">
+                    <Home className="size-4" />
+                    <span className="text-xs font-medium uppercase tracking-wider">Primary Address</span>
                   </div>
-
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-semibold text-red-600">Previous Location</h4>
-                      <div className="space-y-1 text-sm">
-                        <p>
-                          <span className="font-medium">Account:</span> {history.oldAccountNumber}
-                        </p>
-                        {history.oldAddress && (
-                          <p>
-                            <span className="font-medium">Address:</span> {history.oldAddress}
-                          </p>
-                        )}
-                        {history.oldAddressTwo && (
-                          <p>
-                            <span className="font-medium">Address 2:</span> {history.oldAddressTwo}
-                          </p>
-                        )}
-                        {history.oldCity && (
-                          <p>
-                            <span className="font-medium">City:</span> {history.oldCity}
-                          </p>
-                        )}
-                        {history.oldLatitude && history.oldLongitude && (
-                          <p>
-                            <span className="font-medium">Coordinates:</span> {history.oldLatitude},{" "}
-                            {history.oldLongitude}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-semibold text-green-600">New Location</h4>
-                      <div className="space-y-1 text-sm">
-                        <p>
-                          <span className="font-medium">Account:</span> {history.newAccountNumber}
-                        </p>
-                        {history.newAddress && (
-                          <p>
-                            <span className="font-medium">Address:</span> {history.newAddress}
-                          </p>
-                        )}
-                        {history.newAddressTwo && (
-                          <p>
-                            <span className="font-medium">Address 2:</span> {history.newAddressTwo}
-                          </p>
-                        )}
-                        {history.newCity && (
-                          <p>
-                            <span className="font-medium">City:</span> {history.newCity}
-                          </p>
-                        )}
-                        {history.newLatitude && history.newLongitude && (
-                          <p>
-                            <span className="font-medium">Coordinates:</span> {history.newLatitude},{" "}
-                            {history.newLongitude}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {history.reason && (
-                    <div className="mt-3 rounded-md bg-blue-50 p-3">
-                      <p className="text-sm">
-                        <span className="font-medium">Reason:</span> {history.reason}
-                      </p>
-                    </div>
-                  )}
+                  <p className="mt-2 truncate text-sm font-medium text-gray-900" title={currentCustomer.address}>
+                    {currentCustomer.address}
+                  </p>
                 </div>
-              ))}
+
+                <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-emerald-300 hover:shadow-sm">
+                  <div className="flex items-center gap-2 text-gray-500 group-hover:text-emerald-600">
+                    <Home className="size-4" />
+                    <span className="text-xs font-medium uppercase tracking-wider">Secondary Address</span>
+                  </div>
+                  <p className="mt-2 truncate text-sm font-medium text-gray-900" title={currentCustomer.addressTwo}>
+                    {currentCustomer.addressTwo || "N/A"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-2">
+                <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-emerald-300 hover:shadow-sm">
+                  <div className="flex items-center gap-2 text-gray-500 group-hover:text-emerald-600">
+                    <Building className="size-4" />
+                    <span className="text-xs font-medium uppercase tracking-wider">City</span>
+                  </div>
+                  <p className="mt-2 truncate text-sm font-semibold text-gray-900" title={currentCustomer.city}>
+                    {currentCustomer.city}
+                  </p>
+                </div>
+
+                <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-emerald-300 hover:shadow-sm">
+                  <div className="flex items-center gap-2 text-gray-500 group-hover:text-emerald-600">
+                    <Map className="size-4" />
+                    <span className="text-xs font-medium uppercase tracking-wider">State</span>
+                  </div>
+                  <p className="mt-2 truncate text-sm font-semibold text-gray-900" title={currentCustomer.provinceName}>
+                    {currentCustomer.provinceName || "N/A"}
+                  </p>
+                </div>
+
+                <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-emerald-300 hover:shadow-sm">
+                  <div className="flex items-center gap-2 text-gray-500 group-hover:text-emerald-600">
+                    <Layers className="size-4" />
+                    <span className="text-xs font-medium uppercase tracking-wider">LGA</span>
+                  </div>
+                  <p className="mt-2 truncate text-sm font-semibold text-gray-900" title={currentCustomer.lga}>
+                    {currentCustomer.lga || "N/A"}
+                  </p>
+                </div>
+
+                <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-emerald-300 hover:shadow-sm">
+                  <div className="flex items-center gap-2 text-gray-500 group-hover:text-emerald-600">
+                    <Building className="size-4" />
+                    <span className="text-xs font-medium uppercase tracking-wider">Service Center</span>
+                  </div>
+                  <p
+                    className="mt-2 truncate text-sm font-semibold text-gray-900"
+                    title={currentCustomer.serviceCenterName}
+                  >
+                    {currentCustomer.serviceCenterName}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-emerald-300 hover:shadow-sm">
+                  <div className="flex items-center gap-2 text-gray-500 group-hover:text-emerald-600">
+                    <Globe className="size-4" />
+                    <span className="text-xs font-medium uppercase tracking-wider">Latitude</span>
+                  </div>
+                  <p
+                    className="mt-2 truncate font-mono text-sm font-medium text-gray-900"
+                    title={currentCustomer.latitude}
+                  >
+                    {currentCustomer.latitude || "N/A"}
+                  </p>
+                </div>
+
+                <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-emerald-300 hover:shadow-sm">
+                  <div className="flex items-center gap-2 text-gray-500 group-hover:text-emerald-600">
+                    <Globe className="size-4" />
+                    <span className="text-xs font-medium uppercase tracking-wider">Longitude</span>
+                  </div>
+                  <p
+                    className="mt-2 truncate font-mono text-sm font-medium text-gray-900"
+                    title={currentCustomer.longitude}
+                  >
+                    {currentCustomer.longitude || "N/A"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-gray-200 bg-white p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Scale className="size-4 text-gray-500" />
+                    <span className="text-xs font-medium uppercase tracking-wider text-gray-600">VAT Status</span>
+                  </div>
+                  <span
+                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${
+                      currentCustomer.isVATWaved
+                        ? "border border-green-200 bg-green-50 text-green-700"
+                        : "border border-gray-200 bg-gray-50 text-gray-700"
+                    }`}
+                  >
+                    {currentCustomer.isVATWaved ? "Waived" : "Applicable"}
+                  </span>
+                </div>
+              </div>
             </div>
+
+            {/* Map */}
+            {currentCustomer.latitude && currentCustomer.longitude ? (
+              <div className="h-full min-h-[300px] overflow-hidden rounded-lg border border-gray-200">
+                <iframe
+                  title="Customer location map"
+                  width="100%"
+                  height="100%"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  src={`https://www.google.com/maps?q=${currentCustomer.latitude},${currentCustomer.longitude}&z=15&output=embed`}
+                  className="h-full min-h-[300px]"
+                ></iframe>
+              </div>
+            ) : (
+              <div className="flex h-full min-h-[300px] items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50">
+                <div className="text-center">
+                  <MapPin className="mx-auto size-12 text-gray-300" />
+                  <p className="mt-2 text-sm text-gray-600">No location data available</p>
+                  <p className="mt-1 text-xs text-gray-500">Customer coordinates not provided</p>
+                </div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </motion.div>
 
       {/* Distribution Information */}
       <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.2 }}
-        className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.2 }}
+        className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
       >
-        <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-          <Zap className="size-5" />
-          Distribution Information
-        </h3>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">Distribution Station</label>
-            <p className="text-sm text-gray-900">{currentCustomer.distributionSubstation?.dssCode || "N/A"}</p>
+        <div className="border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-amber-100 p-2.5">
+              <Zap className="size-5 text-amber-700" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Distribution Information</h2>
+              <p className="text-sm text-gray-600">Network and infrastructure details</p>
+            </div>
           </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">Feeder Name</label>
-            <p className="text-sm text-gray-900">{currentCustomer.distributionSubstation?.feeder?.name || "N/A"}</p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">Area Office</label>
-            <p className="text-sm text-gray-900">
-              {currentCustomer.distributionSubstation?.feeder?.injectionSubstation?.areaOffice?.nameOfNewOAreaffice ||
-                "N/A"}
-            </p>
-          </div>
+        </div>
 
-          {currentCustomer.distributionSubstation && (
-            <>
-              <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-                <label className="text-sm font-medium text-gray-500">Transformer Capacity</label>
-                <p className="text-sm text-gray-900">
-                  {currentCustomer.distributionSubstation?.transformerCapacityInKva || "N/A"} kVA
-                </p>
+        <div className="p-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-amber-300 hover:shadow-sm">
+              <div className="flex items-center gap-2 text-gray-500 group-hover:text-amber-600">
+                <Building className="size-4" />
+                <span className="text-xs font-medium uppercase tracking-wider">Distribution Station</span>
               </div>
-              <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-                <label className="text-sm font-medium text-gray-500">Number of Units</label>
-                <p className="text-sm text-gray-900">{currentCustomer.distributionSubstation?.numberOfUnit || "N/A"}</p>
+              <p
+                className="mt-2 truncate text-base font-semibold text-gray-900"
+                title={currentCustomer.distributionSubstation?.dssCode}
+              >
+                {currentCustomer.distributionSubstation?.dssCode || "N/A"}
+              </p>
+            </div>
+
+            <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-amber-300 hover:shadow-sm">
+              <div className="flex items-center gap-2 text-gray-500 group-hover:text-amber-600">
+                <Zap className="size-4" />
+                <span className="text-xs font-medium uppercase tracking-wider">Feeder Name</span>
               </div>
-            </>
-          )}
+              <p
+                className="mt-2 truncate text-base font-semibold text-gray-900"
+                title={currentCustomer.distributionSubstation?.feeder?.name}
+              >
+                {currentCustomer.distributionSubstation?.feeder?.name || "N/A"}
+              </p>
+            </div>
+
+            <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-amber-300 hover:shadow-sm">
+              <div className="flex items-center gap-2 text-gray-500 group-hover:text-amber-600">
+                <Building className="size-4" />
+                <span className="text-xs font-medium uppercase tracking-wider">Area Office</span>
+              </div>
+              <p
+                className="mt-2 truncate text-base font-semibold text-gray-900"
+                title={
+                  currentCustomer.distributionSubstation?.feeder?.injectionSubstation?.areaOffice?.nameOfNewOAreaffice
+                }
+              >
+                {currentCustomer.distributionSubstation?.feeder?.injectionSubstation?.areaOffice?.nameOfNewOAreaffice ||
+                  "N/A"}
+              </p>
+            </div>
+
+            {currentCustomer.distributionSubstation && (
+              <>
+                <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-amber-300 hover:shadow-sm">
+                  <div className="flex items-center gap-2 text-gray-500 group-hover:text-amber-600">
+                    <Gauge className="size-4" />
+                    <span className="text-xs font-medium uppercase tracking-wider">Transformer Capacity</span>
+                  </div>
+                  <p
+                    className="mt-2 truncate text-base font-semibold text-gray-900"
+                    title={currentCustomer.distributionSubstation?.transformerCapacityInKva}
+                  >
+                    {currentCustomer.distributionSubstation?.transformerCapacityInKva || "N/A"} kVA
+                  </p>
+                </div>
+
+                <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-amber-300 hover:shadow-sm">
+                  <div className="flex items-center gap-2 text-gray-500 group-hover:text-amber-600">
+                    <Package className="size-4" />
+                    <span className="text-xs font-medium uppercase tracking-wider">Number of Units</span>
+                  </div>
+                  <p
+                    className="mt-2 truncate text-base font-semibold text-gray-900"
+                    title={currentCustomer.distributionSubstation?.numberOfUnit}
+                  >
+                    {currentCustomer.distributionSubstation?.numberOfUnit || "N/A"}
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </motion.div>
 
       {/* Meter & Billing Information */}
       <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.25 }}
-        className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.25 }}
+        className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
       >
-        <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-          <Building className="size-5" />
-          Meter & Billing Information
-        </h3>
-
-        <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
-          {meterStats.map((stat) => (
-            <div key={stat.label} className="rounded-xl border border-gray-100 bg-gray-50 p-4 text-center">
-              <p className="text-xs font-medium uppercase tracking-wide text-gray-500">{stat.label}</p>
-              <p className="mt-1 text-2xl font-semibold text-gray-900">{stat.value}</p>
+        <div className="border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-indigo-100 p-2.5">
+              <HardDrive className="size-5 text-indigo-700" />
             </div>
-          ))}
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Meter & Billing Information</h2>
+              <p className="text-sm text-gray-600">Meter details and consumption metrics</p>
+            </div>
+          </div>
         </div>
 
-        {meters.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-gray-200 bg-[#F9F9F9] p-6 text-center">
-            <p className="text-sm text-gray-600">This customer has no registered meters yet.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {meters.map((meter: any) => {
-              const isExpanded = expandedMeterId === meter.id
+        <div className="p-6">
+          {/* Meter Stats */}
+          <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+            {meterStats.map((stat) => {
+              const colorClasses = {
+                blue: "bg-blue-50 text-blue-700 border-blue-200",
+                emerald: "bg-emerald-50 text-emerald-700 border-emerald-200",
+                indigo: "bg-indigo-50 text-indigo-700 border-indigo-200",
+                purple: "bg-purple-50 text-purple-700 border-purple-200",
+              }[stat.color]
+
               return (
-                <div key={meter.id} className="rounded-2xl border border-gray-200 bg-white shadow-sm">
-                  <button
-                    type="button"
-                    className="flex w-full items-center justify-between gap-4 p-5 text-left"
-                    onClick={() => handleAccordionToggle(meter.id)}
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">
-                        Meter #{meter.serialNumber || meter.drn || meter.id}
-                      </p>
-                      <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
-                        <span className="rounded-full bg-blue-50 px-3 py-1 text-blue-700">
-                          Meter Number: {meter.drn || "N/A"}
-                        </span>
-                        <span className={`rounded-full px-3 py-1 ${getMeterStatusStyle(meter.status)}`}>
-                          {getMeterStatusLabel(meter.status)}
-                        </span>
-                        <span className="rounded-full bg-purple-50 px-3 py-1 text-purple-700">
-                          {getMeterStateLabel(meter.meterState)}
-                        </span>
-                        {meter.isSmart && (
-                          <span className="rounded-full bg-indigo-50 px-3 py-1 text-indigo-700">Smart Meter</span>
-                        )}
-                      </div>
+                <div
+                  key={stat.label}
+                  className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:shadow-sm"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className={`rounded-lg p-2 ${colorClasses?.split(" ")[0]}`}>
+                      <stat.icon className={`size-4 ${colorClasses?.split(" ")[1]}`} />
                     </div>
-                    <ChevronDown
-                      className={`size-5 text-gray-500 transition-transform ${isExpanded ? "rotate-180" : "rotate-0"}`}
-                    />
-                  </button>
-                  {isExpanded && renderMeterDetails(meter)}
+                    <span className="truncate text-2xl font-bold text-gray-900" title={stat.value.toString()}>
+                      {stat.value}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-xs font-medium uppercase tracking-wider text-gray-600">{stat.label}</p>
                 </div>
               )
             })}
           </div>
-        )}
 
-        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-5">
-            <label className="text-sm font-medium text-gray-500">Tariff Rate</label>
-            <p className="text-sm text-gray-900">{formatCurrency(currentCustomer.tariffRate)}</p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-5">
-            <label className="text-sm font-medium text-gray-500">Tariff ID</label>
-            <p className="text-sm text-gray-900">{currentCustomer.tariffId || "N/A"}</p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-5">
-            <label className="text-sm font-medium text-gray-500">Tariff Class</label>
-            <p className="text-sm text-gray-900">{currentCustomer.category?.name || "N/A"}</p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-5">
-            <label className="text-sm font-medium text-gray-500">Tariff Band</label>
-            <p className="text-sm text-gray-900">{currentCustomer.subCategory?.name || "N/A"}</p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-5">
-            <label className="text-sm font-medium text-gray-500">VAT</label>
-            <p className="text-sm text-gray-900">N/A</p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-5">
-            <label className="text-sm font-medium text-gray-500">VAT Waived</label>
-            <p className="text-sm text-gray-900">No</p>
+          {/* Meters List */}
+          {meters.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 p-8 text-center">
+              <HardDrive className="mx-auto size-12 text-gray-300" />
+              <p className="mt-2 text-sm text-gray-600">This customer has no registered meters yet.</p>
+              <button className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+                <VscAdd className="size-4" />
+                Add Meter
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {meters.map((meter: any) => {
+                const isExpanded = expandedMeterId === meter.id
+                return (
+                  <div key={meter.id} className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+                    <button
+                      type="button"
+                      className="flex w-full items-center justify-between gap-4 p-4 text-left hover:bg-gray-50/50"
+                      onClick={() => handleAccordionToggle(meter.id)}
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <div className={`rounded-lg p-2 ${meter.status === 1 ? "bg-emerald-50" : "bg-gray-100"}`}>
+                            <HardDrive
+                              className={`size-4 ${meter.status === 1 ? "text-emerald-600" : "text-gray-600"}`}
+                            />
+                          </div>
+                          <div>
+                            <p
+                              className="truncate text-sm font-medium text-gray-900"
+                              title={`Meter #${meter.serialNumber || meter.drn || meter.id}`}
+                            >
+                              Meter #{meter.serialNumber || meter.drn || meter.id}
+                            </p>
+                            <p className="truncate text-xs text-gray-500" title={`Meter Number: ${meter.drn || "N/A"}`}>
+                              Meter Number: {meter.drn || "N/A"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <span
+                            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium ${getMeterStatusStyle(
+                              meter.status
+                            )}`}
+                          >
+                            <Activity className="size-3" />
+                            {getMeterStatusLabel(meter.status)}
+                          </span>
+                          <span className="inline-flex items-center gap-1 rounded-full border border-purple-200 bg-purple-50 px-2.5 py-1 text-xs font-medium text-purple-700">
+                            {getMeterStateIcon(meter.meterState)}
+                            {getMeterStateLabel(meter.meterState)}
+                          </span>
+                          {meter.isSmart && (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700">
+                              <Cpu className="size-3" />
+                              Smart Meter
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <ChevronDown
+                        className={`size-5 text-gray-500 transition-transform duration-200 ${
+                          isExpanded ? "rotate-180" : "rotate-0"
+                        }`}
+                      />
+                    </button>
+                    <AnimatePresence>{isExpanded && renderMeterDetails(meter)}</AnimatePresence>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Tariff Information */}
+          <div className="mt-6 grid grid-cols-1 gap-4 rounded-lg border border-gray-200 bg-gray-50/50 p-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-blue-100 p-2">
+                <CreditCard className="size-4 text-blue-700" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Tariff Rate</p>
+                <p
+                  className="truncate text-sm font-semibold text-gray-900"
+                  title={formatCurrency(currentCustomer.tariffRate)}
+                >
+                  {formatCurrency(currentCustomer.tariffRate)}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-indigo-100 p-2">
+                <Tag className="size-4 text-indigo-700" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Tariff Class</p>
+                <p className="truncate text-sm font-semibold text-gray-900" title={currentCustomer.category?.name}>
+                  {currentCustomer.category?.name || "N/A"}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-amber-100 p-2">
+                <Layers className="size-4 text-amber-700" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Tariff Band</p>
+                <p className="truncate text-sm font-semibold text-gray-900" title={currentCustomer.subCategory?.name}>
+                  {currentCustomer.subCategory?.name || "N/A"}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </motion.div>
 
       {/* Financial Information */}
       <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.3 }}
-        className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.3 }}
+        className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
       >
-        <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-          <MeteringOutlineIcon className="size-5" />
-          Financial Information
-        </h3>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4 text-center">
-            <label className="text-sm font-medium text-gray-500">Stored Average</label>
-            <p className="text-2xl font-bold text-gray-900">{currentCustomer.storedAverage}Kwh</p>
+        <div className="border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-emerald-100 p-2.5">
+              <BarChart3 className="size-5 text-emerald-700" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Financial Information</h2>
+              <p className="text-sm text-gray-600">Balance and consumption metrics</p>
+            </div>
           </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4 text-center">
-            <label className="text-sm font-medium text-gray-500">{`Current Bill - ${currentMonthYear}`}</label>
-            <p className="text-2xl font-bold text-emerald-600">{formatCurrency(currentCustomer.totalMonthlyVend)}</p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4 text-center">
-            <label className="text-sm font-medium text-gray-500">Monthly Debt</label>
-            <p className="text-2xl font-bold text-amber-600">{formatCurrency(currentCustomer.totalMonthlyDebt)}</p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4 text-center">
-            <label className="text-sm font-medium text-gray-500">Outstanding Debt</label>
-            <p className="text-2xl font-bold text-red-600">
-              {formatCurrency(currentCustomer.customerOutstandingDebtBalance)}
-            </p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4 text-center">
-            <label className="text-sm font-medium text-gray-500">Outstanding Credit</label>
-            <p className="text-2xl font-bold text-blue-600">
-              {formatCurrency(currentCustomer.customerOutstandingCreditBalance)}
-            </p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4 text-center">
-            <label className="text-sm font-medium text-gray-500">Net Balance</label>
-            <p className="text-2xl font-bold text-purple-600">
-              {formatCurrency(currentCustomer.customerOutstandingBalance)}
-            </p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4 text-center">
-            <label className="text-sm font-medium text-gray-500">Lifetime Debit</label>
-            <p className="text-2xl font-bold text-orange-600">{formatCurrency(currentCustomer.totalLifetimeDebit)}</p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4 text-center">
-            <label className="text-sm font-medium text-gray-500">Lifetime Credit</label>
-            <p className="text-2xl font-bold text-teal-600">{formatCurrency(currentCustomer.totalLifetimeCredit)}</p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4 text-center">
-            <label className="text-sm font-medium text-gray-500">Tariff Rate</label>
-            <p className="text-2xl font-bold text-indigo-600">{formatCurrency(currentCustomer.tariff)}/kWh</p>
+        </div>
+
+        <div className="p-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-emerald-300 hover:shadow-sm">
+              <div className="flex items-center gap-2">
+                <div className="rounded-lg bg-emerald-100 p-2">
+                  <Gauge className="size-4 text-emerald-700" />
+                </div>
+                <span className="truncate text-xl font-bold text-gray-900" title={currentCustomer.storedAverage}>
+                  {currentCustomer.storedAverage}
+                </span>
+              </div>
+              <p className="mt-2 text-xs font-medium uppercase tracking-wider text-gray-600">Stored Average (kWh)</p>
+            </div>
+
+            <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-emerald-300 hover:shadow-sm">
+              <div className="flex items-center gap-2">
+                <div className="rounded-lg bg-emerald-100 p-2">
+                  <Calendar className="size-4 text-emerald-700" />
+                </div>
+                <span
+                  className="truncate text-xl font-bold text-emerald-600"
+                  title={formatCurrency(currentCustomer.totalMonthlyVend)}
+                >
+                  {formatCurrency(currentCustomer.totalMonthlyVend)}
+                </span>
+              </div>
+              <p className="mt-2 text-xs font-medium uppercase tracking-wider text-gray-600">
+                Current Bill - {currentMonthYear}
+              </p>
+            </div>
+
+            <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-amber-300 hover:shadow-sm">
+              <div className="flex items-center gap-2">
+                <div className="rounded-lg bg-amber-100 p-2">
+                  <AlertCircle className="size-4 text-amber-700" />
+                </div>
+                <span
+                  className="truncate text-xl font-bold text-amber-600"
+                  title={formatCurrency(currentCustomer.totalMonthlyDebt)}
+                >
+                  {formatCurrency(currentCustomer.totalMonthlyDebt)}
+                </span>
+              </div>
+              <p className="mt-2 text-xs font-medium uppercase tracking-wider text-gray-600">Monthly Debt</p>
+            </div>
+
+            <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-red-300 hover:shadow-sm">
+              <div className="flex items-center gap-2">
+                <div className="rounded-lg bg-red-100 p-2">
+                  <AlertTriangle className="size-4 text-red-700" />
+                </div>
+                <span
+                  className="truncate text-xl font-bold text-red-600"
+                  title={formatCurrency(currentCustomer.customerOutstandingDebtBalance)}
+                >
+                  {formatCurrency(currentCustomer.customerOutstandingDebtBalance)}
+                </span>
+              </div>
+              <p className="mt-2 text-xs font-medium uppercase tracking-wider text-gray-600">Outstanding Debt</p>
+            </div>
+
+            <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-blue-300 hover:shadow-sm">
+              <div className="flex items-center gap-2">
+                <div className="rounded-lg bg-blue-100 p-2">
+                  <CheckCircle className="size-4 text-blue-700" />
+                </div>
+                <span
+                  className="truncate text-xl font-bold text-blue-600"
+                  title={formatCurrency(currentCustomer.customerOutstandingCreditBalance)}
+                >
+                  {formatCurrency(currentCustomer.customerOutstandingCreditBalance)}
+                </span>
+              </div>
+              <p className="mt-2 text-xs font-medium uppercase tracking-wider text-gray-600">Outstanding Credit</p>
+            </div>
+
+            <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-purple-300 hover:shadow-sm">
+              <div className="flex items-center gap-2">
+                <div className="rounded-lg bg-purple-100 p-2">
+                  <Scale className="size-4 text-purple-700" />
+                </div>
+                <span
+                  className="truncate text-xl font-bold text-purple-600"
+                  title={formatCurrency(currentCustomer.customerOutstandingBalance)}
+                >
+                  {formatCurrency(currentCustomer.customerOutstandingBalance)}
+                </span>
+              </div>
+              <p className="mt-2 text-xs font-medium uppercase tracking-wider text-gray-600">Net Balance</p>
+            </div>
+
+            <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-orange-300 hover:shadow-sm">
+              <div className="flex items-center gap-2">
+                <div className="rounded-lg bg-orange-100 p-2">
+                  <History className="size-4 text-orange-700" />
+                </div>
+                <span
+                  className="truncate text-xl font-bold text-orange-600"
+                  title={formatCurrency(currentCustomer.totalLifetimeDebit)}
+                >
+                  {formatCurrency(currentCustomer.totalLifetimeDebit)}
+                </span>
+              </div>
+              <p className="mt-2 text-xs font-medium uppercase tracking-wider text-gray-600">Lifetime Debit</p>
+            </div>
+
+            <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-teal-300 hover:shadow-sm">
+              <div className="flex items-center gap-2">
+                <div className="rounded-lg bg-teal-100 p-2">
+                  <Award className="size-4 text-teal-700" />
+                </div>
+                <span
+                  className="truncate text-xl font-bold text-teal-600"
+                  title={formatCurrency(currentCustomer.totalLifetimeCredit)}
+                >
+                  {formatCurrency(currentCustomer.totalLifetimeCredit)}
+                </span>
+              </div>
+              <p className="mt-2 text-xs font-medium uppercase tracking-wider text-gray-600">Lifetime Credit</p>
+            </div>
+
+            <div className="group rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-indigo-300 hover:shadow-sm">
+              <div className="flex items-center gap-2">
+                <div className="rounded-lg bg-indigo-100 p-2">
+                  <Zap className="size-4 text-indigo-700" />
+                </div>
+                <span
+                  className="truncate text-xl font-bold text-indigo-600"
+                  title={formatCurrency(currentCustomer.tariff)}
+                >
+                  {formatCurrency(currentCustomer.tariff)}
+                </span>
+              </div>
+              <p className="mt-2 text-xs font-medium uppercase tracking-wider text-gray-600">Tariff Rate (per kWh)</p>
+            </div>
           </div>
         </div>
       </motion.div>
 
       {/* Sales & Technical Information */}
       <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.35 }}
-        className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.35 }}
+        className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
       >
-        <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-          <User className="size-5" />
-          Sales & Technical Information
-        </h3>
-        <div className="grid grid-cols-1 gap-6 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4 md:grid-cols-2">
-          <div className="space-y-4 rounded-md border border-dashed border-gray-200 bg-[#FFFFFF] p-4">
-            <h4 className="font-medium text-gray-700">Sales Representative</h4>
-            {currentCustomer.salesRepUser ? (
-              <div className="space-y-2">
-                <p className="text-sm text-gray-900">
-                  {currentCustomer.salesRepUser.fullName} - (ID:{currentCustomer.salesRepUser.id})
-                </p>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Mail className="size-4" />
-                  {currentCustomer.salesRepUser.email}
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Phone className="size-4" />
-                  {currentCustomer.salesRepUser.phoneNumber}
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm text-gray-500">No sales representative assigned</p>
-            )}
+        <div className="border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-amber-100 p-2.5">
+              <Users className="size-5 text-amber-700" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Sales & Technical Information</h2>
+              <p className="text-sm text-gray-600">Assigned personnel and support</p>
+            </div>
           </div>
-          <div className="space-y-4 rounded-md border border-dashed border-gray-200 bg-[#FFFFFF] p-4">
-            <h4 className="font-medium text-gray-700">Technical Engineer</h4>
-            {currentCustomer.technicalEngineerUser ? (
-              <div className="space-y-2">
-                <p className="text-sm text-gray-900">{currentCustomer.technicalEngineerUser.fullName}</p>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Mail className="size-4" />
-                  {currentCustomer.technicalEngineerUser.email}
+        </div>
+
+        <div className="p-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            {/* Sales Representative */}
+            <div className="rounded-lg border border-gray-200 bg-white p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <div className="rounded-lg bg-blue-100 p-2">
+                  <UserCircle className="size-4 text-blue-700" />
                 </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Phone className="size-4" />
-                  {currentCustomer.technicalEngineerUser.phoneNumber}
-                </div>
+                <h3 className="text-sm font-semibold text-gray-900">Sales Representative</h3>
               </div>
-            ) : (
-              <p className="text-sm text-gray-500">No technical engineer assigned</p>
-            )}
+              {currentCustomer.salesRepUser ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-10 items-center justify-center rounded-full bg-blue-100">
+                      <User className="size-5 text-blue-700" />
+                    </div>
+                    <div>
+                      <p
+                        className="truncate text-sm font-medium text-gray-900"
+                        title={currentCustomer.salesRepUser.fullName}
+                      >
+                        {currentCustomer.salesRepUser.fullName}
+                      </p>
+                      <p className="truncate text-xs text-gray-500" title={`ID: ${currentCustomer.salesRepUser.id}`}>
+                        ID: {currentCustomer.salesRepUser.id}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="space-y-2 border-t border-gray-100 pt-2">
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Mail className="size-4 text-gray-400" />
+                      {currentCustomer.salesRepUser.email && (
+                        <p className="truncate text-sm text-gray-600" title={currentCustomer.salesRepUser.email}>
+                          {currentCustomer.salesRepUser.email}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Phone className="size-4 text-gray-400" />
+                      {currentCustomer.salesRepUser.phoneNumber && (
+                        <p className="truncate text-sm text-gray-600" title={currentCustomer.salesRepUser.phoneNumber}>
+                          {currentCustomer.salesRepUser.phoneNumber}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50 p-6">
+                  <p className="text-sm text-gray-500">No sales representative assigned</p>
+                </div>
+              )}
+            </div>
+
+            {/* Technical Engineer */}
+            <div className="rounded-lg border border-gray-200 bg-white p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <div className="rounded-lg bg-purple-100 p-2">
+                  <Wrench className="size-4 text-purple-700" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-900">Technical Engineer</h3>
+              </div>
+              {currentCustomer.technicalEngineerUser ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-10 items-center justify-center rounded-full bg-purple-100">
+                      <User className="size-5 text-purple-700" />
+                    </div>
+                    <div>
+                      <p
+                        className="truncate text-sm font-medium text-gray-900"
+                        title={currentCustomer.technicalEngineerUser.fullName}
+                      >
+                        {currentCustomer.technicalEngineerUser.fullName}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="space-y-2 border-t border-gray-100 pt-2">
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Mail className="size-4 text-gray-400" />
+                      {currentCustomer.technicalEngineerUser.email && (
+                        <p
+                          className="truncate text-sm text-gray-600"
+                          title={currentCustomer.technicalEngineerUser.email}
+                        >
+                          {currentCustomer.technicalEngineerUser.email}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Phone className="size-4 text-gray-400" />
+                      {currentCustomer.technicalEngineerUser.phoneNumber && (
+                        <p
+                          className="truncate text-sm text-gray-600"
+                          title={currentCustomer.technicalEngineerUser.phoneNumber}
+                        >
+                          {currentCustomer.technicalEngineerUser.phoneNumber}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50 p-6">
+                  <p className="text-sm text-gray-500">No technical engineer assigned</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </motion.div>
 
-      {/* Additional Information */}
-      {/* <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.4 }}
-        className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
-      >
-        <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-          <AlertCircle className="size-5" />
-          Additional Information
-        </h3>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">Comment</label>
-            <p className="text-sm text-gray-900">{currentCustomer.comment || "No comments"}</p>
-          </div>
-          {currentCustomer.isSuspended && (
-            <>
-              <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-                <label className="text-sm font-medium text-gray-500">Suspension Reason</label>
-                <p className="text-sm text-gray-900">{currentCustomer.suspensionReason || "Not specified"}</p>
-              </div>
-              <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-                <label className="text-sm font-medium text-gray-500">Suspended At</label>
-                <p className="text-sm text-gray-900">{formatDateTime(currentCustomer.suspendedAt)}</p>
-              </div>
-            </>
-          )}
-        </div>
-      </motion.div> */}
-
-      {/* Account & Meter History */}
+      {/* History Section */}
       {(currentCustomer.accountNumberHistory?.length > 0 || currentCustomer.meterHistory?.length > 0) && (
         <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.45 }}
-          className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.4 }}
+          className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
         >
-          <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-            <History className="size-5" />
-            History
-          </h3>
-
-          {currentCustomer.accountNumberHistory?.length > 0 && (
-            <div className="mb-6">
-              <h4 className="mb-3 font-medium text-gray-700">Account Number History</h4>
-              <div className="space-y-3">
-                {currentCustomer.accountNumberHistory.map((history: any, index: number) => (
-                  <div key={index} className="rounded-lg border border-gray-100 bg-gray-50 p-4">
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <div>
-                        <p className="text-sm text-gray-600">From: {history.oldAccountNumber}</p>
-                        <p className="text-sm text-gray-600">To: {history.newAccountNumber}</p>
-                        <p className="text-sm text-gray-500">{formatDateTime(history.requestedAtUtc)}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Reason: {history.reason}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+          <div className="border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white px-6 py-4">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-gray-100 p-2.5">
+                <History className="size-5 text-gray-700" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">History</h2>
+                <p className="text-sm text-gray-600">Account and meter change records</p>
               </div>
             </div>
-          )}
+          </div>
 
-          {currentCustomer.meterHistory?.length > 0 && (
-            <div>
-              <h4 className="mb-3 font-medium text-gray-700">Meter History</h4>
-              <div className="space-y-3">
-                {currentCustomer.meterHistory.map((history: any, index: number) => (
-                  <div key={index} className="rounded-lg border border-gray-100 bg-gray-50 p-4">
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <div>
-                        <p className="text-sm text-gray-600">From: {history.oldMeterNumber}</p>
-                        <p className="text-sm text-gray-600">To: {history.newMeterNumber}</p>
-                        <p className="text-sm text-gray-500">{formatDateTime(history.requestedAtUtc)}</p>
+          <div className="space-y-6 p-6">
+            {currentCustomer.accountNumberHistory?.length > 0 && (
+              <div>
+                <h3 className="mb-3 text-sm font-semibold text-gray-900">Account Number Changes</h3>
+                <div className="space-y-3">
+                  {currentCustomer.accountNumberHistory.map((history: any, index: number) => (
+                    <div key={index} className="rounded-lg border border-gray-200 bg-gray-50/50 p-4">
+                      <div className="mb-3 flex items-center gap-2">
+                        <Calendar className="size-4 text-gray-500" />
+                        <span className="text-xs font-medium text-gray-700">
+                          {new Date(history.requestedAtUtc).toLocaleDateString(undefined, {
+                            year: "numeric",
+                            month: "short",
+                            day: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Reason: {history.reason}</p>
+
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div className="rounded-lg border border-red-200 bg-red-50/50 p-3">
+                          <p className="mb-2 text-xs font-semibold text-red-700">Previous</p>
+                          <p className="truncate font-mono text-sm" title={history.oldAccountNumber}>
+                            {history.oldAccountNumber}
+                          </p>
+                          {history.oldAddress && <p className="mt-1 text-xs text-gray-600">{history.oldAddress}</p>}
+                        </div>
+
+                        <div className="rounded-lg border border-green-200 bg-green-50/50 p-3">
+                          <p className="mb-2 text-xs font-semibold text-green-700">New</p>
+                          <p className="truncate font-mono text-sm" title={history.newAccountNumber}>
+                            {history.newAccountNumber}
+                          </p>
+                          {history.newAddress && <p className="mt-1 text-xs text-gray-600">{history.newAddress}</p>}
+                        </div>
                       </div>
+
+                      {history.reason && (
+                        <div className="mt-3 rounded-lg bg-blue-50 p-3">
+                          <p className="text-xs text-blue-700">
+                            <span className="font-medium">Reason:</span> {history.reason}
+                          </p>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-        </motion.div>
-      )}
+            )}
 
-      {/* Assets & Equipment */}
-      {/* {assets.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5 }}
-          className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
-        >
-          <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-            <MeterOutlineIcon className="size-5" />
-            Assets & Equipment
-          </h3>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            {assets.map((asset: Asset, index: number) => (
-              <div key={asset.serialNo} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                <div className="mb-3 flex items-center gap-3">
-                  <div className="flex size-12 items-center justify-center rounded-lg bg-blue-100">
-                    <MeterOutlineIcon className="size-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Asset #{asset.serialNo}</h4>
-                    <p className="text-sm text-gray-600">{asset.supplyStructureType}</p>
-                  </div>
-                </div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Feeder</span>
-                    <span className="font-medium">{asset.feederName}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Capacity</span>
-                    <span className="font-medium">{asset.transformerCapacityKva}kVA</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Status</span>
-                    <span
-                      className={`rounded-full px-2 py-1 text-xs font-medium ${
-                        asset.status === "ACTIVE"
-                          ? "bg-emerald-50 text-emerald-600"
-                          : asset.status === "MAINTENANCE"
-                          ? "bg-amber-50 text-amber-600"
-                          : asset.status === "RETIRED"
-                          ? "bg-red-50 text-red-600"
-                          : "bg-blue-50 text-blue-600"
-                      }`}
-                    >
-                      {asset.status}
-                    </span>
-                  </div>
+            {currentCustomer.meterHistory?.length > 0 && (
+              <div>
+                <h3 className="mb-3 text-sm font-semibold text-gray-900">Meter Changes</h3>
+                <div className="space-y-3">
+                  {currentCustomer.meterHistory.map((history: any, index: number) => (
+                    <div key={index} className="rounded-lg border border-gray-200 bg-gray-50/50 p-4">
+                      <div className="mb-3 flex items-center gap-2">
+                        <Calendar className="size-4 text-gray-500" />
+                        <span className="text-xs font-medium text-gray-700">
+                          {new Date(history.requestedAtUtc).toLocaleDateString(undefined, {
+                            year: "numeric",
+                            month: "short",
+                            day: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3">
+                          <p className="mb-2 text-xs font-semibold text-amber-700">Old Meter</p>
+                          <p className="truncate font-mono text-sm" title={history.oldMeterNumber}>
+                            {history.oldMeterNumber}
+                          </p>
+                        </div>
+
+                        <div className="rounded-lg border border-emerald-200 bg-emerald-50/50 p-3">
+                          <p className="mb-2 text-xs font-semibold text-emerald-700">New Meter</p>
+                          <p className="truncate font-mono text-sm" title={history.newMeterNumber}>
+                            {history.newMeterNumber}
+                          </p>
+                        </div>
+                      </div>
+
+                      {history.reason && (
+                        <div className="mt-3 rounded-lg bg-blue-50 p-3">
+                          <p className="text-xs text-blue-700">
+                            <span className="font-medium">Reason:</span> {history.reason}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
+            )}
           </div>
         </motion.div>
-      )} */}
-    </>
+      )}
+    </div>
   )
 }
 
