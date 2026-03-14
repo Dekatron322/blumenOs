@@ -109,6 +109,8 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
         </label>
       )}
       <div
+        role="button"
+        tabIndex={disabled ? -1 : 0}
         className={`
           flex cursor-pointer items-center justify-between rounded-md border px-3
           py-2 ${error ? "border-[#D14343]" : "border-[#E0E0E0]"}
@@ -135,7 +137,19 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
         }}
         onFocus={() => !disabled && setIsFocused(true)}
         onBlur={() => !disabled && setIsFocused(false)}
-        role="combobox"
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault()
+            if (disabled) return
+            setIsOpen((prev) => {
+              const next = !prev
+              if (!next && (!searchable || !onSearchChange)) {
+                setLocalSearchTerm("")
+              }
+              return next
+            })
+          }
+        }}
         aria-expanded={isOpen}
         aria-controls={`${name}-options`}
         aria-invalid={!!error}
@@ -201,7 +215,6 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
                 className={`h-8 flex-1 rounded border border-[#E0E0E0] bg-white px-2 text-sm focus:outline-none focus:ring-2 ${
                   isNeutralFocus ? "focus:ring-blue-500" : "focus:ring-[#004B23]"
                 }`}
-                autoFocus
               />
               {searchable && (
                 <button

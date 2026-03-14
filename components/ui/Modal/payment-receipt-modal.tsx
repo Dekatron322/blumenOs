@@ -440,7 +440,7 @@ const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({ isOpen, onReq
                   alt="Paid stamp"
                   width={190}
                   height={190}
-                  className="h-32 w-32 select-none sm:h-48 sm:w-48 md:h-[190px] md:w-[190px]"
+                  className="size-32 select-none sm:size-48 md:h-[190px] md:w-[190px]"
                   priority
                 />
               </div>

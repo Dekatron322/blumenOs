@@ -302,6 +302,7 @@ export const allLinks: LinkItem[] = [
       { name: "All Debts Entries", href: "/dm/ade", privilegeKey: "payments", requiredActions: ["R"] },
       { name: "All Customer Debts", href: "/dm/all-debts", privilegeKey: "payments", requiredActions: ["R"] },
       { name: "All Debt Recovery", href: "/dm/adr", privilegeKey: "payments", requiredActions: ["R"] },
+      { name: "Promo", href: "/dm/promo", privilegeKey: "payments", requiredActions: ["R"] },
       { name: "Debt Aging", href: "/dm/aging", privilegeKey: "payments", requiredActions: ["R"] },
       { name: "Recovery Policies", href: "/dm/rp", privilegeKey: "payments", requiredActions: ["R"] },
       { name: "Add Debt", href: "/dm/add-debt", privilegeKey: "payments", requiredActions: ["W"] },

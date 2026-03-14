@@ -588,7 +588,7 @@ const BankTransferDetailsModal: React.FC<BankTransferDetailsModalProps> = ({
                 alt="Paid stamp"
                 width={190}
                 height={190}
-                className="h-24 w-24 select-none max-sm:h-20 max-sm:w-20 sm:h-48 sm:w-48 md:h-[190px] md:w-[190px]"
+                className="h-24 w-24 select-none max-sm:h-20 max-sm:w-20 sm:size-48 md:h-[190px] md:w-[190px]"
                 priority
               />
             </div>

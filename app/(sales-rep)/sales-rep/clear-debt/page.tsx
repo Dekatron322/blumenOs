@@ -769,7 +769,7 @@ Generated on: ${new Date().toLocaleString()}
                             <div className="rounded-full bg-purple-100 p-1">
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                className="h-4 w-4 text-purple-600"
+                                className="size-4 text-purple-600"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -889,7 +889,7 @@ Generated on: ${new Date().toLocaleString()}
                                 >
                                   {previewDebtClearanceLoading ? (
                                     <span className="flex items-center gap-1">
-                                      <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
+                                      <svg className="size-4 animate-spin" viewBox="0 0 24 24">
                                         <circle
                                           className="opacity-25"
                                           cx="12"
@@ -1014,7 +1014,7 @@ Generated on: ${new Date().toLocaleString()}
                                     >
                                       {clearDebtLoading ? (
                                         <span className="flex items-center justify-center gap-2">
-                                          <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
+                                          <svg className="size-4 animate-spin" viewBox="0 0 24 24">
                                             <circle
                                               className="opacity-25"
                                               cx="12"
@@ -1185,7 +1185,7 @@ Generated on: ${new Date().toLocaleString()}
               <div className="grid grid-cols-1 gap-3 border-t border-gray-200 bg-white px-6 py-4 sm:grid-cols-3">
                 <ButtonModule type="button" variant="primary" className="flex-1" onClick={handleDownloadReceipt}>
                   <span className="flex items-center justify-center gap-2">
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -1198,7 +1198,7 @@ Generated on: ${new Date().toLocaleString()}
                 </ButtonModule>
                 <ButtonModule type="button" variant="secondary" className="flex-1" onClick={handlePrintReceipt}>
                   <span className="flex items-center justify-center gap-2">
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"

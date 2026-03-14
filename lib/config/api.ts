@@ -545,6 +545,12 @@ export const API_ENDPOINTS = {
     PAUSE: "/debt-management/recovery-policies/{id}/pause",
     RESUME: "/debt-management/recovery-policies/{id}/resume",
     DEBT_RECOVERY: "/debt-management/recovery-records",
+    CLEARANCE_PROMO_LIST: "/debt-management/clearance-promos",
+    PAUSE_PROMO: "/debt-management/clearance-promos/{id}/pause",
+    RESUME_PROMO: "/debt-management/clearance-promos/{id}/resume",
+    ADD_PROMO: "/debt-management/clearance-promos",
+    PROMO_DETAILS: "/debt-management/clearance-promos/{id}",
+    UPDATE_PROMO: "/debt-management/clearance-promos/{id}",
   },
 
   CUSTOMER_AUTH: {

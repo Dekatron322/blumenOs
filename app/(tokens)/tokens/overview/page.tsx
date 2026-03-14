@@ -244,7 +244,7 @@ const CompactAgentRow = ({
     <div className="flex items-center justify-between border-b border-gray-100 py-2 last:border-0">
       <div className="flex-1">
         <div className="flex items-center gap-2">
-          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gray-100 text-[10px] font-medium text-gray-600">
+          <span className="flex size-5 items-center justify-center rounded-full bg-gray-100 text-[10px] font-medium text-gray-600">
             {index + 1}
           </span>
           <span className="text-xs font-medium text-gray-900">{agent.agentName || `Agent ${index + 1}`}</span>
