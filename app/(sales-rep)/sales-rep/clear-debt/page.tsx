@@ -831,7 +831,7 @@ Generated on: ${new Date().toLocaleString()}
                                               {promoCode === promo.code && (
                                                 <div className="rounded-full bg-white p-0.5">
                                                   <svg
-                                                    className="h-3 w-3 text-purple-600"
+                                                    className="size-3 text-purple-600"
                                                     fill="currentColor"
                                                     viewBox="0 0 20 20"
                                                   >
@@ -916,7 +916,7 @@ Generated on: ${new Date().toLocaleString()}
                               {/* Helper text */}
                               <p className="flex items-center gap-1 text-xs text-gray-500">
                                 <svg
-                                  className="h-3 w-3 text-gray-400"
+                                  className="size-3 text-gray-400"
                                   fill="none"
                                   viewBox="0 0 24 24"
                                   stroke="currentColor"

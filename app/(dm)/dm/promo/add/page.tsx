@@ -375,7 +375,7 @@ const AddPromoPage = () => {
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold text-[#16A34A]">Promo Created Successfully!</h3>
                     <p className="text-sm text-[#16A34A]/80">
-                      Your promo "{formData.name}" has been created. Redirecting to promo list...
+                      Your promo &quot;{formData.name}&quot; has been created. Redirecting to promo list...
                     </p>
                   </div>
                   <div className="flex items-center gap-2">

@@ -408,7 +408,7 @@ const EditPromoPage = () => {
               <X className="h-12 w-12 text-red-600" />
             </div>
             <h2 className="mb-2 text-2xl font-bold text-gray-900">Failed to Load Promo</h2>
-            <p className="mb-6 text-gray-600">We couldn't load the promo details. Please try again.</p>
+            <p className="mb-6 text-gray-600">We couldn&apos;t load the promo details. Please try again.</p>
             <div className="space-x-4">
               <ButtonModule
                 variant="primary"
@@ -491,7 +491,7 @@ const EditPromoPage = () => {
                 }`}
               >
                 {React.createElement(statusConfig.isActive[formData.isActive ? "true" : "false"].icon, {
-                  className: "h-3 w-3",
+                  className: "size-3",
                 })}
                 {statusConfig.isActive[formData.isActive ? "true" : "false"].label}
               </span>
@@ -504,7 +504,7 @@ const EditPromoPage = () => {
                 }`}
               >
                 {React.createElement(statusConfig.isPaused[formData.isPaused ? "true" : "false"].icon, {
-                  className: "h-3 w-3",
+                  className: "size-3",
                 })}
                 {statusConfig.isPaused[formData.isPaused ? "true" : "false"].label}
               </span>
@@ -561,7 +561,7 @@ const EditPromoPage = () => {
                               : "border-transparent text-gray-500 hover:text-gray-700"
                           }`}
                         >
-                          {React.createElement(tab.icon, { className: "h-3 w-3" })}
+                          {React.createElement(tab.icon, { className: "size-3" })}
                           {tab.label}
                         </button>
                       ))}
@@ -669,7 +669,7 @@ const EditPromoPage = () => {
                                 className={errors.discountPercent ? "border-red-500" : ""}
                               />
                               <div className="mt-1 flex items-center gap-1 text-xs text-gray-500">
-                                <Info className="h-3 w-3" />
+                                <Info className="size-3" />
                                 <span>Value must be between 1% and 100%</span>
                               </div>
                             </div>
@@ -975,8 +975,8 @@ const EditPromoPage = () => {
                                 <div>
                                   <p className="font-medium text-amber-800">Mixed Status Configuration</p>
                                   <p className="mt-1 text-sm text-amber-700">
-                                    This promo is marked as Active but Paused. When paused, active promos won't be
-                                    available to users even though they're marked as active.
+                                    This promo is marked as Active but Paused. When paused, active promos won&apos;t be
+                                    available to users even though they&apos;re marked as active.
                                   </p>
                                 </div>
                               </div>
@@ -991,7 +991,7 @@ const EditPromoPage = () => {
                       <div className="text-xs text-gray-500">
                         {Object.keys(errors).length > 0 && (
                           <span className="flex items-center gap-1 text-red-600">
-                            <AlertCircle className="h-3 w-3" />
+                            <AlertCircle className="size-3" />
                             {Object.keys(errors).length} error(s)
                           </span>
                         )}
@@ -1004,7 +1004,7 @@ const EditPromoPage = () => {
                           disabled={isSubmitting}
                           className="h-8 px-3"
                         >
-                          <X className="h-3 w-3" />
+                          <X className="size-3" />
                         </ButtonModule>
                         <ButtonModule
                           type="submit"
@@ -1014,12 +1014,12 @@ const EditPromoPage = () => {
                         >
                           {isSubmitting || updateLoading ? (
                             <>
-                              <Loader2 className="h-3 w-3 animate-spin" />
+                              <Loader2 className="size-3 animate-spin" />
                               <span className="ml-1">Updating...</span>
                             </>
                           ) : (
                             <>
-                              <Save className="h-3 w-3" />
+                              <Save className="size-3" />
                               <span className="ml-1">Update</span>
                             </>
                           )}
@@ -1119,7 +1119,7 @@ const EditPromoPage = () => {
                       {formData.scope !== 1 && (
                         <div className="mt-3 rounded border border-gray-200 p-3">
                           <p className="mb-2 flex items-center gap-1 text-xs font-medium text-gray-700">
-                            <MapPin className="h-3 w-3" />
+                            <MapPin className="size-3" />
                             Location Details
                           </p>
                           <div className="grid grid-cols-3 gap-2 text-xs">
@@ -1150,7 +1150,7 @@ const EditPromoPage = () => {
                   {/* Preview Actions */}
                   <div className="mt-4 flex justify-end">
                     <ButtonModule variant="primary" onClick={() => setIsPreview(false)} className="h-8 px-3">
-                      <Edit3 className="h-3 w-3" />
+                      <Edit3 className="size-3" />
                       <span className="ml-1">Edit</span>
                     </ButtonModule>
                   </div>
@@ -1186,7 +1186,7 @@ const EditPromoPage = () => {
                       onClick={() => setActiveTab(action.id)}
                       className="h-8 w-full justify-start gap-2 px-2 text-xs"
                     >
-                      {React.createElement(action.icon, { className: "h-3 w-3" })}
+                      {React.createElement(action.icon, { className: "size-3" })}
                       {action.label}
                     </ButtonModule>
                   ))}
@@ -1249,7 +1249,7 @@ const EditPromoPage = () => {
                   className="rounded-lg border border-red-200 bg-red-50 p-3"
                 >
                   <h4 className="mb-2 flex items-center gap-1 text-xs font-medium text-red-800">
-                    <AlertCircle className="h-3 w-3" />
+                    <AlertCircle className="size-3" />
                     Validation Errors
                   </h4>
                   <ul className="space-y-1">

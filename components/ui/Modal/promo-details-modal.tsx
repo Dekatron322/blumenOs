@@ -289,7 +289,7 @@ const PromoDetailsModal: React.FC<PromoDetailsModalProps> = ({ isOpen, onRequest
                     {/* Date Information */}
                     <div className="space-y-3">
                       <h4 className="flex items-center text-xs font-medium text-gray-700">
-                        <Calendar className="mr-1 h-3 w-3" />
+                        <Calendar className="mr-1 size-3" />
                         Date Information
                       </h4>
 
@@ -308,7 +308,7 @@ const PromoDetailsModal: React.FC<PromoDetailsModalProps> = ({ isOpen, onRequest
                     {/* Scope Information */}
                     <div className="space-y-3">
                       <h4 className="flex items-center text-xs font-medium text-gray-700">
-                        <Tag className="mr-1 h-3 w-3" />
+                        <Tag className="mr-1 size-3" />
                         Scope & Targeting
                       </h4>
 
@@ -350,7 +350,7 @@ const PromoDetailsModal: React.FC<PromoDetailsModalProps> = ({ isOpen, onRequest
                     {/* System Information */}
                     <div className="space-y-3">
                       <h4 className="flex items-center text-xs font-medium text-gray-700">
-                        <Clock className="mr-1 h-3 w-3" />
+                        <Clock className="mr-1 size-3" />
                         System Information
                       </h4>
 
