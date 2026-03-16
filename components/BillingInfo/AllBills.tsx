@@ -12,10 +12,22 @@ import { fetchAreaOffices, fetchFeeders } from "lib/redux/formDataSlice"
 import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import { MapIcon, UserIcon } from "components/Icons/Icons"
-import { ArrowLeft, ChevronDown, ChevronUp, Filter, Loader2, RefreshCw, SortAsc, SortDesc, X } from "lucide-react"
+import {
+  ArrowLeft,
+  ChevronDown,
+  ChevronUp,
+  FileText,
+  Filter,
+  Loader2,
+  RefreshCw,
+  SortAsc,
+  SortDesc,
+  X,
+} from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { VscEye } from "react-icons/vsc"
 import PostpaidBillDetailsModal from "components/ui/Modal/postpaid-bill-modal"
+import BillPreviewModal from "components/ui/Modal/bill-preview-modal"
 import EmptySearchState from "components/ui/EmptySearchState"
 
 export enum BillStatus {
@@ -51,7 +63,7 @@ interface PostpaidBill {
   closingBalance?: number
 }
 
-interface Bill {
+export interface Bill {
   id: number
   customerName: string
   accountNumber: string
@@ -69,6 +81,7 @@ interface Bill {
   netAreas: string
   closingBalance: string
   energyKwh: string
+  customerStatusCode?: string
 }
 
 interface AllBillsProps {
@@ -523,6 +536,10 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
   const [isBillModalOpen, setIsBillModalOpen] = useState(false)
   const [modalBill, setModalBill] = useState<PostpaidBill | null>(null)
 
+  // State for BillPreviewModal
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false)
+  const [previewCurrentIndex, setPreviewCurrentIndex] = useState(0)
+
   // Local state for filters to avoid too many Redux dispatches
   const [localFilters, setLocalFilters] = useState({
     billingPeriodId: undefined as number | undefined,
@@ -905,6 +922,15 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
     router.push(`/billing/bills/update/${billId}`)
   }
 
+  const handlePreviewBill = (bill: Bill) => {
+    // Find the index of the current bill in the displayBills array
+    const index = displayBills.findIndex((b) => b.id === bill.id)
+    if (index !== -1) {
+      setPreviewCurrentIndex(index)
+      setIsPreviewModalOpen(true)
+    }
+  }
+
   const formatDate = (dateString: string) => {
     try {
       const date = new Date(dateString)
@@ -992,6 +1018,7 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
         netAreas: `₦${(apiBill.netArrears || 0.0).toLocaleString()}`,
         closingBalance: `₦${(apiBill.closingBalance || 0.0).toLocaleString()}`,
         energyKwh: `${apiBill.consumptionKwh || 0.0} kWh`,
+        customerStatusCode: apiBill.customerStatusCode,
       } as Bill
     })
   }
@@ -1274,7 +1301,7 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
                           Status <RxCaretSort />
                         </div>
                       </th>
-                      <th className="shadow-[ -4px_0_8px_-2px_rgba(0,0,0,0.1)] sticky right-0 z-10 whitespace-nowrap border-b bg-white p-4 text-sm">
+                      <th className="cursor-pointer whitespace-nowrap border-b p-4 text-sm">
                         <div className="flex items-center gap-2">Actions</div>
                       </th>
                     </tr>
@@ -1288,7 +1315,7 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
                         transition={{ duration: 0.3, delay: index * 0.05 }}
                         className="hover:bg-gray-50"
                       >
-                        <td className="whitespace-nowrap border-b px-4 py-3">
+                        <td className="whitespace-nowrap border-b px-4 py-2">
                           <div className="flex items-center gap-2">
                             <div className="flex size-8 items-center justify-center rounded-full bg-gray-100">
                               <UserIcon />
@@ -1299,29 +1326,29 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
                             </div>
                           </div>
                         </td>
-                        <td className="whitespace-nowrap border-b px-4 py-3">
+                        <td className="whitespace-nowrap border-b px-4 py-2">
                           <div>
                             <div className="text-sm font-medium text-gray-900">{bill.name}</div>
                             <div className="text-xs text-gray-500">{bill.billingCycle}</div>
                           </div>
                         </td>
-                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm  text-gray-900">
+                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm  text-gray-900">
                           {formatCurrency(bill.amount)}
                         </td>
-                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm  text-gray-900">
+                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm  text-gray-900">
                           {formatCurrency(bill.openingBalance)}
                         </td>
-                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm  text-gray-900">
+                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm  text-gray-900">
                           {formatCurrency(bill.netAreas)}
                         </td>
-                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm  text-gray-900">
+                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm  text-gray-900">
                           {formatCurrency(bill.closingBalance)}
                         </td>
-                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">{bill.energyKwh}</td>
-                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm text-gray-600">{bill.energyKwh}</td>
+                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm text-gray-600">
                           {formatDate(bill.issueDate)}
                         </td>
-                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                           <motion.div
                             style={getStatusStyle(bill.status)}
                             className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium"
@@ -1337,7 +1364,7 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
                             {Object.values(BillStatus)[bill.status] || "Unknown"}
                           </motion.div>
                         </td>
-                        <td className="shadow-[ -4px_0_8px_-2px_rgba(0,0,0,0.1)] sticky right-0 z-10 whitespace-nowrap border-b bg-white px-4 py-2 text-sm shadow-md">
+                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                           <div className="flex items-center gap-2">
                             <ButtonModule
                               size="sm"
@@ -1349,6 +1376,17 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
                             >
                               <span className="hidden sm:inline">View</span>
                               <span className="sm:hidden">View</span>
+                            </ButtonModule>
+                            <ButtonModule
+                              size="sm"
+                              icon={<FileText />}
+                              iconPosition="start"
+                              onClick={() => handlePreviewBill(bill)}
+                              variant="outline"
+                              className="text-xs sm:text-sm"
+                            >
+                              <span className="hidden sm:inline">Preview</span>
+                              <span className="sm:hidden">Preview</span>
                             </ButtonModule>
                           </div>
                         </td>
@@ -1664,6 +1702,15 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
         handleFeederSearchClick={handleFeederSearchClick}
         areaOfficesLoading={areaOfficesLoading}
         feedersLoading={feedersLoading}
+      />
+
+      {/* Bill Preview Modal */}
+      <BillPreviewModal
+        isOpen={isPreviewModalOpen}
+        onRequestClose={() => setIsPreviewModalOpen(false)}
+        bills={displayBills}
+        currentIndex={previewCurrentIndex}
+        setCurrentIndex={setPreviewCurrentIndex}
       />
     </>
   )
