@@ -274,11 +274,11 @@ const AddMeterReadingPage = () => {
         // Validate headers
         const expectedHeaders = ["customerid", "period", "previousreadingkwh", "presentreadingkwh", "notes"]
 
-        const missingHeaders = expectedHeaders.filter((header) => !headers.includes(header))
-        if (missingHeaders.length > 0) {
-          setCsvErrors([`Missing required columns: ${missingHeaders.join(", ")}`])
-          return
-        }
+        // const missingHeaders = expectedHeaders.filter((header) => !headers.includes(header))
+        // if (missingHeaders.length > 0) {
+        //   setCsvErrors([`Missing required columns: ${missingHeaders.join(", ")}`])
+        //   return
+        // }
 
         const parsedData: CSVMeterReading[] = []
         const errors: string[] = []

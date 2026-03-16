@@ -381,11 +381,11 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onRequestCl
           "isactive",
         ]
 
-        const missingHeaders = expectedHeaders.filter((header) => !headers.includes(header))
-        if (missingHeaders.length > 0) {
-          setCsvErrors([`Missing required columns: ${missingHeaders.join(", ")}`])
-          return
-        }
+        // const missingHeaders = expectedHeaders.filter((header) => !headers.includes(header))
+        // if (missingHeaders.length > 0) {
+        //   setCsvErrors([`Missing required columns: ${missingHeaders.join(", ")}`])
+        //   return
+        // }
 
         const parsedData: CSVEmployee[] = []
         const errors: string[] = []

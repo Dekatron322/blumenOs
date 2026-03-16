@@ -286,11 +286,11 @@ const ReportOutage = () => {
         // Validate headers
         const expectedHeaders = ["title", "details", "distributionsubstationid", "feederid", "scope", "priority"]
 
-        const missingHeaders = expectedHeaders.filter((header) => !headers.includes(header))
-        if (missingHeaders.length > 0) {
-          setCsvErrors([`Missing required columns: ${missingHeaders.join(", ")}`])
-          return
-        }
+        // const missingHeaders = expectedHeaders.filter((header) => !headers.includes(header))
+        // if (missingHeaders.length > 0) {
+        //   setCsvErrors([`Missing required columns: ${missingHeaders.join(", ")}`])
+        //   return
+        // }
 
         const parsedData: CSVOutage[] = []
         const errors: string[] = []

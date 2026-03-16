@@ -184,11 +184,11 @@ const AddPolePage = () => {
         // Validate headers
         const expectedHeaders = ["htpolenumber"]
 
-        const missingHeaders = expectedHeaders.filter((header) => !headers.includes(header))
-        if (missingHeaders.length > 0) {
-          setCsvErrors([`Missing required columns: ${missingHeaders.join(", ")}`])
-          return
-        }
+        // const missingHeaders = expectedHeaders.filter((header) => !headers.includes(header))
+        // if (missingHeaders.length > 0) {
+        //   setCsvErrors([`Missing required columns: ${missingHeaders.join(", ")}`])
+        //   return
+        // }
 
         const parsedData: CSVPole[] = []
         const errors: string[] = []

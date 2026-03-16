@@ -1049,10 +1049,10 @@ const FileManagementPage = () => {
         if (selectedUploadType) {
           const validation = await validateFileColumns(file)
           if (!validation.isValid && validation.missingColumns.length > 0) {
-            notify("warning", "Missing Required Columns", {
-              description: `Missing: ${validation.missingColumns.join(", ")}`,
-              duration: 7000,
-            })
+            // notify("warning", "Missing Required Columns", {
+            //   description: `Missing: ${validation.missingColumns.join(", ")}`,
+            //   duration: 7000,
+            // })
           } else if (validation.isValid) {
             notify("success", "File Validation Passed", {
               description: "All required columns found",
@@ -1119,15 +1119,15 @@ const FileManagementPage = () => {
         setBulkUploadResponse(null)
 
         // Validate columns if upload type is selected
-        if (selectedUploadType) {
-          const validation = await validateFileColumns(file)
-          if (!validation.isValid && validation.missingColumns.length > 0) {
-            notify("warning", "Missing Required Columns", {
-              description: `Missing: ${validation.missingColumns.join(", ")}`,
-              duration: 7000,
-            })
-          }
-        }
+        // if (selectedUploadType) {
+        //   const validation = await validateFileColumns(file)
+        //   if (!validation.isValid && validation.missingColumns.length > 0) {
+        //     notify("warning", "Missing Required Columns", {
+        //       description: `Missing: ${validation.missingColumns.join(", ")}`,
+        //       duration: 7000,
+        //     })
+        //   }
+        // }
       }
     },
     [selectedUploadType, validateFileColumns]

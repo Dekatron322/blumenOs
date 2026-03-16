@@ -306,11 +306,11 @@ const AddFeederPage = () => {
 
         const optionalHeaders = ["htpoleid", "nerccode"]
 
-        const missingHeaders = expectedHeaders.filter((header) => !headers.includes(header))
-        if (missingHeaders.length > 0) {
-          setCsvErrors([`Missing required columns: ${missingHeaders.join(", ")}`])
-          return
-        }
+        // const missingHeaders = expectedHeaders.filter((header) => !headers.includes(header))
+        // if (missingHeaders.length > 0) {
+        //   setCsvErrors([`Missing required columns: ${missingHeaders.join(", ")}`])
+        //   return
+        // }
 
         const parsedData: CSVFeeder[] = []
         const errors: string[] = []
