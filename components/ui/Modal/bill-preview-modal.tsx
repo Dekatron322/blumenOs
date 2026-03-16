@@ -10,6 +10,7 @@ import jsPDF from "jspdf"
 import { Bill } from "../../BillingInfo/AllBills"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { fetchPostpaidBills, setPagination } from "lib/redux/postpaidSlice"
+import { formatCurrency } from "utils/formatCurrency"
 
 interface BillPreviewModalProps {
   isOpen: boolean
@@ -33,22 +34,6 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
   const invoiceRef = useRef<HTMLDivElement>(null)
 
   const currentBill = bills[currentIndex]
-
-  const formatCurrency = (amount: string) => {
-    // If amount already has ₦ symbol, return as is
-    if (amount.includes("₦")) return amount
-
-    // Otherwise try to parse as number
-    const num = parseFloat(amount.replace(/[^0-9.-]+/g, ""))
-    if (isNaN(num)) return amount
-
-    return new Intl.NumberFormat("en-NG", {
-      style: "currency",
-      currency: "NGN",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(num)
-  }
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -564,18 +549,18 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                       <div className="print-bg-light-green print-white-text flex w-full items-center justify-between bg-[#6CAD2B] px-2 py-1 font-semibold">
                         <p className="print-hide-label">AREA OFFICE</p>
                         <div className="flex items-center justify-center bg-white px-4 text-center print:flex-grow print:justify-end">
-                          <p className="print-show-value text-black">{currentBill.location || "-"}</p>
+                          <p className="print-show-value text-black">{currentBill.areaOfficeName || "-"}</p>
                         </div>
                       </div>
 
                       <div className="space-y-2 px-2">
                         <div className="flex justify-between">
                           <span className="print-hide-label font-semibold">Bill #:</span>
-                          <span className="print-show-value px-2 font-semibold">{currentBill.id}</span>
+                          <span className="print-show-value px-2 font-semibold">{currentBill.billingId}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="print-hide-label font-semibold">Bill Month:</span>
-                          <span className="print-show-value px-2 font-semibold">{currentBill.billingCycle}</span>
+                          <span className="print-show-value px-2 font-semibold">{currentBill.name}</span>
                         </div>
                         <div className="mt-1 flex justify-between">
                           <span className="print-hide-label font-semibold">Customer Account:</span>
@@ -587,15 +572,17 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                         </div>
                         <div className="mt-1 flex justify-between">
                           <span className="print-hide-label font-semibold">Address:</span>
-                          <span className="print-show-value px-2 font-semibold">-</span>
+                          <span className="print-show-value px-2 font-semibold">{currentBill.customerAddress}</span>
                         </div>
                         <div className="mt-1 flex justify-between">
                           <span className="print-hide-label font-semibold">Phone Number:</span>
-                          <span className="print-show-value px-2 font-semibold">-</span>
+                          <span className="print-show-value px-2 font-semibold">
+                            {currentBill.customerPhoneNumber || "-"}
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="print-hide-label font-semibold">City:</span>
-                          <span className="print-show-value px-2 font-semibold">-</span>
+                          <span className="print-show-value px-2 font-semibold">{currentBill.customerCity || "-"}</span>
                         </div>
                       </div>
                     </div>
@@ -607,14 +594,16 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                       >
                         <p className="print:invisible">SERVICE CENTER:</p>
                         <div className="flex items-center justify-center bg-white px-4 print:flex-grow print:justify-end">
-                          <p className="print-show-value text-[7pt] text-black">{currentBill.location || "-"}</p>
+                          <p className="print-show-value text-[7pt] text-black">
+                            {currentBill.serviceCenterName || "-"}
+                          </p>
                         </div>
                       </div>
 
                       <div className="space-y-2 px-2">
                         <div className="flex justify-between">
                           <span className="print-hide-label font-semibold">State:</span>
-                          <span className="print-show-value px-2 font-semibold">-</span>
+                          <span className="print-show-value px-2 font-semibold">{currentBill.customerCity || "-"}</span>
                         </div>
                         <div className="mt-1 flex justify-between">
                           <span className="print-hide-label font-semibold">11KV Feeder:</span>
@@ -622,19 +611,25 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                         </div>
                         <div className="mt-1 flex justify-between">
                           <span className="print-hide-label font-semibold">33KV Feeder:</span>
-                          <span className="print-show-value px-2 font-semibold">-</span>
+                          <span className="print-show-value px-2 font-semibold">
+                            {currentBill.distributionSubstationCode || "-"}
+                          </span>
                         </div>
                         <div className="mt-1 flex justify-between">
                           <span className="print-hide-label font-semibold">DT Name:</span>
-                          <span className="print-show-value px-2 font-semibold">-</span>
+                          <span className="print-show-value px-2 font-semibold">
+                            {currentBill.distributionSubstationName || "-"}
+                          </span>
                         </div>
                         <div className="mt-1 flex justify-between">
                           <span className="print-hide-label font-semibold">Sales Rep:</span>
-                          <span className="print-show-value px-2 font-semibold">-</span>
+                          <span className="print-show-value px-2 font-semibold">{currentBill.salesRepName || "-"}</span>
                         </div>
                         <div className="mt-1 flex justify-between">
                           <span className="print-hide-label font-semibold">Meter:</span>
-                          <span className="print-show-value px-2 font-semibold">-</span>
+                          <span className="print-show-value px-2 font-semibold">
+                            {currentBill.customerMeterNumber || "-"}
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="print-hide-label font-semibold">Multiplier:</span>
@@ -662,13 +657,13 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                         <div className="mt-2 flex justify-between">
                           <span className="print-hide-label font-semibold">Last Payment Date:</span>
                           <span className="print-show-value px-2 font-semibold">
-                            {formatShortDate(currentBill.issueDate)}
+                            {currentBill.lastUpdated ? formatShortDate(currentBill.lastUpdated) : "N/A"}
                           </span>
                         </div>
                         <div className="mt-1 flex justify-between">
                           <span className="print-hide-label font-semibold">Last Payment Amount:</span>
                           <span className="print-show-value px-2 font-semibold">
-                            {formatCurrency(currentBill.amount)}
+                            {formatCurrency(currentBill.lastPaymentAmount || 0)}
                           </span>
                         </div>
                         <div className="mt-1 flex justify-between">
@@ -693,7 +688,7 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                         </div>
                         <div className="mt-1 flex justify-between">
                           <span className="print-hide-label font-semibold">Tariff Class:</span>
-                          <span className="print-show-value px-2 font-semibold">{currentBill.customerType}</span>
+                          <span className="print-show-value px-2 font-semibold">{currentBill.customerTariffCode}</span>
                         </div>
                       </div>
                     </div>
@@ -714,13 +709,13 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                         </div>
                         <div className="mt-1 flex justify-between">
                           <span className="print-hide-label font-semibold">Opening Balance:</span>
-                          <span className="print-show-value px-2 font-semibold">
-                            {formatCurrency(currentBill.openingBalance)}
-                          </span>
+                          <span className="print-show-value px-2 font-semibold">{currentBill.openingBalance}</span>
                         </div>
                         <div className="mt-1 flex justify-between">
                           <span className="print-hide-label font-semibold">Adjustment:</span>
-                          <span className="print-show-value px-2 font-semibold">{formatCurrency("0")}</span>
+                          <span className="print-show-value px-2 font-semibold">
+                            ₦{currentBill.adjustedOpeningBalance}
+                          </span>
                         </div>
                         <div className="mt-1 flex justify-between">
                           <span className="print-hide-label font-semibold">Total Payment Amt:</span>
@@ -731,22 +726,26 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                         <div className="mt-1 flex justify-between">
                           <span className="print-hide-label font-semibold">Net Arrears:</span>
                           <span className="print-show-value px-2 font-semibold">
-                            {formatCurrency(currentBill.netAreas)}
+                            ₦{formatCurrency(currentBill.netArrears || 0)}
                           </span>
                         </div>
                         <div className="mt-1 flex justify-between">
                           <span className="print-hide-label font-semibold">Energy Charged:</span>
                           <span className="print-show-value px-2 font-semibold">
-                            {formatCurrency(currentBill.amount)}
+                            {formatCurrency(currentBill.chargeBeforeVat || 0)}
                           </span>
                         </div>
                         <div className="mt-1 flex justify-between">
                           <span className="print-hide-label font-semibold">Fixed Charge:</span>
-                          <span className="print-show-value px-2 font-semibold">{formatCurrency("0")}</span>
+                          <span className="print-show-value px-2 font-semibold">
+                            {formatCurrency(currentBill.actualBillAmount || 0)}
+                          </span>
                         </div>
                         <div className="mt-1 flex justify-between">
                           <span className="print-hide-label font-semibold">VAT:</span>
-                          <span className="print-show-value px-2 font-semibold">{formatCurrency("0")}</span>
+                          <span className="print-show-value px-2 font-semibold">
+                            {formatCurrency(currentBill.vatAmount || 0)}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -767,7 +766,7 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                       <p className="text-[8pt] print:invisible">TOTAL DUE:</p>
                       <div className="flex items-center justify-center bg-white px-4 py-0.5 print:-mt-5 print:flex-grow print:justify-end">
                         <p className="print-show-value text-[8pt] font-bold text-black">
-                          {formatCurrency(currentBill.closingBalance)}
+                          ₦{formatCurrency(currentBill.totalDue || 0)}
                         </p>
                       </div>
                     </div>

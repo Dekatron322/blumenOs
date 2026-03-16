@@ -134,9 +134,7 @@ const DropdownPopover = ({
 // Time filter types
 type TimeFilter = "lastYear" | "lastMonth" | "lastWeek" | "yesterday" | "day" | "week" | "month" | "year" | "all"
 type DailyCollectionFilter = "week" | "lastWeek" | "month" | "lastMonth" | "year" | "lastYear" | "all"
-type AppliedDateRange =
-  | { kind: "preset"; filter: TimeFilter }
-  | { kind: "custom"; start: string; end: string }
+type AppliedDateRange = { kind: "preset"; filter: TimeFilter } | { kind: "custom"; start: string; end: string }
 
 // Payment Health Card Component
 const PaymentHealthCard = ({
@@ -151,7 +149,7 @@ const PaymentHealthCard = ({
   loading: boolean
   error: string | null
   windowMinutes: number
-  onWindowMinutesChange: (value: number) => void
+  onWindowMinutesChange: (value: string | number) => void
   windowMinutesOptions: { value: number; label: string }[]
 }) => {
   const getHealthColor = (severity: string) => {
@@ -643,7 +641,11 @@ export default function Dashboard() {
       <div className="mb-2 flex items-center justify-between border-b py-2">
         <Text>{card.description}</Text>
         <Text className="text-xs">
-          {timeFilter === "day" ? "00:00:00 AM to 23:59:59 PM" : timeFilter === "year" ? "Jan to Dec" : card.periodLabel}
+          {timeFilter === "day"
+            ? "00:00:00 AM to 23:59:59 PM"
+            : timeFilter === "year"
+            ? "Jan to Dec"
+            : card.periodLabel}
         </Text>
       </div>
 
@@ -667,7 +669,9 @@ export default function Dashboard() {
               </div>
             )}
           </div>
-          {getCardTrend(card) && <TrendIndicator value={getCardTrend(card)!.value} positive={getCardTrend(card)!.positive} />}
+          {getCardTrend(card) && (
+            <TrendIndicator value={getCardTrend(card)!.value} positive={getCardTrend(card)!.positive} />
+          )}
         </div>
       )}
     </Card>
@@ -1040,8 +1044,8 @@ export default function Dashboard() {
     setIsPolling(!isPolling)
   }
 
-  const handlePollingIntervalChange = (interval: number) => {
-    setPollingInterval(interval)
+  const handlePollingIntervalChange = (interval: string | number) => {
+    setPollingInterval(Number(interval))
   }
 
   // Polling interval options
@@ -1224,7 +1228,7 @@ export default function Dashboard() {
                       loading={paymentHealthLoading}
                       error={paymentHealthError}
                       windowMinutes={windowMinutes}
-                      onWindowMinutesChange={setWindowMinutes}
+                      onWindowMinutesChange={(value) => setWindowMinutes(Number(value))}
                       windowMinutesOptions={windowMinutesOptions}
                     />
                   </div>
@@ -1547,7 +1551,11 @@ export default function Dashboard() {
                   {/* Collection Efficiency Card */}
                   <div className="mb-6">
                     <Card
-                      title={`Collection Efficiency${selectedCollectionEfficiencyPeriod ? ` for ${selectedCollectionEfficiencyPeriod.displayName}` : ""}`}
+                      title={`Collection Efficiency${
+                        selectedCollectionEfficiencyPeriod
+                          ? ` for ${selectedCollectionEfficiencyPeriod.displayName}`
+                          : ""
+                      }`}
                       headerAction={
                         <div className="relative">
                           <button
@@ -1560,7 +1568,9 @@ export default function Dashboard() {
                               {selectedCollectionEfficiencyPeriod?.displayName || "All billing periods"}
                             </span>
                             <svg
-                              className={`size-4 text-gray-500 transition-transform ${isCollectionPeriodOpen ? "rotate-180" : ""}`}
+                              className={`size-4 text-gray-500 transition-transform ${
+                                isCollectionPeriodOpen ? "rotate-180" : ""
+                              }`}
                               xmlns="http://www.w3.org/2000/svg"
                               viewBox="0 0 20 20"
                               fill="currentColor"
@@ -1605,7 +1615,9 @@ export default function Dashboard() {
                                   }`}
                                 >
                                   <span>All billing periods</span>
-                                  {effectiveCollectionEfficiencyPeriodKey === "" && <span className="text-xs">Selected</span>}
+                                  {effectiveCollectionEfficiencyPeriodKey === "" && (
+                                    <span className="text-xs">Selected</span>
+                                  )}
                                 </button>
 
                                 <div className="max-h-72 overflow-y-auto rounded-lg border border-gray-100">
@@ -2027,7 +2039,10 @@ export default function Dashboard() {
                             selectedValue={dailyCollectionFilter}
                             onSelect={(value) => setDailyCollectionFilter(value as DailyCollectionFilter)}
                           >
-                            {dailyCollectionFilterOptions.find((option) => option.value === dailyCollectionFilter)?.label}
+                            {
+                              dailyCollectionFilterOptions.find((option) => option.value === dailyCollectionFilter)
+                                ?.label
+                            }
                           </DropdownPopover>
                         }
                       >

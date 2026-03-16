@@ -23,6 +23,13 @@ export interface ActiveDispute {
 }
 
 export interface PostpaidBill {
+  salesRepName: string | undefined
+  serviceCenterName: string | undefined
+  customerState: string | undefined
+  customerCity: string | undefined
+  customerPhoneNumber: string | undefined
+  customerAddress: string | undefined
+  lastPaymentAmount(lastPaymentAmount: any): import("react").ReactNode
   totalPaid: any
   outstandingAmount: number
   reference: any

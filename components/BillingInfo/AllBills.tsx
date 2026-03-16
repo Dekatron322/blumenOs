@@ -64,7 +64,9 @@ interface PostpaidBill {
 }
 
 export interface Bill {
+  actualBillAmount: number
   id: number
+  billingId: string
   customerName: string
   accountNumber: string
   billingCycle: string
@@ -73,6 +75,7 @@ export interface Bill {
   status: BillStatus
   dueDate: string
   issueDate: string
+  lastUpdated?: string
   customerType: "Residential" | "Commercial" | "Industrial"
   location: string
   consumption: string
@@ -82,6 +85,29 @@ export interface Bill {
   closingBalance: string
   energyKwh: string
   customerStatusCode?: string
+  customerTariffCode?: string
+  customerAddress?: string
+  customerPhoneNumber?: string
+  customerCity?: string
+  customerState?: string
+  distributionSubstationCode?: string
+  distributionSubstationName?: string
+  feederName?: string
+  areaOfficeName?: string
+  serviceCenterName?: string
+  customerMeterNumber?: string
+  salesRepName?: string
+  tariffPerKwh?: number
+  totalDue?: number
+  netArrears?: number
+  consumptionKwh?: number
+  presentReadingKwh?: number
+  previousReadingKwh?: number
+  vatAmount?: number
+  chargeBeforeVat?: number
+  currentBillAmount?: number
+  adjustedOpeningBalance?: number
+  lastPaymentAmount?: number
 }
 
 interface AllBillsProps {
@@ -1002,6 +1028,7 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
 
       return {
         id: apiBill.id,
+        billingId: apiBill.billingId || "",
         customerName: apiBill.customerName || "Unknown Customer",
         accountNumber: apiBill.customerAccountNumber || "N/A",
         billingCycle: apiBill.period || "Unknown Period",
@@ -1010,6 +1037,7 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
         status,
         dueDate: formatApiDate(apiBill.dueDate),
         issueDate: formatApiDate(apiBill.createdAt),
+        lastUpdated: apiBill.lastUpdated,
         customerType,
         location,
         consumption,
@@ -1019,6 +1047,27 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
         closingBalance: `₦${(apiBill.closingBalance || 0.0).toLocaleString()}`,
         energyKwh: `${apiBill.consumptionKwh || 0.0} kWh`,
         customerStatusCode: apiBill.customerStatusCode,
+        customerTariffCode: apiBill.customerTariffCode,
+        customerAddress: apiBill.customer?.address,
+        customerPhoneNumber: apiBill.customer?.phoneNumber,
+        customerCity: apiBill.customer?.city,
+        customerState: apiBill.customer?.state,
+        distributionSubstationCode: apiBill.distributionSubstationCode,
+        distributionSubstationName: apiBill.distributionSubstationName,
+        feederName: apiBill.feederName,
+        areaOfficeName: apiBill.areaOfficeName,
+        serviceCenterName: apiBill.customer?.serviceCenterName,
+        customerMeterNumber: apiBill.customerMeterNumber,
+        tariffPerKwh: apiBill.tariffPerKwh,
+        totalDue: apiBill.totalDue,
+        netArrears: apiBill.netArrears,
+        consumptionKwh: apiBill.consumptionKwh,
+        presentReadingKwh: apiBill.presentReadingKwh,
+        previousReadingKwh: apiBill.previousReadingKwh,
+        vatAmount: apiBill.vatAmount,
+        chargeBeforeVat: apiBill.chargeBeforeVat,
+        currentBillAmount: apiBill.currentBillAmount,
+        adjustedOpeningBalance: apiBill.adjustedOpeningBalance,
       } as Bill
     })
   }
