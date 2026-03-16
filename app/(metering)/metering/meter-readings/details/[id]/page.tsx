@@ -424,9 +424,9 @@ const MeterReadingDetailsPage = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex flex-col 2xl:container">
+          <div className="mx-auto flex flex-col ">
             <div className="sticky top-16 z-40 w-full border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-3 py-4 sm:px-4 lg:px-6  2xl:px-16 ">
+              <div className="mx-auto w-full px-3 py-4 sm:px-4 lg:px-6   ">
                 <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3 sm:gap-4">
                     <motion.button
@@ -477,7 +477,7 @@ const MeterReadingDetailsPage = () => {
               </div>
             </div>
 
-            <div className="flex w-full px-3 py-6  sm:px-4 sm:py-8 lg:px-6  2xl:px-16">
+            <div className="flex w-full px-3 py-6  sm:px-4 sm:py-8 lg:px-6  ">
               <div className="flex w-full flex-col gap-6 xl:flex-row">
                 {/* Left Column - Overview & Quick Stats */}
                 <div className="flex w-full flex-col space-y-6 xl:w-[30%]">
@@ -489,7 +489,7 @@ const MeterReadingDetailsPage = () => {
                   >
                     <div className="text-center">
                       <div className="relative inline-block">
-                        <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-blue-100 text-2xl font-bold text-blue-600 sm:size-20 sm:text-3xl">
+                        <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-blue-100 text-2xl font-bold text-blue-600 sm:size-20 sm:text-2xl">
                           <Zap className="size-5 sm:size-7" />
                         </div>
                         <div

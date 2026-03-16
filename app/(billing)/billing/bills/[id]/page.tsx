@@ -27,6 +27,7 @@ import type {
 } from "lib/redux/postpaidSlice"
 import { BillingAdjustmentStatus, getBillingAdjustmentStatusText } from "lib/types/billing"
 import Image from "next/image"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 // Helper functions
 const formatCurrency = (amount: number) => {
@@ -104,7 +105,7 @@ const sourceOptions = [
 const LoadingSkeleton = () => (
   <div className="min-h-screen bg-gradient-to-br from-[#f9f9f9] to-gray-100">
     <DashboardNav />
-    <div className="container mx-auto p-4 sm:p-6">
+    <div className="mx-auto flex w-full flex-col p-4 2xl:container sm:p-6">
       {/* Header Skeleton */}
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
@@ -745,7 +746,7 @@ const BillingJobChangeRequestsSection = ({ billingJobId }: { billingJobId: numbe
           </div>
         ) : changeRequestsByBillingJob.length === 0 ? (
           <div className="py-8 text-center">
-            <p className="text-sm text-gray-500 sm:text-base">No change requests found for this billing job</p>
+            <EmptySearchState title={"No change requests found for this billing job"} />
           </div>
         ) : viewMode === "grid" ? (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -1103,9 +1104,9 @@ const BillDetailsPage = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col 2xl:container">
+          <div className="mx-auto flex w-full flex-col ">
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-3 py-4 sm:px-4 lg:px-6 2xl:px-16">
+              <div className="mx-auto w-full px-3 py-4 sm:px-4 lg:px-6 ">
                 <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3 sm:gap-4">
                     <motion.button
@@ -1193,7 +1194,7 @@ const BillDetailsPage = () => {
               </div>
             </div>
 
-            <div className="flex w-full px-3 py-6  sm:px-4 sm:py-8 lg:px-6 2xl:px-16">
+            <div className="flex w-full px-3 py-6  sm:px-4 sm:py-8 lg:px-6 ">
               <div className="flex w-full flex-col gap-6 xl:flex-row">
                 {/* Left Column - Customer & Quick Info */}
                 <div className="flex w-full flex-col space-y-6 xl:w-[30%]">
@@ -1205,7 +1206,7 @@ const BillDetailsPage = () => {
                   >
                     <div className="text-center">
                       <div className="relative inline-block">
-                        <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-blue-100 text-2xl font-bold text-blue-600 sm:size-20 sm:text-3xl">
+                        <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-blue-100 text-2xl font-bold text-blue-600 sm:size-20 sm:text-2xl">
                           <User className="size-5 sm:size-7" />
                         </div>
                       </div>

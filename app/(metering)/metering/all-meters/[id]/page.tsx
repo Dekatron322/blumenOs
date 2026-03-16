@@ -389,9 +389,7 @@ const MeterHistoryListItem = ({
               <span>
                 <strong>Reason:</strong> {history.reason || "No reason provided"}
               </span>
-              <span>
-                <strong>User ID:</strong> {history.userAccountId}
-              </span>
+
               {history.agentId && (
                 <span>
                   <strong>Agent ID:</strong> {history.agentId}
@@ -897,7 +895,7 @@ const MeterBasicInfoTab = ({
           >
             <div className="text-center">
               <div className="relative inline-block">
-                <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-[#f9f9f9] text-2xl font-bold text-[#004B23] sm:size-20 sm:text-3xl">
+                <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-[#f9f9f9] text-2xl font-bold text-[#004B23] sm:size-20 sm:text-2xl">
                   <MeteringOutlineIcon className="size-8 sm:size-10" />
                 </div>
                 <div
@@ -2030,7 +2028,7 @@ const MeterDetailsPage = () => {
           <DashboardNav />
           <div className="mx-auto flex w-full flex-col xl:container">
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-3 py-4 sm:px-4 md:px-6 2xl:px-16">
+              <div className="mx-auto w-full px-3 py-4 sm:px-4 md:px-6 ">
                 <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-4">
                     <motion.button
@@ -2065,18 +2063,6 @@ const MeterDetailsPage = () => {
                   </div>
 
                   <div className="flex items-center gap-2 sm:gap-3">
-                    <ButtonModule
-                      variant="secondary"
-                      size="sm"
-                      className="flex items-center gap-2 text-sm"
-                      onClick={exportToPDF}
-                      disabled={isExporting}
-                    >
-                      <ExportOutlineIcon className="size-3 sm:size-4" />
-                      <span className="max-sm:hidden">{isExporting ? "Exporting..." : "Export"}</span>
-                      <span className="sm:hidden">Export</span>
-                    </ButtonModule>
-
                     {canUpdate ? (
                       <></>
                     ) : (
@@ -2096,7 +2082,7 @@ const MeterDetailsPage = () => {
               </div>
             </div>
 
-            <div className="flex w-full px-3 py-6 sm:px-4 sm:py-8 md:px-6 2xl:px-16 ">
+            <div className="flex w-full px-3 py-6 sm:px-4 sm:py-8 md:px-6  ">
               <div className="flex w-full flex-col gap-6 xl:flex-row">
                 {/* Left Column - Profile & Quick Actions */}
 

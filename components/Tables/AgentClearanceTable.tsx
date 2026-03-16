@@ -26,6 +26,7 @@ import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { FormTextAreaModule } from "components/ui/Input/FormTextAreaModule"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 // Enum for Cash Clearance Approval Outcome
 enum CashClearanceApprovalOutcome {
@@ -573,14 +574,18 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({ agentId, appl
   return (
     <div className="w-full">
       {/* Search Section */}
-      <div className="mb-4 flex items-center justify-end">
+      <div className="mb-4 w-full">
         <SearchModule
+          prominent
+          prominentTitle="Search Clearance Records"
+          prominentDescription="Find clearances by agent, amount, notes, or approval details."
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           onCancel={handleCancelSearch}
           onSearch={handleManualSearch}
           placeholder="Search clearances..."
-          className="w-full max-w-[380px]"
+          height="h-14"
+          className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
           bgClassName="bg-white"
         />
       </div>
@@ -592,22 +597,10 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({ agentId, appl
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
         >
-          <motion.p
-            className="text-base font-bold text-[#202B3C]"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            {searchText ? "No matching clearances found" : "No clearance records available"}
-          </motion.p>
-          <motion.p
-            className="text-sm text-gray-500"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-          >
-            {searchText ? "Try a different search term" : "Cash clearance records will appear here"}
-          </motion.p>
+          <EmptySearchState
+            title={searchText ? "No matching clearances found" : "No clearance records available"}
+            description={searchText ? "Try a different search term" : "Cash clearance records will appear here"}
+          />
         </motion.div>
       ) : (
         <>
@@ -814,7 +807,7 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({ agentId, appl
                                 setExpandedClearanceId((prev) => (prev === clearance.id ? null : clearance.id))
                               }
                             >
-                              {expandedClearanceId === clearance.id ? "Hide details" : "View details"}
+                              {expandedClearanceId === clearance.id ? "Hide details" : "View Detail"}
                             </ButtonModule>
                             {agentInfo?.agentType !== "SalesRep" &&
                               agentInfo?.agentType !== "Cashier" &&
@@ -835,7 +828,7 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({ agentId, appl
 
                       {expandedClearanceId === clearance.id && (
                         <tr>
-                          <td colSpan={10} className="border-b bg-[#F9FAFB] px-4 py-4 text-sm text-gray-700">
+                          <td colSpan={10} className="border-b bg-[#F9FAFB] p-4 text-sm text-gray-700">
                             <div className="grid gap-4 md:grid-cols-4">
                               <div>
                                 <p className="text-xs font-semibold text-gray-500">Notes</p>
@@ -1050,7 +1043,7 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({ agentId, appl
 
             {/* Sidebar */}
             <motion.div
-              className="fixed right-0 top-0 z-[150] h-full w-full max-w-md bg-white shadow-xl"
+              className="fixed right-0 top-0 z-[150] size-full max-w-md bg-white shadow-xl"
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
@@ -1076,7 +1069,7 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({ agentId, appl
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto px-6 py-6">
+                <div className="flex-1 overflow-y-auto p-6">
                   {/* Instructions */}
                   <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
                     <h4 className="mb-2 text-sm font-semibold text-blue-900">Instructions</h4>

@@ -15,6 +15,7 @@ import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { AgentsRequestParams, type Agent as BackendAgent, fetchAgents } from "lib/redux/agentSlice"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { formatCurrency } from "utils/formatCurrency"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 // Dropdown Popover Component
 const DropdownPopover = ({
@@ -465,11 +466,11 @@ const MobileFilterSidebar = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col bg-white shadow-xl"
+            className="flex size-full max-w-sm flex-col bg-white shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header - Fixed */}
-            <div className="flex-shrink-0 border-b bg-white p-4">
+            <div className="shrink-0 border-b bg-white p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <button
@@ -660,7 +661,7 @@ const MobileFilterSidebar = ({
             </div>
 
             {/* Bottom Action Buttons - Fixed */}
-            <div className="flex-shrink-0 border-t bg-white p-4 2xl:hidden">
+            <div className="shrink-0 border-t bg-white p-4 2xl:hidden">
               <div className="flex gap-3">
                 <button
                   onClick={() => {
@@ -1051,7 +1052,7 @@ const AllAgents: React.FC = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto w-full px-3 py-8 2xl:container sm:px-4 lg:px-6 2xl:px-16">
+          <div className="mx-auto w-full px-3 py-8  sm:px-4 lg:px-6 ">
             <div className="mb-4 flex w-full justify-between max-md:flex-col max-sm:my-4 ">
               <div>
                 <h4 className="text-2xl font-semibold">Sales Rep Management</h4>
@@ -1143,7 +1144,7 @@ const AllAgents: React.FC = () => {
                       )}
                     </button>
                     <div>
-                      <h3 className="text-lg font-medium max-sm:pb-2 md:text-2xl">Sales Rep Directory</h3>
+                      <h3 className="text-lg font-medium max-sm:pb-2 md:text-xl">Sales Rep Directory</h3>
                       <p className="text-sm text-gray-600">View and manage all field agents</p>
                     </div>
                   </div>
@@ -1185,14 +1186,7 @@ const AllAgents: React.FC = () => {
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.4 }}
                   >
-                    <motion.p
-                      className="text-base font-bold text-[#202B3C]"
-                      initial={{ y: 10, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ duration: 0.4, delay: 0.2 }}
-                    >
-                      {searchText ? "No matching agents found" : "No agents available"}
-                    </motion.p>
+                    <EmptySearchState title={searchText ? "No matching agents found" : "No agents available"} />
                   </motion.div>
                 ) : (
                   <>
@@ -1440,7 +1434,7 @@ const AllAgents: React.FC = () => {
                   animate={{ opacity: 1 }}
                   className="hidden w-full flex-col rounded-md border bg-white 2xl:flex 2xl:w-80 2xl:self-start"
                 >
-                  <div className="flex-shrink-0 border-b bg-white p-3 md:p-5">
+                  <div className="shrink-0 border-b bg-white p-3 md:p-5">
                     <div className="flex items-center justify-between">
                       <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
                       <button
@@ -1629,7 +1623,7 @@ const AllAgents: React.FC = () => {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex-shrink-0 space-y-3 border-t bg-white p-3 md:p-5">
+                  <div className="shrink-0 space-y-3 border-t bg-white p-3 md:p-5">
                     <button
                       onClick={applyFilters}
                       className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
@@ -1647,7 +1641,7 @@ const AllAgents: React.FC = () => {
                   </div>
 
                   {/* Summary Stats */}
-                  <div className="flex-shrink-0 rounded-lg bg-gray-50 p-3 md:p-4">
+                  <div className="shrink-0 rounded-lg bg-gray-50 p-3 md:p-4">
                     <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
                     <div className="space-y-1 text-xs md:text-sm">
                       <div className="flex justify-between">

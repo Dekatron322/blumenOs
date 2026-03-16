@@ -31,7 +31,7 @@ const ViewMaintenanceModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, re
           <div className="flex items-center gap-2 px-10 py-5">
             <p className="text-lg font-medium text-black">Maintenance Request</p>
           </div>
-          <div className="h-[1px] w-full bg-[#000000] opacity-5"></div>
+          <div className="h-px w-full bg-[#000000] opacity-5"></div>
           <div className="px-10 py-5">
             <div className="mb-4 flex justify-between">
               <p className="text-sm text-[#707070]">Maintenance Request</p>

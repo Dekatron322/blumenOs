@@ -25,7 +25,7 @@ const PaymentInfo = () => {
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full p-4">
       {/* Tab Navigation */}
       <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
 

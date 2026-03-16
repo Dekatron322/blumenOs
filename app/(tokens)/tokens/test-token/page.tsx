@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
+import { getJobTypeLabel, getJobTypeValue } from "lib/constants/jobTypes"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { CsvJobsParams, downloadTestToken, fetchCsvJobs } from "lib/redux/fileManagementSlice"
 import { VscEye } from "react-icons/vsc"
@@ -37,6 +38,7 @@ import {
 } from "lucide-react"
 import { VscAdd, VscArrowLeft, VscArrowRight, VscChevronLeft, VscChevronRight } from "react-icons/vsc"
 import * as XLSX from "xlsx"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface Meter {
   id: number
@@ -58,8 +60,7 @@ interface UploadProgress {
   percentage: number
 }
 
-// Job Type options for filters - Test Token related job types
-const jobTypeOptions = [{ value: "27", label: "Test Token Import" }]
+const TEST_TOKEN_JOB_TYPE = getJobTypeValue("Test Token")
 
 // Status options for filters
 const statusOptions = [
@@ -114,7 +115,7 @@ const TestToken = () => {
   const [localFilters, setLocalFilters] = useState<Partial<CsvJobsParams>>({
     PageNumber: 1,
     PageSize: 10,
-    JobType: 27, // Default to Test Token Import only
+    JobType: TEST_TOKEN_JOB_TYPE, // Default to Test Token only
     Status: undefined,
     RequestedByUserId: undefined,
     RequestedFromUtc: undefined,
@@ -513,7 +514,7 @@ const TestToken = () => {
     setLocalFilters({
       PageNumber: 1,
       PageSize: 10,
-      JobType: 27, // Default to Test Token Import only
+      JobType: TEST_TOKEN_JOB_TYPE, // Default to Test Token only
       Status: undefined,
       RequestedByUserId: undefined,
       RequestedFromUtc: undefined,
@@ -531,21 +532,6 @@ const TestToken = () => {
       if (key === "PageNumber" || key === "PageSize") return false
       return value !== undefined && value !== ""
     }).length
-  }
-
-  const getJobTypeLabel = (jobType: number) => {
-    // First try to find in the options array
-    const option = jobTypeOptions.find((opt) => opt.value === jobType.toString())
-    if (option) {
-      return option.label
-    }
-
-    // Fallback for known job types
-    if (jobType === 27) {
-      return "Test Token Import"
-    }
-
-    return `Type ${jobType}`
   }
 
   const getStatusLabel = (status: number) => {
@@ -599,210 +585,240 @@ const TestToken = () => {
 
   return (
     <>
-      <DashboardNav />
-      <div className="min-h-screen bg-gray-50">
-        <div className="py-6">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="mb-8">
-              <h1 className="text-2xl font-bold text-gray-900">Test Token</h1>
-              <p className="mt-2 text-gray-600">Generate test tokens for individual meters or bulk operations</p>
-            </div>
+      <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+        <div className="flex w-full">
+          <div className="flex w-full flex-col">
+            <DashboardNav />
 
-            {/* Tab Selection */}
-            <div className="mb-8 grid gap-4 sm:grid-cols-2">
-              <button
-                onClick={() => setActiveTab("single")}
-                className={`relative overflow-hidden rounded-xl border-2 p-6 text-left transition-all duration-200 ${
-                  activeTab === "single"
-                    ? "border-[#004B23] bg-gradient-to-br from-[#004B23]/5 to-[#004B23]/10 shadow-lg"
-                    : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-md"
-                }`}
-              >
-                <div className="flex items-start gap-4">
-                  <div
-                    className={`flex size-12 shrink-0 items-center justify-center rounded-lg transition-colors ${
-                      activeTab === "single" ? "bg-[#004B23] text-white" : "bg-gray-100 text-gray-600"
+            <div className="mx-auto flex w-full flex-col px-3 py-4  sm:px-4 md:px-6 md:py-4 ">
+              {/* Page Header */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => router.back()}
+                      className="flex size-8 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 sm:hidden"
+                      aria-label="Go back"
+                    >
+                      <VscArrowLeft className="size-4" />
+                    </button>
+                    <div>
+                      <h1 className="text-2xl font-bold text-gray-900">Test Token</h1>
+                      <p className="text-sm text-gray-600">
+                        Generate test tokens for individual meters or bulk operations
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tabs */}
+              <div className="mb-8">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <button
+                    onClick={() => setActiveTab("single")}
+                    className={`relative overflow-hidden rounded-xl border-2 p-6 text-left transition-all duration-200 ${
+                      activeTab === "single"
+                        ? "border-[#004B23] bg-gradient-to-br from-[#004B23]/5 to-[#004B23]/10 shadow-lg"
+                        : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-md"
                     }`}
                   >
-                    <Search className="size-6" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900">Single Test Token</h3>
-                    <p className="mt-1 text-sm text-gray-600">
-                      Generate test tokens for individual meters using search
-                    </p>
+                    <div className="flex items-start gap-4">
+                      <div
+                        className={`flex size-12 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                          activeTab === "single" ? "bg-[#004B23] text-white" : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        <Search className="size-6" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900">Single Test</h3>
+                        <p className="mt-1 text-sm text-gray-600">
+                          Generate test tokens for individual meters using search
+                        </p>
+                        {activeTab === "single" && (
+                          <div className="mt-3 flex items-center gap-2">
+                            <span className="inline-flex items-center rounded-full bg-[#004B23] px-2 py-1 text-xs font-medium text-white">
+                              Active
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                     {activeTab === "single" && (
-                      <div className="mt-3 flex items-center gap-2">
-                        <span className="inline-flex items-center rounded-full bg-[#004B23] px-2 py-1 text-xs font-medium text-white">
-                          Active
-                        </span>
-                      </div>
+                      <div className="absolute -right-2 -top-2 size-16 rounded-full bg-[#004B23]/10" />
                     )}
-                  </div>
-                </div>
-                {activeTab === "single" && (
-                  <div className="absolute -right-2 -top-2 h-16 w-16 rounded-full bg-[#004B23]/10" />
-                )}
-              </button>
+                  </button>
 
-              <button
-                onClick={() => setActiveTab("bulk")}
-                className={`relative overflow-hidden rounded-xl border-2 p-6 text-left transition-all duration-200 ${
-                  activeTab === "bulk"
-                    ? "border-[#004B23] bg-gradient-to-br from-[#004B23]/5 to-[#004B23]/10 shadow-lg"
-                    : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-md"
-                }`}
-              >
-                <div className="flex items-start gap-4">
-                  <div
-                    className={`flex size-12 shrink-0 items-center justify-center rounded-lg transition-colors ${
-                      activeTab === "bulk" ? "bg-[#004B23] text-white" : "bg-gray-100 text-gray-600"
+                  <button
+                    onClick={() => setActiveTab("bulk")}
+                    className={`relative overflow-hidden rounded-xl border-2 p-6 text-left transition-all duration-200 ${
+                      activeTab === "bulk"
+                        ? "border-[#004B23] bg-gradient-to-br from-[#004B23]/5 to-[#004B23]/10 shadow-lg"
+                        : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-md"
                     }`}
                   >
-                    <CloudUpload className="size-6" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900">Bulk Test Token</h3>
-                    <p className="mt-1 text-sm text-gray-600">Upload CSV file for bulk test token generation</p>
+                    <div className="flex items-start gap-4">
+                      <div
+                        className={`flex size-12 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                          activeTab === "bulk" ? "bg-[#004B23] text-white" : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        <FileSpreadsheet className="size-6" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900">Bulk Test</h3>
+                        <p className="mt-1 text-sm text-gray-600">
+                          Generate test tokens for multiple meters using file upload
+                        </p>
+                        {activeTab === "bulk" && (
+                          <div className="mt-3 flex items-center gap-2">
+                            <span className="inline-flex items-center rounded-full bg-[#004B23] px-2 py-1 text-xs font-medium text-white">
+                              Active
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                     {activeTab === "bulk" && (
-                      <div className="mt-3 flex items-center gap-2">
-                        <span className="inline-flex items-center rounded-full bg-[#004B23] px-2 py-1 text-xs font-medium text-white">
-                          Active
-                        </span>
+                      <div className="absolute -right-2 -top-2 size-16 rounded-full bg-[#004B23]/10" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Tab Content */}
+              <AnimatePresence mode="wait">
+                {activeTab === "single" ? (
+                  <motion.div
+                    key="single"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {/* Single Test Token Content */}
+                    <div className="mb-6">
+                      <SearchModule
+                        value={searchQuery}
+                        onChange={handleSearchChange}
+                        onSearch={handleSearch}
+                        placeholder="Type meter number, customer account number, or customer name..."
+                        prominent={true}
+                        prominentLabel="Primary action"
+                        prominentTitle="Search Meters"
+                        prominentDescription="Find meters to generate test tokens by meter number, account number, or customer name."
+                        height="h-14"
+                        className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+                        disabled={loading}
+                      />
+                    </div>
+
+                    {/* Error Display */}
+                    {error && (
+                      <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="text-sm font-medium text-red-800">Error searching meters</h3>
+                            <p className="text-sm text-red-600">{error}</p>
+                          </div>
+                          <ButtonModule
+                            variant="outline"
+                            size="sm"
+                            onClick={handleRetry}
+                            className="border-red-300 text-red-700 hover:bg-red-100"
+                          >
+                            Retry
+                          </ButtonModule>
+                        </div>
                       </div>
                     )}
-                  </div>
-                </div>
-                {activeTab === "bulk" && (
-                  <div className="absolute -right-2 -top-2 h-16 w-16 rounded-full bg-[#004B23]/10" />
-                )}
-              </button>
-            </div>
 
-            {/* Tab Content */}
-            <AnimatePresence mode="wait">
-              {activeTab === "single" ? (
-                <motion.div
-                  key="single"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {/* Single Test Token Content */}
-                  <div className="mb-6">
-                    <SearchModule
-                      value={searchQuery}
-                      onChange={handleSearchChange}
-                      onSearch={handleSearch}
-                      placeholder="Search by meter number, customer account number, or customer name..."
-                      height="h-12"
-                      className="w-full md:w-auto"
-                    />
-                  </div>
-
-                  {/* Error Display */}
-                  {error && (
-                    <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="text-sm font-medium text-red-800">Error searching meters</h3>
-                          <p className="text-sm text-red-600">{error}</p>
+                    {/* Loading State */}
+                    {loading && (
+                      <div className="mb-6 flex items-center justify-center py-8">
+                        <div className="flex items-center gap-2">
+                          <div className="size-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
+                          <span className="text-sm text-gray-600">Searching meters...</span>
                         </div>
-                        <ButtonModule
-                          variant="outline"
-                          size="sm"
-                          onClick={handleRetry}
-                          className="border-red-300 text-red-700 hover:bg-red-100"
-                        >
-                          Retry
-                        </ButtonModule>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Loading State */}
-                  {loading && (
-                    <div className="mb-6 flex items-center justify-center py-8">
-                      <div className="flex items-center gap-2">
-                        <div className="size-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
-                        <span className="text-sm text-gray-600">Searching meters...</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Search Results */}
-                  {meters && meters.length > 0 && !loading && (
-                    <div className="mb-6">
-                      <h3 className="mb-3 text-sm font-medium text-gray-900">Search Results</h3>
-                      <div className="space-y-2">
-                        {meters.map((meter) => (
-                          <div
-                            key={meter.id}
-                            onClick={() => handleMeterSelect(meter)}
-                            className={`cursor-pointer rounded-lg border p-4 transition-colors ${
-                              selectedMeter?.id === meter.id
-                                ? "border-blue-500 bg-blue-50"
-                                : "border-gray-200 bg-white hover:bg-gray-50"
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
+                    {/* Search Results */}
+                    {meters && meters.length > 0 && !loading && (
+                      <div className="mb-6">
+                        <h3 className="mb-3 text-sm font-medium text-gray-900">Search Results</h3>
+                        <div className="space-y-2">
+                          {meters.map((meter) => (
+                            <div
+                              key={meter.id}
+                              onClick={() => handleMeterSelect(meter)}
+                              className={`cursor-pointer rounded-lg border p-4 transition-colors ${
+                                selectedMeter?.id === meter.id
+                                  ? "border-blue-500 bg-blue-50"
+                                  : "border-gray-200 bg-white hover:bg-gray-50"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-medium text-gray-900">{meter.meterID}</span>
+                                    <span
+                                      className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                                        meter.status === 1 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                                      }`}
+                                    >
+                                      {meter.status === 1 ? "active" : "inactive"}
+                                    </span>
+                                  </div>
+                                  <div className="mt-1 text-sm text-gray-600">
+                                    <p>Customer: {meter.customerFullName}</p>
+                                    <p>Account: {meter.customerAccountNumber}</p>
+                                    <p>
+                                      Address: {meter.address}, {meter.city}
+                                    </p>
+                                  </div>
+                                </div>
                                 <div className="flex items-center gap-2">
-                                  <span className="font-medium text-gray-900">{meter.meterID}</span>
-                                  <span
-                                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                                      meter.status === 1 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                                    }`}
-                                  >
-                                    {meter.status === 1 ? "active" : "inactive"}
-                                  </span>
+                                  <ButtonModule variant="outline" onClick={() => handleMeterSelect(meter)}>
+                                    Continue
+                                  </ButtonModule>
                                 </div>
-                                <div className="mt-1 text-sm text-gray-600">
-                                  <p>Customer: {meter.customerFullName}</p>
-                                  <p>Account: {meter.customerAccountNumber}</p>
-                                  <p>
-                                    Address: {meter.address}, {meter.city}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <ButtonModule variant="outline" onClick={() => handleMeterSelect(meter)}>
-                                  Continue
-                                </ButtonModule>
                               </div>
                             </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Selected Meter Details */}
+                    {selectedMeter && (
+                      <div className="mb-6 rounded-lg border border-gray-200 bg-white p-6">
+                        <h3 className="mb-4 text-lg font-medium text-gray-900">Selected Meter</h3>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                          <div>
+                            <p className="text-sm font-medium text-gray-500">Meter ID</p>
+                            <p className="text-sm text-gray-900">{selectedMeter.meterID}</p>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                          <div>
+                            <p className="text-sm font-medium text-gray-500">Customer Name</p>
+                            <p className="text-sm text-gray-900">{selectedMeter.customerFullName}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-500">Account Number</p>
+                            <p className="text-sm text-gray-900">{selectedMeter.customerAccountNumber}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-500">Status</p>
+                            <p className="text-sm text-gray-900">
+                              {selectedMeter.status === 1 ? "active" : "inactive"}
+                            </p>
+                          </div>
+                        </div>
 
-                  {/* Selected Meter Details */}
-                  {selectedMeter && (
-                    <div className="mb-6 rounded-lg border border-gray-200 bg-white p-6">
-                      <h3 className="mb-4 text-lg font-medium text-gray-900">Selected Meter</h3>
-                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Meter ID</p>
-                          <p className="text-sm text-gray-900">{selectedMeter.meterID}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Customer Name</p>
-                          <p className="text-sm text-gray-900">{selectedMeter.customerFullName}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Account Number</p>
-                          <p className="text-sm text-gray-900">{selectedMeter.customerAccountNumber}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Status</p>
-                          <p className="text-sm text-gray-900">{selectedMeter.status === 1 ? "active" : "inactive"}</p>
-                        </div>
-                      </div>
-
-                      {/* Test Token Parameters */}
-                      {/* <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        {/* Test Token Parameters */}
+                        {/* <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
                           <label className="mb-2 block text-sm font-medium text-gray-700">Control Value</label>
                           <FormInputModule
@@ -827,521 +843,547 @@ const TestToken = () => {
                         </div>
                       </div> */}
 
-                      <div className="mt-6">
+                        <div className="mt-6">
+                          <ButtonModule
+                            onClick={handleTestToken}
+                            disabled={testTokenLoading}
+                            className="w-full sm:w-auto"
+                          >
+                            {testTokenLoading ? "Generating Test Token..." : "Generate Test Token"}
+                          </ButtonModule>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Test Token Result */}
+                    {testTokenData && (
+                      <div className="mb-6 rounded-lg border border-gray-200 bg-white p-6">
+                        <h3 className="mb-4 text-lg font-medium text-gray-900">Test Token Result</h3>
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">Token Decimal</p>
+                          <div className="mt-1 flex items-center gap-2">
+                            <p className="font-mono text-sm text-gray-900">
+                              {formatTokenDecimal(testTokenData.tokenDec)}
+                            </p>
+                            <ButtonModule
+                              variant="outline"
+                              size="sm"
+                              onClick={handleCopyToken}
+                              className="border-gray-300 text-gray-700 hover:bg-gray-100"
+                            >
+                              {copiedToken ? "Copied!" : "Copy"}
+                            </ButtonModule>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Test Token Error */}
+                    {testTokenError && (
+                      <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
+                        <h3 className="text-sm font-medium text-red-800">Error generating test token</h3>
+                        <p className="text-sm text-red-600">{testTokenError}</p>
+                      </div>
+                    )}
+
+                    {/* No Results */}
+                    {searchQuery && !loading && meters && meters.length === 0 && !error && (
+                      <div className="mb-6 py-8 text-center">
+                        <EmptySearchState title={`No meters found matching "${searchQuery}"`} />
+                      </div>
+                    )}
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="bulk"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {/* Bulk Test Token Content */}
+                    <div className="mb-6">
+                      <div className="mb-4 flex items-center justify-between">
+                        <div>
+                          <h3 className="text-lg font-medium text-gray-900">Upload File</h3>
+                          <p className="text-sm text-gray-600">
+                            Upload a CSV file with meter numbers to generate test tokens
+                          </p>
+                        </div>
                         <ButtonModule
-                          onClick={handleTestToken}
-                          disabled={testTokenLoading}
-                          className="w-full sm:w-auto"
+                          onClick={downloadSampleTemplate}
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center gap-2"
                         >
-                          {testTokenLoading ? "Generating Test Token..." : "Generate Test Token"}
+                          <FileSpreadsheet className="size-4" />
+                          Download Template
                         </ButtonModule>
                       </div>
-                    </div>
-                  )}
-
-                  {/* Test Token Result */}
-                  {testTokenData && (
-                    <div className="mb-6 rounded-lg border border-gray-200 bg-white p-6">
-                      <h3 className="mb-4 text-lg font-medium text-gray-900">Test Token Result</h3>
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Token Decimal</p>
-                        <div className="mt-1 flex items-center gap-2">
-                          <p className="font-mono text-sm text-gray-900">
-                            {formatTokenDecimal(testTokenData.tokenDec)}
+                      <div
+                        className={`relative rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
+                          isDragOver ? "border-blue-400 bg-blue-50" : "border-gray-300 bg-white hover:border-gray-400"
+                        }`}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
+                      >
+                        <CloudUpload className="mx-auto size-12 text-gray-400" />
+                        <div className="mt-4">
+                          <p className="text-lg font-medium text-gray-900">
+                            {selectedFile ? selectedFile.name : "Drop your file here, or click to browse"}
                           </p>
+                          <p className="mt-1 text-sm text-gray-500">Supports CSV and Excel files (.csv, .xlsx, .xls)</p>
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept=".csv,.xlsx,.xls"
+                            onChange={handleFileInputChange}
+                            className="hidden"
+                          />
                           <ButtonModule
+                            onClick={() => fileInputRef.current?.click()}
                             variant="outline"
-                            size="sm"
-                            onClick={handleCopyToken}
-                            className="border-gray-300 text-gray-700 hover:bg-gray-100"
+                            className="mx-auto mt-4"
                           >
-                            {copiedToken ? "Copied!" : "Copy"}
+                            {selectedFile ? "Change File" : "Select File"}
                           </ButtonModule>
                         </div>
                       </div>
                     </div>
-                  )}
 
-                  {/* Test Token Error */}
-                  {testTokenError && (
-                    <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
-                      <h3 className="text-sm font-medium text-red-800">Error generating test token</h3>
-                      <p className="text-sm text-red-600">{testTokenError}</p>
-                    </div>
-                  )}
-
-                  {/* No Results */}
-                  {searchQuery && !loading && meters && meters.length === 0 && !error && (
-                    <div className="mb-6 py-8 text-center">
-                      <p className="text-sm text-gray-600">No meters found matching &ldquo;{searchQuery}&ldquo;</p>
-                    </div>
-                  )}
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="bulk"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {/* Bulk Test Token Content */}
-                  <div className="mb-6">
-                    <div className="mb-4 flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-medium text-gray-900">Upload File</h3>
-                        <p className="text-sm text-gray-600">
-                          Upload a CSV file with meter numbers to generate test tokens
-                        </p>
+                    {/* Upload Error */}
+                    {uploadError && (
+                      <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
+                        <h3 className="text-sm font-medium text-red-800">Upload Error</h3>
+                        <p className="text-sm text-red-600">{uploadError}</p>
                       </div>
-                      <ButtonModule
-                        onClick={downloadSampleTemplate}
-                        variant="outline"
-                        size="sm"
-                        className="flex items-center gap-2"
-                      >
-                        <FileSpreadsheet className="size-4" />
-                        Download Template
-                      </ButtonModule>
-                    </div>
-                    <div
-                      className={`relative rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
-                        isDragOver ? "border-blue-400 bg-blue-50" : "border-gray-300 bg-white hover:border-gray-400"
-                      }`}
-                      onDragOver={handleDragOver}
-                      onDragLeave={handleDragLeave}
-                      onDrop={handleDrop}
-                    >
-                      <CloudUpload className="mx-auto h-12 w-12 text-gray-400" />
-                      <div className="mt-4">
-                        <p className="text-lg font-medium text-gray-900">
-                          {selectedFile ? selectedFile.name : "Drop your file here, or click to browse"}
-                        </p>
-                        <p className="mt-1 text-sm text-gray-500">Supports CSV and Excel files (.csv, .xlsx, .xls)</p>
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept=".csv,.xlsx,.xls"
-                          onChange={handleFileInputChange}
-                          className="hidden"
-                        />
-                        <ButtonModule
-                          onClick={() => fileInputRef.current?.click()}
-                          variant="outline"
-                          className="mx-auto mt-4"
-                        >
-                          {selectedFile ? "Change File" : "Select File"}
-                        </ButtonModule>
+                    )}
+
+                    {/* File Intent Error */}
+                    {fileIntentError && (
+                      <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
+                        <h3 className="text-sm font-medium text-red-800">File Intent Error</h3>
+                        <p className="text-sm text-red-600">{fileIntentError}</p>
                       </div>
-                    </div>
-                  </div>
+                    )}
 
-                  {/* Upload Error */}
-                  {uploadError && (
-                    <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
-                      <h3 className="text-sm font-medium text-red-800">Upload Error</h3>
-                      <p className="text-sm text-red-600">{uploadError}</p>
-                    </div>
-                  )}
+                    {/* Test Token Bulk Upload Error */}
+                    {testTokenBulkUploadError && (
+                      <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
+                        <h3 className="text-sm font-medium text-red-800">Bulk Upload Error</h3>
+                        <p className="text-sm text-red-600">{testTokenBulkUploadError}</p>
+                      </div>
+                    )}
 
-                  {/* File Intent Error */}
-                  {fileIntentError && (
-                    <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
-                      <h3 className="text-sm font-medium text-red-800">File Intent Error</h3>
-                      <p className="text-sm text-red-600">{fileIntentError}</p>
-                    </div>
-                  )}
+                    {/* Upload Success */}
+                    {uploadSuccess && (
+                      <div className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4">
+                        <h3 className="text-sm font-medium text-green-800">Success</h3>
+                        <p className="text-sm text-green-600">Bulk test token processed successfully</p>
+                        {testTokenBulkUploadResponse && (
+                          <div className="mt-2 text-sm text-green-600">
+                            <p>Job ID: {testTokenBulkUploadResponse.data.id}</p>
+                            <p>Status: {testTokenBulkUploadResponse.data.status === 1 ? "Processing" : "Completed"}</p>
+                            <p>Total Rows: {testTokenBulkUploadResponse.data.totalRows}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
-                  {/* Test Token Bulk Upload Error */}
-                  {testTokenBulkUploadError && (
-                    <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
-                      <h3 className="text-sm font-medium text-red-800">Bulk Upload Error</h3>
-                      <p className="text-sm text-red-600">{testTokenBulkUploadError}</p>
-                    </div>
-                  )}
-
-                  {/* Upload Success */}
-                  {uploadSuccess && (
-                    <div className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4">
-                      <h3 className="text-sm font-medium text-green-800">Success</h3>
-                      <p className="text-sm text-green-600">Bulk test token processed successfully</p>
-                      {testTokenBulkUploadResponse && (
-                        <div className="mt-2 text-sm text-green-600">
-                          <p>Job ID: {testTokenBulkUploadResponse.data.id}</p>
-                          <p>Status: {testTokenBulkUploadResponse.data.status === 1 ? "Processing" : "Completed"}</p>
-                          <p>Total Rows: {testTokenBulkUploadResponse.data.totalRows}</p>
+                    {/* Upload Progress */}
+                    {(isUploading || fileIntentLoading || finalizeFileLoading || testTokenBulkUploadLoading) && (
+                      <div className="mb-6">
+                        <div className="mb-2 flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-900">
+                            {fileIntentLoading
+                              ? "Preparing file..."
+                              : finalizeFileLoading
+                              ? "Finalizing file..."
+                              : testTokenBulkUploadLoading
+                              ? "Processing bulk test token..."
+                              : "Uploading file..."}
+                          </span>
+                          <span className="text-sm text-gray-500">
+                            {uploadProgress ? `${uploadProgress.percentage}%` : "0%"}
+                          </span>
                         </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Upload Progress */}
-                  {(isUploading || fileIntentLoading || finalizeFileLoading || testTokenBulkUploadLoading) && (
-                    <div className="mb-6">
-                      <div className="mb-2 flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-900">
-                          {fileIntentLoading
-                            ? "Preparing file..."
-                            : finalizeFileLoading
-                            ? "Finalizing file..."
-                            : testTokenBulkUploadLoading
-                            ? "Processing bulk test token..."
-                            : "Uploading file..."}
-                        </span>
-                        <span className="text-sm text-gray-500">
-                          {uploadProgress ? `${uploadProgress.percentage}%` : "0%"}
-                        </span>
+                        <div className="h-2 w-full rounded-full bg-gray-200">
+                          <div
+                            className="h-2 rounded-full bg-blue-600 transition-all duration-300"
+                            style={{ width: uploadProgress ? `${uploadProgress.percentage}%` : "0%" }}
+                          ></div>
+                        </div>
                       </div>
-                      <div className="h-2 w-full rounded-full bg-gray-200">
-                        <div
-                          className="h-2 rounded-full bg-blue-600 transition-all duration-300"
-                          style={{ width: uploadProgress ? `${uploadProgress.percentage}%` : "0%" }}
-                        ></div>
-                      </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Action Buttons */}
-                  <div className="flex gap-4">
-                    <ButtonModule
-                      onClick={handleBulkUpload}
-                      disabled={
-                        !selectedFile ||
-                        isUploading ||
-                        fileIntentLoading ||
-                        finalizeFileLoading ||
-                        testTokenBulkUploadLoading
-                      }
-                      className="flex-1 sm:flex-none"
-                    >
-                      {isUploading || fileIntentLoading || finalizeFileLoading || testTokenBulkUploadLoading
-                        ? "Processing..."
-                        : "Process Bulk Test"}
-                    </ButtonModule>
-                    {(selectedFile || uploadSuccess) && (
+                    {/* Action Buttons */}
+                    <div className="flex gap-4">
                       <ButtonModule
-                        onClick={resetBulkUpload}
-                        variant="outline"
-                        disabled={isUploading || fileIntentLoading || finalizeFileLoading || testTokenBulkUploadLoading}
+                        onClick={handleBulkUpload}
+                        disabled={
+                          !selectedFile ||
+                          isUploading ||
+                          fileIntentLoading ||
+                          finalizeFileLoading ||
+                          testTokenBulkUploadLoading
+                        }
                         className="flex-1 sm:flex-none"
                       >
-                        Reset
+                        {isUploading || fileIntentLoading || finalizeFileLoading || testTokenBulkUploadLoading
+                          ? "Processing..."
+                          : "Process Bulk Test"}
                       </ButtonModule>
-                    )}
-                  </div>
+                      {(selectedFile || uploadSuccess) && (
+                        <ButtonModule
+                          onClick={resetBulkUpload}
+                          variant="outline"
+                          disabled={
+                            isUploading || fileIntentLoading || finalizeFileLoading || testTokenBulkUploadLoading
+                          }
+                          className="flex-1 sm:flex-none"
+                        >
+                          Reset
+                        </ButtonModule>
+                      )}
+                    </div>
 
-                  {/* Queued Jobs Section */}
-                  <div className="mt-8">
-                    <div className="mb-6 rounded-lg border bg-white">
-                      {/* Results Header */}
-                      <div className="border-b p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="text-lg font-semibold">Test Token Jobs</h3>
-                            {csvJobsPagination && (
-                              <p className="text-sm text-gray-600">
-                                Showing {filteredCsvJobs.length} of {csvJobsPagination.totalCount} jobs
-                              </p>
+                    {/* Queued Jobs Section */}
+                    <div className="mt-8">
+                      <div className="mb-6 rounded-lg border bg-white">
+                        {/* Results Header */}
+                        <div className="border-b p-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h3 className="text-lg font-semibold">Test Token Jobs</h3>
+                              {csvJobsPagination && (
+                                <p className="text-sm text-gray-600">
+                                  Showing {filteredCsvJobs.length} of {csvJobsPagination.totalCount} jobs
+                                </p>
+                              )}
+                            </div>
+                            <ButtonModule
+                              variant="outline"
+                              onClick={handleRefreshTableData}
+                              disabled={csvJobsLoading}
+                              size="sm"
+                            >
+                              <RefreshCw className={`size-4 ${csvJobsLoading ? "animate-spin" : ""}`} />
+                              Refresh
+                            </ButtonModule>
+                            {csvJobsError && (
+                              <div className="flex items-center gap-2 text-red-600">
+                                <AlertCircle className="size-4" />
+                                <span className="text-sm">{csvJobsError}</span>
+                              </div>
                             )}
                           </div>
-                          <ButtonModule
-                            variant="outline"
-                            onClick={handleRefreshTableData}
-                            disabled={csvJobsLoading}
-                            size="sm"
-                          >
-                            <RefreshCw className={`size-4 ${csvJobsLoading ? "animate-spin" : ""}`} />
-                            Refresh
-                          </ButtonModule>
-                          {csvJobsError && (
-                            <div className="flex items-center gap-2 text-red-600">
-                              <AlertCircle className="size-4" />
-                              <span className="text-sm">{csvJobsError}</span>
+                        </div>
+
+                        {/* Filters Section */}
+                        <div className="border-b p-4">
+                          <div className="mb-4 flex items-center justify-between">
+                            <h4 className="text-sm font-medium">Filters</h4>
+                            <div className="flex items-center gap-2">
+                              {getActiveFilterCount() > 0 && (
+                                <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                                  {getActiveFilterCount()} active
+                                </span>
+                              )}
+                              <button
+                                onClick={() => setShowDesktopFilters(!showDesktopFilters)}
+                                className="rounded-lg p-2 hover:bg-gray-100"
+                              >
+                                <Filter className="size-4" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {showDesktopFilters && (
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                              {/* Search */}
+                              <div>
+                                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                                  Search
+                                </label>
+                                <SearchModule
+                                  value={searchText}
+                                  onChange={(e) => setSearchText(e.target.value)}
+                                  onSearch={handleSearchJobs}
+                                  placeholder="Type job details to search..."
+                                  prominent={true}
+                                  prominentLabel="Primary action"
+                                  prominentTitle="Search Jobs"
+                                  prominentDescription="Find and filter test token jobs by filename, status, or other details."
+                                  height="h-14"
+                                  className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+                                  disabled={csvJobsLoading}
+                                  searchTypeOptions={undefined}
+                                  onSearchTypeChange={undefined}
+                                />
+                              </div>
+
+                              {/* Status Filter */}
+                              <div>
+                                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                                  Status
+                                </label>
+                                <FormSelectModule
+                                  name="status"
+                                  value={localFilters.Status?.toString() || ""}
+                                  onChange={(e) =>
+                                    handleFilterChange("Status", e.target.value ? Number(e.target.value) : undefined)
+                                  }
+                                  options={statusOptions}
+                                  className="w-full"
+                                  controlClassName="h-9 text-sm"
+                                />
+                              </div>
+
+                              {/* Has Failures Filter */}
+                              <div>
+                                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                                  Has Failures
+                                </label>
+                                <FormSelectModule
+                                  name="hasFailures"
+                                  value={localFilters.HasFailures?.toString() || ""}
+                                  onChange={(e) =>
+                                    handleFilterChange(
+                                      "HasFailures",
+                                      e.target.value === "true" ? true : e.target.value === "false" ? false : undefined
+                                    )
+                                  }
+                                  options={booleanOptions}
+                                  className="w-full"
+                                  controlClassName="h-9 text-sm"
+                                />
+                              </div>
+
+                              {/* Action Buttons */}
+                              <div className="flex items-end gap-2">
+                                <button
+                                  onClick={applyFilters}
+                                  className="button-filled flex-1 rounded-md px-3 py-2 text-sm"
+                                >
+                                  Apply
+                                </button>
+                                <button
+                                  onClick={resetFilters}
+                                  className="button-outlined flex-1 rounded-md px-3 py-2 text-sm"
+                                >
+                                  Reset
+                                </button>
+                              </div>
                             </div>
                           )}
                         </div>
-                      </div>
 
-                      {/* Filters Section */}
-                      <div className="border-b p-4">
-                        <div className="mb-4 flex items-center justify-between">
-                          <h4 className="text-sm font-medium">Filters</h4>
-                          <div className="flex items-center gap-2">
-                            {getActiveFilterCount() > 0 && (
-                              <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
-                                {getActiveFilterCount()} active
-                              </span>
-                            )}
-                            <button
-                              onClick={() => setShowDesktopFilters(!showDesktopFilters)}
-                              className="rounded-lg p-2 hover:bg-gray-100"
-                            >
-                              <Filter className="size-4" />
-                            </button>
+                        {/* Table */}
+                        <div className="max-h-[60vh] w-full overflow-x-auto overflow-y-hidden">
+                          <div className="min-w-[980px]">
+                            <table className="w-full border-separate border-spacing-0">
+                              <thead>
+                                <tr className="bg-gray-50">
+                                  <th className="border-b border-gray-200 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                                    File
+                                  </th>
+                                  <th className="border-b border-gray-200 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                                    Status
+                                  </th>
+                                  <th className="border-b border-gray-200 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                                    Requested
+                                  </th>
+                                  <th className="border-b border-gray-200 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                                    Progress
+                                  </th>
+                                  <th className="border-b border-gray-200 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                                    Results
+                                  </th>
+                                  <th className="border-b border-gray-200 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                                    Actions
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {csvJobsLoading && filteredCsvJobs.length === 0 ? (
+                                  <tr>
+                                    <td colSpan={6} className="border-b border-gray-200 p-8 text-center">
+                                      <div className="flex items-center justify-center gap-2">
+                                        <RefreshCw className="size-4 animate-spin text-gray-500" />
+                                        <span className="text-sm text-gray-500">Loading jobs...</span>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ) : filteredCsvJobs.length === 0 ? (
+                                  <tr>
+                                    <td colSpan={6} className="border-b border-gray-200 p-8 text-center">
+                                      <div className="text-gray-500">
+                                        <FileIcon className="mx-auto mb-2 size-10 text-gray-300" />
+                                        <EmptySearchState title="No test token jobs found" />
+                                        <p className="mt-1 text-xs text-gray-400">
+                                          Try adjusting your filters or create a new bulk upload
+                                        </p>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ) : (
+                                  filteredCsvJobs.map((job) => {
+                                    const totalRows = typeof job.totalRows === "number" ? job.totalRows : 0
+                                    const succeededRows = typeof job.succeededRows === "number" ? job.succeededRows : 0
+                                    const processedRows = typeof job.processedRows === "number" ? job.processedRows : 0
+                                    const failedRows = typeof job.failedRows === "number" ? job.failedRows : 0
+                                    const progressPercentage =
+                                      totalRows > 0 ? Math.round((processedRows / totalRows) * 100) : 0
+                                    const safeProgress = Math.max(0, Math.min(100, progressPercentage))
+
+                                    return (
+                                      <tr
+                                        key={job.id}
+                                        className="border-b border-gray-100 align-top hover:bg-gray-50/80"
+                                      >
+                                        <td className="border-b border-gray-100 p-3 text-sm">
+                                          <div className="max-w-80">
+                                            <p className="truncate font-medium text-gray-900" title={job.fileName}>
+                                              {job.fileName}
+                                            </p>
+                                            <p
+                                              className="mt-0.5 text-xs text-gray-500"
+                                              title={job.requestedByUser?.fullName || "Unknown"}
+                                            >
+                                              By {job.requestedByUser?.fullName || "Unknown"}
+                                            </p>
+                                          </div>
+                                        </td>
+                                        <td className="border-b border-gray-100 p-3 text-sm">
+                                          <span
+                                            className={`inline-flex whitespace-nowrap rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(
+                                              job.status
+                                            )}`}
+                                          >
+                                            {getStatusLabel(job.status)}
+                                          </span>
+                                        </td>
+                                        <td className="whitespace-nowrap border-b border-gray-100 p-3 text-sm text-gray-700">
+                                          {new Date(job.requestedAtUtc).toLocaleString()}
+                                        </td>
+                                        <td className="border-b border-gray-100 p-3 text-sm">
+                                          <div className="min-w-40">
+                                            <div className="mb-1 flex items-center justify-between">
+                                              <span className="text-xs text-gray-500">Processed</span>
+                                              <span className="text-xs font-medium text-gray-700">{safeProgress}%</span>
+                                            </div>
+                                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                                              <div
+                                                className="h-full rounded-full bg-blue-500"
+                                                style={{ width: `${safeProgress}%` }}
+                                              />
+                                            </div>
+                                          </div>
+                                        </td>
+                                        <td className="border-b border-gray-100 p-3 text-sm">
+                                          <div className="flex flex-wrap gap-1.5 text-xs">
+                                            <span className="rounded bg-blue-50 px-2 py-0.5 font-medium text-blue-700">
+                                              Processed: {processedRows.toLocaleString()}
+                                            </span>
+                                            <span className="rounded bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700">
+                                              Succeeded: {succeededRows.toLocaleString()}
+                                            </span>
+                                            <span className="rounded bg-red-50 px-2 py-0.5 font-medium text-red-700">
+                                              Failed: {failedRows.toLocaleString()}
+                                            </span>
+                                            <span className="rounded bg-gray-100 px-2 py-0.5 font-medium text-gray-700">
+                                              Total: {totalRows.toLocaleString()}
+                                            </span>
+                                          </div>
+                                        </td>
+                                        <td className="border-b border-gray-100 p-3 text-sm">
+                                          <div className="flex flex-wrap gap-2">
+                                            {job.failedRows > 0 && (
+                                              <ButtonModule
+                                                variant="outline"
+                                                size="sm"
+                                                icon={<VscEye />}
+                                                onClick={() => handleViewFailures(job)}
+                                                className="whitespace-nowrap border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                                              >
+                                                View Failures
+                                              </ButtonModule>
+                                            )}
+                                            {(job.status === 3 || job.status === 5) && (
+                                              <ButtonModule
+                                                variant="outline"
+                                                size="sm"
+                                                icon={<Download className="size-4" />}
+                                                onClick={() => handleDownloadCsv(job)}
+                                                className="whitespace-nowrap border-[#004B23] bg-white text-[#004B23] hover:bg-[#e9f5ef]"
+                                                disabled={downloadTestTokenLoading}
+                                              >
+                                                {downloadTestTokenLoading ? "Downloading..." : "Download"}
+                                              </ButtonModule>
+                                            )}
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    )
+                                  })
+                                )}
+                              </tbody>
+                            </table>
                           </div>
                         </div>
 
-                        {showDesktopFilters && (
-                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                            {/* Search */}
-                            <div>
-                              <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
-                                Search
-                              </label>
-                              <SearchModule
-                                value={searchText}
-                                onChange={(e) => setSearchText(e.target.value)}
-                                onSearch={handleSearchJobs}
-                                placeholder="Search jobs..."
-                                className="w-full md:w-auto"
-                                bgClassName="bg-white"
-                                searchTypeOptions={undefined}
-                                onSearchTypeChange={undefined}
-                              />
-                            </div>
-
-                            {/* Status Filter */}
-                            <div>
-                              <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
-                                Status
-                              </label>
-                              <FormSelectModule
-                                name="status"
-                                value={localFilters.Status?.toString() || ""}
-                                onChange={(e) =>
-                                  handleFilterChange("Status", e.target.value ? Number(e.target.value) : undefined)
-                                }
-                                options={statusOptions}
-                                className="w-full"
-                                controlClassName="h-9 text-sm"
-                              />
-                            </div>
-
-                            {/* Has Failures Filter */}
-                            <div>
-                              <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
-                                Has Failures
-                              </label>
-                              <FormSelectModule
-                                name="hasFailures"
-                                value={localFilters.HasFailures?.toString() || ""}
-                                onChange={(e) =>
-                                  handleFilterChange(
-                                    "HasFailures",
-                                    e.target.value === "true" ? true : e.target.value === "false" ? false : undefined
+                        {/* Pagination */}
+                        {csvJobsPagination && csvJobsPagination.totalPages > 1 && (
+                          <div className="border-t border-gray-200 bg-white p-4">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                              <div className="text-sm text-gray-600">
+                                Page {csvJobsPagination.currentPage} of {csvJobsPagination.totalPages}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handlePageChange(currentPage - 1)}
+                                  disabled={!csvJobsPagination.hasPrevious}
+                                  className="rounded-lg border border-gray-300 p-2 text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                  <VscChevronLeft className="size-4" />
+                                </button>
+                                {[...Array(Math.min(5, csvJobsPagination.totalPages))].map((_, index) => {
+                                  const pageNumber = index + 1
+                                  return (
+                                    <button
+                                      key={pageNumber}
+                                      onClick={() => handlePageChange(pageNumber)}
+                                      className={`rounded-lg border px-3 py-2 text-sm ${
+                                        currentPage === pageNumber
+                                          ? "border-[#004B23] bg-[#e9f5ef] text-[#004B23]"
+                                          : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                                      }`}
+                                    >
+                                      {pageNumber}
+                                    </button>
                                   )
-                                }
-                                options={booleanOptions}
-                                className="w-full"
-                                controlClassName="h-9 text-sm"
-                              />
-                            </div>
-
-                            {/* Action Buttons */}
-                            <div className="flex items-end gap-2">
-                              <button
-                                onClick={applyFilters}
-                                className="button-filled flex-1 rounded-md px-3 py-2 text-sm"
-                              >
-                                Apply
-                              </button>
-                              <button
-                                onClick={resetFilters}
-                                className="button-outlined flex-1 rounded-md px-3 py-2 text-sm"
-                              >
-                                Reset
-                              </button>
+                                })}
+                                <button
+                                  onClick={() => handlePageChange(currentPage + 1)}
+                                  disabled={!csvJobsPagination.hasNext}
+                                  className="rounded-lg border border-gray-300 p-2 text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                  <VscChevronRight className="size-4" />
+                                </button>
+                              </div>
                             </div>
                           </div>
                         )}
                       </div>
-
-                      {/* Table */}
-                      <div className="max-h-[70vh] w-full overflow-x-auto overflow-y-hidden ">
-                        <div className="min-w-[1200px]">
-                          <table className="w-full border-separate border-spacing-0">
-                            <thead>
-                              <tr className="border-b bg-gray-50">
-                                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">File Name</th>
-                                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Job Type</th>
-                                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Status</th>
-                                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Requested</th>
-                                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Progress</th>
-                                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Processed</th>
-                                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Succeeded</th>
-                                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Failed</th>
-                                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Total</th>
-                                <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Actions</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {filteredCsvJobs.length === 0 ? (
-                                <tr>
-                                  <td colSpan={10} className="border-b p-8 text-center">
-                                    <div className="text-gray-500">
-                                      <FileIcon className="mx-auto mb-2 size-12 text-gray-300" />
-                                      <p>No test token jobs found</p>
-                                      <p className="text-sm">Try adjusting your filters or create a new bulk upload</p>
-                                    </div>
-                                  </td>
-                                </tr>
-                              ) : (
-                                filteredCsvJobs.map((job) => (
-                                  <tr key={job.id} className="border-b hover:bg-gray-50">
-                                    <td className="border-b p-3 text-sm">
-                                      <div className="max-w-xs truncate whitespace-nowrap" title={job.fileName}>
-                                        {job.fileName}
-                                      </div>
-                                    </td>
-                                    <td className="whitespace-nowrap border-b p-3 text-sm">
-                                      {getJobTypeLabel(job.jobType)}
-                                    </td>
-                                    <td className="border-b p-3 text-sm">
-                                      <span
-                                        className={`whitespace-nowrap rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(
-                                          job.status
-                                        )}`}
-                                      >
-                                        {getStatusLabel(job.status)}
-                                      </span>
-                                    </td>
-                                    <td className="whitespace-nowrap border-b p-3 text-sm">
-                                      {new Date(job.requestedAtUtc).toLocaleString()}
-                                    </td>
-                                    <td className="border-b p-3 text-sm">
-                                      <div className="flex items-center gap-2">
-                                        <div className="size-24 rounded-full bg-gray-200">
-                                          <div
-                                            className="h-2 rounded-full bg-blue-600"
-                                            style={{
-                                              width: `${
-                                                job.totalRows !== null && job.totalRows > 0
-                                                  ? (job.processedRows / job.totalRows) * 100
-                                                  : 0
-                                              }%`,
-                                            }}
-                                          ></div>
-                                        </div>
-                                        <span className="text-xs text-gray-600">
-                                          {job.totalRows !== null && job.totalRows > 0
-                                            ? Math.round((job.processedRows / job.totalRows) * 100)
-                                            : "Processing"}
-                                        </span>
-                                      </div>
-                                    </td>
-                                    <td className="border-b p-3 text-sm">
-                                      <div className="font-medium text-blue-600">
-                                        {job.processedRows !== null && job.processedRows !== undefined
-                                          ? job.processedRows
-                                          : "N/A"}
-                                      </div>
-                                    </td>
-                                    <td className="border-b p-3 text-sm">
-                                      <div className="font-medium text-green-600">
-                                        {job.succeededRows !== null && job.succeededRows !== undefined
-                                          ? job.succeededRows
-                                          : "N/A"}
-                                      </div>
-                                    </td>
-                                    <td className="border-b p-3 text-sm">
-                                      <div className="font-medium text-red-600">
-                                        {job.failedRows !== null && job.failedRows !== undefined
-                                          ? job.failedRows
-                                          : "N/A"}
-                                      </div>
-                                    </td>
-                                    <td className="border-b p-3 text-sm">
-                                      <div className="font-medium text-gray-600">
-                                        {job.totalRows !== null && job.totalRows !== undefined ? job.totalRows : "N/A"}
-                                      </div>
-                                    </td>
-                                    <td className="border-b p-3 text-sm">
-                                      <div className="flex gap-2">
-                                        {job.failedRows > 0 && (
-                                          <ButtonModule
-                                            variant="outline"
-                                            size="sm"
-                                            icon={<VscEye />}
-                                            onClick={() => handleViewFailures(job)}
-                                            className="whitespace-nowrap"
-                                          >
-                                            View Failures
-                                          </ButtonModule>
-                                        )}
-                                        {(job.status === 3 || job.status === 5) && (
-                                          <ButtonModule
-                                            variant="outline"
-                                            size="sm"
-                                            icon={<Download className="size-4" />}
-                                            onClick={() => handleDownloadCsv(job)}
-                                            className="whitespace-nowrap"
-                                            disabled={downloadCsvLoading}
-                                          >
-                                            {downloadCsvLoading ? "Downloading..." : "Download"}
-                                          </ButtonModule>
-                                        )}
-                                      </div>
-                                    </td>
-                                  </tr>
-                                ))
-                              )}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-
-                      {/* Pagination */}
-                      {csvJobsPagination && csvJobsPagination.totalPages > 1 && (
-                        <div className="border-t p-4">
-                          <div className="flex items-center justify-between">
-                            <div className="text-sm text-gray-600">
-                              Page {csvJobsPagination.currentPage} of {csvJobsPagination.totalPages}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => handlePageChange(currentPage - 1)}
-                                disabled={!csvJobsPagination.hasPrevious}
-                                className="rounded-lg border p-2 disabled:opacity-50"
-                              >
-                                <VscChevronLeft className="size-4" />
-                              </button>
-                              {[...Array(Math.min(5, csvJobsPagination.totalPages))].map((_, index) => {
-                                const pageNumber = index + 1
-                                return (
-                                  <button
-                                    key={pageNumber}
-                                    onClick={() => handlePageChange(pageNumber)}
-                                    className={`rounded-lg border px-3 py-2 text-sm ${
-                                      currentPage === pageNumber
-                                        ? "border-blue-500 bg-blue-50 text-blue-700"
-                                        : "border-gray-300 hover:bg-gray-50"
-                                    }`}
-                                  >
-                                    {pageNumber}
-                                  </button>
-                                )
-                              })}
-                              <button
-                                onClick={() => handlePageChange(currentPage + 1)}
-                                disabled={!csvJobsPagination.hasNext}
-                                className="rounded-lg border p-2 disabled:opacity-50"
-                              >
-                                <VscChevronRight className="size-4" />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
                     </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* CSV Jobs Table */}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* CSV Upload Failures Modal */}
       {selectedJob && (

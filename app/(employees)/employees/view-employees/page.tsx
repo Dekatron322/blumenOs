@@ -211,7 +211,7 @@ const ListSkeleton = () => {
           <div key={index} className="border-b bg-white p-3 md:p-4">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-0">
               <div className="flex items-start gap-3 md:items-center md:gap-4">
-                <div className="size-8 flex-shrink-0 rounded-full bg-gray-200 md:size-10"></div>
+                <div className="size-8 shrink-0 rounded-full bg-gray-200 md:size-10"></div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
                     <div className="h-5 w-32 rounded bg-gray-200 md:w-40"></div>
@@ -339,9 +339,9 @@ export default function EmployeeManagement() {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col 2xl:container">
+          <div className="mx-auto flex w-full flex-col ">
             {/* Page Header - Always Visible */}
-            <div className="my-4 flex w-full justify-between gap-6 px-3 max-md:flex-col max-md:px-3 max-sm:my-4 max-sm:px-3 sm:px-4 md:my-4 md:px-6 2xl:px-16">
+            <div className="my-4 flex w-full justify-between gap-6 px-3 max-md:flex-col max-md:px-3 max-sm:my-4 max-sm:px-3 sm:px-4 md:my-4 md:px-6 ">
               <div>
                 <h4 className="text-xl font-semibold sm:text-2xl">Employee Management</h4>
                 <p className="text-sm text-gray-600 sm:text-base">
@@ -430,7 +430,7 @@ export default function EmployeeManagement() {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex w-full flex-col-reverse gap-6 px-3 max-md:px-0 max-sm:my-4 sm:px-4 md:px-6 xl:flex-row 2xl:px-16 ">
+            <div className="flex w-full flex-col-reverse gap-6 px-3 max-md:px-0 max-sm:my-4 sm:px-4 md:px-6 xl:flex-row  ">
               <div className="w-full">
                 <motion.div
                   initial={{ opacity: 0 }}

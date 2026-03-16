@@ -211,7 +211,7 @@ const NercReportsTab: React.FC = () => {
         transition={{ duration: 0.3 }}
       >
         <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">NERC Reports</p>
+          <p className="text-lg font-medium max-sm:pb-3 md:text-xl">NERC Reports</p>
           <p className="text-sm text-gray-600">Mandatory reports for Nigerian Electricity Regulatory Commission</p>
         </div>
         <div className="flex gap-4">

@@ -576,7 +576,7 @@ const CollectPaymentReceiptModal: React.FC<CollectPaymentReceiptModalProps> = ({
               alt="Paid stamp"
               width={190}
               height={190}
-              className="h-32 w-32 select-none sm:h-48 sm:w-48 md:h-[190px] md:w-[190px]"
+              className="size-32 select-none sm:size-48 md:h-[190px] md:w-[190px]"
               priority
             />
           </div>
@@ -722,7 +722,7 @@ const CollectPaymentReceiptModal: React.FC<CollectPaymentReceiptModalProps> = ({
                             </span>
                             <button
                               onClick={() => handleCopyToken(token.token, token.tokenDec || token.token)}
-                              className={`flex-shrink-0 rounded px-2 py-1 text-xs font-medium transition-colors hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-offset-1 ${
+                              className={`shrink-0 rounded px-2 py-1 text-xs font-medium transition-colors hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-offset-1 ${
                                 isCreditToken ? "focus:ring-green-500" : "focus:ring-orange-500"
                               }`}
                               title="Copy token"
@@ -767,7 +767,7 @@ const CollectPaymentReceiptModal: React.FC<CollectPaymentReceiptModalProps> = ({
                           </span>
                           <button
                             onClick={() => handleCopyToken(token.token, token.tokenDec || token.token)}
-                            className="flex-shrink-0 rounded px-2 py-1 text-xs font-medium transition-colors hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-offset-1"
+                            className="shrink-0 rounded px-2 py-1 text-xs font-medium transition-colors hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-offset-1"
                             title="Copy token"
                           >
                             {copiedToken === token.token ? (

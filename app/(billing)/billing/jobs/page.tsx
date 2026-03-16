@@ -24,6 +24,7 @@ import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { fetchAreaOffices as fetchFormDataAreaOffices } from "lib/redux/formDataSlice"
 import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
 import { VscEye } from "react-icons/vsc"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface BillingJob {
   id: number
@@ -293,11 +294,11 @@ const MobileFilterSidebar = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col bg-white shadow-xl"
+            className="flex size-full max-w-sm flex-col bg-white shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header - Fixed */}
-            <div className="flex-shrink-0 border-b bg-white p-4">
+            <div className="shrink-0 border-b bg-white p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <button
@@ -430,7 +431,7 @@ const MobileFilterSidebar = ({
             </div>
 
             {/* Bottom Action Buttons - Fixed */}
-            <div className="flex-shrink-0 border-t bg-white p-4 2xl:hidden">
+            <div className="shrink-0 border-t bg-white p-4 2xl:hidden">
               <div className="flex gap-3">
                 <button
                   onClick={() => {
@@ -1036,7 +1037,7 @@ const BillingJobs: React.FC = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto w-full px-3 py-4 2xl:container max-sm:px-3 sm:px-4 md:px-6 2xl:px-16">
+          <div className="mx-auto w-full px-3 py-4  max-sm:px-3 sm:px-4 md:px-6 ">
             <div className="mb-6 flex w-full flex-col justify-between gap-4 lg:flex-row lg:items-center">
               <div className="flex-1">
                 <h4 className="text-2xl font-semibold">Billing Jobs</h4>
@@ -1148,14 +1149,7 @@ const BillingJobs: React.FC = () => {
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.4 }}
                       >
-                        <motion.p
-                          className="text-base font-bold text-[#202B3C]"
-                          initial={{ y: 10, opacity: 0 }}
-                          animate={{ y: 0, opacity: 1 }}
-                          transition={{ duration: 0.4, delay: 0.2 }}
-                        >
-                          {searchText || getActiveFilterCount() > 0 ? "No matching jobs found" : "No jobs available"}
-                        </motion.p>
+                        <EmptySearchState title={searchText || getActiveFilterCount() > 0 ? "No matching jobs found" : "No jobs available"} />
                       </motion.div>
                     ) : (
                       <>
@@ -1443,7 +1437,7 @@ const BillingJobs: React.FC = () => {
                     animate={{ opacity: 1 }}
                     className="hidden w-full flex-col rounded-md border bg-white 2xl:flex 2xl:w-80 2xl:self-start"
                   >
-                    <div className="flex-shrink-0 border-b bg-white p-3 md:p-5">
+                    <div className="shrink-0 border-b bg-white p-3 md:p-5">
                       <div className="flex items-center justify-between">
                         <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
                         <button
@@ -1574,7 +1568,7 @@ const BillingJobs: React.FC = () => {
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex-shrink-0 space-y-3 border-t bg-white p-3 md:p-5">
+                    <div className="shrink-0 space-y-3 border-t bg-white p-3 md:p-5">
                       <button
                         onClick={applyFilters}
                         className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
@@ -1592,7 +1586,7 @@ const BillingJobs: React.FC = () => {
                     </div>
 
                     {/* Summary Stats */}
-                    <div className="flex-shrink-0 rounded-lg bg-gray-50 p-3 md:p-4">
+                    <div className="shrink-0 rounded-lg bg-gray-50 p-3 md:p-4">
                       <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
                       <div className="space-y-1 text-xs md:text-sm">
                         <div className="flex justify-between">

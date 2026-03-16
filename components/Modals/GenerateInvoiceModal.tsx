@@ -19,7 +19,7 @@ const GenerateInvoiceModal: React.FC<GenerateInvoiceModalProps> = ({ isOpen, onC
         <div className="flex items-center gap-2 px-10 py-5">
           <p className="text-lg font-medium text-black">Generate Invoice</p>
         </div>
-        <div className="h-[1px] w-full bg-[#000000] opacity-5"></div>
+        <div className="h-px w-full bg-[#000000] opacity-5"></div>
         <div className="px-10 py-5">
           {/* Add your form or invoice generation content here */}
           <div>

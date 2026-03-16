@@ -274,11 +274,11 @@ const AddMeterReadingPage = () => {
         // Validate headers
         const expectedHeaders = ["customerid", "period", "previousreadingkwh", "presentreadingkwh", "notes"]
 
-        const missingHeaders = expectedHeaders.filter((header) => !headers.includes(header))
-        if (missingHeaders.length > 0) {
-          setCsvErrors([`Missing required columns: ${missingHeaders.join(", ")}`])
-          return
-        }
+        // const missingHeaders = expectedHeaders.filter((header) => !headers.includes(header))
+        // if (missingHeaders.length > 0) {
+        //   setCsvErrors([`Missing required columns: ${missingHeaders.join(", ")}`])
+        //   return
+        // }
 
         const parsedData: CSVMeterReading[] = []
         const errors: string[] = []
@@ -636,7 +636,7 @@ const AddMeterReadingPage = () => {
                 }`}
               >
                 <div
-                  className={`flex size-7 flex-shrink-0 items-center justify-center rounded-full ${
+                  className={`flex size-7 shrink-0 items-center justify-center rounded-full ${
                     activeTab === "single" ? "bg-blue-100 text-blue-600" : "bg-gray-200 text-gray-600"
                   }`}
                 >
@@ -646,7 +646,7 @@ const AddMeterReadingPage = () => {
                   <div className="text-sm font-medium">Single Reading</div>
                   <div className="mt-1 text-xs text-gray-600">Record reading for individual customer</div>
                 </div>
-                {activeTab === "single" && <ChevronRight className="size-4 flex-shrink-0" />}
+                {activeTab === "single" && <ChevronRight className="size-4 shrink-0" />}
               </button>
 
               <button
@@ -660,7 +660,7 @@ const AddMeterReadingPage = () => {
                 }`}
               >
                 <div
-                  className={`flex size-7 flex-shrink-0 items-center justify-center rounded-full ${
+                  className={`flex size-7 shrink-0 items-center justify-center rounded-full ${
                     activeTab === "bulk" ? "bg-blue-100 text-blue-600" : "bg-gray-200 text-gray-600"
                   }`}
                 >
@@ -670,7 +670,7 @@ const AddMeterReadingPage = () => {
                   <div className="text-sm font-medium">Bulk Upload (CSV)</div>
                   <div className="mt-1 text-xs text-gray-600">Upload CSV file for multiple customers</div>
                 </div>
-                {activeTab === "bulk" && <ChevronRight className="size-4 flex-shrink-0" />}
+                {activeTab === "bulk" && <ChevronRight className="size-4 shrink-0" />}
               </button>
             </nav>
           </div>
@@ -696,7 +696,7 @@ const AddMeterReadingPage = () => {
         <div className="flex w-full flex-col">
           <DashboardNav />
 
-          <div className="mx-auto flex w-full  flex-col px-3 py-4 2xl:container   xl:px-16">
+          <div className="mx-auto flex w-full  flex-col px-3 py-4    xl:px-6">
             {/* Page Header - Mobile Optimized */}
             <div className="mb-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -789,7 +789,7 @@ const AddMeterReadingPage = () => {
                   </button>
                   <button
                     onClick={() => setActiveTab("bulk")}
-                    className={`flex-1 rounded-tr-lg px-4 py-3 text-sm font-medium transition-colors sm:px-6 ${
+                    className={`flex-1 rounded-r-lg px-4 py-3 text-sm font-medium transition-colors sm:px-6 ${
                       activeTab === "bulk"
                         ? "border-b-2 border-blue-500 text-blue-600"
                         : "text-gray-500 hover:text-gray-700"

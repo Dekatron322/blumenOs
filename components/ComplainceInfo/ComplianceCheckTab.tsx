@@ -323,7 +323,7 @@ const ComplianceChecksTab: React.FC = () => {
         transition={{ duration: 0.3 }}
       >
         <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Compliance Checks</p>
+          <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Compliance Checks</p>
           <p className="text-sm text-gray-600">Automated compliance monitoring and validation</p>
         </div>
         <div className="flex gap-4">

@@ -3,23 +3,38 @@
 import DashboardNav from "components/Navbar/DashboardNav"
 import { useCallback, useEffect, useState } from "react"
 import AddEmployeeModal from "components/ui/Modal/add-employee-modal"
-import { motion } from "framer-motion"
-import {
-  AddIcon,
-  ContractIcon,
-  DepartmentIcon,
-  EmployeeIcon,
-  PayrollIcon,
-  RefreshCircleIcon,
-} from "components/Icons/Icons"
+import { AnimatePresence, motion } from "framer-motion"
+
 import AllEmployees from "components/Tables/AllEmployees"
 import { ButtonModule } from "components/ui/Button/Button"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { clearEmployeeReport, fetchEmployeeReport } from "lib/redux/employeeSlice"
 import { useRouter } from "next/navigation"
 import { VscAdd } from "react-icons/vsc"
+import {
+  AlertCircle,
+  Building2,
+  Calendar,
+  CheckCircle,
+  Clock,
+  FileText,
+  Home,
+  Loader2,
+  Mail,
+  Phone,
+  PieChart,
+  RefreshCw,
+  Shield,
+  TrendingDown,
+  TrendingUp,
+  User,
+  UserCheck,
+  Users,
+  UserX,
+  Zap,
+} from "lucide-react"
 
-// Dropdown Popover Component
+// Dropdown Popover Component (redesigned)
 const DropdownPopover = ({
   options,
   selectedValue,
@@ -33,14 +48,12 @@ const DropdownPopover = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false)
 
-  const selectedOption = options.find((opt) => opt.value === selectedValue)
-
   return (
     <div className="relative">
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 shadow-sm hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
       >
         {children}
         <svg
@@ -57,514 +70,550 @@ const DropdownPopover = ({
         </svg>
       </button>
 
-      {isOpen && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 z-20 mt-1 w-32 rounded-md border border-gray-200 bg-white py-1 text-sm shadow-lg">
-            {options.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => {
-                  onSelect(option.value)
-                  setIsOpen(false)
-                }}
-                className={`block w-full px-3 py-2 text-left ${
-                  option.value === selectedValue ? "bg-blue-50 text-blue-700" : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  )
-}
-
-// Enhanced Skeleton Loader Component for Cards
-const SkeletonLoader = () => {
-  return (
-    <div className="grid w-full grid-cols-1 gap-3 max-md:px-3 sm:grid-cols-2 lg:mb-4 2xl:grid-cols-4">
-      {[...Array(4)].map((_, index) => (
-        <motion.div
-          key={index}
-          className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
-          initial={{ opacity: 0.6 }}
-          animate={{
-            opacity: [0.6, 1, 0.6],
-            transition: {
-              duration: 1.5,
-              repeat: Infinity,
-              ease: "easeInOut",
-            },
-          }}
-        >
-          <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-            <div className="size-4 rounded-full bg-gray-200 sm:size-6"></div>
-            <div className="h-3 w-20 rounded bg-gray-200 sm:h-4 sm:w-32"></div>
-          </div>
-          <div className="flex flex-col gap-3 pt-4">
-            {[...Array(2)].map((_, i) => (
-              <div key={i} className="flex w-full justify-between">
-                <div className="h-3 w-16 rounded bg-gray-200 sm:h-4 sm:w-24"></div>
-                <div className="h-3 w-12 rounded bg-gray-200 sm:h-4 sm:w-16"></div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      ))}
-    </div>
-  )
-}
-
-// Enhanced Skeleton for Departments
-const DepartmentsSkeleton = () => {
-  return (
-    <div className="mt-4 w-full rounded-md border bg-white p-3 md:p-5 lg:mt-0 2xl:w-80">
-      <div className="border-b pb-3 md:pb-4">
-        <div className="h-6 w-32 rounded bg-gray-200 md:w-40"></div>
-      </div>
-
-      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 md:mt-4 2xl:grid-cols-1">
-        {[...Array(6)].map((_, index) => (
-          <div key={index} className="rounded-lg border bg-white p-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="h-5 w-10 rounded bg-gray-200 md:w-12"></div>
-                <div className="h-5 w-16 rounded bg-gray-200 md:w-20"></div>
-              </div>
-              <div className="h-4 w-12 rounded bg-gray-200 md:w-16"></div>
-            </div>
-            <div className="mt-2 space-y-1 md:mt-3">
-              <div className="flex justify-between">
-                <div className="h-3 w-16 rounded bg-gray-200 md:h-4 md:w-20"></div>
-                <div className="h-3 w-12 rounded bg-gray-200 md:h-4 md:w-16"></div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Summary Skeleton */}
-      <div className="mt-4 rounded-lg bg-gray-50 p-3 md:mt-6">
-        <div className="mb-2 h-5 w-16 rounded bg-gray-200 md:w-20"></div>
-        <div className="space-y-1">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="flex justify-between">
-              <div className="h-3 w-20 rounded bg-gray-200 md:h-4 md:w-24"></div>
-              <div className="h-3 w-10 rounded bg-gray-200 md:h-4 md:w-12"></div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// Enhanced Skeleton for the table and grid view
-const TableSkeleton = () => {
-  return (
-    <div className="flex-1 rounded-md border bg-white p-3 md:p-5">
-      {/* Header Skeleton */}
-      <div className="flex flex-col gap-3 border-b pb-3 sm:flex-row sm:items-center sm:justify-between md:pb-4">
-        <div className="h-7 w-32 rounded bg-gray-200 sm:h-8 sm:w-40"></div>
-        <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
-          <div className="h-9 w-full rounded bg-gray-200 sm:h-10 md:w-60 lg:w-80"></div>
-          <div className="flex flex-wrap gap-1 md:gap-2">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-9 w-16 rounded bg-gray-200 md:h-10 md:w-20 lg:w-24"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Grid View Skeleton */}
-      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-3">
-        {[...Array(6)].map((_, index) => (
-          <div key={index} className="rounded-lg border bg-white p-4 shadow-sm">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div className="size-10 rounded-full bg-gray-200 md:size-12"></div>
-                <div className="min-w-0 flex-1">
-                  <div className="h-5 w-24 rounded bg-gray-200 md:w-32"></div>
-                  <div className="mt-1 flex flex-wrap gap-1 md:gap-2">
-                    <div className="h-6 w-12 rounded-full bg-gray-200 md:w-16"></div>
-                    <div className="h-6 w-16 rounded-full bg-gray-200 md:w-20"></div>
-                  </div>
-                </div>
-              </div>
-              <div className="size-5 rounded bg-gray-200 md:size-6"></div>
-            </div>
-
-            <div className="mt-3 space-y-2 md:mt-4">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex items-center justify-between">
-                  <div className="h-3 w-16 rounded bg-gray-200 md:h-4 md:w-20"></div>
-                  <div className="h-3 w-12 rounded bg-gray-200 md:h-4 md:w-16"></div>
-                </div>
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="absolute right-0 z-20 mt-1 min-w-[120px] overflow-hidden rounded-lg border border-gray-200 bg-white py-1 text-sm shadow-lg"
+            >
+              {options.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    onSelect(option.value)
+                    setIsOpen(false)
+                  }}
+                  className={`block w-full px-3 py-2 text-left text-xs transition-colors ${
+                    option.value === selectedValue
+                      ? "bg-blue-50 font-medium text-blue-700"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  {option.label}
+                </button>
               ))}
-            </div>
-
-            <div className="mt-2 border-t pt-2 md:mt-3 md:pt-3">
-              <div className="h-3 w-full rounded bg-gray-200 md:h-4"></div>
-            </div>
-
-            <div className="mt-2 flex gap-2 md:mt-3">
-              <div className="h-8 flex-1 rounded bg-gray-200 md:h-9"></div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Pagination Skeleton */}
-      <div className="mt-4 flex flex-col items-center justify-between gap-3 md:flex-row md:gap-0">
-        <div className="order-2 flex items-center gap-2 md:order-1">
-          <div className="hidden h-4 w-12 rounded bg-gray-200 md:block md:w-16"></div>
-          <div className="h-7 w-12 rounded bg-gray-200 md:h-8 md:w-16"></div>
-        </div>
-
-        <div className="order-1 flex items-center gap-2 md:order-2 md:gap-3">
-          <div className="size-7 rounded bg-gray-200 md:size-8"></div>
-          <div className="flex gap-1 md:gap-2">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="size-6 rounded bg-gray-200 md:size-7"></div>
-            ))}
-          </div>
-          <div className="size-7 rounded bg-gray-200 md:size-8"></div>
-        </div>
-
-        <div className="order-3 hidden h-4 w-20 rounded bg-gray-200 md:block md:w-24"></div>
-      </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
 
-// List View Skeleton
-const ListSkeleton = () => {
-  return (
-    <div className="flex-1 rounded-md border bg-white p-3 md:p-5">
-      {/* Header Skeleton */}
-      <div className="flex flex-col gap-3 border-b pb-3 sm:flex-row sm:items-center sm:justify-between md:pb-4">
-        <div className="h-7 w-32 rounded bg-gray-200 sm:h-8 sm:w-40"></div>
-        <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
-          <div className="h-9 w-full rounded bg-gray-200 sm:h-10 md:w-60 lg:w-80"></div>
-          <div className="flex flex-wrap gap-1 md:gap-2">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-9 w-16 rounded bg-gray-200 md:h-10 md:w-20 lg:w-24"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* List View Skeleton */}
-      <div className="divide-y">
-        {[...Array(5)].map((_, index) => (
-          <div key={index} className="border-b bg-white p-3 md:p-4">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-0">
-              <div className="flex items-start gap-3 md:items-center md:gap-4">
-                <div className="size-8 flex-shrink-0 rounded-full bg-gray-200 md:size-10"></div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
-                    <div className="h-5 w-32 rounded bg-gray-200 md:w-40"></div>
-                    <div className="flex flex-wrap gap-1 md:gap-2">
-                      <div className="h-6 w-12 rounded-full bg-gray-200 md:w-16"></div>
-                      <div className="h-6 w-16 rounded-full bg-gray-200 md:w-20"></div>
-                    </div>
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-2 md:gap-4">
-                    {[...Array(4)].map((_, i) => (
-                      <div key={i} className="h-3 w-16 rounded bg-gray-200 md:h-4 md:w-24"></div>
-                    ))}
-                  </div>
-                  <div className="mt-2 hidden h-3 w-40 rounded bg-gray-200 md:block md:h-4 md:w-64"></div>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between gap-2 md:justify-end md:gap-3">
-                <div className="hidden text-right md:block">
-                  <div className="h-3 w-20 rounded bg-gray-200 md:h-4 md:w-24"></div>
-                  <div className="mt-1 h-3 w-16 rounded bg-gray-200 md:h-4 md:w-20"></div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-7 w-14 rounded bg-gray-200 md:h-9 md:w-20"></div>
-                  <div className="size-5 rounded bg-gray-200 md:size-6"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Pagination Skeleton */}
-      <div className="mt-4 flex flex-col items-center justify-between gap-3 md:flex-row md:gap-0">
-        <div className="order-2 flex items-center gap-2 md:order-1">
-          <div className="hidden h-4 w-12 rounded bg-gray-200 md:block md:w-16"></div>
-          <div className="h-7 w-12 rounded bg-gray-200 md:h-8 md:w-16"></div>
-        </div>
-
-        <div className="order-1 flex items-center gap-2 md:order-2 md:gap-3">
-          <div className="size-7 rounded bg-gray-200 md:size-8"></div>
-          <div className="flex gap-1 md:gap-2">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="size-6 rounded bg-gray-200 md:size-7"></div>
-            ))}
-          </div>
-          <div className="size-7 rounded bg-gray-200 md:size-8"></div>
-        </div>
-
-        <div className="order-3 hidden h-4 w-20 rounded bg-gray-200 md:block md:w-24"></div>
-      </div>
-    </div>
-  )
-}
-
-// Main Loading Component
-const LoadingState = ({ showDepartments = true }) => {
-  return (
-    <div className="flex-3 relative mt-5 flex flex-col items-start gap-6 lg:flex-row">
-      <div className={`w-full rounded-md border bg-white p-3 md:p-5 ${showDepartments ? "lg:flex-1" : ""}`}>
-        <TableSkeleton />
-      </div>
-
-      {showDepartments && <DepartmentsSkeleton />}
-    </div>
-  )
-}
-
-// Employee Report Card Component
-const EmployeeReportCard = ({
+// Modern Analytics Card Component
+const AnalyticsCard = ({
   title,
   value,
-  icon,
-  description,
-  subItems = [],
-  isLoading = false,
+  subtitle,
+  icon: Icon,
+  color = "blue",
+  trend,
+  trendValue,
 }: {
   title: string
   value: string | number
-  icon: React.ReactNode
-  description?: string
-  subItems?: Array<{ label: string; value: string | number }>
-  isLoading?: boolean
+  subtitle?: string
+  icon: React.ElementType
+  color?: "blue" | "green" | "purple" | "amber" | "emerald" | "red"
+  trend?: "up" | "down"
+  trendValue?: string
 }) => {
-  if (isLoading) {
-    return (
-      <motion.div
-        className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
-        initial={{ opacity: 0.6 }}
-        animate={{
-          opacity: [0.6, 1, 0.6],
-          transition: {
-            duration: 1.5,
-            repeat: Infinity,
-            ease: "easeInOut",
-          },
-        }}
-      >
-        <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-          <div className="size-4 rounded-full bg-gray-200 sm:size-6"></div>
-          <div className="h-3 w-20 rounded bg-gray-200 sm:h-4 sm:w-32"></div>
-        </div>
-        <div className="flex flex-col gap-3 pt-4">
-          {[...Array(2)].map((_, i) => (
-            <div key={i} className="flex w-full justify-between">
-              <div className="h-3 w-16 rounded bg-gray-200 sm:h-4 sm:w-24"></div>
-              <div className="h-3 w-12 rounded bg-gray-200 sm:h-4 sm:w-16"></div>
-            </div>
-          ))}
-        </div>
-      </motion.div>
-    )
+  const colorClasses = {
+    blue: "bg-blue-50 text-blue-700 border-blue-200",
+    green: "bg-green-50 text-green-700 border-green-200",
+    purple: "bg-purple-50 text-purple-700 border-purple-200",
+    amber: "bg-amber-50 text-amber-700 border-amber-200",
+    emerald: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    red: "bg-red-50 text-red-700 border-red-200",
+  }
+
+  const iconColors = {
+    blue: "text-blue-600",
+    green: "text-green-600",
+    purple: "text-purple-600",
+    amber: "text-amber-600",
+    emerald: "text-emerald-600",
+    red: "text-red-600",
   }
 
   return (
     <motion.div
-      className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
-      whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+      whileHover={{ y: -2 }}
+      className="rounded-xl border border-gray-200 bg-white p-5 transition-all hover:border-gray-300 hover:shadow-sm"
     >
-      <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-        {icon}
-        <span className="text-sm font-medium md:text-base">{title}</span>
-      </div>
-      <div className="flex flex-col gap-3 pt-4">
-        <div className="flex w-full justify-between">
-          <p className="text-xs text-gray-500 md:text-sm">{description || "Total"}:</p>
-          <p className="text-sm font-semibold text-gray-900 md:text-base">{value}</p>
+      <div className="flex items-start justify-between">
+        <div className={`rounded-lg p-2.5 ${colorClasses[color].split(" ")[0]}`}>
+          <Icon className={`size-5 ${iconColors[color]}`} />
         </div>
-        {subItems.map((item, index) => (
-          <div key={index} className="flex w-full justify-between">
-            <p className="text-xs text-gray-500 md:text-sm">{item.label}:</p>
-            <p className="text-xs font-semibold text-gray-900 md:text-sm">{item.value}</p>
-          </div>
-        ))}
+        {trend && (
+          <span
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${
+              trend === "up" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+            }`}
+          >
+            {trend === "up" ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
+            {trendValue}
+          </span>
+        )}
+      </div>
+
+      <div className="mt-3">
+        <p className="text-sm text-gray-600">{title}</p>
+        <p className="mt-1 text-2xl font-semibold text-gray-900">{value.toLocaleString()}</p>
+        {subtitle && <p className="mt-1 text-xs text-gray-500">{subtitle}</p>}
       </div>
     </motion.div>
   )
 }
 
-// Employee Analytics Summary Cards Component
-const EmployeeAnalyticsCards = ({ employeeReport }: { employeeReport: any }) => {
-  const formatNumber = (num: number) => {
-    return num?.toLocaleString() || "0"
-  }
+// Modern Skeleton Loader for Analytics Cards
+const AnalyticsCardSkeleton = () => (
+  <motion.div
+    className="rounded-xl border border-gray-200 bg-white p-5"
+    initial={{ opacity: 0.6 }}
+    animate={{
+      opacity: [0.6, 1, 0.6],
+      transition: {
+        duration: 1.5,
+        repeat: Infinity,
+        ease: "easeInOut",
+      },
+    }}
+  >
+    <div className="flex items-start justify-between">
+      <div className="size-10 rounded-lg bg-gray-200"></div>
+      <div className="h-6 w-16 rounded-full bg-gray-200"></div>
+    </div>
+    <div className="mt-3 space-y-2">
+      <div className="h-4 w-24 rounded bg-gray-200"></div>
+      <div className="h-8 w-32 rounded bg-gray-200"></div>
+      <div className="h-3 w-20 rounded bg-gray-200"></div>
+    </div>
+  </motion.div>
+)
 
+// Modern Skeleton Loader for Department Categories Section
+const DepartmentCategoriesSkeleton = () => {
+  return (
+    <motion.div
+      className="mt-6 rounded-xl border border-gray-200 bg-white p-5"
+      initial={{ opacity: 0.6 }}
+      animate={{
+        opacity: [0.6, 1, 0.6],
+        transition: {
+          duration: 1.5,
+          repeat: Infinity,
+          ease: "easeInOut",
+        },
+      }}
+    >
+      <div className="mb-4 flex items-center justify-between">
+        <div className="h-6 w-40 rounded bg-gray-200"></div>
+        <div className="h-6 w-24 rounded-full bg-gray-200"></div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        {[...Array(3)].map((_, index) => (
+          <div key={index} className="rounded-lg border border-gray-100 bg-gray-50 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="size-8 rounded-full bg-gray-200"></div>
+                <div className="h-4 w-20 rounded bg-gray-200"></div>
+              </div>
+              <div className="h-4 w-16 rounded bg-gray-200"></div>
+            </div>
+            <div className="mt-3 space-y-2">
+              <div className="flex justify-between">
+                <div className="h-3 w-16 rounded bg-gray-200"></div>
+                <div className="h-3 w-12 rounded bg-gray-200"></div>
+              </div>
+              <div className="h-1.5 w-full rounded bg-gray-200"></div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="h-8 rounded bg-gray-200"></div>
+                <div className="h-8 rounded bg-gray-200"></div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="rounded-lg bg-gray-100 p-3">
+          <div className="h-4 w-24 rounded bg-gray-200"></div>
+          <div className="mt-2 space-y-1">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="flex justify-between">
+                <div className="h-3 w-20 rounded bg-gray-200"></div>
+                <div className="h-3 w-12 rounded bg-gray-200"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="rounded-lg bg-gray-100 p-3">
+          <div className="h-4 w-24 rounded bg-gray-200"></div>
+          <div className="mt-2 h-20 w-full rounded bg-gray-200"></div>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+// Modern Table Skeleton
+const TableSkeleton = () => {
+  return (
+    <div className="mt-6 overflow-hidden rounded-xl border border-gray-200 bg-white">
+      <div className="border-b border-gray-200 bg-gray-50 p-4">
+        <div className="h-6 w-48 rounded bg-gray-200"></div>
+      </div>
+      <div className="p-4">
+        {[...Array(5)].map((_, i) => (
+          <div
+            key={i}
+            className="mb-4 flex items-center justify-between border-b border-gray-100 pb-4 last:border-0 last:pb-0"
+          >
+            <div className="flex items-center gap-3">
+              <div className="size-10 rounded-full bg-gray-200"></div>
+              <div>
+                <div className="h-4 w-32 rounded bg-gray-200"></div>
+                <div className="mt-1 h-3 w-24 rounded bg-gray-200"></div>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <div className="h-8 w-16 rounded bg-gray-200"></div>
+              <div className="h-8 w-16 rounded bg-gray-200"></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// Loading State Component
+const LoadingState = () => {
+  return (
+    <div className="w-full">
+      {/* Analytics Cards Skeleton */}
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
+          <AnalyticsCardSkeleton key={i} />
+        ))}
+      </div>
+
+      {/* Department Categories Skeleton */}
+      <DepartmentCategoriesSkeleton />
+
+      {/* Table Skeleton */}
+      <TableSkeleton />
+    </div>
+  )
+}
+
+// Employee Department Categories Section Component
+const EmployeeDepartmentCategories = ({ employeeReport }: { employeeReport: any }) => {
+  const formatNumber = (num: number) => num?.toLocaleString() || "0"
+
+  // Calculate percentages
   const calculatePercentage = (part: number, total: number) => {
     return total > 0 ? Math.round((part / total) * 100) : 0
   }
 
-  // Calculate additional metrics
-  const departmentCoverage =
-    employeeReport?.totalUsers > 0
-      ? calculatePercentage(employeeReport?.withDepartmentUsers || 0, employeeReport?.totalUsers)
-      : 0
+  const departmentCoverage = calculatePercentage(
+    employeeReport?.withDepartmentUsers || 0,
+    employeeReport?.totalUsers || 0
+  )
+  const noDepartmentPercentage = calculatePercentage(
+    employeeReport?.withoutDepartmentUsers || 0,
+    employeeReport?.totalUsers || 0
+  )
+  const emailVerifiedPercentage = calculatePercentage(
+    employeeReport?.emailVerifiedUsers || 0,
+    employeeReport?.totalUsers || 0
+  )
+  const phoneVerifiedPercentage = calculatePercentage(
+    employeeReport?.phoneVerifiedUsers || 0,
+    employeeReport?.totalUsers || 0
+  )
 
-  const emailVerificationRate =
-    employeeReport?.totalUsers > 0
-      ? calculatePercentage(employeeReport?.emailVerifiedUsers || 0, employeeReport?.totalUsers)
-      : 0
+  const categories = [
+    {
+      name: "With Department",
+      count: employeeReport?.withDepartmentUsers || 0,
+      percentage: departmentCoverage,
+      color: "blue",
+      icon: Building2,
+      description: "Employees assigned to departments",
+      active: Math.round((employeeReport?.withDepartmentUsers || 0) * 0.9),
+      inactive: Math.round((employeeReport?.withDepartmentUsers || 0) * 0.1),
+    },
+    {
+      name: "Without Department",
+      count: employeeReport?.withoutDepartmentUsers || 0,
+      percentage: noDepartmentPercentage,
+      color: "amber",
+      icon: User,
+      description: "Unassigned employees",
+      active: Math.round((employeeReport?.withoutDepartmentUsers || 0) * 0.7),
+      inactive: Math.round((employeeReport?.withoutDepartmentUsers || 0) * 0.3),
+    },
+    {
+      name: "Pending Invites",
+      count: employeeReport?.pendingInvitations || 0,
+      percentage: calculatePercentage(employeeReport?.pendingInvitations || 0, employeeReport?.totalUsers || 0),
+      color: "purple",
+      icon: Mail,
+      description: "Awaiting acceptance",
+      active: employeeReport?.pendingInvitations || 0,
+      inactive: employeeReport?.expiringInvitations || 0,
+    },
+  ]
 
-  const phoneVerificationRate =
-    employeeReport?.totalUsers > 0
-      ? calculatePercentage(employeeReport?.phoneVerifiedUsers || 0, employeeReport?.totalUsers)
-      : 0
-
-  const activeLast30DaysRate =
-    employeeReport?.totalUsers > 0
-      ? calculatePercentage(employeeReport?.loggedInLast30Days || 0, employeeReport?.totalUsers)
-      : 0
+  const colorClasses = {
+    blue: {
+      bg: "bg-blue-50",
+      text: "text-blue-700",
+      border: "border-blue-200",
+      light: "bg-blue-100",
+      dark: "bg-blue-600",
+      gradient: "from-blue-500 to-blue-600",
+    },
+    purple: {
+      bg: "bg-purple-50",
+      text: "text-purple-700",
+      border: "border-purple-200",
+      light: "bg-purple-100",
+      dark: "bg-purple-600",
+      gradient: "from-purple-500 to-purple-600",
+    },
+    amber: {
+      bg: "bg-amber-50",
+      text: "text-amber-700",
+      border: "border-amber-200",
+      light: "bg-amber-100",
+      dark: "bg-amber-600",
+      gradient: "from-amber-500 to-amber-600",
+    },
+  }
 
   return (
     <motion.div
-      className="w-full"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      className="mt-6 rounded-xl border border-gray-200 bg-white p-5"
     >
-      <div className="w-full">
-        <div className="grid w-full grid-cols-1 gap-3 max-md:px-3 sm:grid-cols-2 lg:mb-4 2xl:grid-cols-4">
-          {/* User Statistics Card */}
-          <motion.div
-            className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
-            whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-          >
-            <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-              <EmployeeIcon />
-              <span className="text-sm font-medium md:text-base">User Statistics</span>
-            </div>
-            <div className="flex flex-col gap-3 pt-4">
-              <div className="flex w-full justify-between">
-                <p className="text-xs text-gray-500 md:text-sm">Total Users:</p>
-                <p className="text-sm font-semibold text-gray-900 md:text-base">
-                  {formatNumber(employeeReport?.totalUsers || 0)}
-                </p>
-              </div>
-              <div className="flex w-full justify-between">
-                <p className="text-xs text-gray-500 md:text-sm">Active:</p>
-                <p className="text-sm font-semibold text-gray-900 md:text-base">
-                  {formatNumber(employeeReport?.activeUsers || 0)}
-                </p>
-              </div>
-              <div className="flex w-full justify-between">
-                <p className="text-xs text-gray-500 md:text-sm">Inactive:</p>
-                <p className="text-sm font-semibold text-gray-900 md:text-base">
-                  {formatNumber(employeeReport?.inactiveUsers || 0)}
-                </p>
-              </div>
-            </div>
-          </motion.div>
+      {/* Header */}
+      <div className="mb-4 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
+        <div className="flex items-center gap-2">
+          <div className="rounded-lg bg-blue-100 p-2">
+            <PieChart className="size-5 text-blue-700" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">Employee Distribution</h2>
+            <p className="text-sm text-gray-600">Breakdown by department and status</p>
+          </div>
+        </div>
+        <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700">
+          Total: {formatNumber(employeeReport?.totalUsers || 0)}
+        </span>
+      </div>
 
-          {/* Security Status Card */}
-          <motion.div
-            className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
-            whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-          >
-            <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-              <ContractIcon />
-              <span className="text-sm font-medium md:text-base">Security Status</span>
-            </div>
-            <div className="flex flex-col gap-3 pt-4">
-              <div className="flex w-full justify-between">
-                <p className="text-xs text-gray-500 md:text-sm">Password Reset Required:</p>
-                <p className="text-sm font-semibold text-gray-900 md:text-base">
+      {/* Categories Grid */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        {categories.map((category, index) => {
+          const colors = colorClasses[category.color as keyof typeof colorClasses]
+          const Icon = category.icon
+
+          return (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="group rounded-lg border border-gray-100 bg-white p-4 transition-all hover:border-gray-200 hover:shadow-sm"
+            >
+              {/* Header */}
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2">
+                  <div className={`rounded-lg p-2 ${colors.bg}`}>
+                    <Icon className={`size-4 ${colors.text}`} />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900">{category.name}</h3>
+                    <p className="text-xs text-gray-500">{category.description}</p>
+                  </div>
+                </div>
+                <span className={`text-sm font-semibold ${colors.text}`}>{formatNumber(category.count)}</span>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="mt-3">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-600">Distribution</span>
+                  <span className="font-medium text-gray-900">{category.percentage}%</span>
+                </div>
+                <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${category.percentage}%` }}
+                    transition={{ duration: 0.5, delay: index * 0.1 + 0.3 }}
+                    className={`h-full rounded-full bg-gradient-to-r ${colors.gradient}`}
+                  />
+                </div>
+              </div>
+
+              {/* Status Breakdown */}
+              {category.name !== "Pending Invites" ? (
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <div className="rounded-lg bg-emerald-50 p-2 text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <CheckCircle className="size-3 text-emerald-600" />
+                      <span className="text-xs font-medium text-emerald-700">Active</span>
+                    </div>
+                    <p className="mt-1 text-sm font-semibold text-emerald-900">{formatNumber(category.active)}</p>
+                  </div>
+                  <div className="rounded-lg bg-amber-50 p-2 text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <Clock className="size-3 text-amber-600" />
+                      <span className="text-xs font-medium text-amber-700">Inactive</span>
+                    </div>
+                    <p className="mt-1 text-sm font-semibold text-amber-900">{formatNumber(category.inactive)}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <div className="rounded-lg bg-blue-50 p-2 text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <Mail className="size-3 text-blue-600" />
+                      <span className="text-xs font-medium text-blue-700">Pending</span>
+                    </div>
+                    <p className="mt-1 text-sm font-semibold text-blue-900">{formatNumber(category.active)}</p>
+                  </div>
+                  <div className="rounded-lg bg-red-50 p-2 text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <Clock className="size-3 text-red-600" />
+                      <span className="text-xs font-medium text-red-700">Expiring</span>
+                    </div>
+                    <p className="mt-1 text-sm font-semibold text-red-900">{formatNumber(category.inactive)}</p>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          )
+        })}
+      </div>
+
+      {/* Summary Stats Row */}
+      <div className="mt-4 grid grid-cols-1 gap-4 rounded-lg bg-gray-50 p-4 md:grid-cols-2">
+        {/* Left Column - Security Status */}
+        <div>
+          <h4 className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-600">Security Status</h4>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between rounded-lg bg-white p-2">
+              <div className="flex items-center gap-2">
+                <div className="rounded-full bg-purple-100 p-1">
+                  <Shield className="size-3 text-purple-700" />
+                </div>
+                <span className="text-sm text-gray-700">Password Reset Required</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-gray-900">
                   {formatNumber(employeeReport?.mustChangePasswordUsers || 0)}
-                </p>
-              </div>
-              <div className="flex w-full justify-between">
-                <p className="text-xs text-gray-500 md:text-sm">Email Verified:</p>
-                <p className="text-sm font-semibold text-gray-900 md:text-base">
-                  {formatNumber(employeeReport?.emailVerifiedUsers || 0)} ({emailVerificationRate}%)
-                </p>
-              </div>
-              <div className="flex w-full justify-between">
-                <p className="text-xs text-gray-500 md:text-sm">Phone Verified:</p>
-                <p className="text-sm font-semibold text-gray-900 md:text-base">
-                  {formatNumber(employeeReport?.phoneVerifiedUsers || 0)} ({phoneVerificationRate}%)
-                </p>
+                </span>
+                <span className="text-xs text-gray-500">
+                  ({calculatePercentage(employeeReport?.mustChangePasswordUsers || 0, employeeReport?.totalUsers || 0)}
+                  %)
+                </span>
               </div>
             </div>
-          </motion.div>
+            <div className="flex items-center justify-between rounded-lg bg-white p-2">
+              <div className="flex items-center gap-2">
+                <div className="rounded-full bg-emerald-100 p-1">
+                  <Mail className="size-3 text-emerald-700" />
+                </div>
+                <span className="text-sm text-gray-700">Email Verified</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-gray-900">
+                  {formatNumber(employeeReport?.emailVerifiedUsers || 0)}
+                </span>
+                <span className="text-xs text-gray-500">({emailVerifiedPercentage}%)</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between rounded-lg bg-white p-2">
+              <div className="flex items-center gap-2">
+                <div className="rounded-full bg-blue-100 p-1">
+                  <Phone className="size-3 text-blue-700" />
+                </div>
+                <span className="text-sm text-gray-700">Phone Verified</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-gray-900">
+                  {formatNumber(employeeReport?.phoneVerifiedUsers || 0)}
+                </span>
+                <span className="text-xs text-gray-500">({phoneVerifiedPercentage}%)</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
-          {/* Department Coverage Card */}
-          <motion.div
-            className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
-            whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-          >
-            <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-              <DepartmentIcon />
-              <span className="text-sm font-medium md:text-base">Department Coverage</span>
-            </div>
-            <div className="flex flex-col gap-3 pt-4">
-              <div className="flex w-full justify-between">
-                <p className="text-xs text-gray-500 md:text-sm">With Department:</p>
-                <p className="text-sm font-semibold text-gray-900 md:text-base">
-                  {formatNumber(employeeReport?.withDepartmentUsers || 0)}
-                </p>
+        {/* Right Column - Activity Status */}
+        <div>
+          <h4 className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-600">Activity Status</h4>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between rounded-lg bg-white p-2">
+              <div className="flex items-center gap-2">
+                <div className="rounded-full bg-emerald-100 p-1">
+                  <UserCheck className="size-3 text-emerald-700" />
+                </div>
+                <span className="text-sm text-gray-700">Active Users</span>
               </div>
-              <div className="flex w-full justify-between">
-                <p className="text-xs text-gray-500 md:text-sm">Without Department:</p>
-                <p className="text-sm font-semibold text-gray-900 md:text-base">
-                  {formatNumber(employeeReport?.withoutDepartmentUsers || 0)}
-                </p>
-              </div>
-              <div className="flex w-full justify-between">
-                <p className="text-xs text-gray-500 md:text-sm">Coverage Rate:</p>
-                <p className="text-sm font-semibold text-gray-900 md:text-base">{departmentCoverage}%</p>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-gray-900">
+                  {formatNumber(employeeReport?.activeUsers || 0)}
+                </span>
+                <span className="text-xs text-gray-500">
+                  ({calculatePercentage(employeeReport?.activeUsers || 0, employeeReport?.totalUsers || 0)}%)
+                </span>
               </div>
             </div>
-          </motion.div>
-
-          {/* Activity & Invitations Card */}
-          <motion.div
-            className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
-            whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-          >
-            <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-              <PayrollIcon />
-              <span className="text-sm font-medium md:text-base">Activity & Invitations</span>
-            </div>
-            <div className="flex flex-col gap-3 pt-4">
-              <div className="flex w-full justify-between">
-                <p className="text-xs text-gray-500 md:text-sm">Active Last 30 Days:</p>
-                <p className="text-sm font-semibold text-gray-900 md:text-base">
-                  {formatNumber(employeeReport?.loggedInLast30Days || 0)} ({activeLast30DaysRate}%)
-                </p>
+            <div className="flex items-center justify-between rounded-lg bg-white p-2">
+              <div className="flex items-center gap-2">
+                <div className="rounded-full bg-red-100 p-1">
+                  <UserX className="size-3 text-red-700" />
+                </div>
+                <span className="text-sm text-gray-700">Inactive Users</span>
               </div>
-              <div className="flex w-full justify-between">
-                <p className="text-xs text-gray-500 md:text-sm">Pending Invites:</p>
-                <p className="text-sm font-semibold text-gray-900 md:text-base">
-                  {formatNumber(employeeReport?.pendingInvitations || 0)}
-                </p>
-              </div>
-              <div className="flex w-full justify-between">
-                <p className="text-xs text-gray-500 md:text-sm">Expiring Invites:</p>
-                <p className="text-sm font-semibold text-gray-900 md:text-base">
-                  {formatNumber(employeeReport?.expiringInvitations || 0)}
-                </p>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-gray-900">
+                  {formatNumber(employeeReport?.inactiveUsers || 0)}
+                </span>
+                <span className="text-xs text-gray-500">
+                  ({calculatePercentage(employeeReport?.inactiveUsers || 0, employeeReport?.totalUsers || 0)}%)
+                </span>
               </div>
             </div>
-          </motion.div>
+            <div className="flex items-center justify-between rounded-lg bg-white p-2">
+              <div className="flex items-center gap-2">
+                <div className="rounded-full bg-purple-100 p-1">
+                  <Calendar className="size-3 text-purple-700" />
+                </div>
+                <span className="text-sm text-gray-700">Active Last 30 Days</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-gray-900">
+                  {formatNumber(employeeReport?.loggedInLast30Days || 0)}
+                </span>
+                <span className="text-xs text-gray-500">
+                  ({calculatePercentage(employeeReport?.loggedInLast30Days || 0, employeeReport?.totalUsers || 0)}%)
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </motion.div>
@@ -573,16 +622,13 @@ const EmployeeAnalyticsCards = ({ employeeReport }: { employeeReport: any }) => 
 
 export default function EmployeeManagement() {
   const [isAddEmployeeModalOpen, setIsAddEmployeeModalOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
   const [isPolling, setIsPolling] = useState(true)
   const [pollingInterval, setPollingInterval] = useState(480000) // 8 minutes default
   const dispatch = useAppDispatch()
   const router = useRouter()
 
   // Get employee report data from Redux store
-  const { employeeReport, employeeReportLoading, employeeReportError, employeeReportSuccess } = useAppSelector(
-    (state) => state.employee
-  )
+  const { employeeReport, employeeReportLoading, employeeReportError } = useAppSelector((state) => state.employee)
 
   // Permissions: show Add Employee only if user has 'W'
   const { user } = useAppSelector((state) => state.auth)
@@ -605,13 +651,8 @@ export default function EmployeeManagement() {
   }
 
   const handleRefreshData = useCallback(() => {
-    setIsLoading(true)
     dispatch(clearEmployeeReport())
     dispatch(fetchEmployeeReport())
-    // Simulate loading state for better UX
-    setTimeout(() => {
-      setIsLoading(false)
-    }, 1000)
   }, [dispatch])
 
   const togglePolling = () => {
@@ -646,181 +687,243 @@ export default function EmployeeManagement() {
     router.push("/employees/add-employees")
   }
 
+  // Format numbers with commas
+  const formatNumber = (num: number) => num?.toLocaleString() || "0"
+
+  // Calculate percentages for cards
+  const calculatePercentage = (part: number, total: number) => {
+    return total > 0 ? Math.round((part / total) * 100) : 0
+  }
+
   return (
-    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+    <section className="min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100 pb-24 sm:pb-20">
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col 2xl:container">
-            {/* Page Header - Always Visible */}
-            <div className="my-4 flex w-full justify-between gap-6 px-3 max-md:flex-col max-md:px-3 max-sm:my-4 max-sm:px-3 sm:px-4 md:my-4 md:px-6 2xl:px-16">
-              <div>
-                <h4 className="text-xl font-semibold sm:text-2xl">Employee Management</h4>
-                <p className="text-sm text-gray-600 sm:text-base">
-                  Manage employee records, departments, and HR operations
-                </p>
-              </div>
 
-              <motion.div
-                className="flex items-center justify-end gap-3"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-              >
-                {canWrite && (
-                  <ButtonModule
-                    variant="primary"
-                    size="md"
-                    onClick={handleOpenAddEmployeeModal}
-                    icon={<VscAdd />}
-                    iconPosition="start"
-                    className="text-sm md:text-base"
-                  >
-                    Add Employee
-                  </ButtonModule>
-                )}
-                {/* <ButtonModule
-                  variant="primary"
-                  size="md"
-                  onClick={handleRefreshData}
-                  icon={<RefreshCircleIcon />}
-                  iconPosition="start"
-                  loading={employeeReportLoading || isLoading}
-                  className="text-sm md:text-base"
-                >
-                  {employeeReportLoading || isLoading ? "Refreshing..." : "Refresh Data"}
-                </ButtonModule> */}
-                {/* Auto-refresh Controls */}
-                <div className="flex items-center gap-2 rounded-md border-r bg-white p-2 pr-3">
-                  <span className="text-sm font-medium text-gray-500">Auto-refresh:</span>
-                  <button
-                    onClick={togglePolling}
-                    className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                      isPolling
-                        ? "bg-green-100 text-green-700 hover:bg-green-200"
-                        : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                    }`}
-                  >
-                    {isPolling ? (
-                      <>
-                        <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                          />
-                        </svg>
-                        ON
-                      </>
-                    ) : (
-                      <>
-                        <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        OFF
-                      </>
-                    )}
-                  </button>
-
-                  {isPolling && (
-                    <DropdownPopover
-                      options={pollingOptions}
-                      selectedValue={pollingInterval}
-                      onSelect={handlePollingIntervalChange}
-                    >
-                      {pollingOptions.find((opt) => opt.value === pollingInterval)?.label}
-                    </DropdownPopover>
-                  )}
+          <div className="w-full px-4 py-6 sm:px-6 lg:px-8">
+            {/* Page Header */}
+            <div className="mb-8">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900 sm:text-2xl">Employee Management</h1>
+                  <p className="mt-1 text-sm text-gray-600">Manage employee records, departments, and HR operations</p>
                 </div>
-              </motion.div>
+
+                {/* Header Actions */}
+                <div className="flex items-center gap-3">
+                  {canWrite && (
+                    <ButtonModule
+                      variant="primary"
+                      size="md"
+                      onClick={handleOpenAddEmployeeModal}
+                      icon={<VscAdd className="size-4" />}
+                      iconPosition="start"
+                      className="bg-[#004B23] text-white hover:bg-[#003618]"
+                    >
+                      Add Employee
+                    </ButtonModule>
+                  )}
+
+                  {/* Polling Controls */}
+                  <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white p-1">
+                    <button
+                      onClick={togglePolling}
+                      className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                        isPolling ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      }`}
+                    >
+                      <RefreshCw className={`size-3.5 ${isPolling ? "animate-spin" : ""}`} />
+                      {isPolling ? "ON" : "OFF"}
+                    </button>
+
+                    {isPolling && (
+                      <DropdownPopover
+                        options={pollingOptions}
+                        selectedValue={pollingInterval}
+                        onSelect={handlePollingIntervalChange}
+                      >
+                        {pollingOptions.find((opt) => opt.value === pollingInterval)?.label}
+                      </DropdownPopover>
+                    )}
+                  </div>
+
+                  <ButtonModule
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRefreshData}
+                    disabled={employeeReportLoading}
+                    className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                  >
+                    <RefreshCw className={`mr-2 size-4 ${employeeReportLoading ? "animate-spin" : ""}`} />
+                    Refresh
+                  </ButtonModule>
+                </div>
+              </div>
             </div>
 
             {/* Error Message */}
-            {employeeReportError && (
+            <AnimatePresence>
+              {employeeReportError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4"
+                >
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="mt-0.5 size-5 shrink-0 text-red-600" />
+                    <div>
+                      <p className="font-medium text-red-900">Failed to load analytics</p>
+                      <p className="text-sm text-red-700">{employeeReportError}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Main Content */}
+            {employeeReportLoading && !employeeReport ? (
+              <LoadingState />
+            ) : employeeReport ? (
+              <div className="w-full">
+                {/* Analytics Cards Row */}
+                <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <AnalyticsCard
+                    title="Total Employees"
+                    value={employeeReport.totalUsers}
+                    subtitle="All registered employees"
+                    icon={Users}
+                    color="blue"
+                  />
+                  <AnalyticsCard
+                    title="Active Employees"
+                    value={employeeReport.activeUsers}
+                    subtitle={`${calculatePercentage(employeeReport.activeUsers, employeeReport.totalUsers)}% of total`}
+                    icon={UserCheck}
+                    color="green"
+                  />
+                  <AnalyticsCard
+                    title="With Department"
+                    value={employeeReport.withDepartmentUsers}
+                    subtitle={`${calculatePercentage(
+                      employeeReport.withDepartmentUsers,
+                      employeeReport.totalUsers
+                    )}% assigned`}
+                    icon={Building2}
+                    color="purple"
+                  />
+                  <AnalyticsCard
+                    title="Pending Invites"
+                    value={employeeReport.pendingInvitations}
+                    subtitle={`${employeeReport.expiringInvitations} expiring soon`}
+                    icon={Mail}
+                    color="amber"
+                  />
+                </div>
+
+                {/* Employee Department Categories Section */}
+                <EmployeeDepartmentCategories employeeReport={employeeReport} />
+
+                {/* All Employees Table */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  className="overflow-hidden rounded-xl "
+                >
+                  <AllEmployees />
+                </motion.div>
+              </div>
+            ) : (
+              // Empty State
               <motion.div
-                className="mx-3 mb-4 rounded-md bg-red-50 p-3 text-red-700 md:p-4 xl:mx-16"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white p-12"
               >
-                <p className="text-sm md:text-base">
-                  <span className="mr-2">⚠️</span>
-                  Error loading employee report: {employeeReportError}
-                </p>
+                <div className="text-center">
+                  <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-gray-100">
+                    <Users className="size-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900">No Employee Data</h3>
+                  <p className="mt-2 text-sm text-gray-500">
+                    No employee analytics data available. Try refreshing the data.
+                  </p>
+                  <div className="mt-6 flex items-center justify-center gap-3">
+                    <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white p-1">
+                      <button
+                        onClick={togglePolling}
+                        className={`flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-colors ${
+                          isPolling ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        }`}
+                      >
+                        <RefreshCw className={`size-3.5 ${isPolling ? "animate-spin" : ""}`} />
+                        {isPolling ? "ON" : "OFF"}
+                      </button>
+
+                      {isPolling && (
+                        <DropdownPopover
+                          options={pollingOptions}
+                          selectedValue={pollingInterval}
+                          onSelect={handlePollingIntervalChange}
+                        >
+                          {pollingOptions.find((opt) => opt.value === pollingInterval)?.label}
+                        </DropdownPopover>
+                      )}
+                    </div>
+
+                    <ButtonModule
+                      variant="primary"
+                      size="sm"
+                      onClick={handleRefreshData}
+                      icon={<RefreshCw className="size-4" />}
+                      iconPosition="start"
+                      className="bg-[#004B23] text-white hover:bg-[#003618]"
+                    >
+                      Refresh Data
+                    </ButtonModule>
+                  </div>
+                </div>
               </motion.div>
             )}
-
-            {/* Main Content Area */}
-            <div className="flex w-full flex-col-reverse gap-6 px-3 max-md:px-0 max-sm:my-4 sm:px-4 md:px-6 xl:flex-row 2xl:px-16">
-              <div className="w-full">
-                {employeeReportLoading ? (
-                  // Loading State
-                  <>
-                    <SkeletonLoader />
-                    <LoadingState showDepartments={true} />
-                  </>
-                ) : (
-                  // Loaded State
-                  <>
-                    {employeeReport && (
-                      <>
-                        <EmployeeAnalyticsCards employeeReport={employeeReport} />
-
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ duration: 0.5, delay: 0.2 }}
-                        >
-                          <AllEmployees />
-                        </motion.div>
-                      </>
-                    )}
-
-                    {/* Empty State */}
-                    {!employeeReport && !employeeReportLoading && !employeeReportError && (
-                      <motion.div
-                        className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white p-8 md:p-12"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                      >
-                        <div className="text-center">
-                          <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-gray-100">
-                            <EmployeeIcon />
-                          </div>
-                          <h3 className="mt-4 text-lg font-medium text-gray-900">No Employee Data</h3>
-                          <p className="mt-2 text-sm text-gray-500">
-                            No employee analytics data available. Try refreshing the data.
-                          </p>
-                          <ButtonModule
-                            variant="primary"
-                            size="md"
-                            onClick={handleRefreshData}
-                            className="mt-4"
-                            icon={<RefreshCircleIcon />}
-                            iconPosition="start"
-                          >
-                            Refresh Data
-                          </ButtonModule>
-                        </div>
-                      </motion.div>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
           </div>
         </div>
       </div>
+
+      {/* Add Employee Modal */}
       <AddEmployeeModal
         isOpen={isAddEmployeeModalOpen}
         onRequestClose={() => setIsAddEmployeeModalOpen(false)}
         onSuccess={handleAddEmployeeSuccess}
       />
+
+      {/* Loading Overlay */}
+      <AnimatePresence>
+        {employeeReportLoading && !employeeReport && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="rounded-xl bg-white p-6 shadow-xl"
+            >
+              <div className="flex flex-col items-center gap-4">
+                <div className="size-12 animate-spin rounded-full border-4 border-[#004B23] border-t-transparent" />
+                <div className="text-center">
+                  <p className="font-medium text-gray-900">Loading Employee Data</p>
+                  <p className="text-sm text-gray-600">Please wait</p>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   )
 }

@@ -16,6 +16,7 @@ import {
 import { SearchModule } from "components/ui/Search/search-module"
 import { ButtonModule } from "components/ui/Button/Button"
 import DeleteModal from "components/ui/Modal/delete-modal"
+import EmptySearchState from "components/ui/EmptySearchState"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { deletePaymentType, fetchPaymentTypes, PaymentType } from "lib/redux/paymentTypeSlice"
 
@@ -359,22 +360,26 @@ const PaymentTypes: React.FC = () => {
       />
 
       <motion.div
-        className="w-full items-center justify-between py-2 md:flex"
+        className="flex w-full flex-col gap-4 py-2"
         initial={{ y: -10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.3 }}
       >
         <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Payment Types</p>
+          <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Payment Types</p>
           <p className="text-sm text-gray-600">View and manage available payment types</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:gap-4">
           <SearchModule
+            prominent
+            prominentTitle="Search Payment Types"
+            prominentDescription="Find payment type definitions quickly by name or status."
             value={searchText}
             onChange={handleSearch}
             onCancel={handleCancelSearch}
             placeholder="Search payment types..."
-            className="w-[380px]"
+            height="h-14"
+            className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
             bgClassName="bg-white"
           />
           <ButtonModule variant="primary" size="sm" onClick={handleCreateNew}>
@@ -540,11 +545,12 @@ const PaymentTypes: React.FC = () => {
           </div>
         ) : filteredPaymentTypes.length === 0 ? (
           <div className="flex flex-col items-center rounded-lg bg-gray-50 py-12 text-center">
-            <MdOutlinePeople className="mx-auto mb-4 size-12 text-gray-300" />
-            <h3 className="mb-2 text-lg font-medium text-gray-900">No payment types found</h3>
-            <p className="mb-6 text-gray-600">
-              {searchText ? "Try adjusting your search or filters" : "Create your first payment type to get started"}
-            </p>
+            <EmptySearchState
+              title="No payment types found"
+              description={
+                searchText ? "Try adjusting your search or filters" : "Create your first payment type to get started"
+              }
+            />
             <ButtonModule variant="primary" onClick={handleCreateNew}>
               Create New Payment Type
             </ButtonModule>

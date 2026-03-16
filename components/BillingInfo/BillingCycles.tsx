@@ -12,9 +12,10 @@ import { BillingPeriod, fetchBillingPeriods } from "lib/redux/billingPeriodsSlic
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { clearFeeders, fetchFeeders } from "lib/redux/feedersSlice"
-import { ArrowLeft, Filter, PlusIcon, X } from "lucide-react"
+import { ArrowLeft, Filter, Loader2, PlusIcon, RefreshCw, X } from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { CreateBillingPeriodModal } from "components/ui/Modal/create-billing-period-modal"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 // Check if user has specific privilege
 const hasPrivilege = (user: any, key: string, action?: string): boolean => {
@@ -64,144 +65,6 @@ interface BillingCyclesProps {
   onViewDetails?: (cycle: BillingCycle) => void
 }
 
-// Responsive Skeleton Components
-const BillingCycleCardSkeleton = () => (
-  <motion.div
-    className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4 shadow-sm"
-    initial={{ opacity: 0.6 }}
-    animate={{
-      opacity: [0.6, 1, 0.6],
-      transition: {
-        duration: 1.5,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
-    }}
-  >
-    <div className="flex w-full flex-col items-start justify-between gap-3 sm:flex-row sm:items-center sm:gap-0">
-      <div className="flex-1">
-        <div className="mb-2 flex flex-wrap items-center gap-2">
-          <div className="size-5 rounded-full bg-gray-200"></div>
-          <div className="h-5 w-40 rounded bg-gray-200 sm:w-48"></div>
-          <div className="h-6 w-20 rounded-full bg-gray-200"></div>
-          <div className="h-6 w-24 rounded-full bg-gray-200"></div>
-        </div>
-        <div className="space-y-1">
-          <div className="h-4 w-56 rounded bg-gray-200 sm:w-64"></div>
-          <div className="h-3 w-40 rounded bg-gray-200"></div>
-        </div>
-      </div>
-      <div className="flex w-full items-center justify-between sm:w-auto sm:flex-col sm:items-end sm:justify-center sm:gap-1">
-        <div className="h-5 w-20 rounded bg-gray-200"></div>
-        <div className="h-3 w-16 rounded bg-gray-200"></div>
-        <div className="h-9 w-24 rounded bg-gray-200"></div>
-      </div>
-    </div>
-
-    <div className="mt-3 flex flex-wrap justify-between gap-3 border-t pt-3 sm:gap-4">
-      {[...Array(4)].map((_, i) => (
-        <div key={i} className="flex items-center gap-2">
-          <div className="size-4 rounded-full bg-gray-200 sm:size-5"></div>
-          <div className="space-y-1">
-            <div className="h-3 w-16 rounded bg-gray-200 sm:w-20"></div>
-            <div className="h-4 w-12 rounded bg-gray-200 sm:w-16"></div>
-          </div>
-        </div>
-      ))}
-    </div>
-  </motion.div>
-)
-
-const MobileBillingCycleCardSkeleton = () => (
-  <motion.div
-    className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-3"
-    initial={{ opacity: 0.6 }}
-    animate={{
-      opacity: [0.6, 1, 0.6],
-      transition: {
-        duration: 1.5,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
-    }}
-  >
-    <div className="flex items-start justify-between">
-      <div className="flex-1">
-        <div className="flex items-center gap-2">
-          <div className="size-4 rounded-full bg-gray-200"></div>
-          <div className="h-5 w-32 rounded bg-gray-200"></div>
-        </div>
-        <div className="mt-1 h-4 w-20 rounded-full bg-gray-200"></div>
-        <div className="mt-2 space-y-1">
-          <div className="h-3 w-40 rounded bg-gray-200"></div>
-          <div className="size-32 rounded bg-gray-200"></div>
-        </div>
-      </div>
-      <div className="ml-2 flex flex-col items-end gap-1">
-        <div className="h-4 w-16 rounded-full bg-gray-200"></div>
-        <div className="h-8 w-20 rounded bg-gray-200"></div>
-      </div>
-    </div>
-
-    <div className="mt-3 grid grid-cols-2 gap-2 border-t pt-3">
-      {[...Array(4)].map((_, i) => (
-        <div key={i} className="flex items-center gap-1">
-          <div className="size-3 rounded-full bg-gray-200"></div>
-          <div className="space-y-1">
-            <div className="h-2 w-12 rounded bg-gray-200"></div>
-            <div className="h-3 w-8 rounded bg-gray-200"></div>
-          </div>
-        </div>
-      ))}
-    </div>
-  </motion.div>
-)
-
-const PaginationSkeleton = () => (
-  <motion.div
-    className="mt-6 flex flex-col items-center justify-between gap-4 sm:flex-row"
-    initial={{ opacity: 0.6 }}
-    animate={{
-      opacity: [0.6, 1, 0.6],
-      transition: {
-        duration: 1.5,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
-    }}
-  >
-    <div className="order-2 size-40 rounded bg-gray-200 sm:order-1"></div>
-    <div className="order-1 flex items-center gap-2 sm:order-2">
-      <div className="size-8 rounded bg-gray-200"></div>
-      <div className="flex gap-1">
-        {[...Array(5)].map((_, i) => (
-          <div key={i} className="size-7 rounded bg-gray-200"></div>
-        ))}
-      </div>
-      <div className="size-8 rounded bg-gray-200"></div>
-    </div>
-    <div className="order-3 hidden h-4 w-24 rounded bg-gray-200 sm:block"></div>
-  </motion.div>
-)
-
-const HeaderSkeleton = () => (
-  <motion.div
-    className="mb-6"
-    initial={{ opacity: 0.6 }}
-    animate={{
-      opacity: [0.6, 1, 0.6],
-      transition: {
-        duration: 1.5,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
-    }}
-  >
-    <div className="mb-2 h-7 w-32 rounded bg-gray-200 sm:h-8 sm:w-40"></div>
-    <div className="h-12 w-full rounded-lg bg-gray-200 sm:w-96"></div>
-  </motion.div>
-)
-
 // Mobile Filter Sidebar Component
 const MobileFilterSidebar = ({
   isOpen,
@@ -239,7 +102,7 @@ const MobileFilterSidebar = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col bg-white p-4 shadow-xl"
+            className="flex size-full max-w-sm flex-col bg-white p-4 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -291,7 +154,7 @@ const MobileFilterSidebar = ({
                 >
                   Apply Filters
                 </button>
-                <button onClick={onClose} className="button-oulined flex flex-1 items-center justify-center">
+                <button onClick={onClose} className="button-outlined flex flex-1 items-center justify-center">
                   Cancel
                 </button>
               </div>
@@ -304,10 +167,9 @@ const MobileFilterSidebar = ({
 }
 
 const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDetails }) => {
-  const [searchText, setSearchText] = useState("")
-  const [isMobileView, setIsMobileView] = useState(false)
+  const [searchInput, setSearchInput] = useState("")
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const dispatch = useAppDispatch()
@@ -321,18 +183,8 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
   // Applied filters state - triggers API calls
   const [appliedFilters, setAppliedFilters] = useState({
     billingPeriod: undefined as string | undefined,
+    search: undefined as string | undefined,
   })
-
-  // Check for mobile view
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobileView(window.innerWidth < 640)
-    }
-
-    checkMobile()
-    window.addEventListener("resize", checkMobile)
-    return () => window.removeEventListener("resize", checkMobile)
-  }, [])
 
   // Get state from Redux store
   const { billingPeriods, loading, error, success } = useAppSelector((state) => state.billingPeriods)
@@ -380,7 +232,7 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
           pageNumber: 1,
           pageSize: 100,
         })
-      ) // Fetch all periods without filters
+      )
       // Store the complete list for filter dropdown
       if (result.payload && Array.isArray(result.payload)) {
         setAllBillingPeriods(result.payload as BillingPeriod[])
@@ -409,8 +261,8 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
       }
 
       // Add search parameter if provided
-      if (searchText.trim()) {
-        requestParams.search = searchText.trim()
+      if (appliedFilters.search) {
+        requestParams.search = appliedFilters.search
       }
 
       await dispatch(fetchBillingPeriods(requestParams))
@@ -419,17 +271,55 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
     // Always fetch - if no filter applied, it will fetch all periods
     // If filter applied, it will fetch filtered periods
     fetchBills()
-  }, [dispatch, searchText, appliedFilters, currentPage, pageSize])
+  }, [dispatch, appliedFilters, currentPage, pageSize])
 
   // Handle search
-  const handleSearch = (text: string) => {
-    setSearchText(text)
-    setCurrentPage(1) // Reset to first page when searching
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value)
+  }
+
+  const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      setAppliedFilters({
+        ...appliedFilters,
+        search: trimmed,
+      })
+      setCurrentPage(1)
+    }
   }
 
   const handleCancelSearch = () => {
-    setSearchText("")
-    setCurrentPage(1) // Reset to first page when clearing search
+    setSearchInput("")
+    setAppliedFilters({
+      ...appliedFilters,
+      search: undefined,
+    })
+    setCurrentPage(1)
+  }
+
+  // Handle refresh
+  const handleRefresh = () => {
+    const requestParams: any = {
+      PageNumber: currentPage,
+      PageSize: pageSize,
+    }
+
+    if (appliedFilters.billingPeriod) {
+      const match = /^([0-9]{4})-([0-9]{2})$/.exec(appliedFilters.billingPeriod)
+      if (match) {
+        requestParams.year = parseInt(match[1]!, 10)
+        requestParams.month = parseInt(match[2]!, 10)
+      }
+    }
+
+    if (appliedFilters.search) {
+      requestParams.search = appliedFilters.search
+    }
+
+    dispatch(fetchBillingPeriods(requestParams))
   }
 
   // Generate billing period options from all available periods (for filter dropdown)
@@ -453,6 +343,7 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
   const applyFilters = () => {
     setAppliedFilters({
       billingPeriod: localFilters.billingPeriod,
+      search: searchInput.trim() || undefined,
     })
     setCurrentPage(1) // Reset to first page when applying filters
   }
@@ -464,8 +355,9 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
     })
     setAppliedFilters({
       billingPeriod: undefined,
+      search: undefined,
     })
-    setSearchText("")
+    setSearchInput("")
     setCurrentPage(1)
   }
 
@@ -479,11 +371,8 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
   // Transform billing periods to component format
   const transformBillsToCycles = (): BillingCycle[] => {
     if (!billingPeriods || billingPeriods.length === 0) {
-      console.log("No billing periods to transform")
       return []
     }
-
-    console.log("Transforming billing periods to cycles, count:", billingPeriods.length)
 
     // Transform to BillingCycle format
     return billingPeriods.map((period) => {
@@ -521,19 +410,13 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
   }
 
   const billingCycles = transformBillsToCycles()
-  console.log("Transformed billing cycles:", billingCycles)
-
-  // Only show fallback if no data and not loading
-  const shouldShowFallback = !loading && billingCycles.length === 0
-
-  const displayCycles = billingCycles
 
   // Get pagination data from Redux store or calculate from local data
   const totalPages = billingPeriods?.length > 0 ? Math.ceil(billingPeriods.length / pageSize) : 0
   const totalRecords = billingPeriods?.length || 0
   const startIndex = (currentPage - 1) * pageSize
   const endIndex = startIndex + pageSize
-  const paginatedCycles = displayCycles.slice(startIndex, endIndex)
+  const paginatedCycles = billingCycles.slice(startIndex, endIndex)
 
   const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newSize = parseInt(event.target.value)
@@ -583,40 +466,6 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
     return items
   }
 
-  const getMobilePageItems = (): (number | string)[] => {
-    const total = totalPages
-    const current = currentPage
-    const items: (number | string)[] = []
-
-    if (total <= 5) {
-      for (let i = 1; i <= total; i += 1) {
-        items.push(i)
-      }
-    } else {
-      if (current <= 3) {
-        for (let i = 1; i <= 3; i += 1) {
-          items.push(i)
-        }
-        items.push("...")
-        items.push(total)
-      } else if (current >= total - 2) {
-        items.push(1)
-        items.push("...")
-        for (let i = total - 2; i <= total; i += 1) {
-          items.push(i)
-        }
-      } else {
-        items.push(1)
-        items.push("...")
-        items.push(current)
-        items.push("...")
-        items.push(total)
-      }
-    }
-
-    return items
-  }
-
   const formatDate = (dateString: string) => {
     try {
       const date = new Date(dateString)
@@ -626,37 +475,52 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
     }
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Completed":
-        return "bg-green-100 text-green-800"
-      case "In Progress":
-        return "bg-blue-100 text-blue-800"
-      case "Scheduled":
-        return "bg-gray-100 text-gray-800"
-      default:
-        return "bg-gray-100 text-gray-800"
+  const formatDateTime = (dateString: string) => {
+    try {
+      const date = new Date(dateString)
+      return date.toLocaleString("en-US", {
+        month: "short",
+        day: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    } catch {
+      return "—"
     }
   }
 
-  const getCycleTypeColor = (status: string) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case "Completed":
-        return "bg-blue-100 text-blue-800"
+        return "bg-emerald-50 text-emerald-700 border-emerald-200"
       case "In Progress":
-        return "bg-purple-100 text-purple-800"
+        return "bg-blue-50 text-blue-700 border-blue-200"
       case "Scheduled":
-        return "bg-green-100 text-green-800"
+        return "bg-amber-50 text-amber-700 border-amber-200"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-700 border-gray-200"
+    }
+  }
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "Completed":
+        return <span className="size-1.5 rounded-full bg-emerald-500"></span>
+      case "In Progress":
+        return <span className="size-1.5 rounded-full bg-blue-500"></span>
+      case "Scheduled":
+        return <span className="size-1.5 rounded-full bg-amber-500"></span>
+      default:
+        return <span className="size-1.5 rounded-full bg-gray-500"></span>
     }
   }
 
   const getAmountColor = (amount: string) => {
     if (amount === "Pending" || amount === "-") {
-      return "text-yellow-600"
+      return "text-amber-600"
     }
-    return "text-green-600"
+    return "text-emerald-600"
   }
 
   const handleViewDetails = (cycle: BillingCycle) => {
@@ -670,226 +534,43 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
     }
   }
 
-  const BillingCycleCard = ({ cycle }: { cycle: BillingCycle }) => (
-    <div className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4 transition-shadow duration-200 hover:shadow-sm sm:p-4">
-      <div className="flex w-full flex-col items-start justify-between gap-3 sm:flex-row sm:items-center sm:gap-0">
-        <div className="flex-1">
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            <div className="text-gray-600">
-              <DateIcon />
-            </div>
-            <h4 className="text-sm font-semibold text-gray-900 sm:text-base">{cycle.name}</h4>
-            <span className={`rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(cycle.status)}`}>
-              {cycle.status}
-            </span>
-            <span className={`rounded-full px-2 py-1 text-xs font-medium ${getCycleTypeColor(cycle.status)}`}>
-              Monthly Cycle
-            </span>
-          </div>
-          <p className="text-sm font-medium text-gray-900 sm:text-base">
-            {formatDate(cycle.startDate)} to {formatDate(cycle.endDate)}
-          </p>
-          <p className="mt-1 text-xs text-gray-600 sm:text-sm">
-            {cycle.approvedBy ? `Approved by: ${cycle.approvedBy}` : "Pending approval"}
-          </p>
-        </div>
-        <div className="flex w-full items-center justify-between sm:w-auto sm:flex-col sm:items-end sm:justify-center sm:gap-1">
-          {/* <p className={`text-sm font-semibold sm:text-base ${getAmountColor(cycle.totalAmount)}`}>
-            {cycle.totalAmount}
-          </p> */}
-          <p className="text-xs text-gray-500 sm:text-sm">
-            {cycle.status === "Completed"
-              ? formatDate(cycle.endDate)
-              : cycle.status === "In Progress"
-              ? "In Progress"
-              : `Starts: ${formatDate(cycle.startDate)}`}
-          </p>
-          <ButtonModule
-            variant="outline"
-            size="sm"
-            onClick={() => handleViewDetails(cycle)}
-            icon={<VscEye className="size-3 sm:size-4" />}
-            iconPosition="start"
-            className="mt-1 bg-white text-xs sm:text-sm"
-          >
-            <span className="hidden sm:inline">View</span>
-            <span className="sm:hidden">View</span>
-          </ButtonModule>
-        </div>
-      </div>
-
-      {/* Status Indicators */}
-      <div className="mt-3 flex flex-wrap justify-between gap-3 border-t pt-3 text-xs sm:gap-4 sm:text-sm">
-        <div className="flex items-center gap-2">
-          <BillsIcon />
-          <div>
-            <p className="text-gray-500">Bills Generated</p>
-            <p className={`font-medium ${getAmountColor(cycle.billsGenerated)}`}>{cycle.billsGenerated}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <RevenueGeneratedIcon />
-
-          <div>
-            <p className="text-gray-500">Bills Finalized</p>
-            <p
-              className={`font-medium ${
-                cycle.status === "Completed"
-                  ? "text-green-600"
-                  : cycle.status === "In Progress"
-                  ? "text-blue-600"
-                  : "text-gray-600"
-              }`}
-            >
-              {cycle.latestGeneratedBillHistory?.finalizedBillCount}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <StatusIcon />
-          <div>
-            <p className="text-gray-500">Approval</p>
-            <p className={`font-medium ${cycle.approvedBy ? "text-green-600" : "text-yellow-600"}`}>
-              {cycle.approvedBy ? "Approved" : "Pending"}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <CycleIcon />
-          <div>
-            <p className="text-gray-500">Created At</p>
-            <p className="font-medium">{formatDate(cycle.createdAt)}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-
-  const MobileBillingCycleCard = ({ cycle }: { cycle: BillingCycle }) => (
-    <div className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-3 transition-shadow duration-200 hover:shadow-sm">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <div className="text-gray-600">
-              <DateIcon />
-            </div>
-            <h4 className="text-sm font-semibold text-gray-900">{cycle.name}</h4>
-          </div>
-          <span
-            className={`mt-1 inline-block rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(cycle.status)}`}
-          >
-            {cycle.status}
-          </span>
-          <div className="mt-2 space-y-1">
-            <p className="text-xs font-medium text-gray-900">
-              {formatDate(cycle.startDate)} to {formatDate(cycle.endDate)}
-            </p>
-            <p className="text-xs text-gray-600">
-              {cycle.approvedBy ? `Approved by: ${cycle.approvedBy}` : "Pending approval"}
-            </p>
-          </div>
-        </div>
-        <div className="ml-2 flex flex-col items-end gap-1">
-          <span className={`rounded-full px-2 py-1 text-xs font-medium ${getCycleTypeColor(cycle.status)}`}>
-            Monthly
-          </span>
-          <ButtonModule
-            variant="outline"
-            size="sm"
-            onClick={() => handleViewDetails(cycle)}
-            icon={<VscEye />}
-            iconPosition="start"
-            className="bg-white text-xs"
-          >
-            View
-          </ButtonModule>
-        </div>
-      </div>
-
-      <div className="mt-3 grid grid-cols-2 gap-2 border-t pt-3 text-xs">
-        <div className="flex items-center gap-1">
-          <BillsIcon />
-          <div>
-            <p className="text-gray-500">Bills</p>
-            <p className={`font-medium ${getAmountColor(cycle.billsGenerated)}`}>{cycle.billsGenerated}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-1">
-          <CycleIcon />
-          <div>
-            <p className="text-gray-500">Status</p>
-            <p
-              className={`font-medium ${
-                cycle.status === "Completed"
-                  ? "text-green-600"
-                  : cycle.status === "In Progress"
-                  ? "text-blue-600"
-                  : "text-gray-600"
-              }`}
-            >
-              {cycle.status}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-1">
-          <StatusIcon />
-          <div>
-            <p className="text-gray-500">Approval</p>
-            <p className={`font-medium ${cycle.approvedBy ? "text-green-600" : "text-yellow-600"}`}>
-              {cycle.approvedBy ? "Yes" : "No"}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-1">
-          <RevenueGeneratedIcon />
-          <div>
-            <p className="text-gray-500">Revenue</p>
-            <p className={`font-medium ${getAmountColor(cycle.totalAmount)} text-xs`}>
-              {cycle.totalAmount.includes("M") ? cycle.totalAmount.replace("₦", "") : cycle.totalAmount}
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-
+  // Loading state
   if (loading && billingCycles.length === 0) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="w-full"
-      >
-        <div className="rounded-lg border bg-white p-4 sm:p-6">
-          <HeaderSkeleton />
-
-          <div className="space-y-3 sm:space-y-4">
-            {isMobileView ? (
-              <>
-                <MobileBillingCycleCardSkeleton />
-                <MobileBillingCycleCardSkeleton />
-                <MobileBillingCycleCardSkeleton />
-              </>
-            ) : (
-              <>
-                <BillingCycleCardSkeleton />
-                <BillingCycleCardSkeleton />
-                <BillingCycleCardSkeleton />
-              </>
-            )}
-          </div>
-
-          <PaginationSkeleton />
+      <div className="flex items-center justify-center py-16">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="size-8 animate-spin text-blue-600" />
+          <p className="text-sm text-gray-500">Loading billing cycles...</p>
         </div>
-      </motion.div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <div className="flex size-12 items-center justify-center rounded-full bg-red-100">
+            <X className="size-6 text-red-600" />
+          </div>
+          <div>
+            <p className="font-medium text-gray-900">Failed to load billing cycles</p>
+            <p className="mt-1 text-sm text-gray-500">{error}</p>
+          </div>
+          <ButtonModule variant="outline" size="sm" onClick={handleRefresh}>
+            <RefreshCw className="mr-2 size-4" />
+            Retry
+          </ButtonModule>
+        </div>
+      </div>
     )
   }
 
   return (
     <>
       <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row">
-        {/* Main Content - Billing Cycles */}
+        {/* Main Content - Billing Cycles Table */}
         <motion.div
           className={
             showDesktopFilters
@@ -900,94 +581,244 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4 }}
         >
-          <div className="mb-4 sm:mb-6">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <h3 className="text-lg font-semibold sm:text-xl">Billing Cycles</h3>
-              <div className="flex items-center gap-3">
-                {/* Filter Button for ALL screens up to 2xl */}
-                <button
-                  onClick={() => setShowMobileFilters(true)}
-                  className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
-                >
-                  <Filter className="size-4" />
-                  Filters
-                  {getActiveFilterCount() > 0 && (
-                    <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
-                      {getActiveFilterCount()}
-                    </span>
-                  )}
-                </button>
+          {/* Search Priority Section */}
+          <div className="mb-4 rounded-xl border border-gray-200 bg-gradient-to-r from-green-50/60 to-white p-4 shadow-sm">
+            <div className="mb-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#004B23]">Primary action</p>
+              <h2 className="text-base font-semibold text-gray-900 sm:text-lg">Search Billing Cycles</h2>
+              <p className="text-xs text-gray-600 sm:text-sm">
+                Find records quickly by cycle name, period, status, or date range.
+              </p>
+            </div>
 
-                {/* Hide/Show Filters button - Desktop only (2xl and above) */}
-                <div className="flex items-center gap-2">
-                  {canWriteBillingPostpaid ? (
-                    <ButtonModule
-                      variant="outline"
-                      size="sm"
-                      icon={<PlusIcon size={14} />}
-                      iconPosition="start"
-                      onClick={() => setIsCreateModalOpen(true)}
-                    >
-                      Add Billing Cycles
-                    </ButtonModule>
-                  ) : null}
-                  <button
-                    type="button"
-                    onClick={() => setShowDesktopFilters((prev) => !prev)}
-                    className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+            <SearchModule
+              value={searchInput}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              onCancel={handleCancelSearch}
+              onSearch={handleManualSearch}
+              placeholder="Type cycle name, period, status, or date range..."
+              height="h-14"
+              className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+            />
+          </div>
+
+          {/* Filter Actions */}
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 sm:text-xl">Billing Cycles</h3>
+              <p className="text-sm text-gray-500">
+                {totalRecords} cycle(s) found • Page {currentPage} of {totalPages || 1}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {/* Filter Button for screens below 2xl */}
+              <button
+                onClick={() => setShowMobileFilters(true)}
+                className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
+              >
+                <Filter className="size-4" />
+                Filters
+                {getActiveFilterCount() > 0 && (
+                  <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
+                    {getActiveFilterCount()}
+                  </span>
+                )}
+              </button>
+
+              {/* Desktop Actions */}
+              <div className="flex items-center gap-2">
+                {canWriteBillingPostpaid && (
+                  <ButtonModule
+                    variant="outline"
+                    size="sm"
+                    icon={<PlusIcon size={14} />}
+                    iconPosition="start"
+                    onClick={() => setIsCreateModalOpen(true)}
                   >
-                    {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
-                    {showDesktopFilters ? "Hide filters" : "Show filters"}
-                  </button>
-                </div>
+                    Add Cycle
+                  </ButtonModule>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowDesktopFilters((prev) => !prev)}
+                  className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+                >
+                  {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
+                  {showDesktopFilters ? "Hide filters" : "Show filters"}
+                </button>
+                <button
+                  onClick={handleRefresh}
+                  disabled={loading}
+                  className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <RefreshCw className={`mr-2 size-4 ${loading ? "animate-spin" : ""}`} />
+                  Refresh
+                </button>
               </div>
             </div>
           </div>
 
-          {/* Billing Cycles List */}
-          <div className="space-y-3 sm:space-y-4">
-            {paginatedCycles.map((cycle) =>
-              isMobileView ? (
-                <MobileBillingCycleCard key={cycle.id} cycle={cycle} />
-              ) : (
-                <BillingCycleCard key={cycle.id} cycle={cycle} />
-              )
-            )}
+          {/* Billing Cycles Table */}
+          <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Cycle Details
+                  </th>
+                  <th className="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Status
+                  </th>
+                  <th className="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Period
+                  </th>
+                  <th className="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Timeline
+                  </th>
+                  <th className="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Bills Generated
+                  </th>
+                  <th className="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Finalized
+                  </th>
+                  <th className="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Created
+                  </th>
+                  <th className="whitespace-nowrap px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 bg-white">
+                {paginatedCycles.map((cycle) => (
+                  <tr key={cycle.id} className="transition-colors hover:bg-gray-50">
+                    <td className="whitespace-nowrap px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="text-gray-400">
+                          <DateIcon />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{cycle.name}</p>
+                          {/* <p className="text-xs text-gray-500">ID: {cycle.id}</p> */}
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className="whitespace-nowrap px-4 py-3">
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${getStatusColor(
+                          cycle.status
+                        )}`}
+                      >
+                        {getStatusIcon(cycle.status)}
+                        {cycle.status}
+                      </span>
+                    </td>
+
+                    <td className="whitespace-nowrap px-4 py-3">
+                      <span className="text-sm text-gray-700">{cycle.period}</span>
+                    </td>
+
+                    <td className="whitespace-nowrap px-4 py-3">
+                      <div className="space-y-1">
+                        <p className="text-xs text-gray-500">Start: {formatDate(cycle.startDate)}</p>
+                        <p className="text-xs text-gray-500">End: {formatDate(cycle.endDate)}</p>
+                      </div>
+                    </td>
+
+                    <td className="whitespace-nowrap px-4 py-3">
+                      <p className={`text-sm font-medium ${getAmountColor(cycle.billsGenerated)}`}>
+                        {cycle.billsGenerated}
+                      </p>
+                    </td>
+
+                    <td className="whitespace-nowrap px-4 py-3">
+                      <p className="text-sm text-gray-700">
+                        {cycle.latestGeneratedBillHistory?.finalizedBillCount || "0"}
+                      </p>
+                    </td>
+
+                    <td className="whitespace-nowrap px-4 py-3">
+                      <p className="text-xs text-gray-500">{formatDateTime(cycle.createdAt)}</p>
+                    </td>
+
+                    <td className="whitespace-nowrap px-4 py-3 text-right">
+                      <ButtonModule
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewDetails(cycle)}
+                        icon={<VscEye className="size-3.5" />}
+                        iconPosition="start"
+                        className="bg-white"
+                      >
+                        View Bills
+                      </ButtonModule>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+
+          {/* Empty State */}
+          {paginatedCycles.length === 0 && !loading && (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="flex size-16 items-center justify-center rounded-full bg-gray-100">
+                <CyclesIcon />
+              </div>
+              <h3 className="mt-4 text-base font-medium text-gray-900">No Billing Cycles Found</h3>
+              <EmptySearchState
+                title={
+                  getActiveFilterCount() > 0 || searchInput.trim()
+                    ? "Try adjusting your search criteria or filters"
+                    : "No billing cycles available for the selected period"
+                }
+              />
+            </div>
+          )}
 
           {/* Pagination */}
           {paginatedCycles.length > 0 && totalPages > 1 && (
-            <div className="mt-4 flex w-full flex-col items-center justify-between gap-3 border-t pt-4 sm:mt-6 sm:flex-row">
-              <div className="flex items-center gap-1 max-sm:hidden">
-                <p className="text-xs sm:text-sm">Show rows</p>
-                <select value={pageSize} onChange={handleRowsChange} className="bg-[#F2F2F2] p-1 text-xs sm:text-sm">
+            <div className="mt-4 flex flex-col items-center justify-between gap-3 border-t pt-4 sm:flex-row">
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-gray-500">Show</p>
+                <select
+                  value={pageSize}
+                  onChange={handleRowsChange}
+                  className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm"
+                >
                   <option value={5}>5</option>
                   <option value={10}>10</option>
                   <option value={20}>20</option>
                   <option value={50}>50</option>
                 </select>
+                <p className="text-sm text-gray-500">entries</p>
               </div>
 
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2">
                 <button
-                  className={`${
-                    currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-gray-600 hover:text-gray-900"
+                  className={`inline-flex size-8 items-center justify-center rounded-md border ${
+                    currentPage === 1
+                      ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400"
+                      : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                   }`}
                   onClick={() => changePage(currentPage - 1)}
                   disabled={currentPage === 1}
                 >
-                  <BiSolidLeftArrow className="size-3 sm:size-4" />
+                  <BiSolidLeftArrow className="size-3" />
                 </button>
+
                 <div className="flex items-center gap-1">
                   {getPageItems().map((item, index) => (
                     <button
                       key={index}
-                      className={`size-6 rounded text-xs sm:h-7 sm:w-7 sm:text-sm ${
+                      className={`inline-flex size-8 items-center justify-center rounded-md text-sm ${
                         item === currentPage
-                          ? "bg-[#000000] text-white"
+                          ? "bg-black text-white"
                           : item === "..."
                           ? "cursor-default bg-transparent text-gray-400"
-                          : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                          : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                       }`}
                       onClick={() => (typeof item === "number" ? changePage(item) : null)}
                       disabled={item === "..." || item === currentPage}
@@ -996,40 +827,23 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
                     </button>
                   ))}
                 </div>
+
                 <button
-                  className={`${
+                  className={`inline-flex size-8 items-center justify-center rounded-md border ${
                     currentPage === totalPages || totalPages === 0
-                      ? "cursor-not-allowed text-gray-400"
-                      : "text-gray-600 hover:text-gray-900"
+                      ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400"
+                      : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                   }`}
                   onClick={() => changePage(currentPage + 1)}
                   disabled={currentPage === totalPages || totalPages === 0}
                 >
-                  <BiSolidRightArrow className="size-3 sm:size-4" />
+                  <BiSolidRightArrow className="size-3" />
                 </button>
               </div>
 
-              <p className="text-center text-xs text-gray-600 sm:text-right sm:text-sm">
-                Page {currentPage} of {totalPages || 1} ({totalRecords.toLocaleString()} total cycles)
-                {searchText.trim() && " - filtered"}
+              <p className="text-sm text-gray-500">
+                Showing {startIndex + 1} to {Math.min(endIndex, totalRecords)} of {totalRecords} entries
               </p>
-            </div>
-          )}
-
-          {/* Empty State */}
-          {paginatedCycles.length === 0 && !loading && (
-            <div className="flex flex-col items-center justify-center py-8 sm:py-12">
-              <div className="text-center">
-                <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-gray-100 sm:size-16">
-                  <CyclesIcon />
-                </div>
-                <h3 className="mt-3 text-base font-medium text-gray-900 sm:mt-4 sm:text-lg">No Billing Cycles Found</h3>
-                <p className="mt-1 text-xs text-gray-500 sm:mt-2 sm:text-sm">
-                  {getActiveFilterCount() > 0 || searchText.trim()
-                    ? "Try adjusting your search criteria or filters"
-                    : "No billing cycles available for the selected period"}
-                </p>
-              </div>
             </div>
           )}
         </motion.div>
@@ -1079,7 +893,7 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
               </button>
               <button
                 onClick={resetFilters}
-                className="button-oulined flex w-full items-center justify-center gap-2 text-sm md:text-base"
+                className="button-outlined flex w-full items-center justify-center gap-2 text-sm md:text-base"
               >
                 <X className="size-4" />
                 Reset All

@@ -3,9 +3,23 @@
 import React, { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
-import { ArrowLeft, Calendar, ChevronDown, ChevronUp, Download, Filter, SortAsc, SortDesc, X } from "lucide-react"
+import {
+  AlertCircle,
+  ArrowLeft,
+  Calendar,
+  ChevronDown,
+  ChevronUp,
+  Download,
+  Eye,
+  Filter,
+  Loader2,
+  RefreshCw,
+  SortAsc,
+  SortDesc,
+  X,
+} from "lucide-react"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
-import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
+import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos } from "react-icons/md"
 import { SearchModule } from "components/ui/Search/search-module"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { ButtonModule } from "components/ui/Button/Button"
@@ -18,11 +32,80 @@ import {
 } from "lib/redux/paymentSlice"
 import { fetchCustomers } from "lib/redux/customerSlice"
 import { fetchVendors } from "lib/redux/vendorSlice"
-import { fetchAgents } from "lib/redux/agentSlice"
+import { fetchAgentById, fetchAgents } from "lib/redux/agentSlice"
 import { fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
 import { api } from "lib/redux/authSlice"
 import { API_ENDPOINTS, buildApiUrl } from "lib/config/api"
 import ResolveAnomalyModal from "components/Modals/ResolveAnomalyModal"
+import EmptySearchState from "components/ui/EmptySearchState"
+
+// ==================== Status Badge Component ====================
+const StatusBadge = ({ status }: { status: "Open" | "Resolved" }) => {
+  const getStatusStyles = () => {
+    switch (status) {
+      case "Resolved":
+        return "bg-emerald-50 text-emerald-700 border-emerald-200"
+      case "Open":
+        return "bg-amber-50 text-amber-700 border-amber-200"
+      default:
+        return "bg-gray-50 text-gray-700 border-gray-200"
+    }
+  }
+
+  const getDotColor = () => {
+    switch (status) {
+      case "Resolved":
+        return "bg-emerald-500"
+      case "Open":
+        return "bg-amber-500"
+      default:
+        return "bg-gray-500"
+    }
+  }
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium ${getStatusStyles()}`}
+    >
+      <span className={`size-1.5 rounded-full ${getDotColor()}`} />
+      {status}
+    </span>
+  )
+}
+
+// ==================== Channel Badge Component ====================
+const ChannelBadge = ({ channel }: { channel: string }) => {
+  const getChannelStyles = () => {
+    switch (channel) {
+      case "Cash":
+        return "bg-purple-50 text-purple-700 border-purple-200"
+      case "BankTransfer":
+        return "bg-blue-50 text-blue-700 border-blue-200"
+      case "Pos":
+        return "bg-amber-50 text-amber-700 border-amber-200"
+      case "Card":
+        return "bg-pink-50 text-pink-700 border-pink-200"
+      case "VendorWallet":
+        return "bg-emerald-50 text-emerald-700 border-emerald-200"
+      case "Chaque":
+        return "bg-orange-50 text-orange-700 border-orange-200"
+      case "BankDeposit":
+        return "bg-green-50 text-green-700 border-green-200"
+      case "Vendor":
+        return "bg-indigo-50 text-indigo-700 border-indigo-200"
+      case "Migration":
+        return "bg-cyan-50 text-cyan-700 border-cyan-200"
+      default:
+        return "bg-gray-50 text-gray-700 border-gray-200"
+    }
+  }
+
+  return (
+    <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${getChannelStyles()}`}>
+      {channel}
+    </span>
+  )
+}
 
 interface ActionDropdownProps {
   anomaly: AllAnomalyItem
@@ -55,7 +138,7 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ anomaly, onViewDetails,
     const buttonRect = dropdownRef.current.getBoundingClientRect()
     const spaceBelow = window.innerHeight - buttonRect.bottom
     const spaceAbove = buttonRect.top
-    const dropdownHeight = 160
+    const dropdownHeight = 120
 
     if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
       setDropdownDirection("top")
@@ -85,23 +168,24 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ anomaly, onViewDetails,
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <motion.div
-        className="focus::bg-gray-100 flex size-7 cursor-pointer items-center justify-center gap-2 rounded-full transition-all duration-200 ease-in-out hover:bg-gray-200"
+      <motion.button
+        className="flex size-7 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
         onClick={handleButtonClick}
-        whileHover={{ scale: 1.1 }}
+        whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
-        <RxDotsVertical />
-      </motion.div>
+        <RxDotsVertical className="size-4" />
+      </motion.button>
+
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            className="fixed z-50 w-48 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+            className="fixed z-50 min-w-36 rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
             style={
               dropdownDirection === "bottom"
                 ? {
                     top: dropdownRef.current
-                      ? dropdownRef.current.getBoundingClientRect().bottom + window.scrollY + 2
+                      ? dropdownRef.current.getBoundingClientRect().bottom + window.scrollY + 4
                       : 0,
                     right: dropdownRef.current
                       ? window.innerWidth - dropdownRef.current.getBoundingClientRect().right
@@ -109,49 +193,32 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ anomaly, onViewDetails,
                   }
                 : {
                     bottom: dropdownRef.current
-                      ? window.innerHeight - dropdownRef.current.getBoundingClientRect().top + window.scrollY + 2
+                      ? window.innerHeight - dropdownRef.current.getBoundingClientRect().top + window.scrollY + 4
                       : 0,
                     right: dropdownRef.current
                       ? window.innerWidth - dropdownRef.current.getBoundingClientRect().right
                       : 0,
                   }
             }
-            initial={{ opacity: 0, scale: 0.95, y: dropdownDirection === "bottom" ? -10 : 10 }}
+            initial={{ opacity: 0, scale: 0.95, y: dropdownDirection === "bottom" ? -5 : 5 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: dropdownDirection === "bottom" ? -10 : 10 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
+            exit={{ opacity: 0, scale: 0.95, y: dropdownDirection === "bottom" ? -5 : 5 }}
+            transition={{ duration: 0.15 }}
           >
-            <div className="py-1">
-              <motion.button
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={handleViewDetails}
-                whileHover={{ backgroundColor: "#f3f4f6" }}
-                transition={{ duration: 0.1 }}
-              >
-                View Details
-              </motion.button>
-
-              <motion.button
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => {
-                  // You can add edit payment functionality here
-                  setIsOpen(false)
-                }}
-                whileHover={{ backgroundColor: "#f3f4f6" }}
-                transition={{ duration: 0.1 }}
-              >
-                Update Payment
-              </motion.button>
-
-              <motion.button
-                className="block w-full px-4 py-2 text-left text-sm text-green-700 hover:bg-green-50"
-                onClick={handleResolve}
-                whileHover={{ backgroundColor: "#f0fdf4" }}
-                transition={{ duration: 0.1 }}
-              >
-                Resolve
-              </motion.button>
-            </div>
+            <button
+              onClick={handleViewDetails}
+              className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-gray-700 transition-colors hover:bg-gray-50"
+            >
+              <Eye className="size-3.5" />
+              View Details
+            </button>
+            <button
+              onClick={handleResolve}
+              className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-gray-700 transition-colors hover:bg-gray-50"
+            >
+              <RefreshCw className="size-3.5" />
+              Resolve
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -161,37 +228,39 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ anomaly, onViewDetails,
 
 const LoadingSkeleton = () => {
   return (
-    <div className="flex-3 mt-5 flex flex-col rounded-md border bg-white p-5">
-      {/* Header Section Skeleton */}
-      <div className="items-center justify-between border-b py-2 md:flex md:py-4">
-        <div className="mb-3 md:mb-0">
-          <div className="mb-2 h-8 w-48 rounded bg-gray-200"></div>
-          <div className="h-4 w-64 rounded bg-gray-200"></div>
-        </div>
-        <div className="flex gap-4">
-          <div className="h-10 w-48 rounded bg-gray-200"></div>
-          <div className="h-10 w-24 rounded bg-gray-200"></div>
+    <div className="rounded-xl border border-gray-200 bg-white">
+      {/* Header Skeleton */}
+      <div className="border-b border-gray-200 p-4">
+        <div className="flex flex-col gap-4">
+          <div>
+            <div className="h-6 w-40 rounded-lg bg-gray-200"></div>
+            <div className="mt-1 h-4 w-56 rounded-lg bg-gray-200"></div>
+          </div>
+          <div className="flex gap-2">
+            <div className="h-9 w-28 rounded-lg bg-gray-200"></div>
+            <div className="h-9 w-28 rounded-lg bg-gray-200"></div>
+          </div>
         </div>
       </div>
 
       {/* Table Skeleton */}
-      <div className="w-full overflow-x-auto border-x bg-[#f9f9f9]">
-        <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[1200px]">
           <thead>
-            <tr>
+            <tr className="border-b border-gray-200 bg-gray-50/50">
               {[...Array(11)].map((_, i) => (
-                <th key={i} className="whitespace-nowrap border-b p-4">
-                  <div className="h-4 w-24 rounded bg-gray-200"></div>
+                <th key={i} className="px-3 py-2.5">
+                  <div className="h-3.5 w-16 rounded bg-gray-200"></div>
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {[...Array(5)].map((_, rowIndex) => (
-              <tr key={rowIndex}>
+            {[...Array(8)].map((_, rowIndex) => (
+              <tr key={rowIndex} className="border-b border-gray-100">
                 {[...Array(11)].map((_, cellIndex) => (
-                  <td key={cellIndex} className="whitespace-nowrap border-b px-4 py-3">
-                    <div className="h-4 w-full rounded bg-gray-200"></div>
+                  <td key={cellIndex} className="px-3 py-2.5">
+                    <div className="h-3.5 w-full rounded bg-gray-200"></div>
                   </td>
                 ))}
               </tr>
@@ -200,15 +269,15 @@ const LoadingSkeleton = () => {
         </table>
       </div>
 
-      {/* Pagination Section Skeleton */}
-      <div className="flex items-center justify-between border-t py-3">
-        <div className="h-6 w-48 rounded bg-gray-200"></div>
-        <div className="flex items-center gap-2">
-          <div className="size-8 rounded bg-gray-200"></div>
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="size-8 rounded bg-gray-200"></div>
-          ))}
-          <div className="size-8 rounded bg-gray-200"></div>
+      {/* Pagination Skeleton */}
+      <div className="border-t border-gray-200 p-4">
+        <div className="flex items-center justify-between">
+          <div className="h-3.5 w-40 rounded bg-gray-200"></div>
+          <div className="flex gap-1.5">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="size-7 rounded-lg bg-gray-200"></div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -307,7 +376,7 @@ const MobileFilterSidebar = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col bg-white"
+            className="flex size-full max-w-sm flex-col bg-white"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Fixed Header */}
@@ -640,10 +709,66 @@ const AllAnomaliesTable: React.FC<AllAnomaliesTableProps> = ({
   const { user } = useAppSelector((state) => state.auth)
 
   // Helper functions to find names by ID
-  const getAgentName = (agentId: number) => {
+  const [agentNameCache, setAgentNameCache] = useState<Map<number, string>>(new Map())
+  const [loadingAgentNames, setLoadingAgentNames] = useState<Set<number>>(new Set())
+  const [displayAgentNames, setDisplayAgentNames] = useState<Map<number, string>>(new Map())
+
+  const getAgentName = async (agentId: number) => {
+    // First check if we already have it in cache
+    if (agentNameCache.has(agentId)) {
+      return agentNameCache.get(agentId)!
+    }
+
+    // Check if it's in the local agents array (from fetchAgents)
     const agent = agents.find((a) => a.id === agentId)
-    return agent ? agent.user.fullName : `ID: ${agentId}`
+    if (agent && agent.user.fullName) {
+      // Cache it for future use
+      setAgentNameCache((prev) => new Map(prev.set(agentId, agent.user.fullName)))
+      setDisplayAgentNames((prev) => new Map(prev.set(agentId, agent.user.fullName)))
+      return agent.user.fullName
+    }
+
+    // If not in cache and currently loading, return loading indicator
+    if (loadingAgentNames.has(agentId)) {
+      return "Loading..."
+    }
+
+    // If not in cache and not loading, fetch from API
+    setLoadingAgentNames((prev) => new Set(prev.add(agentId)))
+    setDisplayAgentNames((prev) => new Map(prev.set(agentId, "Loading...")))
+
+    try {
+      const result = await dispatch(fetchAgentById(agentId)).unwrap()
+      const agentName = result.data?.user?.fullName || `ID: ${agentId}`
+
+      // Cache the result
+      setAgentNameCache((prev) => new Map(prev.set(agentId, agentName)))
+      setDisplayAgentNames((prev) => new Map(prev.set(agentId, agentName)))
+      return agentName
+    } catch (error) {
+      console.error(`Failed to fetch agent ${agentId}:`, error)
+      const fallbackName = `ID: ${agentId}`
+      setDisplayAgentNames((prev) => new Map(prev.set(agentId, fallbackName)))
+      return fallbackName
+    } finally {
+      setLoadingAgentNames((prev) => {
+        const newSet = new Set(prev)
+        newSet.delete(agentId)
+        return newSet
+      })
+    }
   }
+
+  // Load agent names for all anomalies when component mounts or anomalies change
+  useEffect(() => {
+    const uniqueAgentIds = [...new Set(allAnomalies.map((a) => a.agentId).filter(Boolean))] as number[]
+
+    uniqueAgentIds.forEach((agentId) => {
+      if (!displayAgentNames.has(agentId) && !loadingAgentNames.has(agentId)) {
+        getAgentName(agentId)
+      }
+    })
+  }, [allAnomalies])
 
   const getVendorName = (vendorId: number) => {
     const vendor = vendors.find((v) => v.id === vendorId)
@@ -656,7 +781,7 @@ const AllAnomaliesTable: React.FC<AllAnomaliesTableProps> = ({
   const [searchInput, setSearchInput] = useState("")
   const [selectedAnomaly, setSelectedAnomaly] = useState<AllAnomalyItem | null>(null)
   const [showMobileFiltersLocal, setShowMobileFiltersLocal] = useState(false)
-  const [showDesktopFiltersLocal, setShowDesktopFiltersLocal] = useState(true)
+  const [showDesktopFiltersLocal, setShowDesktopFiltersLocal] = useState(false)
   const [isSortExpanded, setIsSortExpanded] = useState(false)
   const [isResolveModalOpen, setIsResolveModalOpen] = useState(false)
 
@@ -1343,651 +1468,752 @@ const AllAnomaliesTable: React.FC<AllAnomaliesTableProps> = ({
   if (allAnomaliesLoading) return <LoadingSkeleton />
 
   return (
-    <div className="w-full">
-      {/* Header Section with Title, Search and Filters */}
-      <div className="mb-4 space-y-4">
-        {/* Title Row */}
+    <div className="space-y-5">
+      {/* Header Section */}
+      <div className="rounded-xl border border-gray-200 bg-white p-4">
+        <div className="mb-3">
+          <h2 className="text-lg font-semibold text-gray-900">Payment Anomalies</h2>
+          <p className="mt-1 text-xs text-gray-600">View and manage all payment anomalies</p>
+        </div>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h4 className="text-xl font-semibold text-gray-900 md:text-2xl">Payment Anomalies</h4>
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center border-b">
+          <div className="flex w-full flex-wrap items-center gap-2">
+            <div className="w-full">
               <SearchModule
+                prominent
+                prominentTitle="Search Anomalies"
+                prominentDescription="Find anomalies by customer, payment details, reference, or rule key."
                 value={searchInput}
                 onChange={handleSearch}
                 onCancel={handleCancelSearch}
                 onSearch={handleManualSearch}
                 placeholder="Search anomalies..."
-                className="w-full max-w-md"
-                bgClassName="bg-gray-50"
+                height="h-14"
+                className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+                bgClassName="bg-white"
               />
             </div>
-            {/* Mobile Filter Button */}
-            <button
-              onClick={() => setShowMobileFiltersLocal(true)}
-              className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 2xl:hidden"
-            >
-              <Filter className="size-4" />
-              <span className="hidden xs:inline">Filters</span>
-              {getActiveFilterCountLocal() > 0 && (
-                <span className="flex size-5 items-center justify-center rounded-full bg-[#004B23] text-xs font-semibold text-white">
-                  {getActiveFilterCountLocal()}
-                </span>
-              )}
-            </button>
 
-            {/* Desktop Filter Toggle */}
-            <button
-              onClick={() => setShowDesktopFiltersLocal(!showDesktopFiltersLocal)}
-              className="hidden items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 2xl:flex"
-            >
-              {showDesktopFiltersLocal ? <X className="size-4" /> : <Filter className="size-4" />}
-              {showDesktopFiltersLocal ? "Hide Filters" : "Show Filters"}
-              {getActiveFilterCountLocal() > 0 && (
-                <span className="ml-1 flex size-5 items-center justify-center rounded-full bg-[#004B23] text-xs font-semibold text-white">
-                  {getActiveFilterCountLocal()}
-                </span>
-              )}
-            </button>
-            {/* Export CSV Button */}
-            <ButtonModule
-              onClick={() => setShowExportModal(true)}
-              disabled={isExporting}
-              variant="outline"
-              icon={<Download className={`size-4 ${isExporting ? "animate-pulse" : ""}`} />}
-            >
-              {isExporting ? "Exporting..." : "Export"}
-            </ButtonModule>
+            {/* Filter Buttons */}
+            <div className="flex items-center gap-1.5">
+              {/* Mobile Filter Button */}
+              <button
+                onClick={() => setShowMobileFiltersLocal(true)}
+                className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 lg:hidden"
+              >
+                <Filter className="size-3.5" />
+                <span>Filters</span>
+                {getActiveFilterCountLocal() > 0 && (
+                  <span className="flex size-4 items-center justify-center rounded-full bg-[#004B23] text-[10px] font-semibold text-white">
+                    {getActiveFilterCountLocal()}
+                  </span>
+                )}
+              </button>
+
+              {/* Desktop Filter Toggle */}
+              <button
+                onClick={() => setShowDesktopFiltersLocal(!showDesktopFiltersLocal)}
+                className="hidden items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 lg:flex"
+              >
+                {showDesktopFiltersLocal ? <X className="size-3.5" /> : <Filter className="size-3.5" />}
+                <span>{showDesktopFiltersLocal ? "Hide Filters" : "Show Filters"}</span>
+                {getActiveFilterCountLocal() > 0 && (
+                  <span className="ml-0.5 flex size-4 items-center justify-center rounded-full bg-[#004B23] text-[10px] font-semibold text-white">
+                    {getActiveFilterCountLocal()}
+                  </span>
+                )}
+              </button>
+
+              {/* Export Button */}
+              <button
+                onClick={() => setShowExportModal(true)}
+                disabled={isExporting}
+                className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isExporting ? <Loader2 className="size-3.5 animate-spin" /> : <Download className="size-3.5" />}
+                <span className="hidden sm:inline">{isExporting ? "Exporting..." : "Export"}</span>
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* Active Filters Summary */}
+        {getActiveFilterCountLocal() > 0 && (
+          <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-gray-200 pt-3">
+            <span className="text-xs text-gray-600">Active:</span>
+            {appliedFiltersLocal.customerId && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700">
+                Customer
+                <button
+                  onClick={() => handleFilterChange("customerId", undefined)}
+                  className="ml-0.5 hover:text-blue-900"
+                >
+                  <X className="size-2.5" />
+                </button>
+              </span>
+            )}
+            {appliedFiltersLocal.vendorId && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-medium text-purple-700">
+                Vendor
+                <button
+                  onClick={() => handleFilterChange("vendorId", undefined)}
+                  className="ml-0.5 hover:text-purple-900"
+                >
+                  <X className="size-2.5" />
+                </button>
+              </span>
+            )}
+            {appliedFiltersLocal.status && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+                {appliedFiltersLocal.status}
+                <button onClick={() => handleFilterChange("status", undefined)} className="ml-0.5 hover:text-amber-900">
+                  <X className="size-2.5" />
+                </button>
+              </span>
+            )}
+            {appliedFiltersLocal.channel && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+                {appliedFiltersLocal.channel}
+                <button
+                  onClick={() => handleFilterChange("channel", undefined)}
+                  className="ml-0.5 hover:text-emerald-900"
+                >
+                  <X className="size-2.5" />
+                </button>
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Error Message */}
+        <AnimatePresence>
+          {allAnomaliesError && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mt-3 overflow-hidden"
+            >
+              <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-2">
+                <AlertCircle className="size-4 text-red-600" />
+                <p className="text-xs text-red-700">{allAnomaliesError}</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row">
-        {/* Main Content */}
-        <motion.div
-          className={
-            showDesktopFiltersLocal
-              ? "w-full rounded-md border bg-white p-3 md:p-5 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
-              : "w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1"
-          }
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4 }}
-        >
-          {/* Error Message */}
-          {allAnomaliesError && (
-            <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700 md:p-4 md:text-base">
-              <p>Error loading anomalies: {allAnomaliesError}</p>
-            </div>
-          )}
-
-          {allAnomalies.length === 0 ? (
-            <motion.div
-              className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4 }}
-            >
-              <motion.p
-                className="text-base font-bold text-[#202B3C]"
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.2 }}
-              >
-                {searchText ? "No matching anomalies found" : "No anomalies available"}
-              </motion.p>
-              <motion.p
-                className="text-sm text-gray-600"
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.3 }}
-              >
-                {searchText
-                  ? "Try adjusting your search term"
-                  : "Anomalies will appear here once payments are processed"}
-              </motion.p>
-            </motion.div>
-          ) : (
-            <>
-              <motion.div
-                className="w-full overflow-x-auto border-x bg-[#FFFFFF]"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-              >
-                <table className="w-full min-w-[1200px] border-separate border-spacing-0 text-left">
-                  <thead>
-                    <tr>
-                      <th className="whitespace-nowrap border-b p-4 text-sm">
-                        <div className="flex items-center gap-2">
-                          <MdOutlineCheckBoxOutlineBlank className="text-lg" />
-                          ID
-                        </div>
-                      </th>
-                      <th
-                        className="text-500 cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                        onClick={() => toggleSort("amount")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Amount <RxCaretSort />
-                        </div>
-                      </th>
-                      <th
-                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                        onClick={() => toggleSort("customerName")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Customer <RxCaretSort />
-                        </div>
-                      </th>
-                      <th
-                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                        onClick={() => toggleSort("vendorName")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Vendor <RxCaretSort />
-                        </div>
-                      </th>
-                      <th
-                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                        onClick={() => toggleSort("agentName")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Agent <RxCaretSort />
-                        </div>
-                      </th>
-                      <th
-                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                        onClick={() => toggleSort("paymentTypeName")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Payment Type <RxCaretSort />
-                        </div>
-                      </th>
-                      <th
-                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                        onClick={() => toggleSort("channel")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Channel <RxCaretSort />
-                        </div>
-                      </th>
-                      <th
-                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                        onClick={() => toggleSort("status")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Status <RxCaretSort />
-                        </div>
-                      </th>
-                      <th
-                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                        onClick={() => toggleSort("detectedAtUtc")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Detected <RxCaretSort />
-                        </div>
-                      </th>
-                      <th className="whitespace-nowrap border-b p-4 text-sm">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <AnimatePresence>
-                      {allAnomalies.map((anomaly, index) => (
-                        <motion.tr
-                          key={anomaly.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.3, delay: index * 0.05 }}
-                          exit={{ opacity: 0, y: -10 }}
-                        >
-                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">{anomaly.id}</td>
-                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-semibold">
-                            {formatCurrency(anomaly.amount)}
-                          </td>
-                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                            <div>
-                              <div className="font-medium">{anomaly.customerName || "-"}</div>
-                            </div>
-                          </td>
-                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                            <div>
-                              <div className="font-medium">
-                                {anomaly.vendorId ? getVendorName(anomaly.vendorId) : "-"}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                            <div>
-                              <div className="font-medium">{anomaly.agentId ? getAgentName(anomaly.agentId) : "-"}</div>
-                            </div>
-                          </td>
-                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                            {anomaly.paymentTypeName || "-"}
-                          </td>
-                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                            <motion.div
-                              style={getChannelStyle(anomaly.channel)}
-                              className="inline-flex items-center justify-center rounded-full px-3 py-1 text-xs"
-                              whileHover={{ scale: 1.05 }}
-                              transition={{ duration: 0.1 }}
-                            >
-                              {anomaly.channel}
-                            </motion.div>
-                          </td>
-                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                            <motion.div
-                              style={getStatusStyle(anomaly.status)}
-                              className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs"
-                              whileHover={{ scale: 1.05 }}
-                              transition={{ duration: 0.1 }}
-                            >
-                              <span
-                                className="size-2 rounded-full"
-                                style={{
-                                  backgroundColor: getStatusStyle(anomaly.status).dotColor,
-                                }}
-                              ></span>
-                              {anomaly.status}
-                            </motion.div>
-                          </td>
-                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                            {anomaly.detectedAtUtc ? formatDate(anomaly.detectedAtUtc) : "-"}
-                          </td>
-                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                            <ButtonModule variant="outline" size="sm" onClick={() => handleResolve(anomaly)}>
-                              Resolve
-                            </ButtonModule>
-                          </td>
-                        </motion.tr>
-                      ))}
-                    </AnimatePresence>
-                  </tbody>
-                </table>
-              </motion.div>
-
-              <motion.div
-                className="flex items-center justify-between border-t py-3"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.2 }}
-              >
-                <div className="text-sm text-gray-700">
-                  Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalRecords)} of{" "}
-                  {totalRecords} anomalies
-                </div>
-                <div className="flex items-center gap-2">
-                  <motion.button
-                    onClick={() => paginate(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className={`flex items-center justify-center rounded-md p-2 ${
-                      currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
-                    }`}
-                    whileHover={{ scale: currentPage === 1 ? 1 : 1.1 }}
-                    whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
-                  >
-                    <MdOutlineArrowBackIosNew />
-                  </motion.button>
-
-                  {Array.from({ length: Math.min(5, totalPages) }).map((_, index) => {
-                    let pageNum
-                    if (totalPages <= 5) {
-                      pageNum = index + 1
-                    } else if (currentPage <= 3) {
-                      pageNum = index + 1
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNum = totalPages - 4 + index
-                    } else {
-                      pageNum = currentPage - 2 + index
-                    }
-
-                    return (
-                      <motion.button
-                        key={index}
-                        onClick={() => paginate(pageNum)}
-                        className={`flex size-8 items-center justify-center rounded-md text-sm ${
-                          currentPage === pageNum
-                            ? "bg-[#004B23] text-white"
-                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                        }`}
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ duration: 0.2, delay: index * 0.05 }}
-                      >
-                        {pageNum}
-                      </motion.button>
-                    )
-                  })}
-
-                  {totalPages > 5 && currentPage < totalPages - 2 && <span className="px-2">...</span>}
-
-                  {totalPages > 5 && currentPage < totalPages - 1 && (
-                    <motion.button
-                      onClick={() => paginate(totalPages)}
-                      className={`flex size-8 items-center justify-center rounded-md text-sm ${
-                        currentPage === totalPages
-                          ? "bg-[#004B23] text-white"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      {totalPages}
-                    </motion.button>
-                  )}
-
-                  <motion.button
-                    onClick={() => paginate(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className={`flex items-center justify-center rounded-md p-2 ${
-                      currentPage === totalPages
-                        ? "cursor-not-allowed text-gray-400"
-                        : "text-[#003F9F] hover:bg-gray-100"
-                    }`}
-                    whileHover={{ scale: currentPage === totalPages ? 1 : 1.1 }}
-                    whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
-                  >
-                    <MdOutlineArrowForwardIos />
-                  </motion.button>
-                </div>
-              </motion.div>
-            </>
-          )}
-        </motion.div>
-
-        {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
-        {showDesktopFiltersLocal && (
-          <motion.div
-            key="desktop-filters-sidebar"
-            initial={{ opacity: 1 }}
-            animate={{ opacity: 1 }}
-            className="hidden w-full flex-col rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:flex 2xl:w-80 2xl:self-start"
-          >
-            <div className="mb-4 flex shrink-0 items-center justify-between border-b pb-3 md:pb-4">
-              <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
-              <button
-                onClick={resetFilters}
-                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
-              >
-                <X className="size-3 md:size-4" />
-                Clear All
-              </button>
-            </div>
-
-            <div className="flex-1 space-y-4 overflow-y-auto" style={{ maxHeight: "calc(100vh - 400px)" }}>
-              {/* Customer Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Customer</label>
-                <FormSelectModule
-                  name="customerId"
-                  value={localFilters.customerId || ""}
-                  onChange={(e) => handleFilterChange("customerId", e.target.value || undefined)}
-                  options={customerOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Vendor Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Vendor</label>
-                <FormSelectModule
-                  name="vendorId"
-                  value={localFilters.vendorId || ""}
-                  onChange={(e) => handleFilterChange("vendorId", e.target.value || undefined)}
-                  options={vendorOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Agent Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Agent</label>
-                <FormSelectModule
-                  name="agentId"
-                  value={localFilters.agentId || ""}
-                  onChange={(e) => handleFilterChange("agentId", e.target.value || undefined)}
-                  options={agentOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Payment Type Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Payment Type</label>
-                <FormSelectModule
-                  name="paymentTypeId"
-                  value={localFilters.paymentTypeId || ""}
-                  onChange={(e) => handleFilterChange("paymentTypeId", e.target.value || undefined)}
-                  options={paymentTypeOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Resolution Action Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Resolution Action</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {resolutionActionOptions
-                    .filter((opt) => opt.value !== "")
-                    .map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() =>
-                          handleFilterChange(
-                            "resolutionAction",
-                            localFilters.resolutionAction?.toString() === option.value ? undefined : option.value
-                          )
-                        }
-                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
-                          localFilters.resolutionAction?.toString() === (option.value as string)
-                            ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
-                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                </div>
-              </div>
-
-              {/* Channel Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Payment Channel</label>
-                <FormSelectModule
-                  name="channel"
-                  value={String(localFilters.channel || "")}
-                  onChange={(e) => handleFilterChange("channel", e.target.value || undefined)}
-                  options={channelOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Status Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {statusOptions
-                    .filter((opt) => opt.value !== "")
-                    .map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() =>
-                          handleFilterChange("status", localFilters.status === option.value ? undefined : option.value)
-                        }
-                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
-                          localFilters.status === option.value
-                            ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
-                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                </div>
-              </div>
-
-              {/* Amount Range Filters */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Min Amount</label>
-                <input
-                  type="number"
-                  value={localFilters.minAmount || ""}
-                  onChange={(e) =>
-                    handleFilterChange("minAmount", e.target.value ? parseFloat(e.target.value) : undefined)
+      {/* Main Content with Table on Left, Filters on Right */}
+      <div className="flex flex-col-reverse gap-5 lg:flex-row">
+        {/* Table - Takes remaining width */}
+        <div className="min-w-0 flex-1">
+          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+            {allAnomalies.length === 0 ? (
+              <div className="flex h-72 flex-col items-center justify-center px-4">
+                <EmptySearchState
+                  title="No anomalies found"
+                  description={
+                    searchText || getActiveFilterCountLocal() > 0
+                      ? "Try adjusting your search or filters"
+                      : "Anomalies will appear here once payments are processed"
                   }
-                  placeholder="Enter min amount..."
-                  className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
                 />
-              </div>
-
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Max Amount</label>
-                <input
-                  type="number"
-                  value={localFilters.maxAmount || ""}
-                  onChange={(e) =>
-                    handleFilterChange("maxAmount", e.target.value ? parseFloat(e.target.value) : undefined)
-                  }
-                  placeholder="Enter max amount..."
-                  className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                />
-              </div>
-
-              {/* Date Range Filters */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Detected From</label>
-                <input
-                  type="date"
-                  value={localFilters.detectedFromUtc || ""}
-                  onChange={(e) => handleFilterChange("detectedFromUtc", e.target.value || undefined)}
-                  className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Detected To</label>
-                <input
-                  type="date"
-                  value={localFilters.detectedToUtc || ""}
-                  onChange={(e) => handleFilterChange("detectedToUtc", e.target.value || undefined)}
-                  className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Paid From</label>
-                <input
-                  type="date"
-                  value={localFilters.paidFromUtc || ""}
-                  onChange={(e) => handleFilterChange("paidFromUtc", e.target.value || undefined)}
-                  className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Paid To</label>
-                <input
-                  type="date"
-                  value={localFilters.paidToUtc || ""}
-                  onChange={(e) => handleFilterChange("paidToUtc", e.target.value || undefined)}
-                  className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                />
-              </div>
-
-              {/* Text Input Filters */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Rule Key</label>
-                <input
-                  type="text"
-                  value={localFilters.ruleKey || ""}
-                  onChange={(e) => handleFilterChange("ruleKey", e.target.value || undefined)}
-                  placeholder="Enter rule key..."
-                  className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                />
-              </div>
-
-              {/* Sort Options */}
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setIsSortExpanded((prev) => !prev)}
-                  className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
-                  aria-expanded={isSortExpanded}
-                >
-                  <span>Sort By</span>
-                  {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-                </button>
-
-                {isSortExpanded && (
-                  <div className="space-y-2">
-                    {sortOptions.map((option) => (
-                      <button
-                        key={`${option.value}-${option.order}`}
-                        onClick={() => handleSortChange(option)}
-                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
-                          localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                            ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        <span>{option.label}</span>
-                        {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
-                          <span className="text-purple-600">
-                            {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
+                {(searchText || getActiveFilterCountLocal() > 0) && (
+                  <button
+                    onClick={resetFilters}
+                    className="mt-3 rounded-lg bg-[#004B23] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[#003618]"
+                  >
+                    Clear all filters
+                  </button>
                 )}
               </div>
+            ) : (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[1200px]">
+                    <thead>
+                      <tr className="border-b border-gray-200 bg-gray-50/80">
+                        <th className="p-2 text-left">
+                          <button
+                            onClick={() => toggleSort("id")}
+                            className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
+                          >
+                            ID
+                            <RxCaretSort className="size-3.5" />
+                          </button>
+                        </th>
+                        <th className="p-2 text-left">
+                          <button
+                            onClick={() => toggleSort("amount")}
+                            className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
+                          >
+                            Amount
+                            <RxCaretSort className="size-3.5" />
+                          </button>
+                        </th>
+                        <th className="p-2 text-left">
+                          <button
+                            onClick={() => toggleSort("customerName")}
+                            className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
+                          >
+                            Customer
+                            <RxCaretSort className="size-3.5" />
+                          </button>
+                        </th>
+                        <th className="p-2 text-left">
+                          <button
+                            onClick={() => toggleSort("vendorName")}
+                            className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
+                          >
+                            Vendor
+                            <RxCaretSort className="size-3.5" />
+                          </button>
+                        </th>
+                        <th className="p-2 text-left">
+                          <button
+                            onClick={() => toggleSort("agentName")}
+                            className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
+                          >
+                            Agent
+                            <RxCaretSort className="size-3.5" />
+                          </button>
+                        </th>
+                        <th className="p-2 text-left">
+                          <button
+                            onClick={() => toggleSort("paymentTypeName")}
+                            className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
+                          >
+                            Payment Type
+                            <RxCaretSort className="size-3.5" />
+                          </button>
+                        </th>
+                        <th className="p-2 text-left">
+                          <button
+                            onClick={() => toggleSort("channel")}
+                            className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
+                          >
+                            Channel
+                            <RxCaretSort className="size-3.5" />
+                          </button>
+                        </th>
+                        <th className="p-2 text-left">
+                          <button
+                            onClick={() => toggleSort("status")}
+                            className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
+                          >
+                            Status
+                            <RxCaretSort className="size-3.5" />
+                          </button>
+                        </th>
+                        <th className="p-2 text-left">
+                          <button
+                            onClick={() => toggleSort("detectedAtUtc")}
+                            className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 hover:text-gray-900"
+                          >
+                            Detected
+                            <RxCaretSort className="size-3.5" />
+                          </button>
+                        </th>
+                        <th className="p-2 text-left">
+                          <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">
+                            Actions
+                          </span>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <AnimatePresence>
+                        {allAnomalies.map((anomaly, index) => (
+                          <motion.tr
+                            key={anomaly.id}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2, delay: index * 0.01 }}
+                            className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50"
+                          >
+                            <td className="whitespace-nowrap p-2 text-xs font-medium text-gray-900">{anomaly.id}</td>
+                            <td className="whitespace-nowrap p-2 text-xs font-semibold text-gray-900">
+                              {formatCurrency(anomaly.amount)}
+                            </td>
+                            <td className="whitespace-nowrap p-2 text-xs">
+                              <div>
+                                <div className="font-medium text-gray-900">{anomaly.customerName || "-"}</div>
+                              </div>
+                            </td>
+                            <td className="whitespace-nowrap p-2 text-xs text-gray-700">
+                              {anomaly.vendorId ? getVendorName(anomaly.vendorId) : "-"}
+                            </td>
+                            <td className="whitespace-nowrap p-2 text-xs text-gray-700">
+                              {anomaly.agentId
+                                ? displayAgentNames.get(anomaly.agentId) || `ID: ${anomaly.agentId}`
+                                : "-"}
+                            </td>
+                            <td className="whitespace-nowrap p-2 text-xs text-gray-700">
+                              {anomaly.paymentTypeName || "-"}
+                            </td>
+                            <td className="whitespace-nowrap p-2">
+                              <ChannelBadge channel={anomaly.channel} />
+                            </td>
+                            <td className="whitespace-nowrap p-2">
+                              <StatusBadge status={anomaly.status} />
+                            </td>
+                            <td className="whitespace-nowrap p-2 text-xs text-gray-700">
+                              {formatDate(anomaly.detectedAtUtc)}
+                            </td>
+                            <td className="whitespace-nowrap p-2">
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => handleResolve(anomaly)}
+                                  className="flex items-center gap-1 rounded-lg bg-[#004B23] px-2 py-1 text-xs font-medium text-white transition-colors hover:bg-[#003618]"
+                                >
+                                  <RefreshCw className="size-3" />
+                                  Resolve
+                                </button>
+                              </div>
+                            </td>
+                          </motion.tr>
+                        ))}
+                      </AnimatePresence>
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Pagination */}
+                <div className="flex items-center justify-between border-t border-gray-200 px-3 py-2.5">
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs text-gray-600">Show rows</p>
+                    <select
+                      value={pageSize}
+                      onChange={(e) => {
+                        const newPageSize = Number(e.target.value)
+                        const fetchParams: AllAnomaliesRequestParams = {
+                          pageNumber: 1,
+                          pageSize: newPageSize,
+                          ...(agentId !== undefined && { agentId }),
+                          ...(customerId !== undefined && { customerId }),
+                          ...(searchText && { search: searchText }),
+                          ...(appliedFiltersLocal.customerId && { customerId: appliedFiltersLocal.customerId }),
+                          ...(appliedFiltersLocal.vendorId && { vendorId: appliedFiltersLocal.vendorId }),
+                          ...(appliedFiltersLocal.agentId && { agentId: appliedFiltersLocal.agentId }),
+                          ...(appliedFiltersLocal.paymentTypeId && {
+                            paymentTypeId: appliedFiltersLocal.paymentTypeId,
+                          }),
+                          ...(appliedFiltersLocal.status && { status: appliedFiltersLocal.status }),
+                          ...(appliedFiltersLocal.resolutionAction && {
+                            resolutionAction: appliedFiltersLocal.resolutionAction,
+                          }),
+                          ...(appliedFiltersLocal.channel && {
+                            channel: appliedFiltersLocal.channel as AllAnomaliesRequestParams["channel"],
+                          }),
+                          ...(appliedFiltersLocal.minAmount !== undefined && {
+                            minAmount: appliedFiltersLocal.minAmount,
+                          }),
+                          ...(appliedFiltersLocal.maxAmount !== undefined && {
+                            maxAmount: appliedFiltersLocal.maxAmount,
+                          }),
+                          ...(appliedFiltersLocal.detectedFromUtc && {
+                            detectedFromUtc: formatDateTime(appliedFiltersLocal.detectedFromUtc, true),
+                          }),
+                          ...(appliedFiltersLocal.detectedToUtc && {
+                            detectedToUtc: formatDateTime(appliedFiltersLocal.detectedToUtc, false),
+                          }),
+                          ...(appliedFiltersLocal.paidFromUtc && {
+                            paidFromUtc: formatDateTime(appliedFiltersLocal.paidFromUtc, true),
+                          }),
+                          ...(appliedFiltersLocal.paidToUtc && {
+                            paidToUtc: formatDateTime(appliedFiltersLocal.paidToUtc, false),
+                          }),
+                          ...(appliedFiltersLocal.ruleKey && { ruleKey: appliedFiltersLocal.ruleKey }),
+                          ...(appliedFiltersLocal.search && { search: appliedFiltersLocal.search }),
+                          ...(appliedFiltersLocal.sortBy && { sortBy: appliedFiltersLocal.sortBy }),
+                          ...(appliedFiltersLocal.sortOrder && { sortOrder: appliedFiltersLocal.sortOrder }),
+                        }
+                        dispatch(fetchAllAnomalies(fetchParams))
+                      }}
+                      className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                    </select>
+                    <p className="text-xs text-gray-600">
+                      {currentPage * pageSize - pageSize + 1}-{Math.min(currentPage * pageSize, totalRecords)} of{" "}
+                      {totalRecords}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => paginate(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="flex size-6 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <MdOutlineArrowBackIosNew className="size-3" />
+                    </button>
+
+                    {Array.from({ length: Math.min(5, totalPages) }).map((_, index) => {
+                      let pageNum
+                      if (totalPages <= 5) {
+                        pageNum = index + 1
+                      } else if (currentPage <= 3) {
+                        pageNum = index + 1
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + index
+                      } else {
+                        pageNum = currentPage - 2 + index
+                      }
+
+                      return (
+                        <button
+                          key={index}
+                          onClick={() => paginate(pageNum)}
+                          className={`flex size-6 items-center justify-center rounded-lg text-xs font-medium transition-colors ${
+                            currentPage === pageNum
+                              ? "bg-[#004B23] text-white"
+                              : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      )
+                    })}
+
+                    {totalPages > 5 && currentPage < totalPages - 2 && (
+                      <span className="text-xs text-gray-500">...</span>
+                    )}
+
+                    <button
+                      onClick={() => paginate(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="flex size-6 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <MdOutlineArrowForwardIos className="size-3" />
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Desktop Filter Panel - On the Right */}
+        {showDesktopFiltersLocal && (
+          <div className="w-72 shrink-0 rounded-xl border border-gray-200 bg-white">
+            {/* Header */}
+            <div className="border-b border-gray-200 p-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-gray-900">Filters & Sorting</h3>
+                <button onClick={resetFilters} className="text-xs font-medium text-blue-600 hover:text-blue-800">
+                  Clear All
+                </button>
+              </div>
+              {getActiveFilterCountLocal() > 0 && (
+                <p className="mt-1 text-xs text-gray-600">{getActiveFilterCountLocal()} active filter(s)</p>
+              )}
             </div>
 
-            {/* Action Buttons */}
-            <div className="mt-6 shrink-0 space-y-3 border-t pt-4">
-              <button
-                onClick={applyFilters}
-                className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
-              >
-                <Filter className="size-4" />
-                Apply Filters
-              </button>
-              <button
-                onClick={resetFilters}
-                className="button-outlined flex w-full items-center justify-center gap-2 text-sm md:text-base"
-              >
-                <X className="size-4" />
-                Reset All
-              </button>
-            </div>
+            {/* Content */}
+            <div className="max-h-[calc(100vh-320px)] overflow-y-auto p-3">
+              <div className="space-y-4">
+                {/* Customer Filter */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-700">Customer</label>
+                  <FormSelectModule
+                    name="customerId"
+                    value={localFilters.customerId || ""}
+                    onChange={(e) =>
+                      handleFilterChange("customerId", e.target.value ? Number(e.target.value) : undefined)
+                    }
+                    options={customerOptions}
+                    className="w-full"
+                    controlClassName="h-8 text-xs border-gray-300"
+                  />
+                </div>
 
-            {/* Summary Stats */}
-            <div className="mt-4 shrink-0 rounded-lg bg-gray-50 p-3 md:mt-6">
-              <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
-              <div className="space-y-1 text-xs md:text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Total Records:</span>
-                  <span className="font-medium">{totalRecords?.toLocaleString() || 0}</span>
+                {/* Vendor Filter */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-700">Vendor</label>
+                  <FormSelectModule
+                    name="vendorId"
+                    value={localFilters.vendorId || ""}
+                    onChange={(e) =>
+                      handleFilterChange("vendorId", e.target.value ? Number(e.target.value) : undefined)
+                    }
+                    options={vendorOptions}
+                    className="w-full"
+                    controlClassName="h-8 text-xs border-gray-300"
+                  />
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Current Page:</span>
-                  <span className="font-medium">
-                    {currentPage} / {totalPages || 1}
-                  </span>
+
+                {/* Agent Filter */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-700">Agent</label>
+                  <FormSelectModule
+                    name="agentId"
+                    value={localFilters.agentId || ""}
+                    onChange={(e) => handleFilterChange("agentId", e.target.value ? Number(e.target.value) : undefined)}
+                    options={agentOptions}
+                    className="w-full"
+                    controlClassName="h-8 text-xs border-gray-300"
+                  />
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Active Filters:</span>
-                  <span className="font-medium">{getActiveFilterCountLocal()}</span>
+
+                {/* Payment Type Filter */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-700">Payment Type</label>
+                  <div className="grid grid-cols-2 gap-1">
+                    {paymentTypeOptions
+                      .filter((opt) => opt.value !== "")
+                      .slice(0, 6)
+                      .map((typeOption) => (
+                        <button
+                          key={typeOption.value}
+                          onClick={() =>
+                            handleFilterChange(
+                              "paymentTypeId",
+                              localFilters.paymentTypeId === Number(typeOption.value)
+                                ? undefined
+                                : Number(typeOption.value)
+                            )
+                          }
+                          className={`rounded-lg border px-2 py-1 text-xs font-medium transition-colors ${
+                            localFilters.paymentTypeId === Number(typeOption.value)
+                              ? "border-green-500 bg-green-50 text-green-700"
+                              : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                          }`}
+                        >
+                          {typeOption.label}
+                        </button>
+                      ))}
+                  </div>
+                </div>
+
+                {/* Channel Filter */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-700">Payment Channel</label>
+                  <FormSelectModule
+                    name="channel"
+                    value={String(localFilters.channel || "")}
+                    onChange={(e) => handleFilterChange("channel", e.target.value || undefined)}
+                    options={channelOptions}
+                    className="w-full"
+                    controlClassName="h-8 text-xs border-gray-300"
+                  />
+                </div>
+
+                {/* Status Filter */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-700">Status</label>
+                  <div className="grid grid-cols-2 gap-1">
+                    {["Open", "Resolved"].map((statusValue) => {
+                      return (
+                        <button
+                          key={statusValue}
+                          onClick={() =>
+                            handleFilterChange(
+                              "status",
+                              localFilters.status === statusValue ? undefined : (statusValue as "Open" | "Resolved")
+                            )
+                          }
+                          className={`rounded-lg border px-2 py-1 text-xs font-medium transition-colors ${
+                            localFilters.status === statusValue
+                              ? "border-blue-500 bg-blue-50 text-blue-700"
+                              : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                          }`}
+                        >
+                          {statusValue}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Resolution Action Filter */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-700">Resolution Action</label>
+                  <div className="grid grid-cols-2 gap-1">
+                    {resolutionActionOptions
+                      .filter((opt) => opt.value !== "")
+                      .map((option) => (
+                        <button
+                          key={option.value}
+                          onClick={() =>
+                            handleFilterChange(
+                              "resolutionAction",
+                              localFilters.resolutionAction?.toString() === option.value ? undefined : option.value
+                            )
+                          }
+                          className={`rounded-lg border px-2 py-1 text-xs font-medium transition-colors ${
+                            localFilters.resolutionAction?.toString() === (option.value as string)
+                              ? "border-purple-500 bg-purple-50 text-purple-700"
+                              : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                  </div>
+                </div>
+
+                {/* Amount Range Filters */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-700">Min Amount</label>
+                  <input
+                    type="number"
+                    value={localFilters.minAmount || ""}
+                    onChange={(e) =>
+                      handleFilterChange("minAmount", e.target.value ? parseFloat(e.target.value) : undefined)
+                    }
+                    placeholder="Enter min amount..."
+                    className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-700">Max Amount</label>
+                  <input
+                    type="number"
+                    value={localFilters.maxAmount || ""}
+                    onChange={(e) =>
+                      handleFilterChange("maxAmount", e.target.value ? parseFloat(e.target.value) : undefined)
+                    }
+                    placeholder="Enter max amount..."
+                    className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+
+                {/* Date Range Filters */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-700">Detected From</label>
+                  <input
+                    type="date"
+                    value={localFilters.detectedFromUtc || ""}
+                    onChange={(e) => handleFilterChange("detectedFromUtc", e.target.value || undefined)}
+                    className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-700">Detected To</label>
+                  <input
+                    type="date"
+                    value={localFilters.detectedToUtc || ""}
+                    onChange={(e) => handleFilterChange("detectedToUtc", e.target.value || undefined)}
+                    className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-700">Paid From</label>
+                  <input
+                    type="date"
+                    value={localFilters.paidFromUtc || ""}
+                    onChange={(e) => handleFilterChange("paidFromUtc", e.target.value || undefined)}
+                    className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-700">Paid To</label>
+                  <input
+                    type="date"
+                    value={localFilters.paidToUtc || ""}
+                    onChange={(e) => handleFilterChange("paidToUtc", e.target.value || undefined)}
+                    className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+
+                {/* Text Input Filters */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-700">Rule Key</label>
+                  <input
+                    type="text"
+                    value={localFilters.ruleKey || ""}
+                    onChange={(e) => handleFilterChange("ruleKey", e.target.value || undefined)}
+                    placeholder="Enter rule key..."
+                    className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+
+                {/* Sort Options */}
+                <div className="space-y-1">
+                  <button
+                    onClick={() => setIsSortExpanded(!isSortExpanded)}
+                    className="flex w-full items-center justify-between text-xs font-medium text-gray-700"
+                  >
+                    <span>Sort By</span>
+                    {isSortExpanded ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
+                  </button>
+
+                  <AnimatePresence>
+                    {isSortExpanded && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="space-y-1 overflow-hidden"
+                      >
+                        {sortOptions.map((option) => (
+                          <button
+                            key={`${option.value}-${option.order}`}
+                            onClick={() => handleSortChange(option)}
+                            className={`flex w-full items-center justify-between rounded-lg border px-2 py-1 text-xs transition-colors ${
+                              localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                                ? "border-purple-500 bg-purple-50 text-purple-700"
+                                : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                            }`}
+                          >
+                            <span>{option.label}</span>
+                            {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                              <span>
+                                {option.order === "asc" ? (
+                                  <SortAsc className="size-3.5" />
+                                ) : (
+                                  <SortDesc className="size-3.5" />
+                                )}
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
             </div>
-          </motion.div>
+
+            {/* Footer */}
+            <div className="border-t border-gray-200 p-3">
+              <button
+                onClick={applyFilters}
+                className="mb-2 w-full rounded-lg bg-[#004B23] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[#003618]"
+              >
+                Apply Filters
+              </button>
+
+              {/* Summary */}
+              <div className="rounded-lg bg-gray-50 p-2">
+                <h4 className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-500">Summary</h4>
+                <div className="space-y-0.5 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Total:</span>
+                    <span className="font-medium text-gray-900">{totalRecords.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Page:</span>
+                    <span className="font-medium text-gray-900">
+                      {currentPage}/{totalPages || 1}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Filters:</span>
+                    <span className="font-medium text-gray-900">{getActiveFilterCountLocal()}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </div>
 

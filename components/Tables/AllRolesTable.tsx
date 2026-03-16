@@ -18,6 +18,7 @@ import {
 } from "react-icons/md"
 import { SearchModule } from "components/ui/Search/search-module"
 import { ButtonModule } from "components/ui/Button/Button"
+import EmptySearchState from "components/ui/EmptySearchState"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { clearPrivileges, fetchPrivileges, fetchRoles, Privilege, Role } from "lib/redux/roleSlice"
 
@@ -600,22 +601,26 @@ const AllRoleTable: React.FC = () => {
   return (
     <motion.div className="relative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.35 }}>
       <motion.div
-        className="items-center justify-between py-2 md:flex"
+        className="flex flex-col gap-4 py-2"
         initial={{ y: -10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.3 }}
       >
         <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">All Roles</p>
+          <p className="text-lg font-medium max-sm:pb-3 md:text-xl">All Roles</p>
           <p className="text-sm text-gray-600">Manage system and custom roles with their permissions</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:gap-4">
           <SearchModule
+            prominent
+            prominentTitle="Search Roles"
+            prominentDescription="Find roles quickly by name, scope, or assigned permissions."
             value={searchText}
             onChange={handleSearch}
             onCancel={handleCancelSearch}
             placeholder="Search roles..."
-            className="w-[380px]"
+            height="h-14"
+            className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
             bgClassName="bg-white"
           />
           <ButtonModule variant="primary" size="sm" onClick={() => router.push("/roles/create")}>
@@ -770,11 +775,12 @@ const AllRoleTable: React.FC = () => {
             <CardsLoadingSkeleton />
           ) : filteredRoles.length === 0 ? (
             <div className="rounded-lg border border-gray-200 bg-white py-12 text-center">
-              <MdOutlinePeople className="mx-auto mb-4 size-12 text-gray-300" />
-              <h3 className="mb-2 text-lg font-medium text-gray-900">No roles found</h3>
-              <p className="mb-6 text-gray-600">
-                {searchText ? "Try adjusting your search or filters" : "Create your first role to get started"}
-              </p>
+              <EmptySearchState
+                title="No roles found"
+                description={
+                  searchText ? "Try adjusting your search or filters" : "Create your first role to get started"
+                }
+              />
               <ButtonModule variant="primary" onClick={() => router.push("/roles/create")}>
                 Create New Role
               </ButtonModule>
@@ -978,6 +984,7 @@ const AllRoleTable: React.FC = () => {
 
                   <div className="mt-3">
                     <SearchModule
+                      prominent
                       value={privilegeSearch}
                       onChange={handlePrivilegeSearch}
                       onCancel={handleCancelPrivilegeSearch}

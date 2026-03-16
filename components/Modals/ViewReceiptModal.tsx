@@ -21,7 +21,7 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, receiptDat
           <Image src="/DashboardImages/Tenant.svg" width={30} height={30} alt="profile" />
           <p>{receiptData.tenant}</p>
         </div>
-        <div className="h-[1px] w-full bg-[#000000] opacity-5"></div>
+        <div className="h-px w-full bg-[#000000] opacity-5"></div>
         <div className="px-10 py-5 max-sm:px-4">
           <div className="flex w-full items-center justify-center">
             <Image src="/DashboardImages/Success.svg" width={148} height={143.79} alt="profile" />

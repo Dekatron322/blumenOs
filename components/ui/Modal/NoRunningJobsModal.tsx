@@ -51,7 +51,7 @@ export const NoRunningJobsModal: React.FC<NoRunningJobsModalProps> = ({ isOpen, 
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex flex-col items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+          <div className="flex size-12 items-center justify-center rounded-full bg-blue-100">
             <Play className="size-6 text-blue-600" />
           </div>
           <div className="text-center">

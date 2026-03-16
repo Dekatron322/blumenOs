@@ -10,6 +10,7 @@ import { PostpaidBill } from "lib/redux/postpaidSlice"
 import html2canvas from "html2canvas"
 import jsPDF from "jspdf"
 import { Adjustment } from "../../../lib/redux/postpaidSlice"
+import { formatCurrency } from "../../../utils/formatCurrency"
 
 interface PostpaidBillDetailsModalProps {
   isOpen: boolean
@@ -26,15 +27,6 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
 }) => {
   const barcodeRef = useRef<HTMLCanvasElement>(null)
   const invoiceRef = useRef<HTMLDivElement>(null)
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-NG", {
-      style: "currency",
-      currency: "NGN",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount)
-  }
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -625,7 +617,7 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                             <div className="mt-1 flex justify-between">
                               <span className="print-hide-label font-semibold">Last Payment Amount:</span>
                               <span className="print-show-value px-2 font-semibold">
-                                {formatCurrency(bill.paymentsPrevMonth)}
+                                {formatCurrency(bill.totalPaid)}
                               </span>
                             </div>
                             <div className="mt-1 flex justify-between">

@@ -21,6 +21,7 @@ import Image from "next/image"
 import { formatCurrency } from "utils/formatCurrency"
 import TransactionReceiptModal from "components/ui/Modal/transaction-receipt-modal"
 import RetryReceiptModal from "components/MeteringInfo/RetryReceiptModal"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface ActionDropdownProps {
   transaction: FailedPayment
@@ -273,7 +274,7 @@ const LoadingSkeleton = () => {
           />
         </div>
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded bg-gray-200">
+          <div className="size-8 rounded bg-gray-200">
             <motion.div
               className="size-full rounded bg-gray-300"
               initial={{ opacity: 0.3 }}
@@ -289,7 +290,7 @@ const LoadingSkeleton = () => {
             />
           </div>
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-8 w-8 rounded bg-gray-200">
+            <div key={i} className="size-8 rounded bg-gray-200">
               <motion.div
                 className="size-full rounded bg-gray-300"
                 initial={{ opacity: 0.3 }}
@@ -305,7 +306,7 @@ const LoadingSkeleton = () => {
               />
             </div>
           ))}
-          <div className="h-8 w-8 rounded bg-gray-200">
+          <div className="size-8 rounded bg-gray-200">
             <motion.div
               className="size-full rounded bg-gray-300"
               initial={{ opacity: 0.3 }}
@@ -372,7 +373,7 @@ const MobileFilterSidebar = ({
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header - Fixed */}
-            <div className="flex-shrink-0 border-b bg-white p-4">
+            <div className="shrink-0 border-b bg-white p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <button
@@ -424,7 +425,7 @@ const MobileFilterSidebar = ({
             </div>
 
             {/* Bottom Action Buttons - Fixed */}
-            <div className="flex-shrink-0 border-t bg-white p-4 2xl:hidden">
+            <div className="shrink-0 border-t bg-white p-4 2xl:hidden">
               <div className="flex gap-3">
                 <button
                   onClick={() => {
@@ -498,7 +499,7 @@ const FailedTransactionTable: React.FC<FailedTransactionTableProps> = ({ pageSiz
 
   // Filter states
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [localFilters, setLocalFilters] = useState({
     paymentReference: "",
     meterNumber: "",
@@ -807,35 +808,10 @@ const FailedTransactionTable: React.FC<FailedTransactionTableProps> = ({ pageSiz
                       )}
                     </button>
 
-                    <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">Failed Payments</p>
+                    <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-xl">Failed Payments</p>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    {/* Mobile search icon button */}
-                    <button
-                      type="button"
-                      className="flex size-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm transition hover:bg-gray-50 sm:hidden md:size-9"
-                      onClick={() => {
-                        /* Handle mobile search toggle if needed */
-                      }}
-                      aria-label="Toggle search"
-                    >
-                      <Image src="/DashboardImages/Search.svg" width={16} height={16} alt="Search Icon" />
-                    </button>
-
-                    {/* Desktop/Tablet search input */}
-                    <div className="hidden sm:block">
-                      <SearchModule
-                        value={searchInput}
-                        onChange={(e) => setSearchInput(e.target.value)}
-                        onCancel={handleCancelSearch}
-                        onSearch={handleManualSearch}
-                        placeholder="Search by Payment Reference or Meter Number"
-                        className="w-full max-w-full sm:max-w-[320px]"
-                        bgClassName="bg-white"
-                      />
-                    </div>
-
                     {/* Active filters badge - Desktop only (2xl and above) */}
                     {getActiveFilterCount() > 0 && (
                       <div className="hidden items-center gap-2 2xl:flex">
@@ -857,18 +833,28 @@ const FailedTransactionTable: React.FC<FailedTransactionTableProps> = ({ pageSiz
                   </div>
                 </div>
 
-                {/* Mobile search input revealed when icon is tapped */}
-                <div className="mb-3 sm:hidden">
+                {/* Search Priority Section */}
+                <div className="mb-4 rounded-xl border border-gray-200 bg-gradient-to-r from-green-50/60 to-white p-4 shadow-sm">
+                  <div className="mb-3">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-[#004B23]">Primary action</p>
+                    <h2 className="text-base font-semibold text-gray-900 sm:text-lg">Search Failed Payments</h2>
+                    <p className="text-xs text-gray-600 sm:text-sm">
+                      Find records quickly by payment reference or meter number.
+                    </p>
+                  </div>
+
                   <SearchModule
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
                     onCancel={handleCancelSearch}
                     onSearch={handleManualSearch}
-                    placeholder="Search by Payment Reference or Meter Number"
-                    className="w-full"
-                    bgClassName="bg-white"
+                    placeholder="Type payment reference or meter number..."
+                    height="h-14"
+                    className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
                   />
                 </div>
+
+                {/* Mobile search input - removed as it's now in the priority section above */}
               </div>
 
               {loading && failedPayments.length === 0 ? (
@@ -880,16 +866,13 @@ const FailedTransactionTable: React.FC<FailedTransactionTableProps> = ({ pageSiz
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <motion.p
-                    className="text-base font-bold text-[#202B3C]"
-                    initial={{ y: 10, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ duration: 0.4, delay: 0.2 }}
-                  >
-                    {localFilters.paymentReference || localFilters.meterNumber
-                      ? "No matching failed payments found"
-                      : "No failed payments available"}
-                  </motion.p>
+                  <EmptySearchState
+                    title={
+                      localFilters.paymentReference || localFilters.meterNumber
+                        ? "No matching failed payments found"
+                        : "No failed payments available"
+                    }
+                  />
                 </motion.div>
               ) : (
                 <>
@@ -1250,7 +1233,7 @@ const FailedTransactionTable: React.FC<FailedTransactionTableProps> = ({ pageSiz
               animate={{ opacity: 1 }}
               className="hidden w-full flex-col rounded-md border bg-white 2xl:flex 2xl:w-80 2xl:self-start"
             >
-              <div className="flex-shrink-0 border-b bg-white p-3 md:p-5">
+              <div className="shrink-0 border-b bg-white p-3 md:p-5">
                 <div className="flex items-center justify-between">
                   <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters</h2>
                   <button
@@ -1294,7 +1277,7 @@ const FailedTransactionTable: React.FC<FailedTransactionTableProps> = ({ pageSiz
               </div>
 
               {/* Action Buttons */}
-              <div className="flex-shrink-0 space-y-3 border-t bg-white p-3 md:p-5">
+              <div className="shrink-0 space-y-3 border-t bg-white p-3 md:p-5">
                 <button
                   onClick={applyFilters}
                   className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
@@ -1312,7 +1295,7 @@ const FailedTransactionTable: React.FC<FailedTransactionTableProps> = ({ pageSiz
               </div>
 
               {/* Summary Stats */}
-              <div className="flex-shrink-0 rounded-lg bg-gray-50 p-3 md:p-4">
+              <div className="shrink-0 rounded-lg bg-gray-50 p-3 md:p-4">
                 <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
                 <div className="space-y-1 text-xs md:text-sm">
                   <div className="flex justify-between">

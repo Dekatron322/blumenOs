@@ -138,10 +138,10 @@ const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, setActiveTab }
   return (
     <div className="relative w-full md:w-fit">
       {/* Mobile: dropdown trigger */}
-      <div className="flex w-full items-center justify-between rounded-md bg-white p-2 md:hidden">
+      <div className="flex w-full items-center justify-between rounded-md bg-white md:hidden">
         <button
           type="button"
-          className="flex flex-1 items-center justify-between gap-2 rounded-md px-2 py-1 text-sm font-medium text-gray-800"
+          className="flex flex-1 items-center justify-between gap-2 rounded-md  text-sm font-medium text-gray-800"
           onClick={() => setIsMobileOpen((prev) => !prev)}
         >
           <span className="flex items-center gap-2">

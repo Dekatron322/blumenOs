@@ -110,7 +110,7 @@ const ClearCashPage = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-1 items-center justify-center px-4 py-8 2xl:container">
+          <div className="mx-auto flex w-full flex-1 items-center justify-center px-4 py-8 ">
             <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-sm">
               <h1 className="text-xl font-semibold text-gray-900">Clear Your Cash</h1>
               <p className="mt-1 text-sm text-gray-600">

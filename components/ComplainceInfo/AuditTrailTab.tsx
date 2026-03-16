@@ -25,6 +25,7 @@ import { fetchAgentById } from "lib/redux/agentSlice"
 import { fetchEmployeeById } from "lib/redux/employeeSlice"
 import { fetchVendorById } from "lib/redux/vendorSlice"
 import { format } from "date-fns"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface ActorNames {
   userId?: string
@@ -214,10 +215,10 @@ const AuditTrailTab: React.FC = () => {
     (state) => state.auditLogs
   )
 
-  const [searchText, setSearchText] = useState("")
+  const [searchInput, setSearchInput] = useState("")
+  const [searchQuery, setSearchQuery] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedEntry, setSelectedEntry] = useState<AuditLog | null>(null)
-  const [actionFilter, setActionFilter] = useState("")
   const [statusFilter, setStatusFilter] = useState("")
   const [dateFrom, setDateFrom] = useState("")
   const [dateTo, setDateTo] = useState("")
@@ -427,13 +428,13 @@ const AuditTrailTab: React.FC = () => {
       fetchAuditLogs({
         PageNumber: currentPage,
         PageSize: pageSize,
-        Action: actionFilter || undefined,
+        Action: searchQuery || undefined,
         Status: statusFilter || undefined,
         From: dateFrom || undefined,
         To: dateTo || undefined,
       })
     )
-  }, [dispatch, currentPage, pageSize, actionFilter, statusFilter, dateFrom, dateTo])
+  }, [dispatch, currentPage, pageSize, searchQuery, statusFilter, dateFrom, dateTo])
 
   useEffect(() => {
     fetchData()
@@ -446,21 +447,18 @@ const AuditTrailTab: React.FC = () => {
   const totalPages = Math.max(1, auditLogsPagination.totalPages)
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchText(e.target.value)
-    setCurrentPage(1)
+    setSearchInput(e.target.value)
   }
 
   const handleManualSearch = () => {
-    const trimmed = searchText.trim()
-    if (trimmed.length === 0 || trimmed.length >= 3) {
-      setActionFilter(trimmed)
-      setCurrentPage(1)
-    }
+    const trimmed = searchInput.trim()
+    setSearchQuery(trimmed)
+    setCurrentPage(1)
   }
 
   const handleCancelSearch = () => {
-    setSearchText("")
-    setActionFilter("")
+    setSearchInput("")
+    setSearchQuery("")
     setCurrentPage(1)
   }
 
@@ -471,11 +469,11 @@ const AuditTrailTab: React.FC = () => {
   }
 
   const handleClearFilters = () => {
-    setActionFilter("")
     setStatusFilter("")
     setDateFrom("")
     setDateTo("")
-    setSearchText("")
+    setSearchInput("")
+    setSearchQuery("")
     setCurrentPage(1)
   }
 
@@ -484,7 +482,7 @@ const AuditTrailTab: React.FC = () => {
     setIsFilterOpen(false)
   }
 
-  const activeFiltersCount = [statusFilter, dateFrom, dateTo, actionFilter].filter(Boolean).length
+  const activeFiltersCount = [statusFilter, dateFrom, dateTo, searchQuery].filter(Boolean).length
 
   const paginate = (pageNumber: number) => {
     if (pageNumber < 1) pageNumber = 1
@@ -529,150 +527,159 @@ const AuditTrailTab: React.FC = () => {
     <motion.div className="relative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.35 }}>
       {/* Header Section */}
       <motion.div
-        className="items-center justify-between py-2 md:flex"
+        className="space-y-4 border-b py-2 md:py-4"
         initial={{ y: -10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.3 }}
       >
-        <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Audit Trails</p>
-          <p className="text-sm text-gray-600">Complete record of all system activities and user actions</p>
+        <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+          <div>
+            <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Audit Trails</p>
+            <p className="text-sm text-gray-600">Complete record of all system activities and user actions</p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {/* Filter Button */}
+            <div className="relative" ref={filterRef}>
+              <motion.button
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-all ${
+                  activeFiltersCount > 0
+                    ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
+                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                }`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <MdFilterList className="text-lg" />
+                Filters
+                {activeFiltersCount > 0 && (
+                  <span className="flex size-5 items-center justify-center rounded-full bg-[#004B23] text-xs text-white">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </motion.button>
+
+              {/* Filter Dropdown Panel */}
+              <AnimatePresence>
+                {isFilterOpen && (
+                  <motion.div
+                    className="absolute right-0 top-full z-30 mt-2 w-80 rounded-xl border border-gray-200 bg-white p-4 shadow-xl"
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    <div className="mb-4 flex items-center justify-between">
+                      <h3 className="font-semibold text-gray-900">Filter Audit Logs</h3>
+                      <button
+                        onClick={() => setIsFilterOpen(false)}
+                        className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                      >
+                        <MdClose className="text-lg" />
+                      </button>
+                    </div>
+
+                    <div className="space-y-4">
+                      {/* Status Filter */}
+                      <div>
+                        <label className="mb-1.5 block text-xs font-medium text-gray-600">Status</label>
+                        <select
+                          value={statusFilter}
+                          onChange={(e) => setStatusFilter(e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                        >
+                          <option value="">All Statuses</option>
+                          {statusOptions.map((status) => (
+                            <option key={status} value={status}>
+                              {status}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Date Range */}
+                      <div>
+                        <label className="mb-1.5 flex items-center gap-1 text-xs font-medium text-gray-600">
+                          <MdCalendarToday className="text-sm" />
+                          Date Range
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="mb-1 block text-xs text-gray-500">From</label>
+                            <input
+                              type="datetime-local"
+                              value={dateFrom}
+                              onChange={(e) => setDateFrom(e.target.value)}
+                              className="w-full rounded-lg border border-gray-300 px-2 py-1.5 text-xs focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-1 block text-xs text-gray-500">To</label>
+                            <input
+                              type="datetime-local"
+                              value={dateTo}
+                              onChange={(e) => setDateTo(e.target.value)}
+                              className="w-full rounded-lg border border-gray-300 px-2 py-1.5 text-xs focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Filter Actions */}
+                    <div className="mt-4 flex gap-2 border-t pt-4">
+                      <button
+                        onClick={handleClearFilters}
+                        className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100"
+                      >
+                        Clear All
+                      </button>
+                      <button
+                        onClick={handleApplyFilters}
+                        className="flex-1 rounded-lg bg-[#004B23] px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-[#003318]"
+                      >
+                        Apply Filters
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Refresh Button */}
+            <motion.button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <motion.span
+                animate={{ rotate: isRefreshing ? 360 : 0 }}
+                transition={{ duration: 0.5, repeat: isRefreshing ? Infinity : 0, ease: "linear" }}
+              >
+                <MdRefresh className="text-lg" />
+              </motion.span>
+              Refresh
+            </motion.button>
+          </div>
         </div>
-        <div className="mt-3 flex items-center gap-3 md:mt-0">
+
+        <div className="w-full">
           <SearchModule
-            value={searchText}
+            prominent
+            prominentTitle="Search Audit Trails"
+            prominentDescription="Find activities quickly by action, description, actor, entity, or IP address."
+            value={searchInput}
             onChange={handleSearch}
             onCancel={handleCancelSearch}
             onSearch={handleManualSearch}
             placeholder="Search audit trails..."
-            className="w-[280px]"
+            height="h-14"
+            className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
             bgClassName="bg-white"
           />
-
-          {/* Filter Button */}
-          <div className="relative" ref={filterRef}>
-            <motion.button
-              onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-all ${
-                activeFiltersCount > 0
-                  ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
-                  : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-              }`}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <MdFilterList className="text-lg" />
-              Filters
-              {activeFiltersCount > 0 && (
-                <span className="flex size-5 items-center justify-center rounded-full bg-[#004B23] text-xs text-white">
-                  {activeFiltersCount}
-                </span>
-              )}
-            </motion.button>
-
-            {/* Filter Dropdown Panel */}
-            <AnimatePresence>
-              {isFilterOpen && (
-                <motion.div
-                  className="absolute right-0 top-full z-30 mt-2 w-80 rounded-xl border border-gray-200 bg-white p-4 shadow-xl"
-                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  <div className="mb-4 flex items-center justify-between">
-                    <h3 className="font-semibold text-gray-900">Filter Audit Logs</h3>
-                    <button
-                      onClick={() => setIsFilterOpen(false)}
-                      className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                    >
-                      <MdClose className="text-lg" />
-                    </button>
-                  </div>
-
-                  <div className="space-y-4">
-                    {/* Status Filter */}
-                    <div>
-                      <label className="mb-1.5 block text-xs font-medium text-gray-600">Status</label>
-                      <select
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
-                      >
-                        <option value="">All Statuses</option>
-                        {statusOptions.map((status) => (
-                          <option key={status} value={status}>
-                            {status}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Date Range */}
-                    <div>
-                      <label className="mb-1.5 flex items-center gap-1 text-xs font-medium text-gray-600">
-                        <MdCalendarToday className="text-sm" />
-                        Date Range
-                      </label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="mb-1 block text-xs text-gray-500">From</label>
-                          <input
-                            type="datetime-local"
-                            value={dateFrom}
-                            onChange={(e) => setDateFrom(e.target.value)}
-                            className="w-full rounded-lg border border-gray-300 px-2 py-1.5 text-xs focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
-                          />
-                        </div>
-                        <div>
-                          <label className="mb-1 block text-xs text-gray-500">To</label>
-                          <input
-                            type="datetime-local"
-                            value={dateTo}
-                            onChange={(e) => setDateTo(e.target.value)}
-                            className="w-full rounded-lg border border-gray-300 px-2 py-1.5 text-xs focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Filter Actions */}
-                  <div className="mt-4 flex gap-2 border-t pt-4">
-                    <button
-                      onClick={handleClearFilters}
-                      className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100"
-                    >
-                      Clear All
-                    </button>
-                    <button
-                      onClick={handleApplyFilters}
-                      className="flex-1 rounded-lg bg-[#004B23] px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-[#003318]"
-                    >
-                      Apply Filters
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Refresh Button */}
-          <motion.button
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <motion.span
-              animate={{ rotate: isRefreshing ? 360 : 0 }}
-              transition={{ duration: 0.5, repeat: isRefreshing ? Infinity : 0, ease: "linear" }}
-            >
-              <MdRefresh className="text-lg" />
-            </motion.span>
-            Refresh
-          </motion.button>
         </div>
       </motion.div>
 
@@ -725,6 +732,19 @@ const AuditTrailTab: React.FC = () => {
                 </button>
               </motion.span>
             )}
+            {searchQuery && (
+              <motion.span
+                className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-800"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0 }}
+              >
+                Search: {searchQuery}
+                <button onClick={handleCancelSearch} className="ml-1 hover:text-emerald-700">
+                  <MdClose className="text-sm" />
+                </button>
+              </motion.span>
+            )}
             <button
               onClick={handleClearFilters}
               className="text-xs font-medium text-red-600 hover:text-red-700 hover:underline"
@@ -744,11 +764,7 @@ const AuditTrailTab: React.FC = () => {
       >
         {entries.length === 0 ? (
           <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-gray-300 bg-gray-50 py-16">
-            <div className="rounded-full bg-gray-200 p-4">
-              <MdFilterList className="text-3xl text-gray-400" />
-            </div>
-            <p className="text-sm font-medium text-gray-600">No audit logs found</p>
-            <p className="text-xs text-gray-400">Try adjusting your filters or search criteria</p>
+            <EmptySearchState title="No audit logs found" description="Try adjusting your filters or search criteria" />
             {activeFiltersCount > 0 && (
               <button onClick={handleClearFilters} className="mt-2 text-sm font-medium text-[#004B23] hover:underline">
                 Clear all filters

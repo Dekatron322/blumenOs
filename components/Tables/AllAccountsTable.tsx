@@ -426,7 +426,7 @@
 //         animate={{ y: 0, opacity: 1 }}
 //         transition={{ duration: 0.3 }}
 //       >
-//         <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">All Customers</p>
+//         <p className="text-lg font-medium max-sm:pb-3 md:text-xl">All Customers</p>
 //         <div className="flex gap-4">
 //           <SearchModule
 //             value={searchText}
@@ -464,14 +464,8 @@
 //           >
 //             <EmptyState />
 //           </motion.div>
-//           <motion.p
-//             className="text-base font-bold text-[#202B3C]"
-//             initial={{ y: 10, opacity: 0 }}
-//             animate={{ y: 0, opacity: 1 }}
-//             transition={{ duration: 0.4, delay: 0.2 }}
-//           >
-//             {searchText ? "No matching customers found" : "No customers available"}
-//           </motion.p>
+//           <EmptySearchState title={//             {searchText ? "No matching customers found" : "No customers available"}
+//} />
 //         </motion.div>
 //       ) : (
 //         <>

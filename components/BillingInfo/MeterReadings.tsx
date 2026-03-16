@@ -19,9 +19,10 @@ import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { clearFeeders, fetchFeeders } from "lib/redux/feedersSlice"
 import { clearDistributionSubstations, fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
 import { clearCustomers, fetchCustomers } from "lib/redux/customerSlice"
-import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
+import { ArrowLeft, ChevronDown, ChevronUp, Filter, Loader2, SortAsc, SortDesc, X } from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import Image from "next/image"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface SortOption {
   label: string
@@ -34,145 +35,6 @@ interface MeterReadingsProps {
   onGenerateBills?: () => void
   onViewDetails?: (reading: MeterReading) => void
 }
-
-// Responsive Skeleton Components
-const MeterReadingCardSkeleton = () => (
-  <motion.div
-    className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4"
-    initial={{ opacity: 0.6 }}
-    animate={{
-      opacity: [0.6, 1, 0.6],
-      transition: {
-        duration: 1.5,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
-    }}
-  >
-    <div className="flex w-full flex-col items-start justify-between gap-3 sm:flex-row sm:items-center sm:gap-0">
-      <div className="flex-1">
-        <div className="mb-2 flex flex-wrap items-center gap-2">
-          <div className="h-5 w-32 rounded bg-gray-200 sm:w-40"></div>
-          <div className="h-6 w-20 rounded-full bg-gray-200"></div>
-        </div>
-        <div className="space-y-1">
-          <div className="size-40 rounded bg-gray-200 sm:w-48"></div>
-          <div className="flex items-center gap-2">
-            <div className="size-4 rounded-full bg-gray-200"></div>
-            <div className="h-3 w-56 rounded bg-gray-200 sm:w-64"></div>
-          </div>
-        </div>
-      </div>
-      <div className="flex w-full items-center justify-between sm:w-auto sm:flex-col sm:items-end sm:justify-center sm:gap-1">
-        <div className="space-y-1 text-right">
-          <div className="h-3 w-24 rounded bg-gray-200 sm:w-28"></div>
-          <div className="h-3 w-28 rounded bg-gray-200 sm:w-32"></div>
-          <div className="h-4 w-32 rounded bg-gray-200 sm:w-36"></div>
-        </div>
-        <div className="h-8 w-24 rounded-md border border-gray-200 bg-white"></div>
-      </div>
-    </div>
-
-    <div className="mt-3 flex flex-wrap justify-between gap-3 border-t pt-3 sm:gap-4">
-      {[...Array(4)].map((_, i) => (
-        <div key={i} className="flex items-center gap-2">
-          <div className="size-4 rounded-full bg-gray-200 sm:size-5"></div>
-          <div className="space-y-1">
-            <div className="h-3 w-16 rounded bg-gray-200 sm:w-20"></div>
-            <div className="h-4 w-12 rounded bg-gray-200 sm:w-16"></div>
-          </div>
-        </div>
-      ))}
-    </div>
-  </motion.div>
-)
-
-const MobileMeterReadingCardSkeleton = () => (
-  <motion.div
-    className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-3"
-    initial={{ opacity: 0.6 }}
-    animate={{
-      opacity: [0.6, 1, 0.6],
-      transition: {
-        duration: 1.5,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
-    }}
-  >
-    <div className="flex items-start justify-between">
-      <div className="flex-1">
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-24 rounded bg-gray-200"></div>
-          <div className="h-5 w-16 rounded-full bg-gray-200"></div>
-        </div>
-        <div className="mt-2 space-y-1">
-          <div className="size-32 rounded bg-gray-200"></div>
-          <div className="flex items-center gap-1">
-            <div className="size-3 rounded-full bg-gray-200"></div>
-            <div className="h-3 w-40 rounded bg-gray-200"></div>
-          </div>
-        </div>
-      </div>
-      <div className="ml-2 flex flex-col items-end gap-1">
-        <div className="space-y-1 text-right">
-          <div className="size-20 rounded bg-gray-200"></div>
-          <div className="w-22 h-2 rounded bg-gray-200"></div>
-          <div className="h-3 w-24 rounded bg-gray-200"></div>
-        </div>
-        <div className="h-7 w-20 rounded-md border border-gray-200 bg-white"></div>
-      </div>
-    </div>
-
-    <div className="mt-3 grid grid-cols-2 gap-2 border-t pt-3">
-      {[...Array(4)].map((_, i) => (
-        <div key={i} className="flex items-center gap-1">
-          <div className="size-3 rounded-full bg-gray-200"></div>
-          <div className="space-y-1">
-            <div className="h-2 w-12 rounded bg-gray-200"></div>
-            <div className="h-3 w-8 rounded bg-gray-200"></div>
-          </div>
-        </div>
-      ))}
-    </div>
-  </motion.div>
-)
-
-const HeaderSkeleton = () => (
-  <motion.div
-    className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-    initial={{ opacity: 0.6 }}
-    animate={{
-      opacity: [0.6, 1, 0.6],
-      transition: {
-        duration: 1.5,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
-    }}
-  >
-    <div className="h-7 w-40 rounded bg-gray-200 sm:w-48"></div>
-    <div className="flex gap-2">
-      <div className="h-9 w-20 rounded bg-gray-200 sm:w-24"></div>
-      <div className="h-9 w-28 rounded bg-gray-200 sm:w-32"></div>
-    </div>
-  </motion.div>
-)
-
-const SearchSkeleton = () => (
-  <motion.div
-    className="mb-6 h-12 w-full rounded-lg bg-gray-200 sm:w-96"
-    initial={{ opacity: 0.6 }}
-    animate={{
-      opacity: [0.6, 1, 0.6],
-      transition: {
-        duration: 1.5,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
-    }}
-  ></motion.div>
-)
 
 // Mobile Filter Sidebar Component
 const MobileFilterSidebar = ({
@@ -227,11 +89,11 @@ const MobileFilterSidebar = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col bg-white shadow-xl"
+            className="flex size-full max-w-sm flex-col bg-white shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex-shrink-0 border-b bg-white p-4">
+            <div className="shrink-0 border-b bg-white p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <button
@@ -366,7 +228,7 @@ const MobileFilterSidebar = ({
             </div>
 
             {/* Bottom Action Buttons */}
-            <div className="flex-shrink-0 border-t bg-white p-4 2xl:hidden">
+            <div className="shrink-0 border-t bg-white p-4 2xl:hidden">
               <div className="flex gap-3">
                 <button
                   onClick={() => {
@@ -408,12 +270,11 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
   const { feeders } = useAppSelector((state) => state.feeders)
   const { distributionSubstations } = useAppSelector((state) => state.distributionSubstations)
 
-  const [searchText, setSearchText] = useState("")
   const [searchInput, setSearchInput] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [isMobileView, setIsMobileView] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [isSortExpanded, setIsSortExpanded] = useState(true)
 
   // Local state for filters to avoid too many Redux dispatches
@@ -436,6 +297,7 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
     distributionSubstationId: undefined as number | undefined,
     sortBy: undefined as string | undefined,
     sortOrder: undefined as "asc" | "desc" | undefined,
+    search: undefined as string | undefined,
   })
 
   // Check for mobile view
@@ -492,7 +354,7 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
     const fetchParams: any = {
       pageNumber: currentPage,
       pageSize: pagination.pageSize,
-      ...(searchText && { customerId: Number(searchText) }),
+      ...(appliedFilters.search && { customerId: Number(appliedFilters.search) }),
       ...(appliedFilters.period && { period: appliedFilters.period }),
       ...(appliedFilters.customerId !== undefined && { customerId: appliedFilters.customerId }),
       ...(appliedFilters.areaOfficeId !== undefined && { areaOfficeId: appliedFilters.areaOfficeId }),
@@ -505,11 +367,19 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
     }
 
     void dispatch(fetchMeterReadings(fetchParams))
-  }, [dispatch, currentPage, pagination.pageSize, searchText, appliedFilters])
+  }, [dispatch, currentPage, pagination.pageSize, appliedFilters])
+
+  // Handle search
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value)
+  }
 
   const handleCancelSearch = () => {
-    setSearchText("")
     setSearchInput("")
+    setAppliedFilters({
+      ...appliedFilters,
+      search: undefined,
+    })
     setCurrentPage(1)
     dispatch(setMeterReadingPagination({ page: 1, pageSize: pagination.pageSize }))
   }
@@ -519,7 +389,10 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
     const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
 
     if (shouldUpdate) {
-      setSearchText(trimmed)
+      setAppliedFilters({
+        ...appliedFilters,
+        search: trimmed,
+      })
       setCurrentPage(1)
       dispatch(setMeterReadingPagination({ page: 1, pageSize: pagination.pageSize }))
     }
@@ -646,6 +519,7 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
       distributionSubstationId: localFilters.distributionSubstationId,
       sortBy: localFilters.sortBy || undefined,
       sortOrder: localFilters.sortOrder || undefined,
+      search: searchInput.trim() || undefined,
     })
     setCurrentPage(1)
     dispatch(setMeterReadingPagination({ page: 1, pageSize: pagination.pageSize }))
@@ -670,8 +544,8 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
       distributionSubstationId: undefined,
       sortBy: undefined,
       sortOrder: undefined,
+      search: undefined,
     })
-    setSearchText("")
     setSearchInput("")
     setCurrentPage(1)
     dispatch(setMeterReadingPagination({ page: 1, pageSize: pagination.pageSize }))
@@ -781,169 +655,6 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
   }
 
-  const MeterReadingCard = ({ reading }: { reading: MeterReading }) => (
-    <motion.div
-      className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4 hover:shadow-sm sm:p-4"
-      whileHover={{ y: -2, boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)" }}
-    >
-      <div className="flex w-full flex-col items-start justify-between gap-3 sm:flex-row sm:items-center sm:gap-0">
-        <div className="flex-1">
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            <h4 className="text-sm font-semibold text-gray-900 sm:text-base">{reading.customerName}</h4>
-            <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-800">
-              Period {reading.period}
-            </span>
-          </div>
-
-          <p className="text-sm font-medium text-gray-900 sm:text-base">{reading.customerAccountNumber}</p>
-          <div className="mt-1 flex items-center gap-2">
-            <DateIcon />
-            <p className="text-xs text-gray-600 sm:text-sm">
-              Captured: {formatDate(reading.capturedAtUtc)} by {reading.capturedByName}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex w-full items-center justify-between sm:w-auto sm:flex-col sm:items-end sm:justify-center sm:gap-1">
-          <div className="text-right text-xs sm:text-sm">
-            <p className="text-gray-500">Prev: {reading.previousReadingKwh.toLocaleString()} kWh</p>
-            <p className="text-gray-500">Present: {reading.presentReadingKwh.toLocaleString()} kWh</p>
-            <p className="font-semibold text-gray-900">Valid: {reading.validConsumptionKwh.toLocaleString()} kWh</p>
-          </div>
-          <ButtonModule
-            variant="outline"
-            size="sm"
-            onClick={() => handleViewDetails(reading)}
-            icon={<VscEye className="size-3 sm:size-4" />}
-            iconPosition="start"
-            className="mt-1 bg-white text-xs sm:text-sm"
-          >
-            <span className="hidden sm:inline">View Details</span>
-            <span className="sm:hidden">View</span>
-          </ButtonModule>
-        </div>
-      </div>
-
-      {/* Status Indicators */}
-      <div className="mt-3 flex flex-wrap justify-between gap-3 border-t pt-3 text-xs sm:gap-4 sm:text-sm">
-        <div className="flex items-center gap-2">
-          <BillsIdIcon />
-          <div>
-            <p className="text-gray-500">Reading ID</p>
-            <p className="font-medium text-gray-900">{reading.id}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <CategoryIcon />
-          <div>
-            <p className="text-gray-500">Anomaly Score</p>
-            <p className="font-medium text-gray-900">{(reading.anomalyScore ?? 0).toFixed(2)}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <CycleIcon />
-          <div>
-            <p className="text-gray-500">Flagged</p>
-            <p className={`font-medium ${reading.isFlaggedForReview ? "text-red-600" : "text-green-600"}`}>
-              {reading.isFlaggedForReview ? "Yes" : "No"}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <RevenueGeneratedIcon />
-          <div>
-            <p className="text-gray-500">Estimated</p>
-            <p className="font-medium text-gray-900">
-              {reading.estimatedConsumptionKwh != null
-                ? `${reading.estimatedConsumptionKwh.toLocaleString()} kWh`
-                : "N/A"}
-            </p>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  )
-
-  const MobileMeterReadingCard = ({ reading }: { reading: MeterReading }) => (
-    <motion.div
-      className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-3 hover:shadow-sm"
-      whileHover={{ y: -1, boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)" }}
-    >
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <h4 className="text-sm font-semibold text-gray-900">{reading.customerName}</h4>
-            <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-800">
-              P {reading.period}
-            </span>
-          </div>
-          <div className="mt-1 space-y-1">
-            <p className="text-xs font-medium text-gray-900">{reading.customerAccountNumber}</p>
-            <div className="flex items-center gap-1">
-              <DateIcon />
-              <p className="text-xs text-gray-600">
-                {formatDate(reading.capturedAtUtc)} by {reading.capturedByName}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="ml-2 flex flex-col items-end gap-1">
-          <div className="text-right text-xs">
-            <p className="text-gray-500">P: {reading.previousReadingKwh.toLocaleString()}</p>
-            <p className="text-gray-500">C: {reading.presentReadingKwh.toLocaleString()}</p>
-            <p className="font-semibold text-gray-900">V: {reading.validConsumptionKwh.toLocaleString()}</p>
-          </div>
-          <ButtonModule
-            variant="outline"
-            size="sm"
-            onClick={() => handleViewDetails(reading)}
-            icon={<VscEye />}
-            iconPosition="start"
-            className="bg-white text-xs"
-          >
-            View
-          </ButtonModule>
-        </div>
-      </div>
-
-      {/* Status Indicators */}
-      <div className="mt-3 grid grid-cols-2 gap-2 border-t pt-3 text-xs">
-        <div className="flex items-center gap-1">
-          <BillsIdIcon />
-          <div>
-            <p className="text-gray-500">ID</p>
-            <p className="font-medium text-gray-900">{reading.id}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-1">
-          <CategoryIcon />
-          <div>
-            <p className="text-gray-500">Score</p>
-            <p className="font-medium text-gray-900">{(reading.anomalyScore ?? 0).toFixed(2)}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-1">
-          <CycleIcon />
-          <div>
-            <p className="text-gray-500">Flagged</p>
-            <p className={`font-medium ${reading.isFlaggedForReview ? "text-red-600" : "text-green-600"}`}>
-              {reading.isFlaggedForReview ? "Yes" : "No"}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-1">
-          <RevenueGeneratedIcon />
-          <div>
-            <p className="text-gray-500">Est.</p>
-            <p className="font-medium text-gray-900">
-              {reading.estimatedConsumptionKwh != null ? `${reading.estimatedConsumptionKwh.toLocaleString()}k` : "N/A"}
-            </p>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  )
-
   return (
     <>
       <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row">
@@ -1005,34 +716,34 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
             </div>
           </div>
 
-          {/* Search */}
-          <div className="mb-4 sm:mb-6">
+          {/* Search Priority Section */}
+          <div className="mb-4 rounded-xl border border-gray-200 bg-gradient-to-r from-green-50/60 to-white p-4 shadow-sm">
+            <div className="mb-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#004B23]">Primary action</p>
+              <h2 className="text-base font-semibold text-gray-900 sm:text-lg">Search Meter Readings</h2>
+              <p className="text-xs text-gray-600 sm:text-sm">
+                Find records quickly by customer ID, period, area office, or feeder.
+              </p>
+            </div>
+
             <SearchModule
               value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               onCancel={handleCancelSearch}
               onSearch={handleManualSearch}
-              placeholder="Search meter readings..."
-              className="w-full sm:w-96"
+              placeholder="Type customer ID, period, area office, or feeder..."
+              height="h-14"
+              className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
             />
           </div>
 
           {/* Loading State */}
           {meterReadingsLoading && (
-            <div className="space-y-3 sm:space-y-4">
-              {isMobileView ? (
-                <>
-                  <MobileMeterReadingCardSkeleton />
-                  <MobileMeterReadingCardSkeleton />
-                  <MobileMeterReadingCardSkeleton />
-                </>
-              ) : (
-                <>
-                  <MeterReadingCardSkeleton />
-                  <MeterReadingCardSkeleton />
-                  <MeterReadingCardSkeleton />
-                </>
-              )}
+            <div className="flex items-center justify-center py-16">
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="size-8 animate-spin text-blue-600" />
+                <p className="text-sm text-gray-500">Loading meter readings...</p>
+              </div>
             </div>
           )}
 
@@ -1051,26 +762,144 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
                   <DateIcon />
                 </div>
                 <h3 className="mt-3 text-base font-medium text-gray-900 sm:mt-4 sm:text-lg">No Meter Readings Found</h3>
-                <p className="mt-1 text-xs text-gray-500 sm:mt-2 sm:text-sm">
-                  {getActiveFilterCount() > 0 || searchText.trim()
-                    ? "Try adjusting your search criteria or filters"
-                    : "No meter readings available"}
-                </p>
+                <EmptySearchState
+                  title={
+                    getActiveFilterCount() > 0 || searchInput.trim()
+                      ? "Try adjusting your search criteria or filters"
+                      : "No meter readings available"
+                  }
+                />
               </div>
             </div>
           )}
 
-          {/* Meter Readings List */}
+          {/* Meter Readings Table */}
           {!meterReadingsLoading && !meterReadingsError && displayReadings.length > 0 && (
             <>
-              <div className="space-y-3 sm:space-y-4">
-                {displayReadings.map((reading) =>
-                  isMobileView ? (
-                    <MobileMeterReadingCard key={reading.id} reading={reading} />
-                  ) : (
-                    <MeterReadingCard key={reading.id} reading={reading} />
-                  )
-                )}
+              <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Customer
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Account
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Period
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Readings
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Consumption
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Captured
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Status
+                      </th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 bg-white">
+                    <AnimatePresence>
+                      {displayReadings.map((reading, index) => (
+                        <motion.tr
+                          key={reading.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: index * 0.05 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="transition-colors hover:bg-gray-50"
+                        >
+                          <td className="px-4 py-3">
+                            <div className="min-w-[150px] max-w-[200px]">
+                              <p className="truncate text-sm font-medium text-gray-900">{reading.customerName}</p>
+                            </div>
+                          </td>
+
+                          <td className="px-4 py-3">
+                            <div className="min-w-[120px] max-w-[150px]">
+                              <p className="truncate text-sm text-gray-700">{reading.customerAccountNumber}</p>
+                            </div>
+                          </td>
+
+                          <td className="whitespace-nowrap px-4 py-3">
+                            <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">
+                              P {reading.period}
+                            </span>
+                          </td>
+
+                          <td className="whitespace-nowrap px-4 py-3">
+                            <div className="space-y-1 text-xs text-gray-600">
+                              <p>Prev: {reading.previousReadingKwh.toLocaleString()}</p>
+                              <p>Present: {reading.presentReadingKwh.toLocaleString()}</p>
+                            </div>
+                          </td>
+
+                          <td className="whitespace-nowrap px-4 py-3">
+                            <div className="space-y-1">
+                              <p className="text-sm font-semibold text-gray-900">
+                                {reading.validConsumptionKwh.toLocaleString()} kWh
+                              </p>
+                              {reading.estimatedConsumptionKwh != null && (
+                                <p className="text-xs text-gray-500">
+                                  Est: {reading.estimatedConsumptionKwh.toLocaleString()} kWh
+                                </p>
+                              )}
+                            </div>
+                          </td>
+
+                          <td className="whitespace-nowrap px-4 py-3">
+                            <div className="space-y-1 text-xs text-gray-500">
+                              <p>{formatDate(reading.capturedAtUtc)}</p>
+                              <p>by {reading.capturedByName}</p>
+                            </div>
+                          </td>
+
+                          <td className="whitespace-nowrap px-4 py-3">
+                            <div className="space-y-1">
+                              <span
+                                className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${
+                                  reading.isFlaggedForReview
+                                    ? "border border-red-200 bg-red-50 text-red-700"
+                                    : "border border-emerald-200 bg-emerald-50 text-emerald-700"
+                                }`}
+                              >
+                                <span
+                                  className={`size-1.5 rounded-full ${
+                                    reading.isFlaggedForReview ? "bg-red-600" : "bg-emerald-600"
+                                  }`}
+                                />
+                                {reading.isFlaggedForReview ? "Flagged" : "Normal"}
+                              </span>
+                              <p className="text-xs text-gray-500">Score: {(reading.anomalyScore ?? 0).toFixed(2)}</p>
+                            </div>
+                          </td>
+
+                          <td className="px-4 py-3">
+                            <div className="flex min-w-[100px] justify-end">
+                              <ButtonModule
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleViewDetails(reading)}
+                                className="border-gray-300 bg-white hover:bg-gray-50"
+                              >
+                                <VscEye className="size-3.5" />
+                                View
+                              </ButtonModule>
+                            </div>
+                          </td>
+                        </motion.tr>
+                      ))}
+                    </AnimatePresence>
+                  </tbody>
+                </table>
               </div>
 
               {/* Pagination */}
@@ -1157,7 +986,7 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
 
                 <p className="text-center text-xs text-gray-600 sm:text-right sm:text-sm">
                   Page {currentPage} of {totalPages || 1} ({totalRecords.toLocaleString()} total meter readings)
-                  {(getActiveFilterCount() > 0 || searchText.trim()) && " - filtered"}
+                  {(getActiveFilterCount() > 0 || searchInput.trim()) && " - filtered"}
                 </p>
               </div>
             </>

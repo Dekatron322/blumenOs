@@ -186,14 +186,14 @@ export const fetchBillingPeriods = createAsyncThunk(
   "billingPeriods/fetchBillingPeriods",
   async (params: BillingPeriodsRequestParams, { rejectWithValue }) => {
     try {
-      const { year, month, status } = params
+      const { pageNumber, pageSize, year, month, status } = params
 
       console.log("Fetching billing periods with params:", params)
 
       const response = await api.get<BillingPeriodsResponse>(buildApiUrl(API_ENDPOINTS.BILLING_PERIODS.GET), {
         params: {
-          PageNumber: 1,
-          PageSize: 100,
+          PageNumber: pageNumber,
+          PageSize: pageSize,
           ...(year !== undefined && { Year: year }),
           ...(month !== undefined && { Month: month }),
           ...(status !== undefined && { Status: status }),
@@ -277,13 +277,13 @@ export const createPastBillingPeriod = createAsyncThunk(
 // Async thunk for fetching billing schedules
 export const fetchBillingSchedules = createAsyncThunk(
   "billingPeriods/fetchBillingSchedules",
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, signal }) => {
     try {
       console.log("Fetching billing schedules")
 
-      const response = await api.get<BillingSchedulesResponse>(
-        buildApiUrl(API_ENDPOINTS.BILLING_PERIODS.BILLING_SCHEDULE)
-      )
+      const response = await api.get<BillingSchedulesResponse>(buildApiUrl(API_ENDPOINTS.BILLING_PERIODS.BILLING_SCHEDULE), {
+        signal,
+      })
 
       console.log("Billing schedules API response:", response.data)
 
@@ -293,6 +293,9 @@ export const fetchBillingSchedules = createAsyncThunk(
 
       return response.data
     } catch (error: any) {
+      if (error?.code === "ERR_CANCELED" || error?.name === "CanceledError" || error?.name === "AbortError") {
+        throw error
+      }
       console.error("Billing schedules API error:", error)
       if (error.response?.data) {
         return rejectWithValue(error.response.data.message || "Failed to fetch billing schedules")
@@ -474,6 +477,9 @@ const billingPeriodsSlice = createSlice({
       })
       .addCase(fetchBillingSchedules.rejected, (state, action) => {
         state.billingSchedulesLoading = false
+        if (action.meta.aborted) {
+          return
+        }
         state.billingSchedulesError = (action.payload as string) || "Failed to fetch billing schedules"
         state.billingSchedulesSuccess = false
         state.billingSchedules = []

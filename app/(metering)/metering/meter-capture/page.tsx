@@ -9,6 +9,7 @@ import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { SearchModule } from "components/ui/Search/search-module"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
@@ -144,7 +145,7 @@ const FilterModal = ({
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
       >
         {/* Modal Header */}
-        <div className="border-b border-gray-100 bg-gradient-to-r from-green-600 to-green-800 px-6 py-6">
+        <div className="border-b border-gray-100 bg-gradient-to-r from-green-600 to-green-800 p-6">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-3">
@@ -449,7 +450,7 @@ const LoadingSkeleton = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto w-full px-4 py-8 2xl:container max-sm:px-2 xl:px-16">
+          <div className="mx-auto w-full px-4 py-8  max-sm:px-2 xl:px-6">
             <div className="mb-6 flex w-full flex-col justify-between gap-4 lg:flex-row lg:items-center">
               <div className="flex-1">
                 <h4 className="text-2xl font-semibold">Bulk Upload Management</h4>
@@ -852,7 +853,7 @@ const MeterCapture: React.FC = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto w-full  px-3 py-8 2xl:container max-sm:px-2 md:px-4 lg:px-6 2xl:px-16">
+          <div className="mx-auto w-full  px-3 py-8  max-sm:px-2 md:px-4 lg:px-6 ">
             <div className="mb-6 flex w-full flex-col justify-between gap-4 lg:flex-row lg:items-center">
               <div className="flex-1">
                 <h4 className="text-2xl font-semibold">Meter Capture Management</h4>
@@ -1238,11 +1239,10 @@ const MeterCapture: React.FC = () => {
                       {meterCaptures.length === 0 ? (
                         <tr>
                           <td colSpan={13} className="border-b p-8 text-center">
-                            <div className="text-gray-500">
-                              <FileIcon className="mx-auto mb-2 size-12 text-gray-300" />
-                              <p>No meter captures found</p>
-                              <p className="text-sm">Try adjusting your filters</p>
-                            </div>
+                            <EmptySearchState
+                              title="No meter captures found"
+                              description="Try adjusting your filters"
+                            />
                           </td>
                         </tr>
                       ) : (

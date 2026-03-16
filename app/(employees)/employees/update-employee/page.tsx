@@ -307,7 +307,7 @@ const UpdateEmployeePage = () => {
         <DashboardNav />
         <div className="flex min-h-[calc(100vh-80px)] items-center justify-center">
           <div className="text-center">
-            <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-[#004B23]"></div>
+            <div className="mx-auto size-12 animate-spin rounded-full border-b-2 border-[#004B23]"></div>
             <p className="mt-4 text-gray-600">Loading employee data...</p>
           </div>
         </div>
@@ -321,7 +321,7 @@ const UpdateEmployeePage = () => {
         <div className="flex w-full flex-col">
           <DashboardNav />
 
-          <div className="mx-auto flex w-full flex-col px-3 py-4 2xl:container sm:px-4 md:px-6 md:py-4 2xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3 py-4  sm:px-4 md:px-6 md:py-4 ">
             {/* Page Header */}
             <div className="mb-6">
               <div className="flex items-center justify-between gap-3">
@@ -634,7 +634,7 @@ const UpdateEmployeePageWrapper = () => (
         <DashboardNav />
         <div className="flex min-h-[calc(100vh-80px)] items-center justify-center">
           <div className="text-center">
-            <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-[#004B23]"></div>
+            <div className="mx-auto size-12 animate-spin rounded-full border-b-2 border-[#004B23]"></div>
             <p className="mt-4 text-gray-600">Loading employee data...</p>
           </div>
         </div>

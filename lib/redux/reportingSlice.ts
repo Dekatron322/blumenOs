@@ -244,7 +244,11 @@ export interface BreakdownResponse {
 // Collection Efficiency interfaces
 export interface CollectionEfficiencyData {
   totalBilled: number
+  totalBilledWithoutDebt: number
+  totalBilledEnergyKwh: number
   totalCollected: number
+  totalPrepaidAmount: number
+  totalPrepaidEnergyKwh: number
   efficiencyPercent: number
   billCount: number
   billsWithPayments: number
@@ -259,6 +263,7 @@ export interface CollectionEfficiencyResponse {
 export interface CollectionEfficiencyRequestParams {
   startDateUtc?: string
   endDateUtc?: string
+  periodKey?: string
   areaOfficeId?: number
   channel?: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Chaque"
   collectorType?: "Customer" | "SalesRep" | "Vendor" | "Staff"
@@ -276,6 +281,14 @@ export interface OutstandingArrearsResponse {
   isSuccess: boolean
   message: string
   data: OutstandingArrearsData
+}
+
+export interface OutstandingArrearsRequestParams {
+  startDateUtc?: string
+  endDateUtc?: string
+  areaOfficeId?: number
+  channel?: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Chaque"
+  collectorType?: "Customer" | "SalesRep" | "Vendor" | "Staff"
 }
 
 // Disputes interfaces
@@ -1119,7 +1132,7 @@ export const fetchCollectionEfficiency = createAsyncThunk(
   "reporting/fetchCollectionEfficiency",
   async (params: CollectionEfficiencyRequestParams = {}, { rejectWithValue }) => {
     try {
-      const { startDateUtc, endDateUtc, areaOfficeId, channel, collectorType } = params
+      const { startDateUtc, endDateUtc, periodKey, areaOfficeId, channel, collectorType } = params
 
       const queryParams: Record<string, any> = {}
 
@@ -1129,6 +1142,10 @@ export const fetchCollectionEfficiency = createAsyncThunk(
 
       if (endDateUtc) {
         queryParams.EndDateUtc = endDateUtc
+      }
+
+      if (periodKey) {
+        queryParams.PeriodKey = periodKey
       }
 
       if (areaOfficeId !== undefined) {
@@ -1172,10 +1189,40 @@ export const fetchCollectionEfficiency = createAsyncThunk(
 
 export const fetchOutstandingArrears = createAsyncThunk(
   "reporting/fetchOutstandingArrears",
-  async (_, { rejectWithValue }) => {
+  async (params: OutstandingArrearsRequestParams = {}, { rejectWithValue }) => {
     try {
+      const { startDateUtc, endDateUtc, areaOfficeId, channel, collectorType } = params
+
+      const queryParams: Record<string, any> = {}
+
+      if (startDateUtc) {
+        queryParams.StartDateUtc = startDateUtc
+      }
+
+      if (endDateUtc) {
+        queryParams.EndDateUtc = endDateUtc
+      }
+
+      if (areaOfficeId !== undefined) {
+        queryParams.AreaOfficeId = areaOfficeId
+      }
+
+      if (channel) {
+        queryParams.Channel = channel
+      }
+
+      if (collectorType) {
+        queryParams.CollectorType = collectorType
+      }
+
       const response = await api.get<OutstandingArrearsResponse>(
-        buildApiUrl(API_ENDPOINTS.REPORTING.OUTSTANDING_ARREARS)
+        buildApiUrl(API_ENDPOINTS.REPORTING.OUTSTANDING_ARREARS),
+        {
+          params: queryParams,
+          paramsSerializer: {
+            indexes: null,
+          },
+        }
       )
 
       if (!response.data.isSuccess) {
@@ -1184,6 +1231,7 @@ export const fetchOutstandingArrears = createAsyncThunk(
 
       return {
         data: response.data.data,
+        params,
       }
     } catch (error: any) {
       if (error.response?.data) {

@@ -9,7 +9,17 @@ import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { fetchVendors, fetchVendorTopUpSummary } from "lib/redux/vendorSlice"
 import { DateFilter, getDateRangeUtc } from "utils/dateRange"
-import { AlertTriangle, Clock, DollarSign, Filter, TrendingUp, X } from "lucide-react"
+import {
+  AlertCircle,
+  AlertTriangle,
+  Clock,
+  DollarSign,
+  Filter,
+  RefreshCw,
+  TrendingDown,
+  TrendingUp,
+  X,
+} from "lucide-react"
 import { MdCalendarToday, MdClose, MdFilterList, MdPerson, MdTrendingUp } from "react-icons/md"
 
 // Filter Modal Component
@@ -110,7 +120,7 @@ const FilterModal = ({
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
       >
         {/* Modal Header */}
-        <div className="border-b border-gray-100 bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-6">
+        <div className="border-b border-gray-100 bg-gradient-to-r from-green-600 to-emerald-600 p-6">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-3">
@@ -580,6 +590,7 @@ const FilterModal = ({
     </motion.div>
   )
 }
+// Dropdown Popover Component (redesigned)
 const DropdownPopover = ({
   options,
   selectedValue,
@@ -593,14 +604,12 @@ const DropdownPopover = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false)
 
-  const selectedOption = options.find((opt) => opt.value === selectedValue)
-
   return (
     <div className="relative">
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 shadow-sm hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
       >
         {children}
         <svg
@@ -617,191 +626,170 @@ const DropdownPopover = ({
         </svg>
       </button>
 
-      {isOpen && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 z-20 mt-1 w-32 rounded-md border border-gray-200 bg-white py-1 text-sm shadow-lg">
-            {options.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => {
-                  onSelect(option.value)
-                  setIsOpen(false)
-                }}
-                className={`block w-full px-3 py-2 text-left ${
-                  option.value === selectedValue ? "bg-blue-50 text-blue-700" : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="absolute right-0 z-20 mt-1 min-w-[120px] overflow-hidden rounded-lg border border-gray-200 bg-white py-1 text-sm shadow-lg"
+            >
+              {options.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    onSelect(option.value)
+                    setIsOpen(false)
+                  }}
+                  className={`block w-full px-3 py-2 text-left text-xs transition-colors ${
+                    option.value === selectedValue
+                      ? "bg-blue-50 font-medium text-blue-700"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
 
-// Enhanced Skeleton Loader Component for Cards
-const SkeletonLoader = () => {
-  return (
-    <div className="flex w-full gap-3 max-lg:grid max-lg:grid-cols-2 max-sm:grid-cols-1">
-      {[...Array(4)].map((_, index) => (
-        <motion.div
-          key={index}
-          className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
-          initial={{ opacity: 0.6 }}
-          animate={{
-            opacity: [0.6, 1, 0.6],
-            transition: {
-              duration: 1.5,
-              repeat: Infinity,
-              ease: "easeInOut",
-            },
-          }}
-        >
-          <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-            <div className="size-6 rounded-full bg-gray-200"></div>
-            <div className="h-4 w-32 rounded bg-gray-200"></div>
-          </div>
-          <div className="flex flex-col gap-3 pt-4">
-            {[...Array(2)].map((_, i) => (
-              <div key={i} className="flex w-full justify-between">
-                <div className="h-4 w-24 rounded bg-gray-200"></div>
-                <div className="h-4 w-16 rounded bg-gray-200"></div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      ))}
-    </div>
-  )
-}
+// Modern Analytics Card Component
+const AnalyticsCard = ({
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  color = "blue",
+  trend,
+  trendValue,
+}: {
+  title: string
+  value: string | number
+  subtitle?: string
+  icon: React.ElementType
+  color?: "blue" | "green" | "purple" | "amber" | "emerald" | "red"
+  trend?: "up" | "down"
+  trendValue?: string
+}) => {
+  const colorClasses = {
+    blue: "bg-blue-50 text-blue-700 border-blue-200",
+    green: "bg-green-50 text-green-700 border-green-200",
+    purple: "bg-purple-50 text-purple-700 border-purple-200",
+    amber: "bg-amber-50 text-amber-700 border-amber-200",
+    emerald: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    red: "bg-red-50 text-red-700 border-red-200",
+  }
 
-// Enhanced Skeleton for Customer Categories
-const CategoriesSkeleton = () => {
+  const iconColors = {
+    blue: "text-blue-600",
+    green: "text-green-600",
+    purple: "text-purple-600",
+    amber: "text-amber-600",
+    emerald: "text-emerald-600",
+    red: "text-red-600",
+  }
+
   return (
-    <div className="w-80 rounded-md border bg-white p-5">
-      <div className="border-b pb-4">
-        <div className="h-6 w-40 rounded bg-gray-200"></div>
+    <motion.div
+      whileHover={{ y: -2 }}
+      className="rounded-xl border border-gray-200 bg-white p-5 transition-all hover:border-gray-300 hover:shadow-sm"
+    >
+      <div className="flex items-start justify-between">
+        <div className={`rounded-lg p-2.5 ${colorClasses[color].split(" ")[0]}`}>
+          <Icon className={`size-5 ${iconColors[color]}`} />
+        </div>
+        {trend && (
+          <span
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${
+              trend === "up" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+            }`}
+          >
+            {trend === "up" ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
+            {trendValue}
+          </span>
+        )}
       </div>
 
-      <div className="mt-4 space-y-3">
-        {[...Array(6)].map((_, index) => (
-          <div key={index} className="rounded-lg border bg-white p-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="h-5 w-12 rounded bg-gray-200"></div>
-                <div className="h-5 w-20 rounded bg-gray-200"></div>
-              </div>
-              <div className="h-4 w-16 rounded bg-gray-200"></div>
-            </div>
-            <div className="mt-3 space-y-1">
-              <div className="flex justify-between">
-                <div className="h-4 w-20 rounded bg-gray-200"></div>
-                <div className="h-4 w-16 rounded bg-gray-200"></div>
-              </div>
-            </div>
-          </div>
+      <div className="mt-3">
+        <p className="text-sm text-gray-600">{title}</p>
+        <p className="mt-1 text-2xl font-semibold text-gray-900">{value.toLocaleString()}</p>
+        {subtitle && <p className="mt-1 text-xs text-gray-500">{subtitle}</p>}
+      </div>
+    </motion.div>
+  )
+}
+
+// Modern Skeleton Loader for Analytics Cards
+const AnalyticsCardSkeleton = () => (
+  <motion.div
+    className="rounded-xl border border-gray-200 bg-white p-5"
+    initial={{ opacity: 0.6 }}
+    animate={{
+      opacity: [0.6, 1, 0.6],
+      transition: {
+        duration: 1.5,
+        repeat: Infinity,
+        ease: "easeInOut",
+      },
+    }}
+  >
+    <div className="flex items-start justify-between">
+      <div className="size-10 rounded-lg bg-gray-200"></div>
+      <div className="h-6 w-16 rounded-full bg-gray-200"></div>
+    </div>
+    <div className="mt-3 space-y-2">
+      <div className="h-4 w-24 rounded bg-gray-200"></div>
+      <div className="h-8 w-32 rounded bg-gray-200"></div>
+      <div className="h-3 w-20 rounded bg-gray-200"></div>
+    </div>
+  </motion.div>
+)
+
+// Loading State Component
+const LoadingState = () => {
+  return (
+    <div className="w-full">
+      {/* Analytics Cards Skeleton */}
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
+          <AnalyticsCardSkeleton key={i} />
         ))}
       </div>
 
-      {/* Summary Skeleton */}
-      <div className="mt-6 rounded-lg bg-gray-50 p-3">
-        <div className="mb-2 h-5 w-20 rounded bg-gray-200"></div>
-        <div className="space-y-1">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="flex justify-between">
-              <div className="h-4 w-24 rounded bg-gray-200"></div>
-              <div className="h-4 w-12 rounded bg-gray-200"></div>
+      {/* Table Skeleton */}
+      <div className="mt-6 overflow-hidden rounded-xl border border-gray-200 bg-white">
+        <div className="border-b border-gray-200 bg-gray-50 p-4">
+          <div className="h-6 w-48 rounded bg-gray-200"></div>
+        </div>
+        <div className="p-4">
+          {[...Array(5)].map((_, i) => (
+            <div
+              key={i}
+              className="mb-4 flex items-center justify-between border-b border-gray-100 pb-4 last:border-0 last:pb-0"
+            >
+              <div className="flex items-center gap-3">
+                <div className="size-10 rounded-full bg-gray-200"></div>
+                <div>
+                  <div className="h-4 w-32 rounded bg-gray-200"></div>
+                  <div className="mt-1 h-3 w-24 rounded bg-gray-200"></div>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <div className="h-8 w-16 rounded bg-gray-200"></div>
+                <div className="h-8 w-16 rounded bg-gray-200"></div>
+              </div>
             </div>
           ))}
         </div>
       </div>
-    </div>
-  )
-}
-
-// Enhanced Skeleton for the table and grid view
-const TableSkeleton = () => {
-  return (
-    <div className="flex-1 rounded-md border bg-white p-5">
-      {/* Grid View Skeleton */}
-      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {[...Array(6)].map((_, index) => (
-          <div key={index} className="rounded-lg border bg-white p-4 shadow-sm">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div className="size-12 rounded-full bg-gray-200"></div>
-                <div>
-                  <div className="h-5 w-32 rounded bg-gray-200"></div>
-                  <div className="mt-1 flex gap-2">
-                    <div className="h-6 w-16 rounded-full bg-gray-200"></div>
-                    <div className="h-6 w-20 rounded-full bg-gray-200"></div>
-                  </div>
-                </div>
-              </div>
-              <div className="size-6 rounded bg-gray-200"></div>
-            </div>
-
-            <div className="mt-4 space-y-2">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex justify-between">
-                  <div className="h-4 w-20 rounded bg-gray-200"></div>
-                  <div className="h-4 w-16 rounded bg-gray-200"></div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-3 border-t pt-3">
-              <div className="h-4 w-full rounded bg-gray-200"></div>
-            </div>
-
-            <div className="mt-3 flex gap-2">
-              <div className="h-9 flex-1 rounded bg-gray-200"></div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Pagination Skeleton */}
-      <div className="mt-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-16 rounded bg-gray-200"></div>
-          <div className="h-8 w-16 rounded bg-gray-200"></div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="size-8 rounded bg-gray-200"></div>
-          <div className="flex gap-2">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="size-7 rounded bg-gray-200"></div>
-            ))}
-          </div>
-          <div className="size-8 rounded bg-gray-200"></div>
-        </div>
-
-        <div className="h-4 w-24 rounded bg-gray-200"></div>
-      </div>
-    </div>
-  )
-}
-
-// Main Loading Component
-const LoadingState = ({ showCategories = true }) => {
-  return (
-    <div className="flex-3 relative mt-5 flex items-start gap-6">
-      {showCategories ? (
-        <>
-          <TableSkeleton />
-          <CategoriesSkeleton />
-        </>
-      ) : (
-        <div className="w-full">
-          <TableSkeleton />
-        </div>
-      )}
     </div>
   )
 }
@@ -1008,255 +996,213 @@ export default function VendorTopUpHistoryPage() {
   }, [isPolling, pollingInterval])
 
   return (
-    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+    <section className="min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100 pb-24 sm:pb-20">
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto w-full px-3 py-4 2xl:container sm:px-4 lg:px-6 2xl:px-16">
-            {/* Hero Header Section */}
-            <motion.div
-              className="relative mb-6 overflow-hidden rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 p-4 shadow-lg md:p-6 lg:p-8"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-            >
-              {/* Background Pattern */}
-              <div className="absolute inset-0 opacity-10">
-                <div className="absolute -right-10 -top-10 size-40 rounded-full bg-white/20" />
-                <div className="absolute -bottom-10 -left-10 size-32 rounded-full bg-white/10" />
-                <div className="absolute right-1/4 top-1/2 size-20 rounded-full bg-white/10" />
-              </div>
 
-              {/* Header Content */}
-              <div className="relative z-10">
-                <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <h1 className="text-2xl font-bold text-white md:text-3xl">Vendor Top-up History</h1>
-                    <p className="mt-1 text-sm text-white/80 md:text-base">
-                      Complete vendor wallet top-up history and breakdown analysis
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
+          <div className="w-full px-4 py-6 sm:px-6 lg:px-8">
+            {/* Page Header */}
+            <div className="mb-8">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900 sm:text-2xl">Vendor Top-up History</h1>
+                  <p className="mt-1 text-sm text-gray-600">
+                    Complete vendor wallet top-up history and breakdown analysis
+                  </p>
+                </div>
+
+                {/* Header Actions */}
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setShowFilterModal(!showFilterModal)}
+                    className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  >
+                    <Filter className="size-4" />
+                    Filters
+                    {getActiveFilterCount() > 0 && (
+                      <span className="flex size-5 items-center justify-center rounded-full bg-blue-500 text-xs font-bold text-white">
+                        {getActiveFilterCount()}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Polling Controls */}
+                  <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white p-1">
                     <button
-                      onClick={() => setShowFilterModal(!showFilterModal)}
-                      className="flex items-center gap-2 rounded-lg bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-all hover:bg-white/20"
+                      onClick={togglePolling}
+                      className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                        isPolling ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      }`}
                     >
-                      <Filter className="size-4" />
-                      Filters
-                      {getActiveFilterCount() > 0 && (
-                        <span className="flex size-5 items-center justify-center rounded-full bg-blue-500 text-xs font-bold text-white">
-                          {getActiveFilterCount()}
-                        </span>
-                      )}
+                      <RefreshCw className={`size-3.5 ${isPolling ? "animate-spin" : ""}`} />
+                      {isPolling ? "ON" : "OFF"}
                     </button>
 
-                    {/* Auto-refresh controls */}
-                    <div className="z-50 flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2 backdrop-blur-sm">
-                      <span className="text-sm font-medium text-white/80">Auto-refresh:</span>
+                    {isPolling && (
+                      <div className="flex items-center gap-1">
+                        {pollingOptions.map((option) => (
+                          <button
+                            key={option.value}
+                            onClick={() => handlePollingIntervalChange(option.value)}
+                            className={`rounded-md px-2 py-1 text-xs font-medium transition-colors ${
+                              pollingInterval === option.value
+                                ? "bg-emerald-600 text-white"
+                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={refreshVendorData}
+                    disabled={vendorTopUpSummaryLoading}
+                    className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <RefreshCw className={`size-4 ${vendorTopUpSummaryLoading ? "animate-spin" : ""}`} />
+                    Refresh
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Error Message */}
+            <AnimatePresence>
+              {vendorTopUpSummaryError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4"
+                >
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="mt-0.5 size-5 shrink-0 text-red-600" />
+                    <div>
+                      <p className="font-medium text-red-900">Failed to load vendor data</p>
+                      <p className="text-sm text-red-700">{vendorTopUpSummaryError}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Main Content */}
+            {vendorTopUpSummaryLoading && !vendorTopUpSummary ? (
+              <LoadingState />
+            ) : vendorTopUpSummary ? (
+              <div className="w-full">
+                {/* Analytics Cards Row */}
+                <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <AnalyticsCard
+                    title="Total Top-ups"
+                    value={totalTopUps}
+                    subtitle={`₦${totalAmount.toLocaleString()} total amount`}
+                    icon={DollarSign}
+                    color="blue"
+                  />
+                  <AnalyticsCard
+                    title="Confirmed"
+                    value={confirmedTopUps}
+                    subtitle={`₦${totalSettledAmount.toLocaleString()} settled`}
+                    icon={TrendingUp}
+                    color="green"
+                    trend="up"
+                    trendValue={totalTopUps > 0 ? `${Math.round((confirmedTopUps / totalTopUps) * 100)}%` : "0%"}
+                  />
+                  <AnalyticsCard
+                    title="Pending"
+                    value={pendingTopUps}
+                    subtitle={
+                      totalTopUps > 0 ? `${Math.round((pendingTopUps / totalTopUps) * 100)}% of total` : "0% of total"
+                    }
+                    icon={Clock}
+                    color="amber"
+                  />
+                  <AnalyticsCard
+                    title="Failed"
+                    value={failedTopUps}
+                    subtitle={
+                      totalTopUps > 0
+                        ? `${Math.round((failedTopUps / totalTopUps) * 100)}% failure rate`
+                        : "0% failure rate"
+                    }
+                    icon={AlertTriangle}
+                    color="red"
+                  />
+                </div>
+
+                {/* Vendor Top-up History Table */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  className="mt-6 overflow-hidden rounded-xl border border-gray-200 bg-white p-4"
+                >
+                  <VendorTopUpHistory />
+                </motion.div>
+              </div>
+            ) : (
+              // Empty State
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white p-12"
+              >
+                <div className="text-center">
+                  <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-gray-100">
+                    <DollarSign className="size-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900">No Vendor Top-up Data</h3>
+                  <p className="mt-2 text-sm text-gray-500">
+                    No vendor top-up analytics data available. Try refreshing the data.
+                  </p>
+                  <div className="mt-6 flex items-center justify-center gap-3">
+                    <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white p-1">
                       <button
                         onClick={togglePolling}
-                        className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                          isPolling
-                            ? "bg-green-500/20 text-green-300 hover:bg-green-500/30"
-                            : "bg-gray-500/20  hover:bg-gray-500/30"
+                        className={`flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-colors ${
+                          isPolling ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                         }`}
                       >
-                        {isPolling ? (
-                          <>
-                            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                              />
-                            </svg>
-                            ON
-                          </>
-                        ) : (
-                          <>
-                            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                              />
-                            </svg>
-                            OFF
-                          </>
-                        )}
+                        <RefreshCw className={`size-3.5 ${isPolling ? "animate-spin" : ""}`} />
+                        {isPolling ? "ON" : "OFF"}
                       </button>
 
                       {isPolling && (
-                        <DropdownPopover
-                          options={pollingOptions}
-                          selectedValue={pollingInterval}
-                          onSelect={handlePollingIntervalChange}
-                        >
-                          <span className="text-sm font-medium">
-                            {pollingOptions.find((opt) => opt.value === pollingInterval)?.label}
-                          </span>
-                        </DropdownPopover>
+                        <div className="flex items-center gap-1">
+                          {pollingOptions.map((option) => (
+                            <button
+                              key={option.value}
+                              onClick={() => handlePollingIntervalChange(option.value)}
+                              className={`rounded-md px-2 py-1 text-xs font-medium transition-colors ${
+                                pollingInterval === option.value
+                                  ? "bg-emerald-600 text-white"
+                                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                              }`}
+                            >
+                              {option.label}
+                            </button>
+                          ))}
+                        </div>
                       )}
                     </div>
-                  </div>
-                </div>
 
-                {/* Summary Cards */}
-                <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-                  {/* Total Top-ups Card */}
-                  <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
-                    <div className="absolute -right-4 -top-4 size-16 rounded-full bg-white/5 transition-transform group-hover:scale-110" />
-                    <div className="relative">
-                      <div className="mb-1 flex items-center gap-2">
-                        <div className="flex size-8 items-center justify-center rounded-lg bg-white/20">
-                          <DollarSign className="size-4 text-white" />
-                        </div>
-                      </div>
-                      <p className="text-xs font-medium uppercase tracking-wider text-white/70">Total Top-ups</p>
-                      <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
-                        {vendorTopUpSummaryLoading ? (
-                          <span className="animate-pulse">...</span>
-                        ) : vendorTopUpSummaryError ? (
-                          <span className="text-red-300">Error</span>
-                        ) : (
-                          totalTopUps.toLocaleString()
-                        )}
-                      </p>
-                      <p className="mt-1 text-xs text-white/60">₦{totalAmount.toLocaleString()} total amount</p>
-                    </div>
+                    <button
+                      onClick={refreshVendorData}
+                      disabled={vendorTopUpSummaryLoading}
+                      className="inline-flex items-center gap-2 rounded-lg bg-[#004B23] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#003618] focus:outline-none focus:ring-2 focus:ring-[#004B23] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <RefreshCw className={`size-4 ${vendorTopUpSummaryLoading ? "animate-spin" : ""}`} />
+                      Refresh Data
+                    </button>
                   </div>
-
-                  {/* Confirmed Top-ups Card */}
-                  <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
-                    <div className="absolute -right-4 -top-4 size-16 rounded-full bg-emerald-400/10 transition-transform group-hover:scale-110" />
-                    <div className="relative">
-                      <div className="mb-1 flex items-center gap-2">
-                        <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-400/20">
-                          <TrendingUp className="size-4 text-emerald-300" />
-                        </div>
-                      </div>
-                      <p className="text-xs font-medium uppercase tracking-wider text-white/70">Confirmed</p>
-                      <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
-                        {vendorTopUpSummaryLoading ? (
-                          <span className="animate-pulse">...</span>
-                        ) : vendorTopUpSummaryError ? (
-                          <span className="text-red-300">Error</span>
-                        ) : (
-                          confirmedTopUps.toLocaleString()
-                        )}
-                      </p>
-                      <p className="mt-1 text-xs text-emerald-300/80">₦{totalSettledAmount.toLocaleString()} settled</p>
-                    </div>
-                  </div>
-
-                  {/* Pending Top-ups Card */}
-                  <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
-                    <div className="absolute -right-4 -top-4 size-16 rounded-full bg-amber-400/10 transition-transform group-hover:scale-110" />
-                    <div className="relative">
-                      <div className="mb-1 flex items-center gap-2">
-                        <div className="flex size-8 items-center justify-center rounded-lg bg-amber-400/20">
-                          <Clock className="size-4 text-amber-300" />
-                        </div>
-                      </div>
-                      <p className="text-xs font-medium uppercase tracking-wider text-white/70">Pending</p>
-                      <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
-                        {vendorTopUpSummaryLoading ? (
-                          <span className="animate-pulse">...</span>
-                        ) : vendorTopUpSummaryError ? (
-                          <span className="text-red-300">Error</span>
-                        ) : (
-                          pendingTopUps.toLocaleString()
-                        )}
-                      </p>
-                      <p className="mt-1 text-xs text-amber-300/80">
-                        {totalTopUps > 0 ? Math.round((pendingTopUps / totalTopUps) * 100) : 0}% of total
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Failed Top-ups Card */}
-                  <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
-                    <div className="absolute -right-4 -top-4 size-16 rounded-full bg-red-400/10 transition-transform group-hover:scale-110" />
-                    <div className="relative">
-                      <div className="mb-1 flex items-center gap-2">
-                        <div className="flex size-8 items-center justify-center rounded-lg bg-red-400/20">
-                          <AlertTriangle className="size-4 text-red-300" />
-                        </div>
-                      </div>
-                      <p className="text-xs font-medium uppercase tracking-wider text-white/70">Failed</p>
-                      <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
-                        {vendorTopUpSummaryLoading ? (
-                          <span className="animate-pulse">...</span>
-                        ) : vendorTopUpSummaryError ? (
-                          <span className="text-red-300">Error</span>
-                        ) : (
-                          failedTopUps.toLocaleString()
-                        )}
-                      </p>
-                      <p className="mt-1 text-xs text-red-300/80">
-                        {totalTopUps > 0 ? Math.round((failedTopUps / totalTopUps) * 100) : 0}% failure rate
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Error State */}
-            {vendorTopUpSummaryError && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-6 rounded-lg bg-red-50 p-4"
-              >
-                <div className="flex items-center gap-3">
-                  <svg className="size-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <div className="flex-1">
-                    <h4 className="text-sm font-medium text-red-800">Error loading summary data</h4>
-                    <p className="text-xs text-red-700">{vendorTopUpSummaryError}</p>
-                  </div>
-                  <button
-                    onClick={refreshVendorData}
-                    className="rounded bg-red-100 px-3 py-1 text-xs font-medium text-red-800 hover:bg-red-200"
-                  >
-                    Retry
-                  </button>
                 </div>
               </motion.div>
             )}
-
-            {/* Main Content Area */}
-            <div className="flex w-full gap-6 max-md:flex-col">
-              <div className="w-full">
-                {isLoading ? (
-                  // Loading State
-                  <>
-                    <SkeletonLoader />
-                    <LoadingState showCategories={true} />
-                  </>
-                ) : (
-                  // Loaded State
-                  <>
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.3 }}
-                    >
-                      <VendorTopUpHistory />
-                    </motion.div>
-                  </>
-                )}
-              </div>
-            </div>
           </div>
         </div>
       </div>

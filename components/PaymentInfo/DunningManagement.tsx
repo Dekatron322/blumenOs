@@ -398,7 +398,7 @@ const DunningManagement: React.FC<DunningManagementProps> = ({
       {!isLoading && dunningStages.length === 0 && (
         <div className="rounded-lg border bg-gray-50 p-8 text-center">
           <div className="mb-4 text-gray-500">
-            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="mx-auto size-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"

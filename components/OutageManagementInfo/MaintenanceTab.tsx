@@ -10,6 +10,7 @@ import { MapIcon } from "components/Icons/Icons"
 import { fetchMaintenances, setPagination } from "lib/redux/maintenanceSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { ButtonModule } from "components/ui/Button/Button"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface SortOption {
   label: string
@@ -103,7 +104,7 @@ const MobileFilterSidebar = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col bg-white p-4 shadow-xl"
+            className="flex size-full max-w-sm flex-col bg-white p-4 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -290,7 +291,7 @@ const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ onViewMaintenanceDetail
   )
 
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [isSortExpanded, setIsSortExpanded] = useState(true)
 
   // Filter state
@@ -692,31 +693,39 @@ const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ onViewMaintenanceDetail
                   {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
                   {showDesktopFilters ? "Hide filters" : "Show filters"}
                 </button>
-
-                <div className="w-full sm:w-64 md:w-80">
-                  <SearchModule
-                    value={searchText}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    onCancel={handleCancelSearch}
-                    onSearch={handleManualSearch}
-                    placeholder="Search maintenance by title, reference code, or location..."
-                    className="w-80 max-w-[310px]"
-                  />
-                </div>
+                {canScheduleMaintenance && (
+                  <ButtonModule
+                    onClick={() => router.push("/outage-management/schedule-maintenance")}
+                    variant="primary"
+                    size="md"
+                    className="mt-2 md:mt-0 md:w-auto"
+                  >
+                    Schedule Maintenance
+                  </ButtonModule>
+                )}
               </div>
             </div>
-            <div className="w-full md:w-auto md:pl-4">
-              {canScheduleMaintenance && (
-                <ButtonModule
-                  onClick={() => router.push("/outage-management/schedule-maintenance")}
-                  variant="primary"
-                  size="md"
-                  className="mt-2 md:mt-0 md:w-auto"
-                >
-                  Schedule Maintenance
-                </ButtonModule>
-              )}
+          </div>
+
+          {/* Search Priority Section */}
+          <div className="rounded-xl border border-gray-200 bg-gradient-to-r from-green-50/60 to-white p-4 shadow-sm">
+            <div className="mb-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#004B23]">Primary action</p>
+              <h2 className="text-base font-semibold text-gray-900 sm:text-lg">Search Maintenance</h2>
+              <p className="text-xs text-gray-600 sm:text-sm">
+                Find maintenance records quickly by title, reference code, or location.
+              </p>
             </div>
+
+            <SearchModule
+              value={searchText}
+              onChange={(e) => handleSearch(e.target.value)}
+              onCancel={handleCancelSearch}
+              onSearch={handleManualSearch}
+              placeholder="Search by maintenance title, reference code, or location..."
+              height="h-14"
+              className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+            />
           </div>
 
           {error && (
@@ -726,7 +735,7 @@ const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ onViewMaintenanceDetail
           )}
           {!loading && !error && maintenances.length === 0 && (
             <div className="mb-4 mt-2 rounded-lg bg-yellow-50 p-3">
-              <p className="text-center text-sm text-yellow-600">No maintenance records found.</p>
+              <EmptySearchState title="No maintenance records found." />
             </div>
           )}
 

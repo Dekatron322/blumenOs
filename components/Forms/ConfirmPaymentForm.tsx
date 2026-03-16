@@ -97,7 +97,7 @@ const ConfirmPaymentForm: React.FC<ConfirmPaymentFormProps> = ({
 
       {/* Sidebar */}
       <motion.div
-        className="fixed right-0 top-0 z-[150] h-full w-full max-w-md bg-white shadow-xl"
+        className="fixed right-0 top-0 z-[150] size-full max-w-md bg-white shadow-xl"
         initial={{ x: "100%" }}
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
@@ -117,7 +117,7 @@ const ConfirmPaymentForm: React.FC<ConfirmPaymentFormProps> = ({
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto px-6 py-6">
+          <div className="flex-1 overflow-y-auto p-6">
             {/* Payment Details */}
             <div className="mb-6 space-y-4">
               <div className="rounded-lg bg-gray-50 p-4">

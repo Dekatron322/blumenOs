@@ -847,9 +847,9 @@ const PaymentDetailsPage = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <CustomerDashboardNav />
-          <div className="mx-auto flex w-full flex-col 2xl:container">
+          <div className="mx-auto flex w-full flex-col ">
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-3 py-4 sm:px-4 md:px-6 2xl:px-16">
+              <div className="mx-auto w-full px-3 py-4 sm:px-4 md:px-6 ">
                 <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-4">
                     <motion.button
@@ -910,7 +910,7 @@ const PaymentDetailsPage = () => {
               </div>
             </div>
 
-            <div className="flex w-full px-3 py-6 sm:px-4 sm:py-8 md:px-6 2xl:px-16">
+            <div className="flex w-full px-3 py-6 sm:px-4 sm:py-8 md:px-6 ">
               <div className="flex w-full flex-col gap-6 xl:flex-row">
                 {/* Left Column - Payment Summary & Quick Info */}
                 <div className="flex w-full flex-col space-y-6 xl:w-[35%]">
@@ -932,7 +932,7 @@ const PaymentDetailsPage = () => {
                         </div>
                       </div>
 
-                      <h2 className="mb-2 text-2xl font-bold text-gray-900 sm:text-3xl">
+                      <h2 className="mb-2 text-2xl font-bold text-gray-900 sm:text-2xl">
                         {formatCurrency(paymentData.totalAmountPaid || paymentData.amount, paymentData.currency)}
                       </h2>
                       {/* <p className="mb-4 text-sm text-gray-600 sm:text-base">Payment #{paymentDetail.reference}</p> */}
@@ -1695,7 +1695,7 @@ const PaymentDetailsPage = () => {
                   alt="Paid stamp"
                   width={190}
                   height={190}
-                  className="h-24 w-24 select-none max-sm:h-20 max-sm:w-20 sm:h-48 sm:w-48 md:h-[190px] md:w-[190px]"
+                  className="h-24 w-24 select-none max-sm:h-20 max-sm:w-20 sm:size-48 md:h-[190px] md:w-[190px]"
                   priority
                 />
               </div>
@@ -1908,7 +1908,7 @@ const PaymentDetailsPage = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col gap-3 border-t border-gray-200 bg-white px-4 py-4 max-sm:flex-shrink-0 max-sm:gap-2 max-sm:px-3 max-sm:py-3 sm:flex-row sm:justify-end sm:px-6">
+            <div className="flex flex-col gap-3 border-t border-gray-200 bg-white p-4 max-sm:shrink-0 max-sm:gap-2 max-sm:p-3 sm:flex-row sm:justify-end sm:px-6">
               <ButtonModule
                 variant="outline"
                 onClick={() => setIsReceiptModalOpen(false)}

@@ -315,6 +315,110 @@ export interface ApproveDebtEntryResponse {
   data: DebtEntryData
 }
 
+// Clearance promo interface
+export interface ClearancePromo {
+  id: number
+  name: string
+  code: string
+  description: string
+  discountPercent: number
+  startAtUtc: string
+  endAtUtc: string
+  scope: number
+  provinceId: number | null
+  areaOfficeId: number | null
+  feederId: number | null
+  isActive: boolean
+  isPaused: boolean
+  createdAt: string
+  lastUpdated: string | null
+}
+
+// Request parameters interface for fetching clearance promos
+export interface ClearancePromosRequest {
+  PageNumber: number
+  PageSize: number
+  Search?: string
+  Code?: string
+  Scope?: number
+  IsActive?: boolean
+  IsPaused?: boolean
+  AsOfUtc?: string
+}
+
+// Response interface for clearance promos
+export interface ClearancePromosResponse {
+  isSuccess: boolean
+  message: string
+  data: ClearancePromo[]
+  totalCount: number
+  totalPages: number
+  currentPage: number
+  pageSize: number
+  hasNext: boolean
+  hasPrevious: boolean
+}
+
+// Response interface for pause promo
+export interface PausePromoResponse {
+  isSuccess: boolean
+  message: string
+  data: ClearancePromo
+}
+
+// Response interface for resume promo
+export interface ResumePromoResponse {
+  isSuccess: boolean
+  message: string
+  data: ClearancePromo
+}
+
+// Request interface for creating promo
+export interface CreatePromoRequest {
+  name: string
+  code: string
+  description: string
+  discountPercent: number
+  startAtUtc: string
+  endAtUtc: string
+  scope: number
+  provinceId: number
+  areaOfficeId: number
+  feederId: number
+  isActive: boolean
+  isPaused: boolean
+}
+
+// Response interface for creating promo
+export interface CreatePromoResponse {
+  isSuccess: boolean
+  message: string
+  data: ClearancePromo
+}
+
+// Request interface for updating promo
+export interface UpdatePromoRequest {
+  name: string
+  code: string
+  description: string
+  discountPercent: number
+  startAtUtc: string
+  endAtUtc: string
+  scope: number
+  provinceId: number
+  areaOfficeId: number
+  feederId: number
+  isActive: boolean
+  isPaused: boolean
+}
+
+// Response interface for updating promo
+export interface UpdatePromoResponse {
+  isSuccess: boolean
+  message: string
+  data: ClearancePromo
+}
+
 // Debt Management State
 interface DebtManagementState {
   // Fetch recovery summary state
@@ -436,6 +540,51 @@ interface DebtManagementState {
     hasPrevious: boolean
   }
   debtRecoveryRequestParams: DebtRecoveryRequest | null
+
+  // Clearance promos state
+  clearancePromosLoading: boolean
+  clearancePromosError: string | null
+  clearancePromosSuccess: boolean
+  clearancePromos: ClearancePromo[]
+  clearancePromosPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
+  clearancePromosRequestParams: ClearancePromosRequest | null
+
+  // Pause promo state
+  pausePromoLoading: boolean
+  pausePromoError: string | null
+  pausePromoSuccess: boolean
+  pausedPromo: ClearancePromo | null
+
+  // Resume promo state
+  resumePromoLoading: boolean
+  resumePromoError: string | null
+  resumePromoSuccess: boolean
+  resumedPromo: ClearancePromo | null
+
+  // Create promo state
+  createPromoLoading: boolean
+  createPromoError: string | null
+  createPromoSuccess: boolean
+  createdPromo: ClearancePromo | null
+
+  // Update promo state
+  updatePromoLoading: boolean
+  updatePromoError: string | null
+  updatePromoSuccess: boolean
+  updatedPromo: ClearancePromo | null
+
+  // Promo details state
+  promoDetailsLoading: boolean
+  promoDetailsError: string | null
+  promoDetailsSuccess: boolean
+  promoDetails: ClearancePromo | null
 }
 
 // Initial state
@@ -545,6 +694,47 @@ const initialState: DebtManagementState = {
     hasPrevious: false,
   },
   debtRecoveryRequestParams: null,
+
+  clearancePromosLoading: false,
+  clearancePromosError: null,
+  clearancePromosSuccess: false,
+  clearancePromos: [],
+  clearancePromosPagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 0,
+    pageSize: 0,
+    hasNext: false,
+    hasPrevious: false,
+  },
+  clearancePromosRequestParams: null,
+
+  pausePromoLoading: false,
+  pausePromoError: null,
+  pausePromoSuccess: false,
+  pausedPromo: null,
+
+  resumePromoLoading: false,
+  resumePromoError: null,
+  resumePromoSuccess: false,
+  resumedPromo: null,
+
+  createPromoLoading: false,
+  createPromoError: null,
+  createPromoSuccess: false,
+  createdPromo: null,
+
+  // Update promo state
+  updatePromoLoading: false,
+  updatePromoError: null,
+  updatePromoSuccess: false,
+  updatedPromo: null,
+
+  // Promo details state
+  promoDetailsLoading: false,
+  promoDetailsError: null,
+  promoDetailsSuccess: false,
+  promoDetails: null,
 }
 
 // Async thunk for fetching recovery summary
@@ -979,6 +1169,171 @@ export const fetchDebtRecovery = createAsyncThunk(
   }
 )
 
+// Async thunk for fetching clearance promos
+export const fetchClearancePromos = createAsyncThunk(
+  "debtManagement/fetchClearancePromos",
+  async (params: ClearancePromosRequest, { rejectWithValue }) => {
+    try {
+      // Build query parameters
+      const queryParams = new URLSearchParams()
+      queryParams.append("PageNumber", params.PageNumber.toString())
+      queryParams.append("PageSize", params.PageSize.toString())
+
+      if (params.Search !== undefined && params.Search !== null) {
+        queryParams.append("Search", params.Search)
+      }
+      if (params.Code !== undefined && params.Code !== null) {
+        queryParams.append("Code", params.Code)
+      }
+      if (params.Scope !== undefined && params.Scope !== null) {
+        queryParams.append("Scope", params.Scope.toString())
+      }
+      if (params.IsActive !== undefined) {
+        queryParams.append("IsActive", params.IsActive.toString())
+      }
+      if (params.IsPaused !== undefined) {
+        queryParams.append("IsPaused", params.IsPaused.toString())
+      }
+      if (params.AsOfUtc !== undefined && params.AsOfUtc !== null) {
+        queryParams.append("AsOfUtc", params.AsOfUtc)
+      }
+
+      const url = `${buildApiUrl(API_ENDPOINTS.DEBT_MANAGEMENT.CLEARANCE_PROMO_LIST)}?${queryParams.toString()}`
+      const response = await api.get<ClearancePromosResponse>(url)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch clearance promos")
+      }
+
+      return {
+        data: response.data,
+        requestParams: params,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch clearance promos")
+      }
+      return rejectWithValue(error.message || "Network error during clearance promos fetch")
+    }
+  }
+)
+
+// Async thunk for pausing a promo
+export const pausePromo = createAsyncThunk(
+  "debtManagement/pausePromo",
+  async (promoId: number, { rejectWithValue }) => {
+    try {
+      const url = buildApiUrl(API_ENDPOINTS.DEBT_MANAGEMENT.PAUSE_PROMO).replace("{id}", promoId.toString())
+      const response = await api.post<PausePromoResponse>(url)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to pause promo")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to pause promo")
+      }
+      return rejectWithValue(error.message || "Network error during promo pause")
+    }
+  }
+)
+
+// Async thunk for resuming a promo
+export const resumePromo = createAsyncThunk(
+  "debtManagement/resumePromo",
+  async (promoId: number, { rejectWithValue }) => {
+    try {
+      const url = buildApiUrl(API_ENDPOINTS.DEBT_MANAGEMENT.RESUME_PROMO).replace("{id}", promoId.toString())
+      const response = await api.post<ResumePromoResponse>(url)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to resume promo")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to resume promo")
+      }
+      return rejectWithValue(error.message || "Network error during promo resume")
+    }
+  }
+)
+
+// Async thunk for creating a promo
+export const createPromo = createAsyncThunk(
+  "debtManagement/createPromo",
+  async (params: CreatePromoRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<CreatePromoResponse>(buildApiUrl(API_ENDPOINTS.DEBT_MANAGEMENT.ADD_PROMO), params)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to create promo")
+      }
+
+      return {
+        data: response.data,
+        requestParams: params,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to create promo")
+      }
+      return rejectWithValue(error.message || "Network error during promo creation")
+    }
+  }
+)
+
+// Async thunk for updating a promo
+export const updatePromo = createAsyncThunk(
+  "debtManagement/updatePromo",
+  async ({ id, params }: { id: number; params: UpdatePromoRequest }, { rejectWithValue }) => {
+    try {
+      const url = buildApiUrl(API_ENDPOINTS.DEBT_MANAGEMENT.UPDATE_PROMO.replace("{id}", id.toString()))
+      const response = await api.put<UpdatePromoResponse>(url, params)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to update promo")
+      }
+
+      return {
+        data: response.data,
+        promoId: id,
+        requestParams: params,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to update promo")
+      }
+      return rejectWithValue(error.message || "Network error during promo update")
+    }
+  }
+)
+
+// Async thunk for fetching promo details
+export const fetchPromoDetails = createAsyncThunk(
+  "debtManagement/fetchPromoDetails",
+  async (promoId: number, { rejectWithValue }) => {
+    try {
+      const url = buildApiUrl(API_ENDPOINTS.DEBT_MANAGEMENT.PROMO_DETAILS.replace("{id}", promoId.toString()))
+      const response = await api.get<{ data: ClearancePromo; isSuccess: boolean; message: string }>(url)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch promo details")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch promo details")
+      }
+      return rejectWithValue(error.message || "Network error during promo details fetch")
+    }
+  }
+)
+
 // Debt Management slice
 const debtManagementSlice = createSlice({
   name: "debtManagement",
@@ -1195,6 +1550,74 @@ const debtManagementSlice = createSlice({
     // Update debt recovery request parameters
     setDebtRecoveryRequestParams: (state, action: PayloadAction<DebtRecoveryRequest>) => {
       state.debtRecoveryRequestParams = action.payload
+    },
+
+    // Clear clearance promos state
+    clearClearancePromosState: (state) => {
+      state.clearancePromosLoading = false
+      state.clearancePromosError = null
+      state.clearancePromosSuccess = false
+      state.clearancePromos = []
+      state.clearancePromosPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 0,
+        pageSize: 0,
+        hasNext: false,
+        hasPrevious: false,
+      }
+      state.clearancePromosRequestParams = null
+    },
+
+    // Clear pause promo state
+    clearPausePromoState: (state) => {
+      state.pausePromoLoading = false
+      state.pausePromoError = null
+      state.pausePromoSuccess = false
+      state.pausedPromo = null
+    },
+
+    // Clear resume promo state
+    clearResumePromoState: (state) => {
+      state.resumePromoLoading = false
+      state.resumePromoError = null
+      state.resumePromoSuccess = false
+      state.resumedPromo = null
+    },
+
+    // Clear create promo state
+    clearCreatePromoState: (state) => {
+      state.createPromoLoading = false
+      state.createPromoError = null
+      state.createPromoSuccess = false
+      state.createdPromo = null
+    },
+
+    // Clear update promo state
+    clearUpdatePromoState: (state) => {
+      state.updatePromoLoading = false
+      state.updatePromoError = null
+      state.updatePromoSuccess = false
+      state.updatedPromo = null
+    },
+
+    // Clear promo details state
+    clearPromoDetailsState: (state) => {
+      state.promoDetailsLoading = false
+      state.promoDetailsError = null
+      state.promoDetailsSuccess = false
+      state.promoDetails = null
+    },
+
+    // Set clearance promos data manually (if needed for caching or testing)
+    setClearancePromos: (state, action: PayloadAction<ClearancePromo[]>) => {
+      state.clearancePromos = action.payload
+      state.clearancePromosSuccess = true
+    },
+
+    // Update clearance promos request parameters
+    setClearancePromosRequestParams: (state, action: PayloadAction<ClearancePromosRequest>) => {
+      state.clearancePromosRequestParams = action.payload
     },
   },
   extraReducers: (builder) => {
@@ -1626,6 +2049,185 @@ const debtManagementSlice = createSlice({
         }
         state.debtRecoveryRequestParams = null
       })
+      // Fetch clearance promos cases
+      .addCase(fetchClearancePromos.pending, (state) => {
+        state.clearancePromosLoading = true
+        state.clearancePromosError = null
+        state.clearancePromosSuccess = false
+      })
+      .addCase(
+        fetchClearancePromos.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            data: ClearancePromosResponse
+            requestParams: ClearancePromosRequest
+          }>
+        ) => {
+          state.clearancePromosLoading = false
+          state.clearancePromosSuccess = true
+          state.clearancePromosError = null
+          state.clearancePromos = action.payload.data.data
+          state.clearancePromosPagination = {
+            totalCount: action.payload.data.totalCount,
+            totalPages: action.payload.data.totalPages,
+            currentPage: action.payload.data.currentPage,
+            pageSize: action.payload.data.pageSize,
+            hasNext: action.payload.data.hasNext,
+            hasPrevious: action.payload.data.hasPrevious,
+          }
+          state.clearancePromosRequestParams = action.payload.requestParams
+        }
+      )
+      .addCase(fetchClearancePromos.rejected, (state, action) => {
+        state.clearancePromosLoading = false
+        state.clearancePromosError = (action.payload as string) || "Failed to fetch clearance promos"
+        state.clearancePromosSuccess = false
+        state.clearancePromos = []
+        state.clearancePromosPagination = {
+          totalCount: 0,
+          totalPages: 0,
+          currentPage: 0,
+          pageSize: 0,
+          hasNext: false,
+          hasPrevious: false,
+        }
+        state.clearancePromosRequestParams = null
+      })
+      // Pause promo cases
+      .addCase(pausePromo.pending, (state) => {
+        state.pausePromoLoading = true
+        state.pausePromoError = null
+        state.pausePromoSuccess = false
+      })
+      .addCase(pausePromo.fulfilled, (state, action: PayloadAction<ClearancePromo>) => {
+        state.pausePromoLoading = false
+        state.pausePromoSuccess = true
+        state.pausedPromo = action.payload
+
+        // Update the promo in the clearance promos list if it exists
+        const index = state.clearancePromos.findIndex((promo) => promo.id === action.payload.id)
+        if (index !== -1) {
+          state.clearancePromos[index] = action.payload
+        }
+      })
+      .addCase(pausePromo.rejected, (state, action) => {
+        state.pausePromoLoading = false
+        state.pausePromoError = (action.payload as string) || "Failed to pause promo"
+        state.pausePromoSuccess = false
+        state.pausedPromo = null
+      })
+      // Resume promo cases
+      .addCase(resumePromo.pending, (state) => {
+        state.resumePromoLoading = true
+        state.resumePromoError = null
+        state.resumePromoSuccess = false
+      })
+      .addCase(resumePromo.fulfilled, (state, action: PayloadAction<ClearancePromo>) => {
+        state.resumePromoLoading = false
+        state.resumePromoSuccess = true
+        state.resumedPromo = action.payload
+
+        // Update the promo in the clearance promos list if it exists
+        const index = state.clearancePromos.findIndex((promo) => promo.id === action.payload.id)
+        if (index !== -1) {
+          state.clearancePromos[index] = action.payload
+        }
+      })
+      .addCase(resumePromo.rejected, (state, action) => {
+        state.resumePromoLoading = false
+        state.resumePromoError = (action.payload as string) || "Failed to resume promo"
+        state.resumePromoSuccess = false
+        state.resumedPromo = null
+      })
+      // Create promo cases
+      .addCase(createPromo.pending, (state) => {
+        state.createPromoLoading = true
+        state.createPromoError = null
+        state.createPromoSuccess = false
+      })
+      .addCase(
+        createPromo.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            data: CreatePromoResponse
+            requestParams: CreatePromoRequest
+          }>
+        ) => {
+          state.createPromoLoading = false
+          state.createPromoSuccess = true
+          state.createPromoError = null
+          state.createdPromo = action.payload.data.data
+
+          // Add the new promo to the clearance promos list
+          state.clearancePromos.unshift(action.payload.data.data)
+          state.clearancePromosPagination.totalCount += 1
+        }
+      )
+      .addCase(createPromo.rejected, (state, action) => {
+        state.createPromoLoading = false
+        state.createPromoError = (action.payload as string) || "Failed to create promo"
+        state.createPromoSuccess = false
+        state.createdPromo = null
+      })
+      // Update promo cases
+      .addCase(updatePromo.pending, (state) => {
+        state.updatePromoLoading = true
+        state.updatePromoError = null
+        state.updatePromoSuccess = false
+      })
+      .addCase(
+        updatePromo.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            data: UpdatePromoResponse
+            promoId: number
+            requestParams: UpdatePromoRequest
+          }>
+        ) => {
+          state.updatePromoLoading = false
+          state.updatePromoSuccess = true
+          state.updatePromoError = null
+          state.updatedPromo = action.payload.data.data
+
+          // Update the promo in the clearance promos list if it exists
+          const index = state.clearancePromos.findIndex((promo) => promo.id === action.payload.promoId)
+          if (index !== -1) {
+            state.clearancePromos[index] = action.payload.data.data
+          }
+
+          // Update the promo details if it's currently loaded
+          if (state.promoDetails && state.promoDetails.id === action.payload.promoId) {
+            state.promoDetails = action.payload.data.data
+          }
+        }
+      )
+      .addCase(updatePromo.rejected, (state, action) => {
+        state.updatePromoLoading = false
+        state.updatePromoError = (action.payload as string) || "Failed to update promo"
+        state.updatePromoSuccess = false
+        state.updatedPromo = null
+      })
+      // Fetch promo details cases
+      .addCase(fetchPromoDetails.pending, (state) => {
+        state.promoDetailsLoading = true
+        state.promoDetailsError = null
+        state.promoDetailsSuccess = false
+      })
+      .addCase(fetchPromoDetails.fulfilled, (state, action: PayloadAction<ClearancePromo>) => {
+        state.promoDetailsLoading = false
+        state.promoDetailsSuccess = true
+        state.promoDetailsError = null
+        state.promoDetails = action.payload
+      })
+      .addCase(fetchPromoDetails.rejected, (state, action) => {
+        state.promoDetailsLoading = false
+        state.promoDetailsError = (action.payload as string) || "Failed to fetch promo details"
+        state.promoDetailsSuccess = false
+        state.promoDetails = null
+      })
   },
 })
 
@@ -1655,6 +2257,14 @@ export const {
   clearDebtRecoveryState,
   setDebtRecovery,
   setDebtRecoveryRequestParams,
+  clearClearancePromosState,
+  setClearancePromos,
+  setClearancePromosRequestParams,
+  clearPausePromoState,
+  clearResumePromoState,
+  clearCreatePromoState,
+  clearUpdatePromoState,
+  clearPromoDetailsState,
 } = debtManagementSlice.actions
 
 // Redux selectors
@@ -1839,5 +2449,84 @@ export const selectDebtRecoveryPagination = (state: { debtManagement: DebtManage
 
 export const selectDebtRecoveryRequestParams = (state: { debtManagement: DebtManagementState }) =>
   state.debtManagement.debtRecoveryRequestParams
+
+// Clearance promos selectors
+export const selectClearancePromos = (state: { debtManagement: DebtManagementState }) =>
+  state.debtManagement.clearancePromos
+
+export const selectClearancePromosLoading = (state: { debtManagement: DebtManagementState }) =>
+  state.debtManagement.clearancePromosLoading
+
+export const selectClearancePromosError = (state: { debtManagement: DebtManagementState }) =>
+  state.debtManagement.clearancePromosError
+
+export const selectClearancePromosSuccess = (state: { debtManagement: DebtManagementState }) =>
+  state.debtManagement.clearancePromosSuccess
+
+export const selectClearancePromosPagination = (state: { debtManagement: DebtManagementState }) =>
+  state.debtManagement.clearancePromosPagination
+
+export const selectClearancePromosRequestParams = (state: { debtManagement: DebtManagementState }) =>
+  state.debtManagement.clearancePromosRequestParams
+
+// Pause promo selectors
+export const selectPausePromoLoading = (state: { debtManagement: DebtManagementState }) =>
+  state.debtManagement.pausePromoLoading
+
+export const selectPausePromoError = (state: { debtManagement: DebtManagementState }) =>
+  state.debtManagement.pausePromoError
+
+export const selectPausePromoSuccess = (state: { debtManagement: DebtManagementState }) =>
+  state.debtManagement.pausePromoSuccess
+
+export const selectPausedPromo = (state: { debtManagement: DebtManagementState }) => state.debtManagement.pausedPromo
+
+// Resume promo selectors
+export const selectResumePromoLoading = (state: { debtManagement: DebtManagementState }) =>
+  state.debtManagement.resumePromoLoading
+
+export const selectResumePromoError = (state: { debtManagement: DebtManagementState }) =>
+  state.debtManagement.resumePromoError
+
+export const selectResumePromoSuccess = (state: { debtManagement: DebtManagementState }) =>
+  state.debtManagement.resumePromoSuccess
+
+export const selectResumedPromo = (state: { debtManagement: DebtManagementState }) => state.debtManagement.resumedPromo
+
+// Create promo selectors
+export const selectCreatePromoLoading = (state: { debtManagement: DebtManagementState }) =>
+  state.debtManagement.createPromoLoading
+
+export const selectCreatePromoError = (state: { debtManagement: DebtManagementState }) =>
+  state.debtManagement.createPromoError
+
+export const selectCreatePromoSuccess = (state: { debtManagement: DebtManagementState }) =>
+  state.debtManagement.createPromoSuccess
+
+export const selectCreatedPromo = (state: { debtManagement: DebtManagementState }) => state.debtManagement.createdPromo
+
+// Update promo selectors
+export const selectUpdatePromoLoading = (state: { debtManagement: DebtManagementState }) =>
+  state.debtManagement.updatePromoLoading
+
+export const selectUpdatePromoError = (state: { debtManagement: DebtManagementState }) =>
+  state.debtManagement.updatePromoError
+
+export const selectUpdatePromoSuccess = (state: { debtManagement: DebtManagementState }) =>
+  state.debtManagement.updatePromoSuccess
+
+export const selectUpdatedPromo = (state: { debtManagement: DebtManagementState }) => state.debtManagement.updatedPromo
+
+// Promo details selectors
+export const selectPromoDetails = (state: { debtManagement: DebtManagementState }) => state.debtManagement.promoDetails
+
+export const selectPromoDetailsLoading = (state: { debtManagement: DebtManagementState }) =>
+  state.debtManagement.promoDetailsLoading
+
+export const selectPromoDetailsError = (state: { debtManagement: DebtManagementState }) =>
+  state.debtManagement.promoDetailsError
+
+export const selectPromoDetailsSuccess = (state: { debtManagement: DebtManagementState }) =>
+  state.debtManagement.promoDetailsSuccess
 
 export default debtManagementSlice.reducer

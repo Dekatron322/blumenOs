@@ -221,7 +221,7 @@ const TableSkeleton = () => {
           >
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-12 w-12 animate-pulse rounded-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
+                <div className="size-12 animate-pulse rounded-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
                 <div>
                   <div className="h-5 w-32 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
                   <div className="mt-1 flex gap-2">
@@ -315,7 +315,7 @@ const CustomerPaymentHistoryTableSkeleton = () => {
         <div className="h-4 w-32 animate-pulse rounded bg-gray-200"></div>
         <div className="flex gap-2">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-8 w-8 animate-pulse rounded bg-gray-200"></div>
+            <div key={i} className="size-8 animate-pulse rounded bg-gray-200"></div>
           ))}
         </div>
         <div className="h-4 w-32 animate-pulse rounded bg-gray-200"></div>
@@ -927,7 +927,7 @@ export default function AgentManagementDashboard() {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <CustomerDashboardNav />
-          <div className="mx-auto flex w-full flex-col px-3 2xl:container sm:px-4 lg:px-6 2xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3  sm:px-4 lg:px-6 ">
             {/* Page Header - Always Visible */}
             <div className="flex w-full flex-col justify-between gap-4 py-4 sm:py-6 md:flex-row md:gap-6">
               <div className="flex-1">
@@ -1073,10 +1073,10 @@ export default function AgentManagementDashboard() {
             )}
 
             {/* Customer Wallet Card - Mobile Optimized */}
-            <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
+            {/* <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
               <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 sm:h-12 sm:w-12">
+                  <div className="flex size-10 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 sm:h-12 sm:w-12">
                     <svg
                       className="size-5 text-white sm:h-6 sm:w-6"
                       fill="none"
@@ -1099,19 +1099,19 @@ export default function AgentManagementDashboard() {
                     <p className="text-xs text-gray-500 sm:hidden">Balance & Transactions</p>
                   </div>
                 </div>
-                {/* <button
+                <button
                   onClick={() => router.push("/customer-portal/wallet")}
                   className="rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-indigo-700 sm:px-4 sm:py-2 sm:text-sm"
                 >
                   Manage
-                </button> */}
+                </button>
               </div>
 
-              {/* Balance Display - Mobile Optimized */}
+              
               <div className="mb-4 rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50 p-4">
                 <div className="text-center">
                   <p className="mb-1 text-xs font-medium text-gray-500 sm:text-sm">Available Balance</p>
-                  <p className="text-2xl font-bold text-gray-900 sm:text-3xl">₦12,500.00</p>
+                  <p className="text-2xl font-bold text-gray-900 sm:text-2xl">₦12,500.00</p>
                   <div className="mt-2 flex items-center justify-center gap-2">
                     <div className="size-2 rounded-full bg-green-500"></div>
                     <p className="text-xs text-green-600 sm:text-sm">+2.5% from last month</p>
@@ -1119,16 +1119,16 @@ export default function AgentManagementDashboard() {
                 </div>
               </div>
 
-              {/* Quick Stats - Mobile Grid */}
+              
               <div className="grid grid-cols-2 gap-3 sm:hidden">
-                {/* Pending Transactions */}
+                
                 <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                   <p className="mb-1 text-xs font-medium text-gray-500">Pending</p>
                   <p className="text-lg font-bold text-gray-900">3</p>
                   <p className="mt-1 text-xs text-amber-600">Awaiting</p>
                 </div>
 
-                {/* Wallet Status */}
+               
                 <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                   <p className="mb-1 text-xs font-medium text-gray-500">Status</p>
                   <div className="flex items-center gap-2">
@@ -1139,23 +1139,23 @@ export default function AgentManagementDashboard() {
                 </div>
               </div>
 
-              {/* Desktop Stats - Hidden on Mobile */}
+             
               <div className="hidden grid-cols-1 gap-6 sm:grid sm:grid-cols-3">
-                {/* Current Balance */}
+               
                 <div className="text-center sm:text-left">
                   <p className="mb-1 text-sm font-medium text-gray-500">Current Balance</p>
                   <p className="text-2xl font-bold text-gray-900">₦12,500.00</p>
                   <p className="mt-1 text-xs text-green-600">+2.5% from last month</p>
                 </div>
 
-                {/* Pending Transactions */}
+                
                 <div className="text-center sm:text-left">
                   <p className="mb-1 text-sm font-medium text-gray-500">Pending Transactions</p>
                   <p className="text-2xl font-bold text-gray-900">3</p>
                   <p className="mt-1 text-xs text-amber-600">Awaiting confirmation</p>
                 </div>
 
-                {/* Wallet Status */}
+                
                 <div className="text-center sm:text-left">
                   <p className="mb-1 text-sm font-medium text-gray-500">Wallet Status</p>
                   <div className="flex items-center gap-2">
@@ -1166,7 +1166,7 @@ export default function AgentManagementDashboard() {
                 </div>
               </div>
 
-              {/* Bottom Actions - Mobile Optimized */}
+             
               <div className="mt-4 border-t border-gray-200 pt-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center justify-center gap-2 text-xs text-gray-600 sm:justify-start sm:text-sm">
@@ -1193,7 +1193,7 @@ export default function AgentManagementDashboard() {
                   </button>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* Adverts Banner Slider */}
             <div className="mb-6">
@@ -1229,7 +1229,7 @@ export default function AgentManagementDashboard() {
                             <div className="text-center">
                               <div className="rounded-lg bg-white/20 p-3 backdrop-blur-sm sm:p-4">
                                 <svg
-                                  className="mx-auto mb-2 h-8 w-8 text-white sm:h-12 sm:w-12"
+                                  className="mx-auto mb-2 size-8 text-white sm:h-12 sm:w-12"
                                   fill="none"
                                   viewBox="0 0 24 24"
                                   stroke="currentColor"
@@ -1357,7 +1357,7 @@ export default function AgentManagementDashboard() {
                           {/* Today's Collection */}
                           <div className="border-gray-200 last:border-r-0 max-2xl:pb-6 max-sm:border-b max-sm:pb-4 sm:max-2xl:rounded-md sm:max-2xl:bg-[#f9f9f9] sm:max-2xl:p-4 md:pr-6  2xl:border-r">
                             <div className="flex items-center justify-between">
-                              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
+                              <div className="flex size-10 items-center justify-center rounded-lg bg-blue-100">
                                 <svg
                                   className="size-5  text-blue-600"
                                   fill="none"
@@ -1407,7 +1407,7 @@ export default function AgentManagementDashboard() {
                           {/* Pending Confirmations */}
                           <div className="border-gray-200 last:border-r-0 max-2xl:pb-6 max-sm:border-b max-sm:pb-4 sm:max-2xl:rounded-md sm:max-2xl:bg-[#f9f9f9] sm:max-2xl:p-4 md:pr-6  2xl:border-r">
                             <div className="flex items-center justify-between">
-                              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-yellow-100">
+                              <div className="flex size-10 items-center justify-center rounded-lg bg-yellow-100">
                                 <svg
                                   className="size-5  text-yellow-600"
                                   fill="none"
@@ -1462,7 +1462,7 @@ export default function AgentManagementDashboard() {
                           {/* Settled Today */}
                           <div className="border-gray-200 last:border-r-0 max-2xl:pb-6 max-sm:border-b max-sm:pb-4 sm:max-2xl:rounded-md sm:max-2xl:bg-[#f9f9f9] sm:max-2xl:p-4 md:pr-6  2xl:border-r">
                             <div className="flex items-center justify-between">
-                              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
+                              <div className="flex size-10 items-center justify-center rounded-lg bg-green-100">
                                 <svg
                                   className="size-5  text-green-600"
                                   fill="none"
@@ -1513,7 +1513,7 @@ export default function AgentManagementDashboard() {
                           {/* Available Balance */}
                           <div className="border-gray-200 last:border-r-0 max-2xl:pb-6 max-sm:border-b max-sm:pb-4 sm:max-2xl:rounded-md sm:max-2xl:bg-[#f9f9f9] sm:max-2xl:p-4 md:pr-6  2xl:border-r">
                             <div className="flex items-center justify-between">
-                              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100">
+                              <div className="flex size-10 items-center justify-center rounded-lg bg-purple-100">
                                 <svg
                                   className="size-5  text-purple-600"
                                   fill="none"

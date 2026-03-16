@@ -14,6 +14,7 @@ import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from 
 import { ExportCsvIcon } from "components/Icons/Icons"
 import Image from "next/image"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 import { ChangeRequestListItem, fetchChangeRequests } from "lib/redux/postpaidSlice"
 import ViewChangeRequestModal from "../ui/Modal/view-billing-change-request-modal"
@@ -116,7 +117,7 @@ const ChangeRequestListItemSkeleton = () => (
   >
     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-0">
       <div className="flex items-start gap-3 md:items-center md:gap-4">
-        <div className="size-8 flex-shrink-0 rounded-full bg-gray-200 md:size-10"></div>
+        <div className="size-8 shrink-0 rounded-full bg-gray-200 md:size-10"></div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
             <div className="h-5 w-32 rounded bg-gray-200 md:w-40"></div>
@@ -273,7 +274,7 @@ const MobileFilterSidebar = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col bg-white p-4 shadow-xl"
+            className="flex size-full max-w-sm flex-col bg-white p-4 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -439,7 +440,7 @@ const BillingChangeRequestsTable = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [showMobileSearch, setShowMobileSearch] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [isSortExpanded, setIsSortExpanded] = useState(false)
 
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
@@ -926,7 +927,7 @@ const BillingChangeRequestsTable = () => {
           transition={{ duration: 0.4 }}
         >
           <div className="flex w-full flex-col py-2">
-            <div className="mb-3 flex w-full items-center justify-between gap-3">
+            <div className="mb-3 flex w-full flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 {/* Filter Button for ALL screens up to 2xl */}
                 <button
@@ -942,10 +943,10 @@ const BillingChangeRequestsTable = () => {
                   )}
                 </button>
 
-                <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">Billing Change Requests</p>
+                <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-xl">Billing Change Requests</p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex w-full flex-wrap items-center gap-2">
                 {/* Mobile search icon button */}
                 <button
                   type="button"
@@ -957,14 +958,15 @@ const BillingChangeRequestsTable = () => {
                 </button>
 
                 {/* Desktop/Tablet search input */}
-                <div className="hidden sm:block">
+                <div className="hidden w-full sm:block">
                   <SearchModule
+                    prominent
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
                     onCancel={handleCancelSearch}
                     onSearch={handleManualSearch}
                     placeholder="Search by reference or requester"
-                    className="w-full max-w-full md:max-w-[300px]"
+                    className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
                   />
                 </div>
 
@@ -1006,6 +1008,7 @@ const BillingChangeRequestsTable = () => {
             {showMobileSearch && (
               <div className="mb-3 sm:hidden">
                 <SearchModule
+                  prominent
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   onCancel={handleCancelSearch}
@@ -1061,20 +1064,15 @@ const BillingChangeRequestsTable = () => {
           {/* Change Request Display Area */}
           <div className="w-full">
             {changeRequests.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 md:py-12">
-                <div className="text-center">
-                  <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-gray-100 md:size-12">
-                    <VscEye className="size-5 text-gray-400 md:size-6" />
-                  </div>
-                  <h3 className="mt-3 text-base font-medium text-gray-900 md:mt-4 md:text-lg">
-                    No billing change requests found
-                  </h3>
-                  <p className="mt-1 text-xs text-gray-500 md:mt-2 md:text-sm">
-                    {searchText || getActiveFilterCount() > 0
+              <div className="flex items-center justify-center py-8 md:py-12">
+                <EmptySearchState
+                  title="No billing change requests found"
+                  description={
+                    searchText || getActiveFilterCount() > 0
                       ? "Try adjusting your filters or search criteria"
-                      : "No billing change requests available"}
-                  </p>
-                </div>
+                      : "No billing change requests available"
+                  }
+                />
               </div>
             ) : viewMode === "grid" ? (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-3">

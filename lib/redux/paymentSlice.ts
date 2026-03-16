@@ -583,6 +583,8 @@ export interface TopPerformersRequest {
   serviceCenterId?: number
   distributionSubstationId?: number
   feederId?: number
+  pageNumber?: number
+  pageSize?: number
 }
 
 // Interface for Confirm Payment Request
@@ -1082,6 +1084,15 @@ interface PaymentState {
   topPerformersLoading: boolean
   topPerformersError: string | null
   topPerformersSuccess: boolean
+  loadingMoreTopPerformers: boolean
+  topPerformersPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
 
   // Confirm Payment state
   confirmPaymentLoading: boolean
@@ -1292,6 +1303,15 @@ const initialState: PaymentState = {
   topPerformersLoading: false,
   topPerformersError: null,
   topPerformersSuccess: false,
+  loadingMoreTopPerformers: false,
+  topPerformersPagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 1,
+    pageSize: 10,
+    hasNext: false,
+    hasPrevious: false,
+  },
 
   // Confirm Payment
   confirmPaymentLoading: false,
@@ -1769,6 +1789,34 @@ export const fetchTopPerformers = createAsyncThunk(
     } catch (error: any) {
       if (error.response?.data) {
         return rejectWithValue(error.response.data.message || "Failed to fetch top performers")
+      }
+      return rejectWithValue(error.message || "Network error during top performers fetch")
+    }
+  }
+)
+
+// Async thunk for loading more top performers
+export const loadMoreTopPerformers = createAsyncThunk(
+  "payments/loadMoreTopPerformers",
+  async (requestData: TopPerformersRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<TopPerformersResponse>(
+        buildApiUrl(API_ENDPOINTS.PAYMENTS.TOP_PERFORMERS),
+        requestData
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to load more top performers")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Top performers data not found")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to load more top performers")
       }
       return rejectWithValue(error.message || "Network error during top performers fetch")
     }
@@ -3038,6 +3086,53 @@ const paymentSlice = createSlice({
         state.topPerformersError = (action.payload as string) || "Failed to fetch top performers"
         state.topPerformersSuccess = false
         state.topPerformers = null
+      })
+
+      // Load more top performers cases
+      .addCase(loadMoreTopPerformers.pending, (state) => {
+        state.loadingMoreTopPerformers = true
+        state.topPerformersError = null
+      })
+      .addCase(loadMoreTopPerformers.fulfilled, (state, action: PayloadAction<TopPerformersData>) => {
+        state.loadingMoreTopPerformers = false
+        state.topPerformersError = null
+
+        // Append new performers to existing data
+        if (state.topPerformers && action.payload.windows) {
+          const existingWindows = state.topPerformers.windows
+          const newWindows = action.payload.windows
+
+          // Merge windows by appending new performers to existing windows
+          const mergedWindows = existingWindows.map((existingWindow) => {
+            const newWindow = newWindows.find((w) => w.window === existingWindow.window)
+            if (newWindow) {
+              return {
+                ...existingWindow,
+                topAgents: [...existingWindow.topAgents, ...newWindow.topAgents],
+                topVendors: [...existingWindow.topVendors, ...newWindow.topVendors],
+              }
+            }
+            return existingWindow
+          })
+
+          // Add any new windows that don't exist in current state
+          newWindows.forEach((newWindow) => {
+            if (!existingWindows.find((w) => w.window === newWindow.window)) {
+              mergedWindows.push(newWindow)
+            }
+          })
+
+          state.topPerformers = {
+            windows: mergedWindows,
+          }
+        } else {
+          // If no existing data, set new data
+          state.topPerformers = action.payload
+        }
+      })
+      .addCase(loadMoreTopPerformers.rejected, (state, action) => {
+        state.loadingMoreTopPerformers = false
+        state.topPerformersError = (action.payload as string) || "Failed to load more top performers"
       })
 
       // Confirm payment cases

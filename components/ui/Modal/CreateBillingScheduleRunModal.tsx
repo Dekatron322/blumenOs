@@ -1,9 +1,8 @@
 "use client"
 
-import React from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { X } from "lucide-react"
-import { useRouter } from "next/navigation"
+import React from "react"
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { CreateBillingScheduleRunRequest } from "lib/redux/fileManagementSlice"
@@ -43,15 +42,33 @@ export const CreateBillingScheduleRunModal: React.FC<CreateBillingScheduleRunMod
   distributionSubstations = [],
   distributionSubstationsLoading = false,
 }) => {
-  const router = useRouter()
-
   const handleInputChange = (field: keyof CreateBillingScheduleRunRequest, value: any) => {
     onFormDataChange({ ...formData, [field]: value })
   }
 
   const handleCancel = () => {
     onClose()
-    router.push("/billing/generate")
+  }
+
+  const isFormValid = () => {
+    if (!formData.billingPeriodId || formData.billingPeriodId <= 0) {
+      return false
+    }
+
+    if (scheduleType === "Feeder" && (!formData.feederId || formData.feederId <= 0)) {
+      return false
+    }
+    if (scheduleType === "AreaOffice" && (!formData.areaOfficeId || formData.areaOfficeId <= 0)) {
+      return false
+    }
+    if (
+      scheduleType === "Distribution Substation" &&
+      (!formData.distributionSubstationId || formData.distributionSubstationId <= 0)
+    ) {
+      return false
+    }
+
+    return true
   }
 
   if (!isOpen) return null
@@ -74,7 +91,7 @@ export const CreateBillingScheduleRunModal: React.FC<CreateBillingScheduleRunMod
             className="mx-4 w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex flex-col gap-4 rounded-xl bg-white p-6 shadow-2xl">
+            <div className="flex flex-col gap-4 overflow-visible rounded-xl border border-gray-200 bg-white p-6 shadow-2xl">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-gray-900">Create Billing Schedule Run</h2>
                 <button
@@ -88,13 +105,16 @@ export const CreateBillingScheduleRunModal: React.FC<CreateBillingScheduleRunMod
               <div className="space-y-4">
                 {/* Title Field - Common for all types */}
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700">Title</label>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                    Title <span className="text-gray-400">(optional)</span>
+                  </label>
                   <input
                     type="text"
                     value={formData.title}
                     onChange={(e) => handleInputChange("title", e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                     placeholder="Enter run title"
+                    autoComplete="off"
                   />
                 </div>
 
@@ -114,6 +134,7 @@ export const CreateBillingScheduleRunModal: React.FC<CreateBillingScheduleRunMod
                     loading={billingPeriodsLoading}
                     disabled={billingPeriodsLoading}
                     required
+                    focusVariant="neutral"
                   />
                 </div>
 
@@ -134,6 +155,7 @@ export const CreateBillingScheduleRunModal: React.FC<CreateBillingScheduleRunMod
                       loading={feedersLoading}
                       disabled={feedersLoading}
                       required
+                      focusVariant="neutral"
                     />
                   </div>
                 )}
@@ -154,6 +176,7 @@ export const CreateBillingScheduleRunModal: React.FC<CreateBillingScheduleRunMod
                       loading={areaOfficesLoading}
                       disabled={areaOfficesLoading}
                       required
+                      focusVariant="neutral"
                     />
                   </div>
                 )}
@@ -174,6 +197,7 @@ export const CreateBillingScheduleRunModal: React.FC<CreateBillingScheduleRunMod
                       loading={distributionSubstationsLoading}
                       disabled={distributionSubstationsLoading}
                       required
+                      focusVariant="neutral"
                     />
                   </div>
                 )}
@@ -182,10 +206,10 @@ export const CreateBillingScheduleRunModal: React.FC<CreateBillingScheduleRunMod
               </div>
 
               <div className="flex gap-3 pt-4">
-                <ButtonModule className="flex-1" variant="outline" onClick={handleCancel} disabled={loading}>
+                <ButtonModule className="flex-1" variant="outlineGray" onClick={handleCancel} disabled={loading}>
                   Cancel
                 </ButtonModule>
-                <ButtonModule className="flex-1" onClick={onSubmit} disabled={loading}>
+                <ButtonModule className="flex-1" variant="blue" onClick={onSubmit} disabled={loading || !isFormValid()}>
                   {loading ? "Creating..." : "Create Run"}
                 </ButtonModule>
               </div>

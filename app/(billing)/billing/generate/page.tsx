@@ -1,10 +1,10 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import { motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { fetchBillingSchedules } from "lib/redux/billingPeriodsSlice"
+import { fetchBillingSchedules, Stage } from "lib/redux/billingPeriodsSlice"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"
 import { notify } from "components/ui/Notification/Notification"
@@ -13,9 +13,9 @@ import {
   Archive,
   ArrowLeft,
   BarChart3,
-  Calendar,
   CheckCircle,
   CheckSquare,
+  ChevronRight,
   Clock,
   FileDown,
   FilePlus,
@@ -132,39 +132,52 @@ const GenerateBillPage = () => {
   }
 
   // Redux state for billing schedules
-  const { billingSchedules, billingSchedulesLoading, billingSchedulesError, billingSchedulesSuccess } = useAppSelector(
+  const { billingSchedules, billingSchedulesLoading, billingSchedulesError } = useAppSelector(
     (state: { billingPeriods: any }) => state.billingPeriods
   )
 
   // Local state
   const [selectedSchedule, setSelectedSchedule] = useState<any>(null)
+  const refreshRequestRef = useRef<{ abort?: () => void } | null>(null)
+
+  const refreshBillingSchedules = useCallback(() => {
+    refreshRequestRef.current?.abort?.()
+    const request = dispatch(fetchBillingSchedules()) as unknown as { abort?: () => void }
+    refreshRequestRef.current = request
+  }, [dispatch])
 
   // Fetch billing schedules on component mount
   useEffect(() => {
-    dispatch(fetchBillingSchedules())
-  }, [dispatch])
+    refreshBillingSchedules()
 
-  // Handle billing schedules success/error
-  useEffect(() => {
-    if (billingSchedulesSuccess) {
-      console.log("Billing schedules fetched successfully:", billingSchedules)
+    return () => {
+      refreshRequestRef.current?.abort?.()
     }
+  }, [refreshBillingSchedules])
+
+  // Handle billing schedules errors
+  useEffect(() => {
     if (billingSchedulesError) {
       console.error("Error fetching billing schedules:", billingSchedulesError)
       notify("error", "Failed to load billing schedules", {
         description: billingSchedulesError,
       })
     }
-  }, [billingSchedulesSuccess, billingSchedulesError, billingSchedules])
+  }, [billingSchedulesError])
 
   // Handle refresh
-  const handleRefresh = () => {
-    dispatch(fetchBillingSchedules())
-  }
+  const handleRefresh = useCallback(() => {
+    refreshBillingSchedules()
+  }, [refreshBillingSchedules])
 
   // Format date
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+  const formatDate = (dateString?: string | null) => {
+    if (!dateString) return null
+
+    const date = new Date(dateString)
+    if (Number.isNaN(date.getTime())) return null
+
+    return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -177,11 +190,89 @@ const GenerateBillPage = () => {
   const getRunStatusInfo = (status: number) => {
     switch (status) {
       case 0:
-        return { color: "yellow", text: "Running", icon: Clock }
+        return { text: "Pending", icon: Clock, badgeClass: "bg-gray-100 text-gray-700" }
       case 1:
-        return { color: "green", text: "Completed", icon: CheckCircle }
+        return { text: "Running", icon: Clock, badgeClass: "bg-amber-100 text-amber-800" }
+      case 2:
+        return { text: "Completed", icon: CheckCircle, badgeClass: "bg-emerald-100 text-emerald-800" }
+      case 3:
+        return { text: "Failed", icon: XCircle, badgeClass: "bg-rose-100 text-rose-800" }
       default:
-        return { color: "red", text: "Failed", icon: XCircle }
+        return { text: "Pending", icon: Clock, badgeClass: "bg-gray-100 text-gray-700" }
+    }
+  }
+
+  const isFiniteNumber = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value)
+
+  const activeRunningScheduleId =
+    billingSchedules.find((schedule: any) => schedule?.latestRunProgress?.hasRunningStage === true)?.id ?? null
+  const hasAnyRunningStage = activeRunningScheduleId !== null
+
+  const getRunMetrics = (latestRunProgress?: any) => {
+    if (!latestRunProgress) {
+      return {
+        totalStages: 0,
+        processedStages: 0,
+        completedStages: 0,
+        failedStages: 0,
+        runningStages: 0,
+        pendingStages: 0,
+        doneRows: 0,
+        runningRows: 0,
+        failedRows: 0,
+        pendingRows: 0,
+        progressPercent: 0,
+      }
+    }
+
+    const stages: Stage[] = Array.isArray(latestRunProgress.stages) ? latestRunProgress.stages : []
+
+    const derivedCompletedStages = stages.filter((stage) => stage.state === 2).length
+    const derivedFailedStages = stages.filter((stage) => stage.state === 3).length
+    const derivedRunningStages = stages.filter((stage) => stage.state === 1).length
+    const derivedPendingStages = stages.filter((stage) => stage.state === 0).length
+
+    const totalStages = isFiniteNumber(latestRunProgress.totalStages) ? latestRunProgress.totalStages : stages.length
+    const completedStages = isFiniteNumber(latestRunProgress.succeededStages)
+      ? latestRunProgress.succeededStages
+      : derivedCompletedStages
+    const failedStages = isFiniteNumber(latestRunProgress.failedStages)
+      ? latestRunProgress.failedStages
+      : derivedFailedStages
+    const runningStages = isFiniteNumber(latestRunProgress.runningStages)
+      ? latestRunProgress.runningStages
+      : derivedRunningStages
+    const pendingStages = isFiniteNumber(latestRunProgress.pendingStages)
+      ? latestRunProgress.pendingStages
+      : derivedPendingStages
+    const processedStages = isFiniteNumber(latestRunProgress.processedStages)
+      ? latestRunProgress.processedStages
+      : Math.min(totalStages, completedStages + failedStages + runningStages)
+    const progressPercent = totalStages > 0 ? Math.round((processedStages / totalStages) * 100) : 0
+
+    // Row-level chips should reflect the currently relevant stage, not stage-state counts.
+    const activeStage =
+      stages.find((stage) => stage.state === 1) ||
+      stages.find((stage) => stage.total > 0 || stage.processed > 0 || stage.succeeded > 0 || stage.failed > 0) ||
+      stages[0]
+
+    const doneRows = activeStage?.succeeded ?? 0
+    const failedRows = activeStage?.failed ?? 0
+    const pendingRows = activeStage?.pending ?? 0
+    const runningRows = Math.max((activeStage?.processed ?? 0) - doneRows - failedRows, 0)
+
+    return {
+      totalStages,
+      processedStages,
+      completedStages,
+      failedStages,
+      runningStages,
+      pendingStages,
+      doneRows,
+      runningRows,
+      failedRows,
+      pendingRows,
+      progressPercent: Math.max(0, Math.min(100, progressPercent)),
     }
   }
 
@@ -198,13 +289,13 @@ const GenerateBillPage = () => {
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => router.back()}
-                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    className="flex size-10 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     aria-label="Go back"
                   >
                     <ArrowLeft className="size-5" />
                   </button>
                   <div>
-                    <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Billing Schedule Templates</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 sm:text-2xl">Billing Schedules</h1>
                     <p className="mt-1 text-sm text-gray-600">Manage and monitor billing schedule blueprints</p>
                   </div>
                 </div>
@@ -238,22 +329,13 @@ const GenerateBillPage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="rounded-xl bg-white shadow-lg"
+                className="rounded-xl border border-gray-200/60 bg-transparent"
               >
                 <div className="p-6">
-                  <div className="mb-6 flex items-center justify-between">
-                    <div>
-                      <h2 className="text-lg font-semibold text-gray-900">Billing Schedule Blueprints</h2>
-                      <p className="text-sm text-gray-600">
-                        Available billing schedule configurations and their status
-                      </p>
-                    </div>
-                  </div>
-
                   {billingSchedulesLoading && (
                     <div className="flex items-center justify-center py-12">
-                      <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
-                      <span className="ml-2 text-gray-600">Loading billing schedules...</span>
+                      <div className="size-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
+                      <span className="ml-2 text-gray-600">Loading</span>
                     </div>
                   )}
 
@@ -271,144 +353,128 @@ const GenerateBillPage = () => {
 
                   {!billingSchedulesLoading && !billingSchedulesError && billingSchedules.length === 0 && (
                     <div className="py-12 text-center">
-                      <FileText className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+                      <FileText className="mx-auto mb-4 size-12 text-gray-400" />
                       <h3 className="mb-2 text-lg font-medium text-gray-900">No billing schedules found</h3>
                       <p className="text-gray-600">There are currently no billing schedule blueprints available.</p>
                     </div>
                   )}
 
                   {!billingSchedulesLoading && !billingSchedulesError && billingSchedules.length > 0 && (
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                      {billingSchedules.map((schedule: any, index: number) => (
-                        <motion.div
-                          key={schedule.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.3, delay: index * 0.1 }}
-                          className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg transition-all duration-200 hover:shadow-xl"
-                        >
-                          {/* Card Header */}
-                          <div className="border-b border-gray-100 p-6">
-                            <div className="mb-4 flex items-start justify-between">
-                              <div className="flex items-center">
-                                <Calendar className="size-6 text-blue-600" />
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {billingSchedules.map((schedule: any, index: number) => {
+                        const scheduleTypeInfo = getScheduleTypeInfo(schedule.scheduleType)
+                        const ScheduleTypeIcon = scheduleTypeInfo.icon
+                        const formattedLastRun = formatDate(schedule.latestRunProgress?.startedAtUtc)
+                        const runMetrics = getRunMetrics(schedule.latestRunProgress)
+                        const isCurrentScheduleRunning = schedule.latestRunProgress?.hasRunningStage === true
+                        const isViewDetailsDisabled = hasAnyRunningStage && !isCurrentScheduleRunning
 
-                                <div className="ml-3">
-                                  <h3 className="text-lg font-semibold text-gray-900">{schedule.name}</h3>
+                        return (
+                          <motion.div
+                            key={schedule.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: index * 0.1 }}
+                            className="flex h-full min-h-[300px] flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-md transition-all duration-200 hover:shadow-lg"
+                          >
+                            {/* Card Header */}
+                            <div className="border-b border-gray-100 p-4">
+                              <div className="mb-3 flex items-start gap-2">
+                                <div className="flex items-center">
+                                  <ScheduleTypeIcon className={`size-5 ${scheduleTypeInfo.textColor}`} />
+
+                                  <div className="ml-2.5">
+                                    <h3 className="line-clamp-1 text-base font-semibold text-gray-900">
+                                      {schedule.name}
+                                    </h3>
+                                  </div>
                                 </div>
                               </div>
-                              <span
-                                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                  schedule.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
-                                }`}
-                              >
-                                {schedule.isActive ? "Active" : "Inactive"}
-                              </span>
+
+                              <p className="line-clamp-2 text-xs leading-5 text-gray-600">
+                                {schedule.description || "No description available"}
+                              </p>
                             </div>
 
-                            <p className="line-clamp-2 text-sm text-gray-600">
-                              {schedule.description || "No description available"}
-                            </p>
-                          </div>
-
-                          {/* Card Body - Run Progress */}
-                          <div className="bg-gray-50 p-6">
-                            {schedule.latestRunProgress ? (
-                              <div className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-sm font-medium text-gray-700">Latest Run</span>
-                                  {(() => {
-                                    const statusInfo = getRunStatusInfo(schedule.latestRunProgress.runStatus)
-                                    const Icon = statusInfo.icon
-                                    return (
-                                      <span
-                                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-${statusInfo.color}-100 text-${statusInfo.color}-800`}
-                                      >
-                                        <Icon className="mr-1 size-3" />
-                                        {statusInfo.text}
-                                      </span>
-                                    )
-                                  })()}
-                                </div>
-
-                                <div className="space-y-2">
-                                  <div className="flex justify-between text-xs text-gray-600">
-                                    <span>{schedule.latestRunProgress.runTitle}</span>
-                                    <span>
-                                      {schedule.latestRunProgress.processedStages}/
-                                      {schedule.latestRunProgress.totalStages} stages
-                                    </span>
+                            {/* Card Body - Run Summary */}
+                            <div className="flex-1 bg-gray-50 p-4">
+                              {schedule.latestRunProgress ? (
+                                <div className="space-y-3">
+                                  <div className="flex justify-end">
+                                    {(() => {
+                                      const statusInfo = getRunStatusInfo(schedule.latestRunProgress.runStatus)
+                                      const Icon = statusInfo.icon
+                                      return (
+                                        <span
+                                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusInfo.badgeClass}`}
+                                        >
+                                          <Icon className="mr-1 size-3" />
+                                          {statusInfo.text}
+                                        </span>
+                                      )
+                                    })()}
                                   </div>
 
-                                  {/* Overall Progress Bar */}
-                                  <div className="h-2 w-full rounded-full bg-gray-200">
+                                  <div className="flex items-center justify-between text-[11px] text-gray-600">
+                                    <span>
+                                      {runMetrics.processedStages}/{runMetrics.totalStages} stages
+                                    </span>
+                                    <span>{runMetrics.progressPercent}% complete</span>
+                                  </div>
+
+                                  <div className="h-1.5 w-full rounded-full bg-gray-200">
                                     <div
-                                      className="h-2 rounded-full bg-blue-600 transition-all duration-300"
-                                      style={{
-                                        width: `${
-                                          (schedule.latestRunProgress.processedStages /
-                                            schedule.latestRunProgress.totalStages) *
-                                          100
-                                        }%`,
-                                      }}
+                                      className="h-1.5 rounded-full bg-blue-600 transition-all duration-300"
+                                      style={{ width: `${runMetrics.progressPercent}%` }}
                                     />
                                   </div>
 
-                                  {/* Individual Stages */}
-                                  <div className="mt-3 space-y-1">
-                                    {schedule.latestRunProgress.stages
-                                      .slice(0, 3)
-                                      .map((stage: any, stageIndex: number) => {
-                                        const stepInfo = getStepInfo(stage.stage)
-                                        return (
-                                          <div key={stageIndex} className="flex items-center justify-between text-xs">
-                                            <span className="text-gray-500">{stepInfo.name}</span>
-                                            <div className="flex items-center space-x-2">
-                                              <span className="text-gray-400">
-                                                {stage.processed}/{stage.total}
-                                              </span>
-                                              <div className="h-1 w-12 rounded-full bg-gray-200">
-                                                <div
-                                                  className={`bg-${stepInfo.color}-500 h-1 rounded-full transition-all duration-300`}
-                                                  style={{ width: `${(stage.processed / stage.total) * 100}%` }}
-                                                />
-                                              </div>
-                                            </div>
-                                          </div>
-                                        )
-                                      })}
-                                    {schedule.latestRunProgress.stages.length > 3 && (
-                                      <div className="text-center text-xs text-gray-400">
-                                        +{schedule.latestRunProgress.stages.length - 3} more stages
-                                      </div>
-                                    )}
+                                  <div className="grid grid-cols-4 gap-2 text-[11px]">
+                                    <div className="rounded bg-gray-100 px-2 py-1 text-center text-gray-600">
+                                      Done: {runMetrics.doneRows.toLocaleString()}
+                                    </div>
+                                    <div className="rounded bg-blue-100 px-2 py-1 text-center text-blue-700">
+                                      Running: {runMetrics.runningRows.toLocaleString()}
+                                    </div>
+                                    <div className="rounded bg-red-100 px-2 py-1 text-center text-red-700">
+                                      Failed: {runMetrics.failedRows.toLocaleString()}
+                                    </div>
+                                    <div className="rounded bg-orange-100 px-2 py-1 text-center text-orange-700">
+                                      Pending: {runMetrics.pendingRows.toLocaleString()}
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            ) : (
-                              <div className="py-4 text-center">
-                                <Clock className="mx-auto mb-2 h-8 w-8 text-gray-400" />
-                                <p className="text-sm text-gray-500">No runs yet</p>
-                              </div>
-                            )}
-                          </div>
+                              ) : (
+                                <div className="pt-8 text-center">
+                                  <Clock className="mx-auto mb-1 size-6 text-gray-400" />
+                                  <p className="text-xs text-gray-500">No runs yet</p>
+                                </div>
+                              )}
+                            </div>
 
-                          {/* Card Footer */}
-                          <div className="flex flex-col gap-4 border-t border-gray-100 bg-white p-4">
-                            <div className="text-xs text-gray-500">Updated {formatDate(schedule.lastUpdated)}</div>
-                            <div className="flex items-center justify-between">
+                            {/* Card Footer */}
+                            <div className="flex flex-col gap-2 border-t border-gray-100 bg-white p-3">
+                              {formattedLastRun && (
+                                <div className="text-xs text-gray-500">Last run {formattedLastRun}</div>
+                              )}
                               <ButtonModule
-                                className="w-full"
-                                variant="outline"
-                                size="md"
+                                className={`w-full ${isViewDetailsDisabled ? "cursor-not-allowed opacity-60" : ""}`}
+                                variant="outlineGray"
+                                size="sm"
+                                icon={<ChevronRight className="size-3.5" />}
+                                iconPosition="end"
+                                disabled={isViewDetailsDisabled}
                                 onClick={() => router.push(`/billing/generate/${schedule.id}`)}
                               >
-                                View Details
+                                View details
                               </ButtonModule>
+                              {isViewDetailsDisabled && (
+                                <p className="text-[11px] text-amber-700">Locked until the active run is completed.</p>
+                              )}
                             </div>
-                          </div>
-                        </motion.div>
-                      ))}
+                          </motion.div>
+                        )
+                      })}
                     </div>
                   )}
                 </div>
@@ -516,25 +582,27 @@ const GenerateBillPage = () => {
 
                     <div className="space-y-2">
                       <p className="text-xs font-medium text-gray-500">Stages Progress</p>
-                      {selectedSchedule.latestRunProgress.stages.map((stage: any, index: number) => {
-                        const stepInfo = getStepInfo(stage.stage)
-                        return (
-                          <div key={index} className="flex items-center justify-between text-xs">
-                            <span className="font-medium text-gray-700">{stepInfo.name}</span>
-                            <div className="flex items-center space-x-2">
-                              <span className="text-gray-500">
-                                {stage.processed}/{stage.total}
-                              </span>
-                              <div className="h-2 w-16 rounded-full bg-gray-200">
-                                <div
-                                  className={`bg-${stepInfo.color}-500 h-2 rounded-full transition-all duration-300`}
-                                  style={{ width: `${(stage.processed / stage.total) * 100}%` }}
-                                />
+                      {selectedSchedule.latestRunProgress.stages
+                        .filter((stage: Stage) => stage.stage !== 1 && stage.stage !== 2 && stage.stage !== 3)
+                        .map((stage: Stage, index: number) => {
+                          const stepInfo = getStepInfo(stage.stage)
+                          return (
+                            <div key={index} className="flex items-center justify-between text-xs">
+                              <span className="font-medium text-gray-700">{stepInfo.name}</span>
+                              <div className="flex items-center space-x-2">
+                                <span className="text-gray-500">
+                                  {stage.processed}/{stage.total}
+                                </span>
+                                <div className="h-2 w-16 rounded-full bg-gray-200">
+                                  <div
+                                    className={`bg-${stepInfo.color}-500 h-2 rounded-full transition-all duration-300`}
+                                    style={{ width: `${(stage.processed / stage.total) * 100}%` }}
+                                  />
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        )
-                      })}
+                          )
+                        })}
                     </div>
                   </div>
                 </div>

@@ -30,6 +30,16 @@ interface SearchModuleProps {
   bgClassName?: string
 
   disabled?: boolean
+
+  prominent?: boolean
+
+  prominentLabel?: string
+
+  prominentTitle?: string
+
+  prominentDescription?: string
+
+  prominentClassName?: string
 }
 
 export const SearchModule: React.FC<SearchModuleProps> = ({
@@ -49,6 +59,11 @@ export const SearchModule: React.FC<SearchModuleProps> = ({
   ],
   bgClassName = "bg-[#f9f9f9]",
   disabled = false,
+  prominent = false,
+  prominentLabel = "Primary action",
+  prominentTitle = "Search Records",
+  prominentDescription = "Find records quickly using names, IDs, references, or keywords.",
+  prominentClassName = "",
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -77,9 +92,19 @@ export const SearchModule: React.FC<SearchModuleProps> = ({
     setIsDropdownOpen(false)
   }
 
-  return (
+  const resolvedHeight = prominent && height === "h-[37px]" ? "h-14" : height
+
+  const controlSizeClasses = prominent ? "w-full max-w-none sm:max-w-none md:w-full md:max-w-none" : ""
+
+  const prominentInputClasses = prominent
+    ? "rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+    : ""
+
+  const defaultWidthClass = prominent ? "w-full md:w-full" : "md:w-[380px]"
+
+  const searchControl = (
     <div
-      className={`flex ${height} items-center justify-between gap-3 rounded-md border px-0 text-[#707070] transition-all duration-200 focus-within:ring-2 focus-within:ring-[#004B23] focus-within:ring-offset-2 hover:border-[#004B23] md:w-[380px] ${bgClassName} ${className}`}
+      className={`flex ${resolvedHeight} items-center justify-between gap-3 rounded-md border px-0 text-[#707070] transition-all duration-200 focus-within:ring-2 focus-within:ring-[#004B23] focus-within:ring-offset-2 hover:border-[#004B23] ${defaultWidthClass} ${bgClassName} ${prominentInputClasses} ${className} ${controlSizeClasses}`}
     >
       {/* Search type dropdown */}
       {onSearchTypeChange && (
@@ -135,17 +160,32 @@ export const SearchModule: React.FC<SearchModuleProps> = ({
             style={{ cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.5 : 1 }}
           />
         )}
-        {onSearch && (
-          <button
-            type="button"
-            onClick={disabled ? undefined : onSearch}
-            disabled={disabled}
-            className="rounded bg-[#004B23] px-3 py-1 text-xs text-white transition-colors hover:bg-[#003d1c] disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Search
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={disabled ? undefined : onSearch}
+          disabled={disabled}
+          className="rounded bg-[#004B23] px-3 py-1 text-xs text-white transition-colors hover:bg-[#003d1c] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Search
+        </button>
       </div>
+    </div>
+  )
+
+  if (!prominent) {
+    return searchControl
+  }
+
+  return (
+    <div
+      className={`w-full basis-full rounded-xl border border-gray-200 bg-gradient-to-r from-green-50/60 to-white p-4 shadow-sm ${prominentClassName}`}
+    >
+      <div className="mb-3">
+        <p className="text-xs font-semibold uppercase tracking-wider text-[#004B23]">{prominentLabel}</p>
+        <h3 className="text-base font-semibold text-gray-900">{prominentTitle}</h3>
+        <p className="text-xs text-gray-600 sm:text-sm">{prominentDescription}</p>
+      </div>
+      <div className="w-full [&>div]:w-full [&>div]:max-w-none [&>div]:md:w-full">{searchControl}</div>
     </div>
   )
 }

@@ -14,6 +14,8 @@ import { AppDispatch, RootState } from "lib/redux/store"
 import { clearSupportTicketsStatus, getSupportTickets } from "lib/redux/customersDashboardSlice"
 import Image from "next/image"
 import { ButtonModule } from "components/ui/Button/Button"
+import EmptySearchState from "components/ui/EmptySearchState"
+import { FaTicketAlt } from "react-icons/fa"
 
 // Support ticket status enum matching API
 enum TicketStatus {
@@ -259,7 +261,6 @@ const AllSupportTicket: React.FC<AllSupportTicketProps> = ({
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
-  const [showMobileSearch, setShowMobileSearch] = useState(false)
 
   // Filter dropdown states
   const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false)
@@ -459,7 +460,6 @@ const AllSupportTicket: React.FC<AllSupportTicketProps> = ({
 
   const handleCancelSearch = () => {
     setSearchText("")
-    setShowMobileSearch(false)
   }
 
   const handleStatusFilterChange = (status: string) => {
@@ -487,7 +487,6 @@ const AllSupportTicket: React.FC<AllSupportTicketProps> = ({
       categoryId: "",
     })
     setSearchText("")
-    setShowMobileSearch(false)
     setPagination((prev) => ({ ...prev, currentPage: 1 }))
   }
 
@@ -589,9 +588,19 @@ const AllSupportTicket: React.FC<AllSupportTicketProps> = ({
         transition={{ duration: 0.3 }}
       >
         <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Support Tickets</p>
+          <p className="text-lg font-medium max-sm:pb-3 md:text-xl">Support Tickets</p>
           <p className="text-sm text-gray-600">View and manage all support tickets</p>
         </div>
+        <ButtonModule
+          type="button"
+          variant="primary"
+          onClick={() => router.push("/customer-portal/all-support-ticket/add")}
+          icon={<FaTicketAlt />}
+          iconPosition="start"
+          className="max-sm:w-full"
+        >
+          Create New Ticket
+        </ButtonModule>
       </motion.div>
 
       {/* Header with Search and Mobile Search Toggle */}
@@ -601,18 +610,19 @@ const AllSupportTicket: React.FC<AllSupportTicketProps> = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        {/* Mobile search input revealed when icon is tapped */}
-        {showMobileSearch && (
-          <div className="mb-3 sm:hidden">
-            <SearchModule
-              value={searchText}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              onCancel={handleCancelSearch}
-              placeholder="Search by reference, title or customer name"
-              className="w-full"
-            />
-          </div>
-        )}
+        <div className="mb-3 w-full">
+          <SearchModule
+            prominent
+            prominentTitle="Search Support Tickets"
+            prominentDescription="Find tickets quickly by reference, title, customer, or issue details."
+            value={searchText}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            onCancel={handleCancelSearch}
+            placeholder="Search by reference, title or customer name"
+            height="h-14"
+            className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+          />
+        </div>
 
         {/* Filters Section */}
         <motion.div
@@ -891,26 +901,18 @@ const AllSupportTicket: React.FC<AllSupportTicketProps> = ({
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
         >
-          <motion.p
-            className="text-base font-bold text-[#202B3C]"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            {searchText || filters.status || filters.priority || filters.categoryId
-              ? "No matching support tickets found"
-              : "No support tickets available"}
-          </motion.p>
-          <motion.p
-            className="text-sm text-gray-600"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-          >
-            {searchText || filters.status || filters.priority || filters.categoryId
-              ? "Try adjusting your search or filters"
-              : "Support tickets will appear here once they are created"}
-          </motion.p>
+          <EmptySearchState
+            title={
+              searchText || filters.status || filters.priority || filters.categoryId
+                ? "No matching support tickets found"
+                : "No support tickets available"
+            }
+            description={
+              searchText || filters.status || filters.priority || filters.categoryId
+                ? "Try adjusting your search or filters"
+                : "Support tickets will appear here once they are created"
+            }
+          />
         </motion.div>
       ) : (
         <>

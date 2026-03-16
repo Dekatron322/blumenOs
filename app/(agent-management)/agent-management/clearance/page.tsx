@@ -2,7 +2,21 @@
 
 import React, { useEffect, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
+import {
+  AlertCircle,
+  ArrowLeft,
+  Calendar,
+  ChevronDown,
+  ChevronUp,
+  Download,
+  Filter,
+  Info,
+  Loader2,
+  Search,
+  SortAsc,
+  SortDesc,
+  X,
+} from "lucide-react"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
@@ -63,11 +77,11 @@ const MobileFilterSidebar = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col bg-white shadow-xl"
+            className="flex size-full max-w-sm flex-col bg-white shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header - Fixed */}
-            <div className="flex-shrink-0 border-b bg-white p-4">
+            <div className="shrink-0 border-b bg-white p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <button
@@ -184,7 +198,7 @@ const MobileFilterSidebar = ({
             </div>
 
             {/* Bottom Action Buttons - Fixed */}
-            <div className="flex-shrink-0 border-t bg-white p-4 2xl:hidden">
+            <div className="shrink-0 border-t bg-white p-4 2xl:hidden">
               <div className="flex gap-3">
                 <button
                   onClick={() => {
@@ -350,201 +364,272 @@ export default function CashClearancesPage() {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto w-full px-3 py-8 2xl:container sm:px-4 lg:px-6 2xl:px-16">
-            <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row">
-              {/* Main Content */}
-              <motion.div
-                className={
-                  showDesktopFilters
-                    ? "w-full rounded-md border bg-white p-3 md:p-5 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
-                    : "w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1"
-                }
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="mb-4 flex w-full flex-col justify-between gap-4 max-md:flex-col md:flex-row md:items-center">
+          <div className="mx-auto w-full px-3 py-8 sm:px-4 lg:px-6 ">
+            <div className="space-y-5">
+              {/* Header Section */}
+              <div className="rounded-xl border border-gray-200 bg-white p-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <h4 className="text-2xl font-semibold">Cash Clearances</h4>
+                    <h2 className="text-lg font-semibold text-gray-900">Cash Clearances</h2>
+                    <p className="mt-1 text-xs text-gray-600">View and manage agent cash clearance records</p>
                   </div>
-                  <div className="flex items-center gap-2">
+
+                  <div className="flex flex-wrap items-center gap-2">
                     {/* Mobile Filter Button */}
                     <button
                       onClick={() => setShowMobileFilters(true)}
-                      className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 2xl:hidden"
+                      className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 2xl:hidden"
                     >
-                      <Filter className="size-4" />
-                      Filters
+                      <Filter className="size-3.5" />
+                      <span>Filters</span>
                       {getActiveFilterCount() > 0 && (
-                        <span className="flex size-5 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
+                        <span className="flex size-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-semibold text-white">
                           {getActiveFilterCount()}
                         </span>
                       )}
                     </button>
 
-                    {/* Hide/Show Filters button - Desktop only (2xl and above) */}
+                    {/* Hide/Show Filters button - Desktop only */}
                     <button
                       type="button"
                       onClick={() => setShowDesktopFilters((prev) => !prev)}
-                      className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+                      className="hidden items-center gap-1.5 whitespace-nowrap rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 2xl:flex"
                     >
-                      {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
+                      {showDesktopFilters ? <X className="size-3.5" /> : <Filter className="size-3.5" />}
                       {showDesktopFilters ? "Hide filters" : "Show filters"}
                     </button>
                   </div>
                 </div>
 
-                <AgentClearanceTable appliedFilters={appliedFilters} />
-              </motion.div>
-
-              {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
-              {showDesktopFilters && (
-                <motion.div
-                  key="desktop-filters-sidebar"
-                  initial={{ opacity: 1 }}
-                  animate={{ opacity: 1 }}
-                  className="hidden w-full flex-col rounded-md border bg-white 2xl:flex 2xl:w-80 2xl:self-start"
-                >
-                  {/* Header - Fixed */}
-                  <div className="flex-shrink-0 border-b bg-white p-3 md:p-5">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
-                      <button
-                        onClick={resetFilters}
-                        className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
-                      >
-                        <X className="size-3 md:size-4" />
-                        Clear All
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Filter Content - Scrollable */}
-                  <div className="flex-1 overflow-y-auto p-3 md:p-5">
-                    <div className="space-y-4">
-                      {/* Agent Filter */}
-                      <div>
-                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Agent</label>
-                        <FormSelectModule
-                          name="agentId"
-                          value={localFilters.agentId || ""}
-                          onChange={(e) =>
-                            handleFilterChange("agentId", e.target.value ? Number(e.target.value) : undefined)
-                          }
-                          options={agentOptions}
-                          className="w-full"
-                          controlClassName="h-9 text-sm"
-                        />
-                      </div>
-
-                      {/* Area Office Filter */}
-                      <div>
-                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
-                        <FormSelectModule
-                          name="areaOfficeId"
-                          value={localFilters.areaOfficeId || ""}
-                          onChange={(e) =>
-                            handleFilterChange("areaOfficeId", e.target.value ? Number(e.target.value) : undefined)
-                          }
-                          options={areaOfficeOptions}
-                          className="w-full"
-                          controlClassName="h-9 text-sm"
-                        />
-                      </div>
-
-                      {/* Date Range Filters */}
-                      <div>
-                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Start Date</label>
-                        <input
-                          type="date"
-                          value={localFilters.startDate || ""}
-                          onChange={(e) => handleFilterChange("startDate", e.target.value || undefined)}
-                          className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">End Date</label>
-                        <input
-                          type="date"
-                          value={localFilters.endDate || ""}
-                          onChange={(e) => handleFilterChange("endDate", e.target.value || undefined)}
-                          className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                        />
-                      </div>
-
-                      {/* Sort Options */}
-                      <div>
+                {/* Active Filters Summary */}
+                {getActiveFilterCount() > 0 && (
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <span className="text-xs text-gray-600">Active filters:</span>
+                    {appliedFilters.agentId && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
+                        Agent: {agentOptions.find((a) => a.value === appliedFilters.agentId)?.label}
                         <button
-                          type="button"
-                          onClick={() => setIsSortExpanded((prev) => !prev)}
-                          className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
-                          aria-expanded={isSortExpanded}
+                          onClick={() => handleFilterChange("agentId", undefined)}
+                          className="text-gray-500 hover:text-gray-700"
                         >
-                          <span>Sort By</span>
-                          {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                          <X className="size-3" />
                         </button>
+                      </span>
+                    )}
+                    {appliedFilters.areaOfficeId && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
+                        Area Office: {areaOfficeOptions.find((a) => a.value === appliedFilters.areaOfficeId)?.label}
+                        <button
+                          onClick={() => handleFilterChange("areaOfficeId", undefined)}
+                          className="text-gray-500 hover:text-gray-700"
+                        >
+                          <X className="size-3" />
+                        </button>
+                      </span>
+                    )}
+                    {appliedFilters.startDate && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
+                        From: {new Date(appliedFilters.startDate).toLocaleDateString()}
+                        <button
+                          onClick={() => handleFilterChange("startDate", undefined)}
+                          className="text-gray-500 hover:text-gray-700"
+                        >
+                          <X className="size-3" />
+                        </button>
+                      </span>
+                    )}
+                    {appliedFilters.endDate && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
+                        To: {new Date(appliedFilters.endDate).toLocaleDateString()}
+                        <button
+                          onClick={() => handleFilterChange("endDate", undefined)}
+                          className="text-gray-500 hover:text-gray-700"
+                        >
+                          <X className="size-3" />
+                        </button>
+                      </span>
+                    )}
+                    {appliedFilters.sortBy && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
+                        Sort:{" "}
+                        {
+                          sortOptions.find(
+                            (s) => s.value === appliedFilters.sortBy && s.order === appliedFilters.sortOrder
+                          )?.label
+                        }
+                        <button
+                          onClick={() => {
+                            handleFilterChange("sortBy", undefined)
+                            handleFilterChange("sortOrder", undefined)
+                          }}
+                          className="text-gray-500 hover:text-gray-700"
+                        >
+                          <X className="size-3" />
+                        </button>
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
 
-                        {isSortExpanded && (
-                          <div className="space-y-2">
-                            {sortOptions.map((option) => (
-                              <button
-                                key={`${option.value}-${option.order}`}
-                                onClick={() => handleSortChange(option)}
-                                className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
-                                  localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                                    ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                                    : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                                }`}
-                              >
-                                <span>{option.label}</span>
-                                {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
-                                  <span className="text-purple-600">
-                                    {option.order === "asc" ? (
-                                      <SortAsc className="size-4" />
-                                    ) : (
-                                      <SortDesc className="size-4" />
-                                    )}
-                                  </span>
-                                )}
-                              </button>
-                            ))}
-                          </div>
-                        )}
+              {/* Main Content with Table */}
+              <div className="flex gap-6">
+                {/* Table Container */}
+                <div className={showDesktopFilters ? "flex-1" : "w-full"}>
+                  <AgentClearanceTable appliedFilters={appliedFilters} />
+                </div>
+
+                {/* Desktop Filters Sidebar */}
+                {showDesktopFilters && (
+                  <motion.div
+                    key="desktop-filters-sidebar"
+                    initial={{ opacity: 1 }}
+                    animate={{ opacity: 1 }}
+                    className="hidden w-80 shrink-0 rounded-xl border border-gray-200 bg-white 2xl:block"
+                  >
+                    {/* Header */}
+                    <div className="border-b border-gray-200 p-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-semibold text-gray-900">Filters & Sorting</h3>
+                        <button
+                          onClick={resetFilters}
+                          className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
+                        >
+                          <X className="size-3" />
+                          Clear All
+                        </button>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Action Buttons - Fixed */}
-                  <div className="flex-shrink-0 space-y-3 border-t bg-white p-3 md:p-5">
-                    <button
-                      onClick={applyFilters}
-                      className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
-                    >
-                      <Filter className="size-4" />
-                      Apply Filters
-                    </button>
-                    <button
-                      onClick={resetFilters}
-                      className="button-oulined flex w-full items-center justify-center gap-2 text-sm md:text-base"
-                    >
-                      <X className="size-4" />
-                      Reset All
-                    </button>
-                  </div>
+                    {/* Filter Content */}
+                    <div className="p-4">
+                      <div className="space-y-4">
+                        {/* Agent Filter */}
+                        <div>
+                          <label className="mb-1.5 block text-xs font-medium text-gray-700">Agent</label>
+                          <FormSelectModule
+                            name="agentId"
+                            value={localFilters.agentId || ""}
+                            onChange={(e) =>
+                              handleFilterChange("agentId", e.target.value ? Number(e.target.value) : undefined)
+                            }
+                            options={agentOptions}
+                            className="w-full"
+                            controlClassName="h-9 text-xs"
+                          />
+                        </div>
 
-                  {/* Summary Stats - Fixed */}
-                  <div className="flex-shrink-0 rounded-lg bg-gray-50 p-3 md:p-4">
-                    <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
-                    <div className="space-y-1 text-xs md:text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Active Filters:</span>
-                        <span className="font-medium">{getActiveFilterCount()}</span>
+                        {/* Area Office Filter */}
+                        <div>
+                          <label className="mb-1.5 block text-xs font-medium text-gray-700">Area Office</label>
+                          <FormSelectModule
+                            name="areaOfficeId"
+                            value={localFilters.areaOfficeId || ""}
+                            onChange={(e) =>
+                              handleFilterChange("areaOfficeId", e.target.value ? Number(e.target.value) : undefined)
+                            }
+                            options={areaOfficeOptions}
+                            className="w-full"
+                            controlClassName="h-9 text-xs"
+                          />
+                        </div>
+
+                        {/* Date Range Filters */}
+                        <div>
+                          <label className="mb-1.5 block text-xs font-medium text-gray-700">Start Date</label>
+                          <input
+                            type="date"
+                            value={localFilters.startDate || ""}
+                            onChange={(e) => handleFilterChange("startDate", e.target.value || undefined)}
+                            className="h-9 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-1.5 block text-xs font-medium text-gray-700">End Date</label>
+                          <input
+                            type="date"
+                            value={localFilters.endDate || ""}
+                            onChange={(e) => handleFilterChange("endDate", e.target.value || undefined)}
+                            className="h-9 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          />
+                        </div>
+
+                        {/* Sort Options */}
+                        <div>
+                          <button
+                            type="button"
+                            onClick={() => setIsSortExpanded((prev) => !prev)}
+                            className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700"
+                            aria-expanded={isSortExpanded}
+                          >
+                            <span>Sort By</span>
+                            {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                          </button>
+
+                          {isSortExpanded && (
+                            <div className="space-y-2">
+                              {sortOptions.map((option) => (
+                                <button
+                                  key={`${option.value}-${option.order}`}
+                                  onClick={() => handleSortChange(option)}
+                                  className={`flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-xs transition-colors ${
+                                    localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                                      ? "border border-purple-200 bg-purple-50 text-purple-700"
+                                      : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                                  }`}
+                                >
+                                  <span>{option.label}</span>
+                                  {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                                    <span className="text-purple-600">
+                                      {option.order === "asc" ? (
+                                        <SortAsc className="size-3" />
+                                      ) : (
+                                        <SortDesc className="size-3" />
+                                      )}
+                                    </span>
+                                  )}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </motion.div>
-              )}
+
+                    {/* Action Buttons */}
+                    <div className="border-t border-gray-200 p-4">
+                      <div className="space-y-2">
+                        <button
+                          onClick={applyFilters}
+                          className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#004B23] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[#003618]"
+                        >
+                          <Filter className="size-3.5" />
+                          Apply Filters
+                        </button>
+                        <button
+                          onClick={resetFilters}
+                          className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                        >
+                          <X className="size-3.5" />
+                          Reset All
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Summary Stats */}
+                    <div className="border-t border-gray-200 bg-gray-50 p-4">
+                      <h4 className="mb-2 text-xs font-medium text-gray-900">Summary</h4>
+                      <div className="space-y-1 text-xs">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Active Filters:</span>
+                          <span className="font-medium">{getActiveFilterCount()}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
             </div>
           </div>
         </div>

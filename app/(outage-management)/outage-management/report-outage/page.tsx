@@ -286,11 +286,11 @@ const ReportOutage = () => {
         // Validate headers
         const expectedHeaders = ["title", "details", "distributionsubstationid", "feederid", "scope", "priority"]
 
-        const missingHeaders = expectedHeaders.filter((header) => !headers.includes(header))
-        if (missingHeaders.length > 0) {
-          setCsvErrors([`Missing required columns: ${missingHeaders.join(", ")}`])
-          return
-        }
+        // const missingHeaders = expectedHeaders.filter((header) => !headers.includes(header))
+        // if (missingHeaders.length > 0) {
+        //   setCsvErrors([`Missing required columns: ${missingHeaders.join(", ")}`])
+        //   return
+        // }
 
         const parsedData: CSVOutage[] = []
         const errors: string[] = []
@@ -526,7 +526,7 @@ const ReportOutage = () => {
     <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
       <DashboardNav />
       <div className="flex w-full">
-        <div className="flex w-full flex-col px-3 2xl:container max-sm:px-3 xl:px-16">
+        <div className="flex w-full flex-col px-3  max-sm:px-3 xl:px-6">
           {/* Page Header */}
           <div className="flex w-full justify-between gap-6 max-md:flex-col max-md:items-start max-sm:my-4 md:my-8">
             <div>
@@ -602,7 +602,7 @@ const ReportOutage = () => {
                   </button>
                   <button
                     onClick={() => setActiveTab("bulk")}
-                    className={`flex-1 rounded-tr-lg px-6 py-4 text-sm font-medium transition-colors ${
+                    className={`flex-1 rounded-r-lg px-6 py-4 text-sm font-medium transition-colors ${
                       activeTab === "bulk"
                         ? "border-b-2 border-blue-500 text-blue-600"
                         : "text-gray-500 hover:text-gray-700"
@@ -623,7 +623,7 @@ const ReportOutage = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="rounded-b-lg rounded-tr-lg bg-white p-6 shadow-sm"
+                    className="rounded-b-lg rounded-r-lg bg-white p-6 shadow-sm"
                   >
                     {/* Form Header */}
                     <div className="mb-6 border-b pb-4">

@@ -884,6 +884,8 @@ export interface DataQualityParams {
   Severity?: "Warning" | "Error"
   FromUtc?: string
   ToUtc?: string
+  SortBy?: string
+  SortOrder?: "asc" | "desc"
 }
 
 export interface DataQualityResponse {

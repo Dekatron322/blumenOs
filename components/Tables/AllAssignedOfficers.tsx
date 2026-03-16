@@ -11,6 +11,7 @@ import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { Agent, AgentsRequestParams, clearAgents, clearError, fetchAgents, setPagination } from "lib/redux/agentSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import { VscEye } from "react-icons/vsc"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface ActionDropdownProps {
   agent: Agent
@@ -390,8 +391,22 @@ const AllAssignedOfficers: React.FC<AllAssignedOfficersProps> = ({
   return (
     <div className="w-full">
       {/* Header Section with Search and Filters */}
-      <div className="mb-4 flex items-center justify-between border-b pb-4">
-        <div className="flex items-center gap-3">
+      <div className="mb-4 border-b pb-4">
+        <div className="mb-3 w-full">
+          <SearchModule
+            prominent
+            prominentTitle="Search Agents"
+            prominentDescription="Find agents quickly by name, account ID, status, or assignment."
+            value={searchText}
+            onChange={handleSearch}
+            onCancel={handleCancelSearch}
+            placeholder="Search agents..."
+            height="h-14"
+            className="!w-full md:!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
+            bgClassName="bg-white"
+          />
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
           {/* Mobile Filter Button */}
           {setShowMobileFilters && (
             <button
@@ -423,14 +438,6 @@ const AllAssignedOfficers: React.FC<AllAssignedOfficersProps> = ({
               )}
             </button>
           )}
-          <SearchModule
-            value={searchText}
-            onChange={handleSearch}
-            onCancel={handleCancelSearch}
-            placeholder="Search agents..."
-            className="w-full max-w-[380px]"
-            bgClassName="bg-white"
-          />
         </div>
       </div>
 
@@ -448,24 +455,14 @@ const AllAssignedOfficers: React.FC<AllAssignedOfficersProps> = ({
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
         >
-          <motion.p
-            className="text-base font-bold text-[#202B3C]"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            {searchText ? "No matching agents found" : "No agents available"}
-          </motion.p>
-          <motion.p
-            className="text-sm text-gray-600"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-          >
-            {searchText
-              ? "Try adjusting your search term"
-              : "Agents will appear here once they are added to the system"}
-          </motion.p>
+          <EmptySearchState
+            title={searchText ? "No matching agents found" : "No agents available"}
+            description={
+              searchText
+                ? "Try adjusting your search term"
+                : "Agents will appear here once they are added to the system"
+            }
+          />
         </motion.div>
       ) : (
         <>

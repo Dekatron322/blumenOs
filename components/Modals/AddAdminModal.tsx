@@ -42,7 +42,7 @@ const AddAdminModal: React.FC<AddEAdminModalProps> = ({ isOpen, onClose, onSave 
         </button>
         <h2 className="mb-4 px-10 text-base font-medium">Add New Admin</h2>
 
-        <div className="h-[1px] w-full bg-[#000000] opacity-5"></div>
+        <div className="h-px w-full bg-[#000000] opacity-5"></div>
         <div className="px-10">
           <div className="search-bg my-3  h-[56px] items-center  justify-between  rounded-[10px] px-3 py-2 hover:border-[#EEC202] focus:border-[#EEC202] focus:bg-[#FBFAFC] max-sm:mb-2 xl:w-[328px]">
             <p className="text-xs text-[#9D99AC]">Name</p>

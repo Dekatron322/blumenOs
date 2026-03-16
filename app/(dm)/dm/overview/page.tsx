@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { motion } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 import {
   clearAllDebtEntriesState,
   clearCustomersState,
@@ -33,13 +33,31 @@ import type {
 } from "lib/redux/debtManagementSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { ButtonModule } from "components/ui/Button/Button"
-import { VscAdd, VscEye } from "react-icons/vsc"
+import { VscAdd } from "react-icons/vsc"
 import RecordDebtModal from "components/ui/Modal/record-debt-modal"
 import ViewDebtEntryModal from "components/ui/Modal/view-debt-entry-modal"
 import DebtManagementInfo from "components/DebtManagementInfo/DebtManagementInfo"
 import DashboardNav from "components/Navbar/DashboardNav"
+import {
+  AlertCircle,
+  ArrowDown,
+  ArrowUp,
+  Banknote,
+  Calendar,
+  CreditCard,
+  DollarSign,
+  Home,
+  Loader2,
+  PieChart,
+  RefreshCw,
+  TrendingDown,
+  TrendingUp,
+  Users,
+  Wallet,
+  Zap,
+} from "lucide-react"
 
-// Dropdown Popover Component
+// Dropdown Popover Component (redesigned)
 const DropdownPopover = ({
   options,
   selectedValue,
@@ -53,14 +71,12 @@ const DropdownPopover = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false)
 
-  const selectedOption = options.find((opt) => opt.value === selectedValue)
-
   return (
     <div className="relative">
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 shadow-sm hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
       >
         {children}
         <svg
@@ -77,170 +93,152 @@ const DropdownPopover = ({
         </svg>
       </button>
 
-      {isOpen && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 z-20 mt-1 w-32 rounded-md border border-gray-200 bg-white py-1 text-sm shadow-lg">
-            {options.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => {
-                  onSelect(option.value)
-                  setIsOpen(false)
-                }}
-                className={`block w-full px-3 py-2 text-left ${
-                  option.value === selectedValue ? "bg-blue-50 text-blue-700" : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  )
-}
-
-// Enhanced Skeleton Loader Component for Cards
-const SkeletonLoader = () => {
-  return (
-    <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      {[...Array(4)].map((_, index) => (
-        <motion.div
-          key={index}
-          className="small-card rounded-md bg-white p-4 shadow-sm transition duration-500 md:border"
-          initial={{ opacity: 0.6 }}
-          animate={{
-            opacity: [0.6, 1, 0.6],
-            transition: {
-              duration: 1.5,
-              repeat: Infinity,
-              ease: "easeInOut",
-            },
-          }}
-        >
-          <div className="flex items-center gap-2 border-b pb-4">
-            <div className="size-6 rounded-full bg-gray-200"></div>
-            <div className="h-4 w-32 rounded bg-gray-200"></div>
-          </div>
-          <div className="flex flex-col gap-3 pt-4">
-            {[...Array(2)].map((_, i) => (
-              <div key={i} className="flex w-full justify-between">
-                <div className="h-4 w-24 rounded bg-gray-200"></div>
-                <div className="h-4 w-16 rounded bg-gray-200"></div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      ))}
-    </div>
-  )
-}
-
-// Enhanced Skeleton for the table and grid view
-const TableSkeleton = () => {
-  return (
-    <div className="flex-1 rounded-md border bg-white p-4 sm:p-5">
-      {/* Header Skeleton */}
-      <div className="flex flex-col items-start justify-between gap-4 border-b pb-4 sm:flex-row sm:items-center">
-        <div className="h-8 w-40 rounded bg-gray-200"></div>
-        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:gap-4">
-          <div className="h-10 w-full rounded bg-gray-200 sm:w-64"></div>
-          <div className="flex flex-wrap gap-2">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-10 w-20 rounded bg-gray-200 sm:w-24"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Grid View Skeleton */}
-      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {[...Array(6)].map((_, index) => (
-          <div key={index} className="rounded-lg border bg-white p-4 shadow-sm">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div className="size-10 rounded-full bg-gray-200 sm:size-12"></div>
-                <div>
-                  <div className="h-5 w-32 rounded bg-gray-200"></div>
-                  <div className="mt-1 flex flex-wrap gap-2">
-                    <div className="h-6 w-16 rounded-full bg-gray-200"></div>
-                    <div className="h-6 w-20 rounded-full bg-gray-200"></div>
-                  </div>
-                </div>
-              </div>
-              <div className="size-6 rounded bg-gray-200"></div>
-            </div>
-
-            <div className="mt-4 space-y-2">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex justify-between">
-                  <div className="h-4 w-20 rounded bg-gray-200"></div>
-                  <div className="h-4 w-16 rounded bg-gray-200"></div>
-                </div>
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="absolute right-0 z-20 mt-1 min-w-[120px] overflow-hidden rounded-lg border border-gray-200 bg-white py-1 text-sm shadow-lg"
+            >
+              {options.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    onSelect(option.value)
+                    setIsOpen(false)
+                  }}
+                  className={`block w-full px-3 py-2 text-left text-xs transition-colors ${
+                    option.value === selectedValue
+                      ? "bg-blue-50 font-medium text-blue-700"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  {option.label}
+                </button>
               ))}
-            </div>
-
-            <div className="mt-3 border-t pt-3">
-              <div className="h-4 w-full rounded bg-gray-200"></div>
-            </div>
-
-            <div className="mt-3 flex gap-2">
-              <div className="h-9 flex-1 rounded bg-gray-200"></div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Pagination Skeleton */}
-      <div className="mt-4 flex flex-col items-center justify-between gap-4 sm:flex-row">
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-16 rounded bg-gray-200"></div>
-          <div className="h-8 w-16 rounded bg-gray-200"></div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <div className="size-8 rounded bg-gray-200"></div>
-          <div className="flex gap-1">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="size-7 rounded bg-gray-200"></div>
-            ))}
-          </div>
-          <div className="size-8 rounded bg-gray-200"></div>
-        </div>
-
-        <div className="h-4 w-24 rounded bg-gray-200"></div>
-      </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
 
-// Main Loading Component
-const LoadingState = () => {
+// Modern Analytics Card Component
+const AnalyticsCard = ({
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  color = "blue",
+  trend,
+  trendValue,
+}: {
+  title: string
+  value: string | number
+  subtitle?: string
+  icon: React.ElementType
+  color?: "blue" | "green" | "purple" | "amber" | "emerald" | "red"
+  trend?: "up" | "down"
+  trendValue?: string
+}) => {
+  const colorClasses = {
+    blue: "bg-blue-50 text-blue-700 border-blue-200",
+    green: "bg-green-50 text-green-700 border-green-200",
+    purple: "bg-purple-50 text-purple-700 border-purple-200",
+    amber: "bg-amber-50 text-amber-700 border-amber-200",
+    emerald: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    red: "bg-red-50 text-red-700 border-red-200",
+  }
+
+  const iconColors = {
+    blue: "text-blue-600",
+    green: "text-green-600",
+    purple: "text-purple-600",
+    amber: "text-amber-600",
+    emerald: "text-emerald-600",
+    red: "text-red-600",
+  }
+
   return (
-    <div className="mt-5 flex flex-col gap-6 lg:flex-row">
-      <div className="flex-1">
-        <TableSkeleton />
+    <motion.div
+      whileHover={{ y: -2 }}
+      className="rounded-xl border border-gray-200 bg-white p-5 transition-all hover:border-gray-300 hover:shadow-sm"
+    >
+      <div className="flex items-start justify-between">
+        <div className={`rounded-lg p-2.5 ${colorClasses[color].split(" ")[0]}`}>
+          <Icon className={`size-5 ${iconColors[color]}`} />
+        </div>
+        {trend && (
+          <span
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${
+              trend === "up" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+            }`}
+          >
+            {trend === "up" ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
+            {trendValue}
+          </span>
+        )}
       </div>
-    </div>
+
+      <div className="mt-3">
+        <p className="text-sm text-gray-600">{title}</p>
+        <p className="mt-1 text-2xl font-semibold text-gray-900">{value.toLocaleString()}</p>
+        {subtitle && <p className="mt-1 text-xs text-gray-500">{subtitle}</p>}
+      </div>
+    </motion.div>
   )
 }
 
-// Debt Management Summary Component
-const DebtManagementSummary = ({
+// Modern Skeleton Loader for Analytics Cards
+const AnalyticsCardSkeleton = () => (
+  <motion.div
+    className="rounded-xl border border-gray-200 bg-white p-5"
+    initial={{ opacity: 0.6 }}
+    animate={{
+      opacity: [0.6, 1, 0.6],
+      transition: {
+        duration: 1.5,
+        repeat: Infinity,
+        ease: "easeInOut",
+      },
+    }}
+  >
+    <div className="flex items-start justify-between">
+      <div className="size-10 rounded-lg bg-gray-200"></div>
+      <div className="h-6 w-16 rounded-full bg-gray-200"></div>
+    </div>
+    <div className="mt-3 space-y-2">
+      <div className="h-4 w-24 rounded bg-gray-200"></div>
+      <div className="h-8 w-32 rounded bg-gray-200"></div>
+      <div className="h-3 w-20 rounded bg-gray-200"></div>
+    </div>
+  </motion.div>
+)
+
+// Modern Recovery Summary Section Component
+const RecoverySummarySection = ({
   recoverySummary,
   recoverySummaryLoading,
   recoverySummaryError,
+  customers,
 }: {
   recoverySummary: RecoverySummaryItem[]
   recoverySummaryLoading: boolean
   recoverySummaryError: string | null
+  customers: any[]
 }) => {
   // Calculate totals from recovery summary
   const totalRecoveredAmount = recoverySummary.reduce((sum, item) => sum + item.totalRecoveredAmount, 0)
   const totalRecoveries = recoverySummary.reduce((sum, item) => sum + item.totalRecoveries, 0)
+  const averageRecovery = totalRecoveries > 0 ? totalRecoveredAmount / totalRecoveries : 0
+
+  // Calculate total outstanding from customers data
+  const totalOutstanding = customers.reduce((sum, customer) => sum + (customer.outstandingBalance || 0), 0)
 
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -252,27 +250,115 @@ const DebtManagementSummary = ({
     }).format(amount)
   }
 
+  const formatNumber = (num: number) => num?.toLocaleString() || "0"
+
+  const calculatePercentage = (part: number, total: number) => {
+    return total > 0 ? Math.round((part / total) * 100) : 0
+  }
+
+  const recoveryCategories = [
+    {
+      name: "Total Outstanding",
+      value: totalOutstanding,
+      formatted: formatCurrency(totalOutstanding),
+      percentage: 100,
+      color: "amber",
+      icon: DollarSign,
+      description: "Total outstanding debt",
+      trend: "+5.2%",
+      trendUp: true,
+    },
+    {
+      name: "Total Recovered",
+      value: totalRecoveredAmount,
+      formatted: formatCurrency(totalRecoveredAmount),
+      percentage: 100,
+      color: "emerald",
+      icon: Banknote,
+      description: "Total amount recovered",
+      trend: "+8.3%",
+      trendUp: true,
+    },
+    {
+      name: "Recovery Count",
+      value: totalRecoveries,
+      formatted: formatNumber(totalRecoveries),
+      percentage: calculatePercentage(totalRecoveries, 1000),
+      color: "blue",
+      icon: CreditCard,
+      description: "Number of recoveries",
+      trend: "+12.7%",
+      trendUp: true,
+    },
+    {
+      name: "Average Recovery",
+      value: averageRecovery,
+      formatted: formatCurrency(averageRecovery),
+      percentage: 87,
+      color: "purple",
+      icon: Wallet,
+      description: "Average per recovery",
+      trend: "-2.4%",
+      trendUp: false,
+    },
+  ]
+
+  const colorClasses = {
+    emerald: {
+      bg: "bg-emerald-50",
+      text: "text-emerald-700",
+      border: "border-emerald-200",
+      light: "bg-emerald-100",
+      dark: "bg-emerald-600",
+      gradient: "from-emerald-500 to-emerald-600",
+    },
+    blue: {
+      bg: "bg-blue-50",
+      text: "text-blue-700",
+      border: "border-blue-200",
+      light: "bg-blue-100",
+      dark: "bg-blue-600",
+      gradient: "from-blue-500 to-blue-600",
+    },
+    purple: {
+      bg: "bg-purple-50",
+      text: "text-purple-700",
+      border: "border-purple-200",
+      light: "bg-purple-100",
+      dark: "bg-purple-600",
+      gradient: "from-purple-500 to-purple-600",
+    },
+    amber: {
+      bg: "bg-amber-50",
+      text: "text-amber-700",
+      border: "border-amber-200",
+      light: "bg-amber-100",
+      dark: "bg-amber-600",
+      gradient: "from-amber-500 to-amber-600",
+    },
+  }
+
   if (recoverySummaryLoading) {
     return (
       <motion.div
-        className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
+        className="rounded-xl border border-gray-200 bg-white p-5"
       >
-        <div className="flex items-center gap-3 border-b pb-3">
-          <div className="size-6 animate-pulse rounded-full bg-gray-200"></div>
-          <div className="h-5 w-32 animate-pulse rounded bg-gray-200"></div>
+        <div className="mb-4 flex items-center gap-2">
+          <div className="size-10 rounded-lg bg-gray-200"></div>
+          <div>
+            <div className="h-5 w-40 rounded bg-gray-200"></div>
+            <div className="mt-1 h-4 w-32 rounded bg-gray-200"></div>
+          </div>
         </div>
-        <div className="mt-4 space-y-3">
-          <div className="flex justify-between">
-            <div className="h-4 w-20 animate-pulse rounded bg-gray-200"></div>
-            <div className="h-4 w-16 animate-pulse rounded bg-gray-200"></div>
-          </div>
-          <div className="flex justify-between">
-            <div className="h-4 w-24 animate-pulse rounded bg-gray-200"></div>
-            <div className="h-4 w-12 animate-pulse rounded bg-gray-200"></div>
-          </div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="rounded-lg border border-gray-100 bg-gray-50 p-4">
+              <div className="h-4 w-24 rounded bg-gray-200"></div>
+              <div className="mt-2 h-8 w-32 rounded bg-gray-200"></div>
+            </div>
+          ))}
         </div>
       </motion.div>
     )
@@ -281,25 +367,15 @@ const DebtManagementSummary = ({
   if (recoverySummaryError) {
     return (
       <motion.div
-        className="rounded-lg border border-red-200 bg-red-50 p-4 shadow-sm"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
+        className="rounded-xl border border-red-200 bg-red-50 p-5"
       >
-        <div className="flex items-center gap-3">
-          <div className="rounded-full bg-red-100 p-2">
-            <svg className="size-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          </div>
+        <div className="flex items-start gap-3">
+          <AlertCircle className="mt-0.5 size-5 shrink-0 text-red-600" />
           <div>
-            <h5 className="text-sm font-medium text-red-800">Debt Recovery Error</h5>
-            <p className="text-xs text-red-600">{recoverySummaryError}</p>
+            <p className="font-medium text-red-900">Failed to load recovery data</p>
+            <p className="text-sm text-red-700">{recoverySummaryError}</p>
           </div>
         </div>
       </motion.div>
@@ -307,168 +383,188 @@ const DebtManagementSummary = ({
   }
 
   return (
-    <>
-      <div className="mb-6">
-        <div className="flex items-center gap-3">
-          <div className="rounded-full bg-indigo-100 p-2">
-            <svg className="size-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="rounded-xl border border-gray-200 bg-white p-5"
+    >
+      {/* Header */}
+      <div className="mb-4 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
+        <div className="flex items-center gap-2">
+          <div className="rounded-lg bg-emerald-100 p-2">
+            <PieChart className="size-5 text-emerald-700" />
           </div>
           <div>
-            <h5 className="text-lg font-semibold text-gray-900">Debt Recovery Summary</h5>
-            <p className="text-sm text-gray-500">Current period recovery performance</p>
+            <h2 className="text-lg font-semibold text-gray-900">Debt Recovery Summary</h2>
+            <p className="text-sm text-gray-600">Current period recovery performance</p>
           </div>
         </div>
+        <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700">Last 30 days</span>
       </div>
-      <motion.div
-        className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {/* Total Recovered */}
-          <div className="border-r border-gray-200 pr-6 last:border-r-0">
-            <div className="flex items-center justify-between">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
-                <svg className="size-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+
+      {/* Categories Grid */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
+        {recoveryCategories.map((category, index) => {
+          const colors = colorClasses[category.color as keyof typeof colorClasses]
+          const Icon = category.icon
+
+          return (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="group rounded-lg border border-gray-100 bg-white p-4 transition-all hover:border-gray-200 hover:shadow-sm"
+            >
+              {/* Header */}
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2">
+                  <div className={`rounded-lg p-2 ${colors.bg}`}>
+                    <Icon className={`size-4 ${colors.text}`} />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900">{category.name}</h3>
+                    <p className="text-xs text-gray-500">{category.description}</p>
+                  </div>
+                </div>
+                <span
+                  className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${
+                    category.trendUp ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+                  }`}
+                >
+                  {category.trendUp ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
+                  {category.trend}
+                </span>
+              </div>
+
+              {/* Value */}
+              <div className="mt-3">
+                <p className="text-2xl font-semibold text-gray-900">{category.formatted}</p>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="mt-3">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-600">Performance</span>
+                  <span className="font-medium text-gray-900">{category.percentage}%</span>
+                </div>
+                <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${category.percentage}%` }}
+                    transition={{ duration: 0.5, delay: index * 0.1 + 0.3 }}
+                    className={`h-full rounded-full bg-gradient-to-r ${colors.gradient}`}
                   />
-                </svg>
-              </div>
-              <div className="flex items-center gap-1 text-green-600">
-                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
-                </svg>
-                <span className="text-sm font-medium">{totalRecoveredAmount > 0 ? "+8.3%" : "0%"}</span>
-              </div>
-            </div>
-            <div className="mt-4">
-              <h3 className="text-sm font-medium text-gray-500">Total Recovered</h3>
-              <p className="mt-2 text-2xl font-semibold text-gray-900">{formatCurrency(totalRecoveredAmount)}</p>
-              <div className="mt-3 text-sm text-gray-600">
-                <div className="flex justify-between">
-                  <span>This Period:</span>
-                  <span>{formatCurrency(totalRecoveredAmount * 0.85)}</span>
                 </div>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          )
+        })}
+      </div>
 
-          {/* Recovery Count */}
-          <div className="border-r border-gray-200 pr-6 last:border-r-0">
-            <div className="flex items-center justify-between">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
-                <svg className="size-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                  />
-                </svg>
-              </div>
-              <div className="flex items-center gap-1 text-green-600">
-                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
-                </svg>
-                <span className="text-sm font-medium">{totalRecoveries > 0 ? "+12.7%" : "0%"}</span>
-              </div>
-            </div>
-            <div className="mt-4">
-              <h3 className="text-sm font-medium text-gray-500">Recovery Count</h3>
-              <p className="mt-2 text-2xl font-semibold text-gray-900">{totalRecoveries.toLocaleString()}</p>
-              <div className="mt-3 text-sm text-gray-600">
-                <div className="flex justify-between">
-                  <span>Success Rate:</span>
-                  <span>87.3%</span>
-                </div>
-              </div>
-            </div>
-          </div>
+      {/* Recovery by Period */}
+      {recoverySummary.length > 0 && (
+        <div className="mt-4 rounded-lg bg-gray-50 p-4">
+          <h4 className="mb-3 text-xs font-medium uppercase tracking-wider text-gray-600">Recovery by Period</h4>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {recoverySummary.slice(0, 6).map((item, index) => {
+              const trend = Math.floor(Math.random() * 20) + 3
+              const isPositive = Math.random() > 0.3
 
-          {/* Average Recovery */}
-          <div className="pr-6 last:pr-0">
-            <div className="flex items-center justify-between">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100">
-                <svg className="size-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
-                  />
-                </svg>
-              </div>
-              <div className="flex items-center gap-1 text-amber-600">
-                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
-                </svg>
-                <span className="text-sm font-medium">{totalRecoveries > 0 ? "-2.4%" : "0%"}</span>
-              </div>
-            </div>
-            <div className="mt-4">
-              <h3 className="text-sm font-medium text-gray-500">Average Recovery</h3>
-              <p className="mt-2 text-2xl font-semibold text-gray-900">
-                {totalRecoveries > 0 ? formatCurrency(totalRecoveredAmount / totalRecoveries) : formatCurrency(0)}
-              </p>
-              <div className="mt-3 text-sm text-gray-600">
-                <div className="flex justify-between">
-                  <span>Median:</span>
-                  <span>
-                    {totalRecoveries > 0
-                      ? formatCurrency((totalRecoveredAmount / totalRecoveries) * 0.8)
-                      : formatCurrency(0)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {recoverySummary.length > 0 && (
-          <div className="mt-6 border-t pt-6">
-            <h6 className="mb-4 text-sm font-semibold text-gray-900">Recovery by Period</h6>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {recoverySummary.slice(0, 6).map((item, index) => (
-                <div key={index} className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+              return (
+                <div key={index} className="flex items-center justify-between rounded-lg bg-white p-3">
                   <div>
                     <p className="text-sm font-medium text-gray-900">{item.periodKey}</p>
-                    <p className="text-xs text-gray-500">{Math.floor(Math.random() * 20) + 5} recoveries</p>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-gray-500">{Math.floor(Math.random() * 20) + 5} recoveries</span>
+                    </div>
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-semibold text-gray-900">{formatCurrency(item.totalRecoveredAmount)}</p>
-                    <p className="text-xs text-green-600">+{Math.floor(Math.random() * 15) + 3}%</p>
+                    <span
+                      className={`inline-flex items-center gap-0.5 text-xs ${
+                        isPositive ? "text-emerald-600" : "text-red-600"
+                      }`}
+                    >
+                      {isPositive ? <ArrowUp className="size-3" /> : <ArrowDown className="size-3" />}
+                      {trend}%
+                    </span>
                   </div>
                 </div>
-              ))}
-              {recoverySummary.length > 6 && (
-                <div className="flex items-center justify-center rounded-lg bg-gray-50 p-3">
-                  <p className="text-sm text-gray-500">+{recoverySummary.length - 6} more periods...</p>
-                </div>
-              )}
+              )
+            })}
+            {recoverySummary.length > 6 && (
+              <div className="flex items-center justify-center rounded-lg bg-white p-3">
+                <p className="text-xs text-gray-500">+{recoverySummary.length - 6} more periods</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </motion.div>
+  )
+}
+
+// Modern Skeleton Loader for Debt Management Info
+const DebtManagementInfoSkeleton = () => {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="mt-6 overflow-hidden rounded-xl border border-gray-200 bg-white"
+    >
+      <div className="border-b border-gray-200 bg-gray-50 p-4">
+        <div className="h-6 w-48 rounded bg-gray-200"></div>
+      </div>
+      <div className="p-4">
+        {[...Array(3)].map((_, i) => (
+          <div
+            key={i}
+            className="mb-4 flex items-center justify-between border-b border-gray-100 pb-4 last:border-0 last:pb-0"
+          >
+            <div className="flex items-center gap-3">
+              <div className="size-10 rounded-full bg-gray-200"></div>
+              <div>
+                <div className="h-4 w-32 rounded bg-gray-200"></div>
+                <div className="mt-1 h-3 w-24 rounded bg-gray-200"></div>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <div className="h-8 w-16 rounded bg-gray-200"></div>
+              <div className="h-8 w-16 rounded bg-gray-200"></div>
             </div>
           </div>
-        )}
-      </motion.div>
-    </>
+        ))}
+      </div>
+    </motion.div>
+  )
+}
+
+// Loading State Component
+const LoadingState = () => {
+  return (
+    <div className="w-full">
+      {/* Analytics Cards Skeleton */}
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
+          <AnalyticsCardSkeleton key={i} />
+        ))}
+      </div>
+
+      {/* Recovery Summary Skeleton */}
+      <div className="mb-6">
+        <AnalyticsCardSkeleton />
+      </div>
+
+      {/* Debt Management Info Skeleton */}
+      <DebtManagementInfoSkeleton />
+    </div>
   )
 }
 
 export default function DebtManagementDashboard() {
-  const [isLoading, setIsLoading] = useState(false)
   const [isPolling, setIsPolling] = useState(true)
-  const [pollingInterval, setPollingInterval] = useState<number>(480000) // Default 8 minutes (480,000 ms)
+  const [pollingInterval, setPollingInterval] = useState<number>(480000) // Default 8 minutes
 
   // Initialize selectedPeriod with a stable value
   const [selectedPeriod, setSelectedPeriod] = useState<string>(() => {
@@ -588,8 +684,6 @@ export default function DebtManagementDashboard() {
   }
 
   const handleRefreshData = useCallback(() => {
-    setIsLoading(true)
-
     // Refresh recovery summary
     const [year, month] = selectedPeriod.split("-").map(Number)
     const validYear = year && !isNaN(year) ? year : new Date().getFullYear()
@@ -610,7 +704,6 @@ export default function DebtManagementDashboard() {
 
     dispatch(fetchRecoverySummary(recoveryParams))
     dispatch(fetchDebtManagementCustomers(customersParams))
-    setTimeout(() => setIsLoading(false), 1000)
   }, [dispatch, selectedPeriod, customersPage, customersPageSize])
 
   const handleCustomersPageChange = (page: number) => {
@@ -741,77 +834,66 @@ export default function DebtManagementDashboard() {
     }
   }, [dispatch, isPolling, pollingInterval, selectedPeriod, customersPage, customersPageSize])
 
-  return (
-    <section className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200">
-      <DashboardNav />
-      <div className="flex min-h-screen w-full pb-20">
-        <div className="flex w-full flex-col">
-          <div className="mx-auto flex w-full flex-col px-3 2xl:container sm:px-3 xl:px-6 2xl:px-16">
-            {/* Page Header - Always Visible */}
-            <div className="flex w-full flex-col items-start justify-between gap-4 py-4 sm:py-6 md:gap-6 md:py-8 xl:flex-row xl:items-start">
-              <div className="flex-1">
-                <h4 className="text-lg font-semibold sm:text-xl md:text-2xl">Debt Management</h4>
-                <p className="text-sm text-gray-600 sm:text-base">Debt recovery tracking and management</p>
-              </div>
+  // Calculate totals for analytics cards
+  const totalRecoveredAmount = recoverySummary.reduce((sum, item) => sum + item.totalRecoveredAmount, 0)
+  const totalRecoveries = recoverySummary.reduce((sum, item) => sum + item.totalRecoveries, 0)
+  const averageRecovery = totalRecoveries > 0 ? totalRecoveredAmount / totalRecoveries : 0
 
-              <motion.div
-                className="flex flex-wrap items-center gap-3 xl:justify-end"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-              >
+  // Calculate total outstanding from customers data
+  const totalOutstanding = customers.reduce((sum, customer) => sum + (customer.outstandingBalance || 0), 0)
+
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
+      notation: "compact",
+      maximumFractionDigits: 1,
+    }).format(amount)
+  }
+
+  return (
+    <section className="min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100 pb-24 sm:pb-20">
+      <div className="flex w-full">
+        <div className="flex w-full flex-col">
+          <DashboardNav />
+
+          <div className="w-full px-4 py-6 sm:px-6 lg:px-8">
+            {/* Page Header */}
+            <div className="mb-8">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900 sm:text-2xl">Debt Management</h1>
+                  <p className="mt-1 text-sm text-gray-600">Debt recovery tracking and management</p>
+                </div>
+
+                {/* Header Actions */}
                 <div className="flex items-center gap-3">
-                  {/* Polling Controls */}
                   {canRecordDebt && (
                     <ButtonModule
                       variant="primary"
                       size="md"
-                      icon={<VscAdd />}
-                      iconPosition="start"
                       onClick={() => {
-                        // For now, open with a placeholder customer ID
-                        // In a real implementation, you might want a customer selection modal
                         handleOpenRecordDebtModal(0, "Select Customer", "")
                       }}
+                      icon={<VscAdd className="size-4" />}
+                      iconPosition="start"
+                      className="bg-[#004B23] text-white hover:bg-[#003618]"
                     >
                       Record Debt
                     </ButtonModule>
                   )}
-                  <div className="flex items-center gap-2 rounded-md border-r bg-white p-2 pr-3">
-                    <span className="text-sm font-medium text-gray-500">Auto-refresh:</span>
+
+                  {/* Polling Controls */}
+                  <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white p-1">
                     <button
                       onClick={togglePolling}
-                      className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                        isPolling
-                          ? "bg-green-100 text-green-700 hover:bg-green-200"
-                          : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                      className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                        isPolling ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                       }`}
                     >
-                      {isPolling ? (
-                        <>
-                          <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                            />
-                          </svg>
-                          ON
-                        </>
-                      ) : (
-                        <>
-                          <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
-                          OFF
-                        </>
-                      )}
+                      <RefreshCw className={`size-3.5 ${isPolling ? "animate-spin" : ""}`} />
+                      {isPolling ? "ON" : "OFF"}
                     </button>
 
                     {isPolling && (
@@ -820,97 +902,91 @@ export default function DebtManagementDashboard() {
                         selectedValue={pollingInterval}
                         onSelect={handlePollingIntervalChange}
                       >
-                        <span className="text-sm font-medium">
-                          {pollingOptions.find((opt) => opt.value === pollingInterval)?.label}
-                        </span>
+                        {pollingOptions.find((opt) => opt.value === pollingInterval)?.label}
                       </DropdownPopover>
                     )}
                   </div>
+
+                  <ButtonModule
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRefreshData}
+                    disabled={recoverySummaryLoading}
+                    className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                  >
+                    <RefreshCw className={`mr-2 size-4 ${recoverySummaryLoading ? "animate-spin" : ""}`} />
+                    Refresh
+                  </ButtonModule>
                 </div>
-              </motion.div>
+              </div>
             </div>
 
             {/* Error Message */}
-            {recoverySummaryError && (
-              <motion.div
-                className="mb-4 rounded-md bg-red-50 p-4 text-red-700"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                <p className="text-sm">Error loading debt recovery data: {recoverySummaryError}</p>
-              </motion.div>
-            )}
-
-            {/* Main Content Area */}
-            <div className="w-full">
-              {recoverySummaryLoading || isLoading ? (
-                // Loading State
-                <>
-                  <SkeletonLoader />
-                  <LoadingState />
-                  {/* Debt Management Summary Loading State */}
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.25 }}
-                    className="mt-6"
-                  >
-                    <DebtManagementSummary
-                      recoverySummary={[]}
-                      recoverySummaryLoading={true}
-                      recoverySummaryError={null}
-                    />
-                  </motion.div>
-                </>
-              ) : (
-                // Loaded State - Debt Management Dashboard
-                <>
-                  {/* Debt Management Summary */}
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.25 }}
-                    className="mt-6"
-                  >
-                    <DebtManagementSummary
-                      recoverySummary={recoverySummary}
-                      recoverySummaryLoading={recoverySummaryLoading}
-                      recoverySummaryError={recoverySummaryError}
-                    />
-                  </motion.div>
-
-                  {/* Debt Management Tabbed Interface */}
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.3 }}
-                    className="mt-6"
-                  >
-                    <DebtManagementInfo
-                      customers={customers}
-                      customersLoading={customersLoading}
-                      customersError={customersError}
-                      customersPagination={customersPagination}
-                      onCustomersPageChange={handleCustomersPageChange}
-                      onRefreshCustomers={handleRefreshCustomers}
-                      allDebtEntries={allDebtEntries}
-                      allDebtEntriesLoading={allDebtEntriesLoading}
-                      allDebtEntriesError={allDebtEntriesError}
-                      allDebtEntriesPagination={allDebtEntriesPagination}
-                      onAllDebtEntriesPageChange={handleAllDebtEntriesPageChange}
-                      onRefreshAllDebtEntries={handleRefreshAllDebtEntries}
-                      selectedCustomerId={selectedCustomerId}
-                      selectedStatus={selectedStatus}
-                      selectedPaymentTypeId={selectedPaymentTypeId}
-                      onCustomerIdFilterChange={handleCustomerIdFilterChange}
-                      onStatusFilterChange={handleStatusFilterChange}
-                      onPaymentTypeIdFilterChange={handlePaymentTypeIdFilterChange}
-                      onViewEntryDetails={handleViewEntryDetails}
-                    />
-                  </motion.div>
-                </>
+            <AnimatePresence>
+              {recoverySummaryError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4"
+                >
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="mt-0.5 size-5 shrink-0 text-red-600" />
+                    <div>
+                      <p className="font-medium text-red-900">Failed to load analytics</p>
+                      <p className="text-sm text-red-700">{recoverySummaryError}</p>
+                    </div>
+                  </div>
+                </motion.div>
               )}
-            </div>
+            </AnimatePresence>
+
+            {/* Main Content */}
+            {recoverySummaryLoading && !recoverySummary.length ? (
+              <LoadingState />
+            ) : (
+              <div className="w-full">
+                {/* Analytics Cards Row */}
+
+                {/* Recovery Summary Section */}
+                <RecoverySummarySection
+                  recoverySummary={recoverySummary}
+                  recoverySummaryLoading={recoverySummaryLoading}
+                  recoverySummaryError={recoverySummaryError}
+                  customers={customers}
+                />
+
+                {/* Debt Management Tabbed Interface */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  className="mt-6"
+                >
+                  <DebtManagementInfo
+                    customers={customers}
+                    customersLoading={customersLoading}
+                    customersError={customersError}
+                    customersPagination={customersPagination}
+                    onCustomersPageChange={handleCustomersPageChange}
+                    onRefreshCustomers={handleRefreshCustomers}
+                    allDebtEntries={allDebtEntries}
+                    allDebtEntriesLoading={allDebtEntriesLoading}
+                    allDebtEntriesError={allDebtEntriesError}
+                    allDebtEntriesPagination={allDebtEntriesPagination}
+                    onAllDebtEntriesPageChange={handleAllDebtEntriesPageChange}
+                    onRefreshAllDebtEntries={handleRefreshAllDebtEntries}
+                    selectedCustomerId={selectedCustomerId}
+                    selectedStatus={selectedStatus}
+                    selectedPaymentTypeId={selectedPaymentTypeId}
+                    onCustomerIdFilterChange={handleCustomerIdFilterChange}
+                    onStatusFilterChange={handleStatusFilterChange}
+                    onPaymentTypeIdFilterChange={handlePaymentTypeIdFilterChange}
+                    onViewEntryDetails={handleViewEntryDetails}
+                  />
+                </motion.div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -932,6 +1008,33 @@ export default function DebtManagementDashboard() {
         onRequestClose={handleCloseViewDebtEntryModal}
         entryId={selectedEntryId}
       />
+
+      {/* Loading Overlay */}
+      <AnimatePresence>
+        {recoverySummaryLoading && !recoverySummary.length && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="rounded-xl bg-white p-6 shadow-xl"
+            >
+              <div className="flex flex-col items-center gap-4">
+                <div className="size-12 animate-spin rounded-full border-4 border-[#004B23] border-t-transparent" />
+                <div className="text-center">
+                  <p className="font-medium text-gray-900">Loading Debt Data</p>
+                  <p className="text-sm text-gray-600">Please wait</p>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   )
 }

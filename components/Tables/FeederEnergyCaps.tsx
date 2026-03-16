@@ -15,7 +15,18 @@ import {
   setPagination,
 } from "lib/redux/feederEnergyCapSlice"
 import { ButtonModule } from "components/ui/Button/Button"
-import { ArrowLeft, ChevronDown, ChevronUp, Download, Filter, PlusCircle, SortAsc, SortDesc, X } from "lucide-react"
+import {
+  ArrowLeft,
+  ChevronDown,
+  ChevronUp,
+  Download,
+  Filter,
+  Loader2,
+  PlusCircle,
+  SortAsc,
+  SortDesc,
+  X,
+} from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { clearFeeders, fetchFeeders } from "lib/redux/feedersSlice"
@@ -27,6 +38,7 @@ import { clearCompanies, fetchCompanies } from "lib/redux/companySlice"
 import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
 import { VscEye } from "react-icons/vsc"
 import Image from "next/image"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 interface ActionDropdownProps {
   energyCap: FeederEnergyCap
@@ -237,7 +249,7 @@ const MobileFilterSidebar = ({
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header - Fixed at top */}
-            <div className="flex-shrink-0 border-b bg-white p-4">
+            <div className="shrink-0 border-b bg-white p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <button
@@ -375,7 +387,7 @@ const MobileFilterSidebar = ({
             </div>
 
             {/* Bottom Action Buttons - Fixed at bottom */}
-            <div className="flex-shrink-0 border-t bg-white p-4">
+            <div className="shrink-0 border-t bg-white p-4">
               <div className="flex gap-3">
                 <button
                   onClick={() => {
@@ -403,62 +415,6 @@ const MobileFilterSidebar = ({
         </motion.div>
       )}
     </AnimatePresence>
-  )
-}
-
-const LoadingSkeleton = () => {
-  return (
-    <div className="flex-3 mt-5 flex flex-col rounded-md border bg-white p-5">
-      {/* Header Section Skeleton */}
-      <div className="items-center justify-between border-b py-2 md:flex md:py-4">
-        <div className="mb-3 md:mb-0">
-          <div className="mb-2 h-8 w-48 rounded bg-gray-200"></div>
-          <div className="h-4 w-64 rounded bg-gray-200"></div>
-        </div>
-        <div className="flex gap-4">
-          <div className="h-10 w-48 rounded bg-gray-200"></div>
-          <div className="h-10 w-24 rounded bg-gray-200"></div>
-        </div>
-      </div>
-
-      {/* Table Skeleton */}
-      <div className="w-full overflow-x-auto border-x bg-[#f9f9f9]">
-        <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
-          <thead>
-            <tr>
-              {[...Array(8)].map((_, i) => (
-                <th key={i} className="whitespace-nowrap border-b p-4">
-                  <div className="h-4 w-24 rounded bg-gray-200"></div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {[...Array(5)].map((_, rowIndex) => (
-              <tr key={rowIndex}>
-                {[...Array(8)].map((_, cellIndex) => (
-                  <td key={cellIndex} className="whitespace-nowrap border-b px-4 py-3">
-                    <div className="h-4 w-full rounded bg-gray-200"></div>
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination Section Skeleton */}
-      <div className="flex items-center justify-between border-t py-3">
-        <div className="h-6 w-48 rounded bg-gray-200"></div>
-        <div className="flex items-center gap-2">
-          <div className="size-8 rounded bg-gray-200"></div>
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="size-8 rounded bg-gray-200"></div>
-          ))}
-          <div className="size-8 rounded bg-gray-200"></div>
-        </div>
-      </div>
-    </div>
   )
 }
 
@@ -493,7 +449,7 @@ const FeederEnergyCaps: React.FC = () => {
   const [searchTrigger, setSearchTrigger] = useState(0)
   const [selectedEnergyCap, setSelectedEnergyCap] = useState<FeederEnergyCap | null>(null)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [isSortExpanded, setIsSortExpanded] = useState(false)
 
   // Search states for dropdowns
@@ -915,7 +871,17 @@ const FeederEnergyCaps: React.FC = () => {
     return items
   }
 
-  if (feederEnergyCapsLoading) return <LoadingSkeleton />
+  // Loading state
+  if (feederEnergyCapsLoading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="size-8 animate-spin text-blue-600" />
+          <p className="text-sm text-gray-500">Loading feeder energy caps...</p>
+        </div>
+      </div>
+    )
+  }
   if (feederEnergyCapsError)
     return <div className="p-4 text-red-500">Error loading feeder energy cap data: {feederEnergyCapsError}</div>
 
@@ -931,7 +897,7 @@ const FeederEnergyCaps: React.FC = () => {
           }
         >
           <div className="flex flex-col py-2">
-            <div className="mb-3 flex w-full items-center justify-between gap-3">
+            <div className="mb-3 flex w-full flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 {/* Filter Button for ALL screens up to 2xl */}
                 <button
@@ -944,7 +910,7 @@ const FeederEnergyCaps: React.FC = () => {
 
                 {/* Export CSV button for mobile/tablet */}
 
-                <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">Feeder Energy Caps</p>
+                <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-xl">Feeder Energy Caps</p>
               </div>
 
               <div className="flex items-center gap-2">
@@ -983,27 +949,33 @@ const FeederEnergyCaps: React.FC = () => {
             <p className="text-sm text-gray-600">Manage and monitor feeder energy consumption caps and tariffs</p>
           </div>
 
-          <div className="mb-4 mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="w-full sm:w-96">
+          <div className="my-4 flex flex-col gap-3">
+            <div className="w-full">
               <SearchModule
+                prominent
+                prominentTitle="Search Feeder Energy Caps"
+                prominentDescription="Find feeder cap records quickly by period, feeder, area, or status."
                 value={searchText}
                 onChange={handleSearch}
                 onCancel={handleCancelSearch}
                 onSearch={handleManualSearch}
                 placeholder="Search by period (e.g., 2024-01)..."
-                className="w-full"
+                height="h-14"
+                className="!w-full rounded-xl border border-[#004B23]/25 bg-white px-2 shadow-sm md:!w-full [&_button]:min-h-[38px] [&_button]:px-4 [&_button]:text-sm [&_input]:text-sm sm:[&_input]:text-base"
                 bgClassName="bg-white"
               />
             </div>
             {canAddFeederCap && (
-              <button
-                type="button"
-                onClick={() => router.push("/billing/feeder-energy-caps/add")}
-                className="whitespace-nowrap rounded-md bg-[#004B23] px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-black focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 sm:px-4"
-              >
-                <PlusCircle className="size-4 sm:hidden" />
-                <p className="max-sm:hidden">Add Feeder Cap</p>
-              </button>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => router.push("/billing/feeder-energy-caps/add")}
+                  className="whitespace-nowrap rounded-md bg-[#004B23] px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-black focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 sm:px-4"
+                >
+                  <PlusCircle className="size-4 sm:hidden" />
+                  <p className="max-sm:hidden">Add Feeder Cap</p>
+                </button>
+              </div>
             )}
           </div>
 
@@ -1014,16 +986,13 @@ const FeederEnergyCaps: React.FC = () => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4 }}
             >
-              <motion.p
-                className="text-base font-bold text-[#202B3C]"
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.2 }}
-              >
-                {searchText || getActiveFilterCount() > 0
-                  ? "No matching feeder energy caps found"
-                  : "No feeder energy caps available"}
-              </motion.p>
+              <EmptySearchState
+                title={
+                  searchText || getActiveFilterCount() > 0
+                    ? "No matching feeder energy caps found"
+                    : "No feeder energy caps available"
+                }
+              />
             </motion.div>
           ) : (
             <>

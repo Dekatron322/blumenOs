@@ -279,7 +279,7 @@ const CreateDepartmentPage = () => {
           <div className="mx-auto flex w-full flex-col ">
             {/* Header */}
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-3 py-4 xl:px-16">
+              <div className="mx-auto w-full px-3 py-4 xl:px-6">
                 <div className="flex w-full items-center justify-between">
                   <div className="flex items-center gap-4">
                     <motion.button
@@ -351,7 +351,7 @@ const CreateDepartmentPage = () => {
               </div>
             </div>
 
-            <div className="flex w-full px-3 py-8 xl:px-16">
+            <div className="flex w-full px-3 py-8 xl:px-6">
               <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-3">
                 {/* Main Form Content - 2/3 width */}
                 <div className="space-y-6 md:col-span-2">

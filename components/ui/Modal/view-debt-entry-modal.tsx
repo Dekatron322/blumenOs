@@ -120,7 +120,7 @@ const ViewDebtEntryModal: React.FC<ViewDebtEntryModalProps> = ({ isOpen, onReque
         <div className="max-h-[70vh] overflow-y-auto">
           {isLoading ? (
             <div className="flex items-center justify-center p-8">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+              <div className="size-8 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
             </div>
           ) : error ? (
             <div className="p-8 text-center">

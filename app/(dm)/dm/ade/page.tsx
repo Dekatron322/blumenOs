@@ -22,6 +22,7 @@ import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
 import { UserIcon } from "components/Icons/Icons"
 import { AnimatePresence } from "framer-motion"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import EmptySearchState from "components/ui/EmptySearchState"
 
 // Dropdown Popover Component
 const DropdownPopover = ({
@@ -176,7 +177,7 @@ const FilterSidebar = ({
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header - Fixed at top */}
-            <div className="flex-shrink-0 border-b bg-white p-4">
+            <div className="shrink-0 border-b bg-white p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <button
@@ -302,7 +303,7 @@ const FilterSidebar = ({
             </div>
 
             {/* Bottom Action Buttons - Fixed at bottom */}
-            <div className="flex-shrink-0 border-t bg-white p-4">
+            <div className="shrink-0 border-t bg-white p-4">
               <div className="flex gap-3">
                 <button
                   onClick={() => {
@@ -531,7 +532,7 @@ const AllDebtEntriesTable = ({
         transition={{ duration: 0.3 }}
       >
         <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">All Debt Entries</p>
+          <p className="text-lg font-medium max-sm:pb-3 md:text-xl">All Debt Entries</p>
           <p className="text-sm text-gray-600">View and manage all debt entries</p>
         </div>
         <div className="flex items-center gap-3">
@@ -559,14 +560,7 @@ const AllDebtEntriesTable = ({
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
         >
-          <motion.p
-            className="text-base font-bold text-[#202B3C]"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            No debt entries found
-          </motion.p>
+          <EmptySearchState title="No debt entries found" />
         </motion.div>
       ) : (
         <>
@@ -755,7 +749,7 @@ export default function AllDebtEntriesPage() {
   const [isPolling, setIsPolling] = useState(true)
   const [pollingInterval, setPollingInterval] = useState<number>(480000) // Default 8 minutes (480,000 ms)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
 
   // Redux hooks
   const dispatch = useAppDispatch()
@@ -1024,11 +1018,11 @@ export default function AllDebtEntriesPage() {
       <DashboardNav />
       <div className="flex min-h-screen w-full pb-10">
         <div className="flex w-full flex-col">
-          <div className="mx-auto flex w-full flex-col px-3 2xl:container sm:px-3 xl:px-6 2xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3  sm:px-3 xl:px-6 ">
             {/* Page Header */}
             <div className="flex w-full flex-col items-start justify-between gap-4 py-4 sm:py-6 md:gap-6 md:py-4 xl:flex-row xl:items-start">
               <div className="flex-1">
-                <h4 className="text-lg font-semibold sm:text-xl md:text-2xl">All Manually Entered Debts</h4>
+                <h4 className="text-lg font-semibold sm:text-xl md:text-xl">All Manually Entered Debts</h4>
                 <p className="text-sm text-gray-600 sm:text-base">View and manage all debt entries</p>
               </div>
 
