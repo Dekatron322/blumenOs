@@ -21,6 +21,7 @@ import {
   fetchTokenGenerated,
   fetchTrend,
 } from "lib/redux/reportingSlice"
+import { fetchBillingPeriods, type BillingPeriod } from "lib/redux/billingPeriodsSlice"
 import { clearPaymentHealth, fetchPaymentHealth } from "lib/redux/paymentSlice"
 
 import {
@@ -63,6 +64,7 @@ import {
   FileText,
   Loader2,
   PieChart as PieChartIcon,
+  Search,
   XCircle,
   Zap,
 } from "lucide-react"
@@ -74,14 +76,12 @@ const DropdownPopover = ({
   onSelect,
   children,
 }: {
-  options: { value: number; label: string }[]
-  selectedValue: number
-  onSelect: (value: number) => void
+  options: { value: string | number; label: string }[]
+  selectedValue: string | number
+  onSelect: (value: string | number) => void
   children: React.ReactNode
 }) => {
   const [isOpen, setIsOpen] = useState(false)
-
-  const selectedOption = options.find((opt) => opt.value === selectedValue)
 
   return (
     <div className="relative">
@@ -133,6 +133,10 @@ const DropdownPopover = ({
 
 // Time filter types
 type TimeFilter = "lastYear" | "lastMonth" | "lastWeek" | "yesterday" | "day" | "week" | "month" | "year" | "all"
+type DailyCollectionFilter = "week" | "lastWeek" | "month" | "lastMonth" | "year" | "lastYear" | "all"
+type AppliedDateRange =
+  | { kind: "preset"; filter: TimeFilter }
+  | { kind: "custom"; start: string; end: string }
 
 // Payment Health Card Component
 const PaymentHealthCard = ({
@@ -538,6 +542,7 @@ export default function Dashboard() {
   const [selectedCurrencyId, setSelectedCurrencyId] = useState<number>(1)
   const [selectedCurrencySymbol, setSelectedCurrencySymbol] = useState<string>("₦")
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("day")
+  const [appliedDateRange, setAppliedDateRange] = useState<AppliedDateRange>({ kind: "preset", filter: "day" })
   const [activeView, setActiveView] = useState<"kpi" | "statistics">("kpi")
   const [isLoading, setIsLoading] = useState(false)
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
@@ -546,6 +551,11 @@ export default function Dashboard() {
   const [customStartDate, setCustomStartDate] = useState<string>("")
   const [customEndDate, setCustomEndDate] = useState<string>("")
   const [isDateRangeOpen, setIsDateRangeOpen] = useState(false)
+  const [dailyCollectionFilter, setDailyCollectionFilter] = useState<DailyCollectionFilter>("month")
+  const [paymentTrendsFilter, setPaymentTrendsFilter] = useState<DailyCollectionFilter>("month")
+  const [isCollectionPeriodOpen, setIsCollectionPeriodOpen] = useState(false)
+  const [collectionPeriodSearch, setCollectionPeriodSearch] = useState("")
+  const [collectionEfficiencyPeriodKey, setCollectionEfficiencyPeriodKey] = useState<string | null>(null)
   const [windowMinutes, setWindowMinutes] = useState<number>(60) // Default 60 minutes
   const router = useRouter()
   const dispatch = useAppDispatch()
@@ -599,6 +609,69 @@ export default function Dashboard() {
   } = useAppSelector((state) => state.reporting)
 
   const { paymentHealth, paymentHealthLoading, paymentHealthError } = useAppSelector((state) => state.payments)
+  const {
+    billingPeriods,
+    loading: billingPeriodsLoading,
+    error: billingPeriodsError,
+  } = useAppSelector((state) => state.billingPeriods)
+
+  const topDashboardCards = dashboardCards.slice(0, 3)
+  const remainingDashboardCards = dashboardCards.slice(3)
+  const effectiveCollectionEfficiencyPeriodKey = collectionEfficiencyPeriodKey ?? billingPeriods[0]?.periodKey ?? ""
+  const selectedCollectionEfficiencyPeriod = billingPeriods.find(
+    (period) => period.periodKey === effectiveCollectionEfficiencyPeriodKey
+  )
+  const filteredCollectionEfficiencyPeriods = useMemo(() => {
+    const query = collectionPeriodSearch.trim().toLowerCase()
+
+    if (!query) {
+      return billingPeriods
+    }
+
+    return billingPeriods.filter((period) => {
+      const month = period.month.toString().padStart(2, "0")
+      return (
+        period.displayName.toLowerCase().includes(query) ||
+        period.periodKey.toLowerCase().includes(query) ||
+        `${period.year}-${month}`.includes(query)
+      )
+    })
+  }, [billingPeriods, collectionPeriodSearch])
+
+  const renderDashboardMetricCard = (card: (typeof dashboardCards)[number], className: string) => (
+    <Card key={card.title} title={card.title} icon={getCardIcon(card.title)} className={className}>
+      <div className="mb-2 flex items-center justify-between border-b py-2">
+        <Text>{card.description}</Text>
+        <Text className="text-xs">
+          {timeFilter === "day" ? "00:00:00 AM to 23:59:59 PM" : timeFilter === "year" ? "Jan to Dec" : card.periodLabel}
+        </Text>
+      </div>
+
+      {dashboardCardsLoading || isLoading ? (
+        <div className="flex items-center justify-center py-8">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="size-6 animate-spin text-[#004B23]" />
+            <p className="text-sm text-gray-500">Loading dashboard cards...</p>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-start justify-between">
+          <div className="flex flex-col">
+            <Metric>{formatCardValue(card.value, card.valueFormat)}</Metric>
+            {card.valueFormat === "currency" && (
+              <div className="text-sm text-gray-600">
+                {(() => {
+                  const { full } = formatCurrencyWithAbbreviation(card.value, selectedCurrencySymbol)
+                  return full
+                })()}
+              </div>
+            )}
+          </div>
+          {getCardTrend(card) && <TrendIndicator value={getCardTrend(card)!.value} positive={getCardTrend(card)!.positive} />}
+        </div>
+      )}
+    </Card>
+  )
 
   const activeCustomersData = customerSegmentsData?.segments?.map((segment) => ({
     name: segment.label,
@@ -635,39 +708,26 @@ export default function Dashboard() {
     ],
   }
 
-  const refreshDashboardData = useCallback(() => {
-    let startDateUtc: string
-    let endDateUtc: string
-
-    // Use custom date range if provided (datetime-local format preserves time)
-    if (customStartDate && customEndDate) {
-      const start = new Date(customStartDate)
-      startDateUtc = start.toISOString()
-
-      const end = new Date(customEndDate)
-      endDateUtc = end.toISOString()
-    } else {
-      const dateRange = getDateRangeUtc(timeFilter as DateFilter)
-      startDateUtc = dateRange.startDateUtc
-      endDateUtc = dateRange.endDateUtc
+  const getAppliedDateParams = useCallback(() => {
+    if (appliedDateRange.kind === "custom") {
+      return {
+        startDateUtc: new Date(appliedDateRange.start).toISOString(),
+        endDateUtc: new Date(appliedDateRange.end).toISOString(),
+      }
     }
+
+    const dateRange = getDateRangeUtc(appliedDateRange.filter as DateFilter)
+    return {
+      startDateUtc: dateRange.startDateUtc,
+      endDateUtc: dateRange.endDateUtc,
+    }
+  }, [appliedDateRange])
+
+  const refreshFilteredDashboardData = useCallback(() => {
+    const { startDateUtc, endDateUtc } = getAppliedDateParams()
 
     dispatch(
       fetchDashboardCards({
-        startDateUtc,
-        endDateUtc,
-      })
-    )
-
-    dispatch(
-      fetchEnergyBalance({
-        startDateUtc,
-        endDateUtc,
-      })
-    )
-
-    dispatch(
-      fetchDailyCollection({
         startDateUtc,
         endDateUtc,
       })
@@ -716,42 +776,112 @@ export default function Dashboard() {
     )
 
     dispatch(
-      fetchCustomerSegments({
-        startDateUtc,
-        endDateUtc,
-      })
-    )
-
-    dispatch(
-      fetchTrend({
-        startDateUtc,
-        endDateUtc,
-      })
-    )
-
-    dispatch(
       fetchBreakdown({
         startDateUtc,
         endDateUtc,
         dimension: 0,
       })
     )
+  }, [dispatch, getAppliedDateParams])
+
+  const refreshCollectionEfficiencyData = useCallback(() => {
+    dispatch(
+      fetchCollectionEfficiency(
+        effectiveCollectionEfficiencyPeriodKey ? { periodKey: effectiveCollectionEfficiencyPeriodKey } : {}
+      )
+    )
+  }, [dispatch, effectiveCollectionEfficiencyPeriodKey])
+
+  const refreshDailyCollectionData = useCallback(() => {
+    const dateRange = getDateRangeUtc(dailyCollectionFilter as DateFilter)
 
     dispatch(
-      fetchCollectionEfficiency({
-        startDateUtc,
-        endDateUtc,
+      fetchDailyCollection({
+        startDateUtc: dateRange.startDateUtc,
+        endDateUtc: dateRange.endDateUtc,
       })
     )
+  }, [dailyCollectionFilter, dispatch])
 
-    dispatch(fetchOutstandingArrears())
+  const refreshOutstandingArrearsData = useCallback(() => {
+    const dateRange = getDateRangeUtc(dailyCollectionFilter as DateFilter)
+
+    dispatch(
+      fetchOutstandingArrears({
+        startDateUtc: dateRange.startDateUtc,
+        endDateUtc: dateRange.endDateUtc,
+      })
+    )
+  }, [dailyCollectionFilter, dispatch])
+
+  const refreshPaymentTrendsData = useCallback(() => {
+    const dateRange = getDateRangeUtc(paymentTrendsFilter as DateFilter)
+
+    dispatch(
+      fetchTrend({
+        startDateUtc: dateRange.startDateUtc,
+        endDateUtc: dateRange.endDateUtc,
+      })
+    )
+  }, [dispatch, paymentTrendsFilter])
+
+  const refreshUnfilteredDashboardData = useCallback(() => {
+    dispatch(fetchEnergyBalance({}))
+
+    dispatch(fetchCustomerSegments({}))
+
     dispatch(fetchDisputes())
+  }, [dispatch])
+
+  const refreshDashboardData = useCallback(() => {
+    refreshFilteredDashboardData()
+    refreshCollectionEfficiencyData()
+    refreshDailyCollectionData()
+    refreshOutstandingArrearsData()
+    refreshPaymentTrendsData()
+    refreshUnfilteredDashboardData()
     dispatch(fetchPaymentHealth({ windowMinutes }))
-  }, [dispatch, timeFilter, customStartDate, customEndDate, windowMinutes])
+  }, [
+    dispatch,
+    refreshCollectionEfficiencyData,
+    refreshDailyCollectionData,
+    refreshOutstandingArrearsData,
+    refreshPaymentTrendsData,
+    refreshFilteredDashboardData,
+    refreshUnfilteredDashboardData,
+    windowMinutes,
+  ])
 
   useEffect(() => {
-    refreshDashboardData()
-  }, [dispatch, timeFilter, refreshDashboardData])
+    refreshFilteredDashboardData()
+  }, [refreshFilteredDashboardData])
+
+  useEffect(() => {
+    dispatch(fetchBillingPeriods({ pageNumber: 1, pageSize: 200 }))
+  }, [dispatch])
+
+  useEffect(() => {
+    if (billingPeriodsLoading) return
+    if (billingPeriods.length === 0 && !billingPeriodsError) return
+
+    refreshCollectionEfficiencyData()
+  }, [billingPeriods.length, billingPeriodsError, billingPeriodsLoading, refreshCollectionEfficiencyData])
+
+  useEffect(() => {
+    refreshDailyCollectionData()
+  }, [refreshDailyCollectionData])
+
+  useEffect(() => {
+    refreshOutstandingArrearsData()
+  }, [refreshOutstandingArrearsData])
+
+  useEffect(() => {
+    refreshPaymentTrendsData()
+  }, [refreshPaymentTrendsData])
+
+  useEffect(() => {
+    refreshUnfilteredDashboardData()
+  }, [refreshUnfilteredDashboardData])
 
   // Fetch payment health when window minutes changes
   useEffect(() => {
@@ -774,7 +904,7 @@ export default function Dashboard() {
     }, pollingInterval)
 
     return () => clearInterval(interval)
-  }, [dispatch, timeFilter, isPolling, pollingInterval, refreshDashboardData])
+  }, [isPolling, pollingInterval, refreshDashboardData])
 
   // Memoize chart data to prevent unnecessary re-renders
   const memoizedEnergyBalanceChartData = useMemo(
@@ -896,7 +1026,14 @@ export default function Dashboard() {
 
   const handleTimeFilterChange = (filter: TimeFilter) => {
     setTimeFilter(filter)
+    setAppliedDateRange({ kind: "preset", filter })
     setIsMobileFilterOpen(false)
+  }
+
+  const handleCollectionEfficiencyPeriodSelect = (periodKey: string | null) => {
+    setCollectionEfficiencyPeriodKey(periodKey)
+    setCollectionPeriodSearch("")
+    setIsCollectionPeriodOpen(false)
   }
 
   const togglePolling = () => {
@@ -916,6 +1053,16 @@ export default function Dashboard() {
     { value: 1200000, label: "20m" },
   ]
 
+  const dailyCollectionFilterOptions: { value: DailyCollectionFilter; label: string }[] = [
+    { value: "week", label: "This Week" },
+    { value: "lastWeek", label: "Last Week" },
+    { value: "month", label: "This Month" },
+    { value: "lastMonth", label: "Last Month" },
+    { value: "year", label: "This Year" },
+    { value: "lastYear", label: "Last Year" },
+    { value: "all", label: "All Time" },
+  ]
+
   const getTimeFilterLabel = (filter: TimeFilter) => {
     if (filter === "day") return "Today"
     if (filter === "yesterday") return "Yesterday"
@@ -933,18 +1080,23 @@ export default function Dashboard() {
     className = "",
     title,
     icon,
+    headerAction,
     trend,
   }: {
     children: React.ReactNode
     className?: string
     title?: string
     icon?: React.ReactNode
+    headerAction?: React.ReactNode
     trend?: { value: string; positive: boolean }
   }) => (
     <div className={`rounded-xl bg-white p-6 shadow-sm transition-all hover:shadow-md ${className}`}>
       <div className="mb-4 flex items-center justify-between">
         {title && <h3 className="text-lg font-semibold text-gray-800">{title}</h3>}
-        {icon && <div className="text-gray-400">{icon}</div>}
+        <div className="flex items-center gap-3">
+          {headerAction}
+          {icon && <div className="text-gray-400">{icon}</div>}
+        </div>
       </div>
       {children}
       {trend && (
@@ -1077,8 +1229,8 @@ export default function Dashboard() {
                     />
                   </div>
 
-                  <div className="hidden rounded-lg p-3 sm:bg-white sm:p-2 sm:shadow-sm xl:flex">
-                    <div className="flex flex-row items-center gap-4 max-sm:justify-between sm:gap-4">
+                  <div className="hidden w-full rounded-lg p-3 sm:bg-white sm:p-2 sm:shadow-sm xl:flex">
+                    <div className="flex w-full flex-row items-center justify-between gap-4 max-sm:justify-between sm:gap-4">
                       <div className="flex flex-row items-center gap-2 max-sm:justify-between sm:gap-3">
                         <span className="text-xs  font-medium text-gray-500">Time Range:</span>
 
@@ -1161,6 +1313,8 @@ export default function Dashboard() {
                                     onClick={() => {
                                       setCustomStartDate("")
                                       setCustomEndDate("")
+                                      setAppliedDateRange({ kind: "preset", filter: timeFilter })
+                                      setIsDateRangeOpen(false)
                                     }}
                                     className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100"
                                   >
@@ -1170,7 +1324,11 @@ export default function Dashboard() {
                                 <button
                                   onClick={() => {
                                     if (customStartDate && customEndDate) {
-                                      refreshDashboardData()
+                                      setAppliedDateRange({
+                                        kind: "custom",
+                                        start: customStartDate,
+                                        end: customEndDate,
+                                      })
                                       setIsDateRangeOpen(false)
                                     }
                                   }}
@@ -1374,54 +1532,7 @@ export default function Dashboard() {
               {activeView === "kpi" && (
                 <>
                   <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 2xl:grid-cols-6">
-                    {(dashboardCards || []).map((card, index) => (
-                      <Card
-                        key={card.title}
-                        title={card.title}
-                        icon={getCardIcon(card.title)}
-                        className={index < 3 ? "2xl:col-span-2" : "2xl:col-span-3"}
-                      >
-                        <div className="mb-2 flex items-center justify-between border-b py-2">
-                          <Text>{card.description}</Text>
-                          <Text className="text-xs">
-                            {timeFilter === "day"
-                              ? "00:00:00 AM to 23:59:59 PM"
-                              : timeFilter === "year"
-                              ? "Jan to Dec"
-                              : card.periodLabel}
-                          </Text>
-                        </div>
-
-                        {dashboardCardsLoading || isLoading ? (
-                          <div className="flex items-center justify-center py-8">
-                            <div className="flex flex-col items-center gap-3">
-                              <Loader2 className="size-6 animate-spin text-[#004B23]" />
-                              <p className="text-sm text-gray-500">Loading dashboard cards...</p>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex items-start justify-between">
-                            <div className="flex flex-col">
-                              <Metric>{formatCardValue(card.value, card.valueFormat)}</Metric>
-                              {card.valueFormat === "currency" && (
-                                <div className="text-sm text-gray-600">
-                                  {(() => {
-                                    const { full } = formatCurrencyWithAbbreviation(card.value, selectedCurrencySymbol)
-                                    return full
-                                  })()}
-                                </div>
-                              )}
-                            </div>
-                            {getCardTrend(card) && (
-                              <TrendIndicator
-                                value={getCardTrend(card)!.value}
-                                positive={getCardTrend(card)!.positive}
-                              />
-                            )}
-                          </div>
-                        )}
-                      </Card>
-                    ))}
+                    {topDashboardCards.map((card) => renderDashboardMetricCard(card, "2xl:col-span-2"))}
 
                     {!dashboardCardsLoading && !isLoading && dashboardCards.length === 0 && (
                       <Card title="Dashboard Cards" icon={<RevenueIcon />}>
@@ -1435,7 +1546,115 @@ export default function Dashboard() {
 
                   {/* Collection Efficiency Card */}
                   <div className="mb-6">
-                    <Card title="Collection Efficiency">
+                    <Card
+                      title={`Collection Efficiency${selectedCollectionEfficiencyPeriod ? ` for ${selectedCollectionEfficiencyPeriod.displayName}` : ""}`}
+                      headerAction={
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={() => setIsCollectionPeriodOpen((prev) => !prev)}
+                            className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+                          >
+                            <Calendar className="size-4 text-gray-500" />
+                            <span className="max-w-[220px] truncate">
+                              {selectedCollectionEfficiencyPeriod?.displayName || "All billing periods"}
+                            </span>
+                            <svg
+                              className={`size-4 text-gray-500 transition-transform ${isCollectionPeriodOpen ? "rotate-180" : ""}`}
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </button>
+
+                          {isCollectionPeriodOpen && (
+                            <>
+                              <div className="fixed inset-0 z-10" onClick={() => setIsCollectionPeriodOpen(false)} />
+                              <div className="absolute right-0 top-full z-20 mt-2 w-80 rounded-xl border border-gray-200 bg-white p-3 shadow-xl">
+                                <div className="mb-3">
+                                  <div className="text-sm font-semibold text-gray-900">Billing Period</div>
+                                  <div className="mt-1 text-xs text-gray-500">
+                                    Search by month, year, or period key.
+                                  </div>
+                                </div>
+
+                                <div className="relative mb-3">
+                                  <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
+                                  <input
+                                    type="text"
+                                    value={collectionPeriodSearch}
+                                    onChange={(e) => setCollectionPeriodSearch(e.target.value)}
+                                    placeholder="Search periods"
+                                    className="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-sm text-gray-700 focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                                  />
+                                </div>
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleCollectionEfficiencyPeriodSelect("")}
+                                  className={`mb-2 flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm ${
+                                    effectiveCollectionEfficiencyPeriodKey === ""
+                                      ? "bg-[#004B23] text-white"
+                                      : "text-gray-700 hover:bg-gray-100"
+                                  }`}
+                                >
+                                  <span>All billing periods</span>
+                                  {effectiveCollectionEfficiencyPeriodKey === "" && <span className="text-xs">Selected</span>}
+                                </button>
+
+                                <div className="max-h-72 overflow-y-auto rounded-lg border border-gray-100">
+                                  {billingPeriodsLoading ? (
+                                    <div className="flex items-center justify-center py-6 text-sm text-gray-500">
+                                      <Loader2 className="mr-2 size-4 animate-spin" />
+                                      Loading periods...
+                                    </div>
+                                  ) : filteredCollectionEfficiencyPeriods.length === 0 ? (
+                                    <div className="px-3 py-6 text-center text-sm text-gray-500">
+                                      No billing periods match your search.
+                                    </div>
+                                  ) : (
+                                    filteredCollectionEfficiencyPeriods.map((period: BillingPeriod) => (
+                                      <button
+                                        key={period.id}
+                                        type="button"
+                                        onClick={() => handleCollectionEfficiencyPeriodSelect(period.periodKey)}
+                                        className={`flex w-full items-start justify-between gap-3 border-b border-gray-100 px-3 py-2 text-left last:border-b-0 ${
+                                          effectiveCollectionEfficiencyPeriodKey === period.periodKey
+                                            ? "bg-green-50"
+                                            : "text-gray-700 hover:bg-gray-50"
+                                        }`}
+                                      >
+                                        <div>
+                                          <div className="text-sm font-medium text-gray-900">{period.displayName}</div>
+                                          <div className="text-xs text-gray-500">{period.periodKey}</div>
+                                        </div>
+                                        {effectiveCollectionEfficiencyPeriodKey === period.periodKey && (
+                                          <span className="rounded-full bg-[#004B23] px-2 py-0.5 text-xs text-white">
+                                            Selected
+                                          </span>
+                                        )}
+                                      </button>
+                                    ))
+                                  )}
+                                </div>
+
+                                {billingPeriodsError && (
+                                  <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                                    {billingPeriodsError}
+                                  </div>
+                                )}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      }
+                    >
                       {collectionEfficiencyLoading ? (
                         <div className="flex items-center justify-center py-16">
                           <div className="flex flex-col items-center gap-3">
@@ -1456,123 +1675,223 @@ export default function Dashboard() {
                             <div className="mb-2 text-lg font-semibold text-gray-900">
                               No collection efficiency data
                             </div>
-                            <div className="text-sm text-gray-600">Try changing the time range.</div>
+                            <div className="text-sm text-gray-600">Try selecting another billing period.</div>
                           </div>
                         </div>
                       ) : (
-                        <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
-                          {/* Efficiency Percentage Card */}
-                          <div className="rounded-lg bg-gradient-to-br from-green-50 to-green-100 p-6">
-                            <div className="mb-2 text-sm font-medium uppercase tracking-wide text-green-600">
-                              Collection Efficiency
-                            </div>
-                            <div className={`text-3xl font-bold ${collectionEfficiencyColor}`}>
-                              {collectionEfficiencyData.efficiencyPercent?.toFixed(1) || "0.0"}%
-                            </div>
-                            <div className="mt-2 text-sm text-green-700">
-                              {collectionEfficiencyData.efficiencyPercent >= 90
-                                ? "Excellent"
-                                : collectionEfficiencyData.efficiencyPercent >= 80
-                                ? "Good"
-                                : "Needs Improvement"}
-                            </div>
-                          </div>
-
-                          {/* Total Billed Card */}
-                          <div className="rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 p-6">
-                            <div className="mb-2 text-sm font-medium uppercase tracking-wide text-blue-600">
-                              Total Billed
-                            </div>
-                            <div className="">
-                              <div className="text-3xl font-bold text-blue-900">
-                                {collectionEfficiencyData.totalBilled
-                                  ? (() => {
-                                      const { formatted } = formatCurrencyWithAbbreviation(
-                                        collectionEfficiencyData.totalBilled,
-                                        selectedCurrencySymbol
-                                      )
-                                      return formatted
-                                    })()
-                                  : `${selectedCurrencySymbol}0`}
+                        <div className="space-y-6">
+                          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+                            {/* Efficiency Percentage Card */}
+                            <div className="rounded-lg bg-gradient-to-br from-green-50 to-green-100 p-6">
+                              <div className="mb-2 text-sm font-medium uppercase tracking-wide text-green-600">
+                                Collection Efficiency
                               </div>
-                              <div className="flex w-full items-center justify-between">
-                                <div className="text-sm text-blue-700">
-                                  {collectionEfficiencyData.totalBilled
-                                    ? (() => {
-                                        const { full } = formatCurrencyWithAbbreviation(
-                                          collectionEfficiencyData.totalBilled,
-                                          selectedCurrencySymbol
-                                        )
-                                        return full
-                                      })()
-                                    : `${selectedCurrencySymbol}0`}
-                                </div>
+                              <div className={`text-3xl font-bold ${collectionEfficiencyColor}`}>
+                                {collectionEfficiencyData.efficiencyPercent?.toFixed(1) || "0.0"}%
+                              </div>
+                              <div className="mt-2 text-sm text-green-700">
+                                {collectionEfficiencyData.efficiencyPercent >= 90
+                                  ? "Excellent"
+                                  : collectionEfficiencyData.efficiencyPercent >= 80
+                                  ? "Good"
+                                  : "Needs Improvement"}
+                              </div>
+                            </div>
 
-                                <div className="mt-2 text-sm text-blue-700">
-                                  {collectionEfficiencyData.billCount?.toLocaleString() || "0"} bills
+                            {/* Performance Indicator */}
+                            <div className="rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+                              <div className="mb-2 text-sm font-medium uppercase tracking-wide text-gray-600">
+                                Performance
+                              </div>
+                              <div className="mb-4">
+                                <div className="h-4 w-full overflow-hidden rounded-full bg-gray-200">
+                                  <div
+                                    className="h-full rounded-full bg-gradient-to-r from-green-400 to-green-600"
+                                    style={{
+                                      width: `${Math.min(collectionEfficiencyData.efficiencyPercent || 0, 100)}%`,
+                                    }}
+                                  ></div>
+                                </div>
+                              </div>
+                              <div className="text-sm text-gray-700">
+                                <div className="flex justify-between">
+                                  <span>Target: 85%</span>
+                                  <span className="font-semibold">
+                                    {collectionEfficiencyData.efficiencyPercent?.toFixed(1) || "0.0"}%
+                                  </span>
                                 </div>
                               </div>
                             </div>
                           </div>
 
-                          {/* Total Collected Card */}
-                          <div className="rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 p-6">
-                            <div className="mb-2 text-sm font-medium uppercase tracking-wide text-purple-600">
-                              Total Collected
-                            </div>
-                            <div className="">
-                              <div className="text-3xl font-bold text-purple-900">
-                                {collectionEfficiencyData.totalCollected
-                                  ? (() => {
-                                      const { formatted } = formatCurrencyWithAbbreviation(
-                                        collectionEfficiencyData.totalCollected,
-                                        selectedCurrencySymbol
-                                      )
-                                      return formatted
-                                    })()
-                                  : `${selectedCurrencySymbol}0`}
-                              </div>
-                              <div className="flex w-full items-center justify-between">
-                                <div className="text-sm text-purple-700">
-                                  {collectionEfficiencyData.totalCollected
-                                    ? (() => {
-                                        const { full } = formatCurrencyWithAbbreviation(
-                                          collectionEfficiencyData.totalCollected,
-                                          selectedCurrencySymbol
-                                        )
-                                        return full
-                                      })()
-                                    : `${selectedCurrencySymbol}0`}
+                          <div className="grid grid-cols-1 gap-6 2xl:grid-cols-2">
+                            <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-4">
+                              <div className="mb-4">
+                                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">
+                                  Billing
                                 </div>
-
-                                <div className="mt-2 text-sm text-purple-700">
-                                  {collectionEfficiencyData.billsWithPayments?.toLocaleString() || "0"} paid bills
+                                <div className="mt-1 text-sm text-blue-900/70">
+                                  Gross billed totals and billed energy for the selected period.
                                 </div>
                               </div>
-                            </div>
-                          </div>
 
-                          {/* Performance Indicator */}
-                          <div className="rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 p-6">
-                            <div className="mb-2 text-sm font-medium uppercase tracking-wide text-gray-600">
-                              Performance
-                            </div>
-                            <div className="mb-4">
-                              <div className="h-4 w-full overflow-hidden rounded-full bg-gray-200">
-                                <div
-                                  className="h-full rounded-full bg-gradient-to-r from-green-400 to-green-600"
-                                  style={{
-                                    width: `${Math.min(collectionEfficiencyData.efficiencyPercent || 0, 100)}%`,
-                                  }}
-                                ></div>
+                              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <div className="rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 p-6">
+                                  <div className="mb-2 text-sm font-medium uppercase tracking-wide text-blue-600">
+                                    Total Billed With Debt
+                                  </div>
+                                  <div className="">
+                                    <div className="text-3xl font-bold text-blue-900">
+                                      {collectionEfficiencyData.totalBilled
+                                        ? (() => {
+                                            const { formatted } = formatCurrencyWithAbbreviation(
+                                              collectionEfficiencyData.totalBilled,
+                                              selectedCurrencySymbol
+                                            )
+                                            return formatted
+                                          })()
+                                        : `${selectedCurrencySymbol}0`}
+                                    </div>
+                                    <div className="flex w-full items-center justify-between">
+                                      <div className="text-sm text-blue-700">
+                                        {collectionEfficiencyData.totalBilled
+                                          ? (() => {
+                                              const { full } = formatCurrencyWithAbbreviation(
+                                                collectionEfficiencyData.totalBilled,
+                                                selectedCurrencySymbol
+                                              )
+                                              return full
+                                            })()
+                                          : `${selectedCurrencySymbol}0`}
+                                      </div>
+
+                                      <div className="mt-2 text-sm text-blue-700">
+                                        {collectionEfficiencyData.totalBilledEnergyKwh?.toLocaleString() || "0"} kWh
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="rounded-lg bg-gradient-to-br from-sky-50 to-cyan-100 p-6">
+                                  <div className="mb-2 text-sm font-medium uppercase tracking-wide text-sky-600">
+                                    Total Billed Without Debt
+                                  </div>
+                                  <div className="">
+                                    <div className="text-3xl font-bold text-sky-900">
+                                      {collectionEfficiencyData.totalBilledWithoutDebt
+                                        ? (() => {
+                                            const { formatted } = formatCurrencyWithAbbreviation(
+                                              collectionEfficiencyData.totalBilledWithoutDebt,
+                                              selectedCurrencySymbol
+                                            )
+                                            return formatted
+                                          })()
+                                        : `${selectedCurrencySymbol}0`}
+                                    </div>
+                                    <div className="flex w-full items-center justify-between">
+                                      <div className="text-sm text-sky-700">
+                                        {collectionEfficiencyData.totalBilledWithoutDebt
+                                          ? (() => {
+                                              const { full } = formatCurrencyWithAbbreviation(
+                                                collectionEfficiencyData.totalBilledWithoutDebt,
+                                                selectedCurrencySymbol
+                                              )
+                                              return full
+                                            })()
+                                          : `${selectedCurrencySymbol}0`}
+                                      </div>
+
+                                      <div className="mt-2 text-sm text-sky-700">
+                                        {collectionEfficiencyData.billCount?.toLocaleString() || "0"} bills
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
                             </div>
-                            <div className="text-sm text-gray-700">
-                              <div className="flex justify-between">
-                                <span>Target: 85%</span>
-                                <span className="font-semibold">
-                                  {collectionEfficiencyData.efficiencyPercent?.toFixed(1) || "0.0"}%
-                                </span>
+
+                            <div className="rounded-xl border border-purple-100 bg-purple-50/40 p-4">
+                              <div className="mb-4">
+                                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-purple-700">
+                                  Payments
+                                </div>
+                                <div className="mt-1 text-sm text-purple-900/70">
+                                  Cash collected and prepaid value delivered during the same period.
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <div className="rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 p-6">
+                                  <div className="mb-2 text-sm font-medium uppercase tracking-wide text-purple-600">
+                                    Total Collected
+                                  </div>
+                                  <div className="">
+                                    <div className="text-3xl font-bold text-purple-900">
+                                      {collectionEfficiencyData.totalCollected
+                                        ? (() => {
+                                            const { formatted } = formatCurrencyWithAbbreviation(
+                                              collectionEfficiencyData.totalCollected,
+                                              selectedCurrencySymbol
+                                            )
+                                            return formatted
+                                          })()
+                                        : `${selectedCurrencySymbol}0`}
+                                    </div>
+                                    <div className="flex w-full items-center justify-between">
+                                      <div className="text-sm text-purple-700">
+                                        {collectionEfficiencyData.totalCollected
+                                          ? (() => {
+                                              const { full } = formatCurrencyWithAbbreviation(
+                                                collectionEfficiencyData.totalCollected,
+                                                selectedCurrencySymbol
+                                              )
+                                              return full
+                                            })()
+                                          : `${selectedCurrencySymbol}0`}
+                                      </div>
+
+                                      <div className="mt-2 text-sm text-purple-700">
+                                        {collectionEfficiencyData.billsWithPayments?.toLocaleString() || "0"} paid bills
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="rounded-lg bg-gradient-to-br from-amber-50 to-yellow-100 p-6">
+                                  <div className="mb-2 text-sm font-medium uppercase tracking-wide text-amber-600">
+                                    Total Prepaid Amount
+                                  </div>
+                                  <div className="">
+                                    <div className="text-3xl font-bold text-amber-900">
+                                      {collectionEfficiencyData.totalPrepaidAmount
+                                        ? (() => {
+                                            const { formatted } = formatCurrencyWithAbbreviation(
+                                              collectionEfficiencyData.totalPrepaidAmount,
+                                              selectedCurrencySymbol
+                                            )
+                                            return formatted
+                                          })()
+                                        : `${selectedCurrencySymbol}0`}
+                                    </div>
+                                    <div className="flex w-full items-center justify-between">
+                                      <div className="text-sm text-amber-700">
+                                        {collectionEfficiencyData.totalPrepaidAmount
+                                          ? (() => {
+                                              const { full } = formatCurrencyWithAbbreviation(
+                                                collectionEfficiencyData.totalPrepaidAmount,
+                                                selectedCurrencySymbol
+                                              )
+                                              return full
+                                            })()
+                                          : `${selectedCurrencySymbol}0`}
+                                      </div>
+
+                                      <div className="mt-2 text-sm text-amber-700">
+                                        {collectionEfficiencyData.totalPrepaidEnergyKwh?.toLocaleString() || "0"} kWh
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -1700,7 +2019,18 @@ export default function Dashboard() {
                     </Card>
 
                     <div className="grid grid-cols-1  gap-6">
-                      <Card title="Daily Collection">
+                      <Card
+                        title="Daily Collection"
+                        headerAction={
+                          <DropdownPopover
+                            options={dailyCollectionFilterOptions}
+                            selectedValue={dailyCollectionFilter}
+                            onSelect={(value) => setDailyCollectionFilter(value as DailyCollectionFilter)}
+                          >
+                            {dailyCollectionFilterOptions.find((option) => option.value === dailyCollectionFilter)?.label}
+                          </DropdownPopover>
+                        }
+                      >
                         {dailyCollectionLoading ? (
                           <div className="flex items-center justify-center py-16">
                             <div className="flex flex-col items-center gap-3">
@@ -1770,7 +2100,7 @@ export default function Dashboard() {
 
                   {/* Operational Metrics */}
                   <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 2xl:grid-cols-4">
-                    <Card title="New Connections (MTD)" icon={<ConnectionIcon />}>
+                    <Card title="New Connections" icon={<ConnectionIcon />}>
                       <div className="mb-2 flex items-center justify-between border-b py-2">
                         <Text>Meter Installations</Text>
                       </div>
@@ -1876,11 +2206,29 @@ export default function Dashboard() {
                     </Card>
                   </div>
 
+                  {!dashboardCardsLoading && !isLoading && remainingDashboardCards.length > 0 && (
+                    <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 2xl:grid-cols-6">
+                      {remainingDashboardCards.map((card) => renderDashboardMetricCard(card, "2xl:col-span-3"))}
+                    </div>
+                  )}
+
                   {/* Payment Health Section */}
 
                   {/* Outstanding Arrears Section */}
                   <div className="mb-6">
-                    <Card title="Outstanding Arrears Summary" icon={<RevenueIcon />}>
+                    <Card
+                      title="Outstanding Arrears Summary"
+                      icon={<RevenueIcon />}
+                      headerAction={
+                        <DropdownPopover
+                          options={dailyCollectionFilterOptions}
+                          selectedValue={dailyCollectionFilter}
+                          onSelect={(value) => setDailyCollectionFilter(value as DailyCollectionFilter)}
+                        >
+                          {dailyCollectionFilterOptions.find((option) => option.value === dailyCollectionFilter)?.label}
+                        </DropdownPopover>
+                      }
+                    >
                       {outstandingArrearsLoading || isLoading ? (
                         <div className="flex items-center justify-center py-16">
                           <div className="flex flex-col items-center gap-3">
@@ -2312,8 +2660,19 @@ export default function Dashboard() {
                   {/* Trend Chart */}
                   <Card className="mb-6">
                     <div className="mb-4">
-                      <h3 className="text-lg font-semibold text-gray-900">Payment Trends</h3>
-                      <p className="text-sm text-gray-600">Confirmed payments over time</p>
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900">Payment Trends</h3>
+                          <p className="text-sm text-gray-600">Confirmed payments over time</p>
+                        </div>
+                        <DropdownPopover
+                          options={dailyCollectionFilterOptions}
+                          selectedValue={paymentTrendsFilter}
+                          onSelect={(value) => setPaymentTrendsFilter(value as DailyCollectionFilter)}
+                        >
+                          {dailyCollectionFilterOptions.find((option) => option.value === paymentTrendsFilter)?.label}
+                        </DropdownPopover>
+                      </div>
                     </div>
                     {trendLoading ? (
                       <div className="flex items-center justify-center py-16">
