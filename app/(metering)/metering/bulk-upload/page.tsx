@@ -722,7 +722,7 @@ const JobTypeUploadsTable = ({ jobType }: { jobType: number | null }) => {
                               View Failures
                             </ButtonModule>
                           )}
-                          {(job.status === 3 || job.status === 5) && (
+                          {(job.status === 3 || job.status === 5) && job.jobType !== 12 && (
                             <ButtonModule
                               variant="outline"
                               size="sm"
