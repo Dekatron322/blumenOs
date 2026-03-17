@@ -46,6 +46,7 @@ export interface PostpaidBill {
   customerAccountNumber: string
   customerStatusCode: any
   customerAverageDailyConsumption: any
+  storedAverage: number
   customerTariffCode: string
   customerMeterNumber: string | null
   netArrears: number

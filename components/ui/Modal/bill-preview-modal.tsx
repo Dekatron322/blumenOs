@@ -668,23 +668,30 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                         </div>
                         <div className="mt-1 flex justify-between">
                           <span className="print-hide-label font-semibold">ADC:</span>
-                          <span className="print-show-value px-2 font-semibold">-</span>
+                          <span className="print-show-value px-2 font-semibold">
+                            {currentBill.storedAverage || "-"}
+                          </span>
                         </div>
                         <div className="mt-1 flex justify-between">
                           <span className="print-hide-label font-semibold">Present Reading:</span>
-                          <span className="print-show-value px-2 font-semibold">{currentBill.consumption}</span>
+                          <span className="print-show-value px-2 font-semibold">
+                            {currentBill.presentReadingKwh || "-"}
+                          </span>
                         </div>
                         <div className="mt-1 flex justify-between">
                           <span className="print-hide-label font-semibold">Previous Reading:</span>
-                          <span className="print-show-value px-2 font-semibold">-</span>
+                          <span className="print-show-value px-2 font-semibold">
+                            {" "}
+                            {currentBill.previousReadingKwh || "-"}
+                          </span>
                         </div>
                         <div className="mt-1 flex justify-between">
                           <span className="print-hide-label font-semibold">Consumption:</span>
-                          <span className="print-show-value px-2 font-semibold">{currentBill.consumption}</span>
+                          <span className="print-show-value px-2 font-semibold">{currentBill.consumption || "-"}</span>
                         </div>
                         <div className="mt-1 flex justify-between">
                           <span className="print-hide-label font-semibold">Tariff Rate:</span>
-                          <span className="print-show-value px-2 font-semibold">{currentBill.tariff}</span>
+                          <span className="print-show-value px-2 font-semibold">{currentBill.tariffPerKwh}</span>
                         </div>
                         <div className="mt-1 flex justify-between">
                           <span className="print-hide-label font-semibold">Tariff Class:</span>

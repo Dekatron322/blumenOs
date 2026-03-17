@@ -663,9 +663,7 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                           <div className="space-y-2 px-2 ">
                             <div className="mt-2 flex justify-between">
                               <span className="print-hide-label font-semibold">Status Code:</span>
-                              <span className="print-show-value px-2 font-semibold">
-                                {getCustomerStatusLabel(bill.customer?.statusCode)}
-                              </span>
+                              <span className="print-show-value px-2 font-semibold">{bill.customer?.statusCode}</span>
                             </div>
                             <div className="mt-1 flex justify-between">
                               <span className="print-hide-label font-semibold">Opening Balance:</span>

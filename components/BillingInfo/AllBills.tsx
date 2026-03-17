@@ -108,6 +108,7 @@ export interface Bill {
   currentBillAmount?: number
   adjustedOpeningBalance?: number
   lastPaymentAmount?: number
+  storedAverage?: number
 }
 
 interface AllBillsProps {
@@ -1068,6 +1069,7 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
         chargeBeforeVat: apiBill.chargeBeforeVat,
         currentBillAmount: apiBill.currentBillAmount,
         adjustedOpeningBalance: apiBill.adjustedOpeningBalance,
+        storedAverage: apiBill.storedAverage,
       } as Bill
     })
   }
