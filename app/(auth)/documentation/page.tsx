@@ -1,32 +1,44 @@
 "use client"
 
 import React, { useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 import Image from "next/image"
 import {
-  Search,
-  ChevronDown,
-  ChevronRight,
-  Users,
-  Settings,
-  FileText,
-  BarChart3,
-  CreditCard,
-  Zap,
-  Briefcase,
-  UserCog,
-  Shield,
-  MapPin,
-  Clock,
   AlertCircle,
-  CheckCircle2,
-  Menu,
+  BarChart3,
   BookOpen,
+  Briefcase,
+  Check,
+  CheckCircle2,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
   Code,
+  Copy,
+  CreditCard,
+  Edit,
+  ExternalLink,
+  FileText,
+  HelpCircle,
+  Home,
+  Info,
   Layers,
+  LifeBuoy,
+  MapPin,
+  Menu,
+  Play,
+  Plus,
+  Search,
+  Settings,
+  Shield,
   Smartphone,
+  UserCog,
+  Users,
+  Zap,
 } from "lucide-react"
 
+// --- Types ---
 interface ModuleSection {
   id: string
   title: string
@@ -41,6 +53,7 @@ interface ModuleSection {
   }[]
 }
 
+// --- Data (same as original, but kept for completeness) ---
 const platformModules: ModuleSection[] = [
   {
     id: "auth",
@@ -977,13 +990,23 @@ const platformModules: ModuleSection[] = [
   },
 ]
 
+// --- Main Component ---
 export default function DocumentationPage() {
   const [searchTerm, setSearchTerm] = useState("")
-  const [expandedModules, setExpandedModules] = useState<string[]>([]) // All closed by default
-  const [selectedSubmodule, setSelectedSubmodule] = useState<string | null>(null)
+  const [expandedModules, setExpandedModules] = useState<string[]>([])
+  const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null)
+  const [selectedSubmodule, setSelectedSubmodule] = useState<{ moduleId: string; subName: string } | null>(null)
+  const [activeTab, setActiveTab] = useState<"modules" | "permissions" | "architecture" | "getting-started">("modules")
+  const [copiedCode, setCopiedCode] = useState<string | null>(null)
 
   const toggleModule = (moduleId: string) => {
     setExpandedModules((prev) => (prev.includes(moduleId) ? prev.filter((id) => id !== moduleId) : [...prev, moduleId]))
+  }
+
+  const handleSubmoduleSelect = (moduleId: string, subName: string) => {
+    setSelectedModuleId(moduleId)
+    setSelectedSubmodule({ moduleId, subName })
+    setActiveTab("modules")
   }
 
   const filteredModules = platformModules.filter(
@@ -997,449 +1020,293 @@ export default function DocumentationPage() {
       )
   )
 
+  const copyToClipboard = (text: string, id: string) => {
+    navigator.clipboard.writeText(text)
+    setCopiedCode(id)
+    setTimeout(() => setCopiedCode(null), 2000)
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-      <div className="mx-auto w-full px-4 py-6 sm:px-6 lg:px-8">
-        {/* Header with Logo - Matching login page style */}
+      {/* Top Navigation Bar */}
+      <div className="sticky top-0 z-20 border-b border-gray-200 bg-white/80 backdrop-blur-md">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-2">
+            <Image src="/kadco.svg" alt="blumenOs Logo" width={120} height={40} className="h-8 w-auto" />
+            <span className="text-xl font-bold text-[#004B23]">blumenOs</span>
+          </div>
+          <div className="hidden items-center gap-6 md:flex">
+            <button
+              onClick={() => setActiveTab("modules")}
+              className={`text-sm font-medium transition-colors ${
+                activeTab === "modules" ? "text-[#004B23]" : "text-gray-600 hover:text-[#004B23]"
+              }`}
+            >
+              Modules
+            </button>
+            <button
+              onClick={() => setActiveTab("permissions")}
+              className={`text-sm font-medium transition-colors ${
+                activeTab === "permissions" ? "text-[#004B23]" : "text-gray-600 hover:text-[#004B23]"
+              }`}
+            >
+              Permissions
+            </button>
+            <button
+              onClick={() => setActiveTab("architecture")}
+              className={`text-sm font-medium transition-colors ${
+                activeTab === "architecture" ? "text-[#004B23]" : "text-gray-600 hover:text-[#004B23]"
+              }`}
+            >
+              Architecture
+            </button>
+            <button
+              onClick={() => setActiveTab("getting-started")}
+              className={`text-sm font-medium transition-colors ${
+                activeTab === "getting-started" ? "text-[#004B23]" : "text-gray-600 hover:text-[#004B23]"
+              }`}
+            >
+              Getting Started
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <a
+              href="#"
+              className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-all hover:border-[#004B23]/30 hover:text-[#004B23]"
+            >
+              <LifeBuoy className="h-4 w-4" />
+              Support
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Hero Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="mb-8 flex flex-col items-start justify-between gap-4 border-b border-gray-200 pb-6 sm:flex-row sm:items-center"
+          className="mb-12 rounded-2xl bg-gradient-to-r from-[#004B23] to-[#006838] p-8 text-white shadow-xl"
         >
-          <div className="flex items-center gap-4">
-            <Image src="/kadco.svg" alt="blumenOs Logo" width={150} height={150} />
-
+          <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight text-[#004B23]">blumenOs Platform</h1>
-              <p className="mt-1 text-sm text-gray-500">Documentation & Reference Guide</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="inline-flex items-center rounded-full bg-[#004B23]/10 px-3 py-1 text-xs font-medium text-[#004B23]">
-              v2.0 · Stable
-            </span>
-          </div>
-        </motion.div>
-
-        {/* Search Bar */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="mb-8"
-        >
-          <div className="relative max-w-xl">
-            <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search modules, features, permissions..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-10 pr-4 shadow-sm transition-all focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
-            />
-          </div>
-        </motion.div>
-
-        {/* Documentation Content */}
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Module Navigation */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-4 space-y-4">
-              <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-                <Menu className="h-5 w-5 text-[#004B23]" />
-                Platform Modules
-                <span className="ml-2 text-sm font-normal text-gray-400">({filteredModules.length})</span>
-              </h2>
-
-              <div className="space-y-3">
-                {filteredModules.map((module, index) => (
-                  <motion.div
-                    key={module.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.02 }}
-                    className="rounded-xl border border-gray-200 bg-white shadow-sm transition-all hover:shadow-md"
-                  >
-                    <button
-                      onClick={() => toggleModule(module.id)}
-                      className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-gray-50"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="rounded-lg bg-[#004B23]/10 p-2 text-[#004B23]">{module.icon}</div>
-                        <span className="font-medium text-gray-900">{module.title}</span>
-                      </div>
-                      {expandedModules.includes(module.id) ? (
-                        <ChevronDown className="h-5 w-5 text-gray-400" />
-                      ) : (
-                        <ChevronRight className="h-5 w-5 text-gray-400" />
-                      )}
-                    </button>
-
-                    <AnimatePresence>
-                      {expandedModules.includes(module.id) && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="overflow-hidden"
-                        >
-                          <div className="border-t border-gray-100 px-4 pb-4">
-                            {module.submodules.map((sub) => (
-                              <button
-                                key={sub.path}
-                                onClick={() => setSelectedSubmodule(`${module.id}|${sub.name}`)}
-                                className={`mt-2 block w-full rounded-md px-3 py-2 text-left text-sm transition-all ${
-                                  selectedSubmodule === `${module.id}|${sub.name}`
-                                    ? "bg-[#004B23] text-white shadow-md"
-                                    : "text-gray-600 hover:bg-gray-50 hover:text-[#004B23]"
-                                }`}
-                              >
-                                {sub.name}
-                              </button>
-                            ))}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </motion.div>
-                ))}
+              <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Documentation</h1>
+              <p className="mt-2 text-lg text-green-100">
+                Complete guide to the blumenOs electricity distribution platform
+              </p>
+              <div className="mt-4 flex gap-2">
+                <span className="inline-flex items-center rounded-full bg-white/20 px-3 py-1 text-sm">Version 2.0</span>
+                <span className="inline-flex items-center rounded-full bg-white/20 px-3 py-1 text-sm">
+                  Last updated: March 2026
+                </span>
               </div>
             </div>
+            <div className="relative w-full max-w-md">
+              <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search documentation..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full rounded-xl border-0 bg-white/10 py-3 pl-10 pr-4 text-white placeholder:text-white/60 focus:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/50"
+              />
+            </div>
           </div>
+        </motion.div>
 
-          {/* Details Panel */}
-          <div className="lg:col-span-2">
-            {selectedSubmodule ? (
-              <SubmoduleDetails modules={platformModules} selectedId={selectedSubmodule} />
-            ) : (
-              <OverviewContent modules={platformModules} />
-            )}
+        {/* Main Content Area */}
+        <div className="grid gap-8 lg:grid-cols-12">
+          {/* Sidebar - Module Navigation (only shown on modules tab) */}
+          {activeTab === "modules" && (
+            <div className="lg:col-span-3">
+              <div className="sticky top-24 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                    <Menu className="h-5 w-5 text-[#004B23]" />
+                    Platform Modules
+                    <span className="ml-2 text-sm font-normal text-gray-400">({filteredModules.length})</span>
+                  </h2>
+                </div>
+
+                <div className="space-y-2">
+                  {filteredModules.map((module, index) => (
+                    <motion.div
+                      key={module.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.01 }}
+                      className={`rounded-xl border transition-all ${
+                        selectedModuleId === module.id
+                          ? "border-[#004B23] bg-[#004B23]/5 shadow-md"
+                          : "border-gray-200 bg-white shadow-sm hover:shadow-md"
+                      }`}
+                    >
+                      <button
+                        onClick={() => toggleModule(module.id)}
+                        className="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-gray-50"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`rounded-lg p-2 ${
+                              selectedModuleId === module.id
+                                ? "bg-[#004B23] text-white"
+                                : "bg-[#004B23]/10 text-[#004B23]"
+                            }`}
+                          >
+                            {module.icon}
+                          </div>
+                          <span className="font-medium text-gray-900">{module.title}</span>
+                        </div>
+                        {expandedModules.includes(module.id) ? (
+                          <ChevronDown className="h-4 w-4 text-gray-400" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4 text-gray-400" />
+                        )}
+                      </button>
+
+                      <AnimatePresence>
+                        {expandedModules.includes(module.id) && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="border-t border-gray-100 px-3 pb-3">
+                              {module.submodules.map((sub) => (
+                                <button
+                                  key={sub.path}
+                                  onClick={() => handleSubmoduleSelect(module.id, sub.name)}
+                                  className={`mt-2 block w-full rounded-md px-3 py-2 text-left text-sm transition-all ${
+                                    selectedSubmodule?.moduleId === module.id && selectedSubmodule?.subName === sub.name
+                                      ? "bg-[#004B23] text-white shadow-md"
+                                      : "text-gray-600 hover:bg-gray-50 hover:text-[#004B23]"
+                                  }`}
+                                >
+                                  {sub.name}
+                                </button>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Main Content Area */}
+          <div className={`${activeTab === "modules" ? "lg:col-span-9" : "lg:col-span-12"}`}>
+            <AnimatePresence mode="wait">
+              {activeTab === "modules" && (
+                <motion.div
+                  key="modules"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {selectedSubmodule ? (
+                    <SubmoduleDetails
+                      modules={platformModules}
+                      selectedId={`${selectedSubmodule.moduleId}|${selectedSubmodule.subName}`}
+                      onBack={() => {
+                        setSelectedSubmodule(null)
+                        setSelectedModuleId(null)
+                      }}
+                      copyToClipboard={copyToClipboard}
+                      copiedCode={copiedCode}
+                    />
+                  ) : (
+                    <ModulesOverview
+                      modules={platformModules}
+                      onSelectModule={(moduleId) => {
+                        setSelectedModuleId(moduleId)
+                        toggleModule(moduleId)
+                      }}
+                    />
+                  )}
+                </motion.div>
+              )}
+
+              {activeTab === "permissions" && (
+                <motion.div
+                  key="permissions"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <PermissionsReference copyToClipboard={copyToClipboard} copiedCode={copiedCode} />
+                </motion.div>
+              )}
+
+              {activeTab === "architecture" && (
+                <motion.div
+                  key="architecture"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <ArchitectureOverview copyToClipboard={copyToClipboard} copiedCode={copiedCode} />
+                </motion.div>
+              )}
+
+              {activeTab === "getting-started" && (
+                <motion.div
+                  key="getting-started"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <GettingStarted />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 
-        {/* Quick Reference - Brand Colors */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="mt-12 rounded-2xl bg-gradient-to-r from-[#004B23] to-[#006838] p-8 text-white shadow-xl"
-        >
-          <h2 className="text-2xl font-bold">Quick Reference Guide</h2>
-          <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/20">
-              <Shield className="mb-2 h-8 w-8" />
-              <h3 className="font-semibold">Authentication</h3>
-              <p className="mt-1 text-sm text-blue-100">
-                JWT for staff, OTP for customers. RBAC with granular permissions.
-              </p>
-            </div>
-            <div className="rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/20">
-              <Users className="mb-2 h-8 w-8" />
-              <h3 className="font-semibold">User Types</h3>
-              <p className="mt-1 text-sm text-blue-100">Employees, Agents, Customers. Self-service portal.</p>
-            </div>
-            <div className="rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/20">
-              <Settings className="mb-2 h-8 w-8" />
-              <h3 className="font-semibold">Permissions</h3>
-              <p className="mt-1 text-sm text-blue-100">
-                Resource:action format (e.g., customers:read). Roles bundle permissions.
-              </p>
-            </div>
-            <div className="rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/20">
-              <Clock className="mb-2 h-8 w-8" />
-              <h3 className="font-semibold">Workflows</h3>
-              <p className="mt-1 text-sm text-blue-100">Approval workflows & audit logs maintained for compliance.</p>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* System Architecture */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.35 }}
-          className="mt-12 rounded-2xl bg-white p-8 shadow-sm"
-        >
-          <h2 className="text-2xl font-bold text-gray-900">System Architecture</h2>
-          <div className="mt-6 grid gap-8 md:grid-cols-2">
-            <div>
-              <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                <Code className="h-5 w-5 text-[#004B23]" />
-                Frontend Stack
-              </h3>
-              <ul className="space-y-2 text-gray-600">
-                <li>
-                  <strong>Next.js 14</strong> - Server-side rendering & App Router
-                </li>
-                <li>
-                  <strong>TypeScript</strong> - Type-safe development
-                </li>
-                <li>
-                  <strong>Tailwind CSS</strong> - Utility-first styling
-                </li>
-                <li>
-                  <strong>Redux Toolkit</strong> - State management
-                </li>
-                <li>
-                  <strong>Radix UI</strong> - Accessible components
-                </li>
-                <li>
-                  <strong>Framer Motion</strong> - Animations
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                <Layers className="h-5 w-5 text-[#004B23]" />
-                Backend Integration
-              </h3>
-              <ul className="space-y-2 text-gray-600">
-                <li>
-                  <strong>RESTful APIs</strong> - Standardized endpoints
-                </li>
-                <li>
-                  <strong>JWT Authentication</strong> - Secure token-based auth
-                </li>
-                <li>
-                  <strong>Axios</strong> - HTTP client with interceptors
-                </li>
-                <li>
-                  <strong>File Processing</strong> - CSV/Excel bulk operations
-                </li>
-                <li>
-                  <strong>Background Jobs</strong> - Async processing
-                </li>
-                <li>
-                  <strong>Audit Logging</strong> - Complete activity tracking
-                </li>
-              </ul>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Permission Reference */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          className="mt-12 rounded-2xl bg-white p-8 shadow-sm"
-        >
-          <h2 className="text-2xl font-bold text-gray-900">Permission Reference</h2>
-          <p className="mt-2 text-gray-600">
-            Permissions follow the pattern:{" "}
-            <code className="rounded bg-gray-100 px-2 py-1 font-mono text-sm">resource:action</code>
-          </p>
-
-          <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <div className="rounded-lg border border-gray-200 p-4 transition-all hover:border-[#004B23]/30 hover:shadow-md">
-              <h3 className="font-semibold text-gray-900">User Management</h3>
-              <ul className="mt-2 space-y-1 text-sm text-gray-600">
-                <li>
-                  <code>users:read</code> - View user profiles
-                </li>
-                <li>
-                  <code>users:create</code> - Create new users
-                </li>
-                <li>
-                  <code>users:update</code> - Edit user details
-                </li>
-                <li>
-                  <code>users:delete</code> - Deactivate users
-                </li>
-              </ul>
-            </div>
-            <div className="rounded-lg border border-gray-200 p-4 transition-all hover:border-[#004B23]/30 hover:shadow-md">
-              <h3 className="font-semibold text-gray-900">Customer Operations</h3>
-              <ul className="mt-2 space-y-1 text-sm text-gray-600">
-                <li>
-                  <code>customers:read</code> - View customer data
-                </li>
-                <li>
-                  <code>customers:create</code> - Register customers
-                </li>
-                <li>
-                  <code>customers:update</code> - Modify customer info
-                </li>
-                <li>
-                  <code>customers:approve</code> - Approve changes
-                </li>
-              </ul>
-            </div>
-            <div className="rounded-lg border border-gray-200 p-4 transition-all hover:border-[#004B23]/30 hover:shadow-md">
-              <h3 className="font-semibold text-gray-900">Billing Operations</h3>
-              <ul className="mt-2 space-y-1 text-sm text-gray-600">
-                <li>
-                  <code>bills:read</code> - View bills
-                </li>
-                <li>
-                  <code>bills:create</code> - Generate bills
-                </li>
-                <li>
-                  <code>bills:update</code> - Adjust bills
-                </li>
-                <li>
-                  <code>bills:approve</code> - Approve adjustments
-                </li>
-              </ul>
-            </div>
-            <div className="rounded-lg border border-gray-200 p-4 transition-all hover:border-[#004B23]/30 hover:shadow-md">
-              <h3 className="font-semibold text-gray-900">Payment Processing</h3>
-              <ul className="mt-2 space-y-1 text-sm text-gray-600">
-                <li>
-                  <code>payments:read</code> - View transactions
-                </li>
-                <li>
-                  <code>payments:create</code> - Record payments
-                </li>
-                <li>
-                  <code>payments:update</code> - Edit payments
-                </li>
-                <li>
-                  <code>payments:cancel</code> - Reverse payments
-                </li>
-              </ul>
-            </div>
-            <div className="rounded-lg border border-gray-200 p-4 transition-all hover:border-[#004B23]/30 hover:shadow-md">
-              <h3 className="font-semibold text-gray-900">Agent Management</h3>
-              <ul className="mt-2 space-y-1 text-sm text-gray-600">
-                <li>
-                  <code>agents:read</code> - View agents
-                </li>
-                <li>
-                  <code>agents:create</code> - Add new agents
-                </li>
-                <li>
-                  <code>agents:update</code> - Modify agent details
-                </li>
-                <li>
-                  <code>agents:clear</code> - Process cash clearance
-                </li>
-              </ul>
-            </div>
-            <div className="rounded-lg border border-gray-200 p-4 transition-all hover:border-[#004B23]/30 hover:shadow-md">
-              <h3 className="font-semibold text-gray-900">Vendor Operations</h3>
-              <ul className="mt-2 space-y-1 text-sm text-gray-600">
-                <li>
-                  <code>vendors:read</code> - View vendor data
-                </li>
-                <li>
-                  <code>vendors:create</code> - Add new vendors
-                </li>
-                <li>
-                  <code>vendors:update</code> - Modify vendor details
-                </li>
-                <li>
-                  <code>wallet:topup</code> - Top-up vendor wallets
-                </li>
-              </ul>
-            </div>
-            <div className="rounded-lg border border-gray-200 p-4 transition-all hover:border-[#004B23]/30 hover:shadow-md">
-              <h3 className="font-semibold text-gray-900">Asset Management</h3>
-              <ul className="mt-2 space-y-1 text-sm text-gray-600">
-                <li>
-                  <code>assets:read</code> - View assets
-                </li>
-                <li>
-                  <code>assets:create</code> - Add new assets
-                </li>
-                <li>
-                  <code>assets:update</code> - Modify asset details
-                </li>
-                <li>
-                  <code>assets:approve</code> - Approve changes
-                </li>
-              </ul>
-            </div>
-            <div className="rounded-lg border border-gray-200 p-4 transition-all hover:border-[#004B23]/30 hover:shadow-md">
-              <h3 className="font-semibold text-gray-900">Debt Management</h3>
-              <ul className="mt-2 space-y-1 text-sm text-gray-600">
-                <li>
-                  <code>debts:read</code> - View debt entries
-                </li>
-                <li>
-                  <code>debts:create</code> - Create debt records
-                </li>
-                <li>
-                  <code>debts:manage</code> - Manage debt recovery
-                </li>
-                <li>
-                  <code>campaigns:configure</code> - Configure campaigns
-                </li>
-              </ul>
-            </div>
-            <div className="rounded-lg border border-gray-200 p-4 transition-all hover:border-[#004B23]/30 hover:shadow-md">
-              <h3 className="font-semibold text-gray-900">Prepaid Tokens</h3>
-              <ul className="mt-2 space-y-1 text-sm text-gray-600">
-                <li>
-                  <code>tokens:read</code> - View token transactions
-                </li>
-                <li>
-                  <code>tokens:create</code> - Generate tokens
-                </li>
-                <li>
-                  <code>prepaid:process</code> - Process token vending
-                </li>
-                <li>
-                  <code>tamper:clear</code> - Clear meter tamper
-                </li>
-              </ul>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Getting Started Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.45 }}
-          className="mt-12 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 p-8 shadow-sm"
-        >
-          <div className="flex items-start gap-4">
-            <div className="rounded-full bg-amber-100 p-3">
-              <BookOpen className="h-6 w-6 text-amber-700" />
-            </div>
-            <div>
-              <h3 className="text-xl font-semibold text-amber-900">Getting Started with blumenOs</h3>
-              <p className="mt-2 text-amber-800">
-                New to the platform? Start by exploring the <strong>Authentication & Access Control</strong> module to
-                understand how users access the system. Then dive into the modules relevant to your role:
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <span className="rounded-full bg-white/50 px-3 py-1 text-sm text-amber-800">
-                  📊 Administrators → System Settings & Roles
-                </span>
-                <span className="rounded-full bg-white/50 px-3 py-1 text-sm text-amber-800">
-                  👥 HR → Employee Management
-                </span>
-                <span className="rounded-full bg-white/50 px-3 py-1 text-sm text-amber-800">
-                  💰 Finance → Billing & Payments
-                </span>
-                <span className="rounded-full bg-white/50 px-3 py-1 text-sm text-amber-800">
-                  ⚡ Field Ops → Metering & Outage
-                </span>
-                <span className="rounded-full bg-white/50 px-3 py-1 text-sm text-amber-800">
-                  🤝 Sales → Sales Representative
-                </span>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
         {/* Footer */}
-        <footer className="mt-12 border-t border-gray-200 pt-8 text-center text-sm text-gray-500">
+        <footer className="mt-16 border-t border-gray-200 pt-8 text-center text-sm text-gray-500">
           <p>blumenOs Platform Documentation v2.0</p>
           <p className="mt-1">Powered by BlumenTech · Last updated: March 2026</p>
-          <p className="mt-2 text-xs text-gray-400">© 2026 blumenOs. All rights reserved.</p>
+          <div className="mt-4 flex justify-center gap-4">
+            <a href="#" className="hover:text-[#004B23]">
+              Terms
+            </a>
+            <a href="#" className="hover:text-[#004B23]">
+              Privacy
+            </a>
+            <a href="#" className="hover:text-[#004B23]">
+              Contact
+            </a>
+          </div>
         </footer>
       </div>
     </div>
   )
 }
 
-// Subcomponent for displaying submodule details
-function SubmoduleDetails({ modules, selectedId }: { modules: ModuleSection[]; selectedId: string }) {
+// --- Submodule Details Component ---
+function SubmoduleDetails({
+  modules,
+  selectedId,
+  onBack,
+  copyToClipboard,
+  copiedCode,
+}: {
+  modules: ModuleSection[]
+  selectedId: string
+  onBack: () => void
+  copyToClipboard: (text: string, id: string) => void
+  copiedCode: string | null
+}) {
   const [moduleId, subName] = selectedId.split("|")
   const module = modules.find((m) => m.id === moduleId)
   const submodule = module?.submodules.find((s) => s.name === subName)
@@ -1454,6 +1321,15 @@ function SubmoduleDetails({ modules, selectedId }: { modules: ModuleSection[]; s
       className="rounded-2xl bg-white shadow-sm"
     >
       <div className="p-6 md:p-8">
+        {/* Back button */}
+        <button
+          onClick={onBack}
+          className="mb-4 flex items-center gap-1 text-sm text-gray-500 transition-colors hover:text-[#004B23]"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Back to modules
+        </button>
+
         {/* Breadcrumb */}
         <div className="mb-4 flex items-center gap-2 text-sm text-gray-500">
           <span className="hover:text-[#004B23]">{module.title}</span>
@@ -1465,10 +1341,18 @@ function SubmoduleDetails({ modules, selectedId }: { modules: ModuleSection[]; s
         <h2 className="text-2xl font-bold text-gray-900">{submodule.name}</h2>
         <p className="mt-2 leading-relaxed text-gray-600">{submodule.description}</p>
 
-        {/* Path */}
-        <div className="mt-5 rounded-xl border border-gray-100 bg-gray-50 p-4">
-          <span className="text-sm font-medium text-gray-700">Route: </span>
-          <code className="rounded bg-white px-2 py-1 font-mono text-sm text-[#004B23]">{submodule.path}</code>
+        {/* Path with copy */}
+        <div className="mt-5 flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 p-4">
+          <div>
+            <span className="text-sm font-medium text-gray-700">Route: </span>
+            <code className="rounded bg-white px-2 py-1 font-mono text-sm text-[#004B23]">{submodule.path}</code>
+          </div>
+          <button
+            onClick={() => copyToClipboard(submodule.path, "path")}
+            className="rounded-md p-1 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-600"
+          >
+            {copiedCode === "path" ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+          </button>
         </div>
 
         {/* Permissions */}
@@ -1479,9 +1363,22 @@ function SubmoduleDetails({ modules, selectedId }: { modules: ModuleSection[]; s
           </h3>
           <div className="mt-2 flex flex-wrap gap-2">
             {submodule.permissions.map((perm, idx) => (
-              <span key={idx} className="rounded-full bg-[#004B23]/10 px-3 py-1 font-mono text-sm text-[#004B23]">
+              <div
+                key={idx}
+                className="group relative flex items-center gap-1 rounded-full bg-[#004B23]/10 px-3 py-1 font-mono text-sm text-[#004B23]"
+              >
                 {perm}
-              </span>
+                <button
+                  onClick={() => copyToClipboard(perm, `perm-${idx}`)}
+                  className="opacity-0 transition-opacity group-hover:opacity-100"
+                >
+                  {copiedCode === `perm-${idx}` ? (
+                    <Check className="h-3 w-3 text-green-600" />
+                  ) : (
+                    <Copy className="h-3 w-3 text-gray-500" />
+                  )}
+                </button>
+              </div>
             ))}
           </div>
         </div>
@@ -1545,30 +1442,36 @@ function SubmoduleDetails({ modules, selectedId }: { modules: ModuleSection[]; s
   )
 }
 
-// Subcomponent for overview content
-function OverviewContent({ modules }: { modules: ModuleSection[] }) {
+// --- Modules Overview Component ---
+function ModulesOverview({
+  modules,
+  onSelectModule,
+}: {
+  modules: ModuleSection[]
+  onSelectModule: (moduleId: string) => void
+}) {
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-2xl bg-white p-6 shadow-sm md:p-8">
+    <div className="rounded-2xl bg-white p-6 shadow-sm md:p-8">
       <div className="mb-6 flex items-center gap-3 border-b border-gray-100 pb-4">
         <div className="rounded-full bg-[#004B23]/10 p-3">
           <BookOpen className="h-6 w-6 text-[#004B23]" />
         </div>
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Welcome to blumenOs Documentation</h2>
-          <p className="text-sm text-gray-500">Your comprehensive guide to the electricity distribution platform</p>
+          <h2 className="text-xl font-bold text-gray-900">Module Documentation</h2>
+          <p className="text-sm text-gray-500">Select a module from the sidebar to view detailed documentation</p>
         </div>
       </div>
 
       <p className="text-gray-600">
-        Select any module from the sidebar to view detailed documentation about specific features, permissions, and
-        workflows. Each module contains complete information about its functionality, required permissions, and
-        step-by-step workflow processes.
+        The blumenOs platform is organized into functional modules, each containing related features and workflows.
+        Select any module from the sidebar to explore its submodules, permissions, and implementation details.
       </p>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
-        {modules.slice(0, 8).map((module) => (
+      <div className="mt-8 grid gap-4 md:grid-cols-2">
+        {modules.slice(0, 12).map((module) => (
           <div
             key={module.id}
+            onClick={() => onSelectModule(module.id)}
             className="group cursor-pointer rounded-xl border border-gray-200 p-4 transition-all hover:border-[#004B23]/30 hover:shadow-md"
           >
             <div className="flex items-center gap-3">
@@ -1581,7 +1484,7 @@ function OverviewContent({ modules }: { modules: ModuleSection[] }) {
             <div className="mt-3 flex items-center justify-between">
               <p className="text-xs text-gray-400">{module.submodules.length} submodules</p>
               <span className="text-xs text-[#004B23] opacity-0 transition-opacity group-hover:opacity-100">
-                Click to explore →
+                Expand →
               </span>
             </div>
           </div>
@@ -1599,11 +1502,432 @@ function OverviewContent({ modules }: { modules: ModuleSection[] }) {
               <li>• Use the search bar to quickly find modules and features</li>
               <li>• Expand modules to view all available submodules</li>
               <li>• Each submodule includes permission requirements and workflow details</li>
-              <li>• Check the Permission Reference section for complete access control documentation</li>
+              <li>• Check the Permissions tab for complete access control documentation</li>
             </ul>
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
+  )
+}
+
+// --- Permissions Reference Component ---
+function PermissionsReference({
+  copyToClipboard,
+  copiedCode,
+}: {
+  copyToClipboard: (text: string, id: string) => void
+  copiedCode: string | null
+}) {
+  const permissionGroups = [
+    {
+      title: "User Management",
+      permissions: [
+        { name: "users:read", description: "View user profiles" },
+        { name: "users:create", description: "Create new users" },
+        { name: "users:update", description: "Edit user details" },
+        { name: "users:delete", description: "Deactivate users" },
+      ],
+    },
+    {
+      title: "Customer Operations",
+      permissions: [
+        { name: "customers:read", description: "View customer data" },
+        { name: "customers:create", description: "Register customers" },
+        { name: "customers:update", description: "Modify customer info" },
+        { name: "customers:approve", description: "Approve changes" },
+      ],
+    },
+    {
+      title: "Billing Operations",
+      permissions: [
+        { name: "bills:read", description: "View bills" },
+        { name: "bills:create", description: "Generate bills" },
+        { name: "bills:update", description: "Adjust bills" },
+        { name: "bills:approve", description: "Approve adjustments" },
+      ],
+    },
+    {
+      title: "Payment Processing",
+      permissions: [
+        { name: "payments:read", description: "View transactions" },
+        { name: "payments:create", description: "Record payments" },
+        { name: "payments:update", description: "Edit payments" },
+        { name: "payments:cancel", description: "Reverse payments" },
+      ],
+    },
+    {
+      title: "Agent Management",
+      permissions: [
+        { name: "agents:read", description: "View agents" },
+        { name: "agents:create", description: "Add new agents" },
+        { name: "agents:update", description: "Modify agent details" },
+        { name: "agents:clear", description: "Process cash clearance" },
+      ],
+    },
+    {
+      title: "Vendor Operations",
+      permissions: [
+        { name: "vendors:read", description: "View vendor data" },
+        { name: "vendors:create", description: "Add new vendors" },
+        { name: "vendors:update", description: "Modify vendor details" },
+        { name: "wallet:topup", description: "Top-up vendor wallets" },
+      ],
+    },
+    {
+      title: "Asset Management",
+      permissions: [
+        { name: "assets:read", description: "View assets" },
+        { name: "assets:create", description: "Add new assets" },
+        { name: "assets:update", description: "Modify asset details" },
+        { name: "assets:approve", description: "Approve changes" },
+      ],
+    },
+    {
+      title: "Debt Management",
+      permissions: [
+        { name: "debts:read", description: "View debt entries" },
+        { name: "debts:create", description: "Create debt records" },
+        { name: "debts:manage", description: "Manage debt recovery" },
+        { name: "campaigns:configure", description: "Configure campaigns" },
+      ],
+    },
+    {
+      title: "Prepaid Tokens",
+      permissions: [
+        { name: "tokens:read", description: "View token transactions" },
+        { name: "tokens:create", description: "Generate tokens" },
+        { name: "prepaid:process", description: "Process token vending" },
+        { name: "tamper:clear", description: "Clear meter tamper" },
+      ],
+    },
+  ]
+
+  return (
+    <div className="rounded-2xl bg-white p-6 shadow-sm md:p-8">
+      <div className="mb-6 flex items-center gap-3 border-b border-gray-100 pb-4">
+        <div className="rounded-full bg-[#004B23]/10 p-3">
+          <Shield className="h-6 w-6 text-[#004B23]" />
+        </div>
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">Permission Reference</h2>
+          <p className="text-sm text-gray-500">Complete list of system permissions organized by module</p>
+        </div>
+      </div>
+
+      <p className="text-gray-600">
+        Permissions follow the pattern:{" "}
+        <code className="rounded bg-gray-100 px-2 py-1 font-mono text-sm">resource:action</code>
+      </p>
+
+      <div className="mb-8 rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 p-6">
+        <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-blue-900">
+          <Info className="h-5 w-5" />
+          Understanding Permission Types
+        </h3>
+        <p className="mb-4 text-blue-800">
+          The platform uses a Role-Based Access Control (RBAC) system where permissions follow the pattern:
+        </p>
+        <div className="mb-4 rounded-lg bg-white p-3 text-center font-mono text-sm text-blue-700">resource:action</div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-lg bg-white p-4 shadow-sm">
+            <h4 className="flex items-center gap-2 font-semibold text-green-700">
+              <Check className="h-4 w-4" />
+              read
+            </h4>
+            <p className="mt-2 text-sm text-gray-600">
+              Allows viewing and accessing information. Users with read permissions can browse data, view reports, and
+              access dashboards without making any changes.
+            </p>
+            <div className="mt-3">
+              <span className="rounded bg-green-100 px-2 py-1 font-mono text-xs text-green-700">customers:read</span>
+            </div>
+          </div>
+          <div className="rounded-lg bg-white p-4 shadow-sm">
+            <h4 className="flex items-center gap-2 font-semibold text-blue-700">
+              <Plus className="h-4 w-4" />
+              create
+            </h4>
+            <p className="mt-2 text-sm text-gray-600">
+              Allows adding new records or entities. Users with create permissions can add new customers, generate
+              bills, create agents, or initiate new transactions.
+            </p>
+            <div className="mt-3">
+              <span className="rounded bg-blue-100 px-2 py-1 font-mono text-xs text-blue-700">bills:create</span>
+            </div>
+          </div>
+          <div className="rounded-lg bg-white p-4 shadow-sm">
+            <h4 className="flex items-center gap-2 font-semibold text-orange-700">
+              <Edit className="h-4 w-4" />
+              update
+            </h4>
+            <p className="mt-2 text-sm text-gray-600">
+              Allows modifying existing records. Users with update permissions can edit customer details, adjust bills,
+              modify agent information, or change asset configurations.
+            </p>
+            <div className="mt-3">
+              <span className="rounded bg-orange-100 px-2 py-1 font-mono text-xs text-orange-700">agents:update</span>
+            </div>
+          </div>
+          <div className="rounded-lg bg-white p-4 shadow-sm">
+            <h4 className="flex items-center gap-2 font-semibold text-purple-700">
+              <Play className="h-4 w-4" />
+              execute
+            </h4>
+            <p className="mt-2 text-sm text-gray-600">
+              Allows performing operational actions and workflows. Users with execute permissions can process payments,
+              clear cash, generate tokens, or run system operations.
+            </p>
+            <div className="mt-3">
+              <span className="rounded bg-purple-100 px-2 py-1 font-mono text-xs text-purple-700">
+                payments:process
+              </span>
+            </div>
+          </div>
+        </div>
+        <div className="mt-4 rounded-lg bg-blue-100 p-3">
+          <p className="text-sm text-blue-800">
+            <strong>Note:</strong> Some special actions like <code className="rounded bg-blue-200 px-1">delete</code>,
+            <code className="rounded bg-blue-200 px-1">approve</code>,{" "}
+            <code className="rounded bg-blue-200 px-1">manage</code>, and{" "}
+            <code className="rounded bg-blue-200 px-1">admin</code> provide additional specific capabilities beyond the
+            standard CRUD operations.
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {permissionGroups.map((group, idx) => (
+          <div
+            key={idx}
+            className="rounded-xl border border-gray-200 p-4 transition-all hover:border-[#004B23]/30 hover:shadow-md"
+          >
+            <h3 className="font-semibold text-gray-900">{group.title}</h3>
+            <ul className="mt-3 space-y-2">
+              {group.permissions.map((perm, permIdx) => (
+                <li key={permIdx} className="group/permission flex items-center justify-between">
+                  <div>
+                    <code className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs text-[#004B23]">
+                      {perm.name}
+                    </code>
+                    <p className="mt-0.5 text-xs text-gray-500">{perm.description}</p>
+                  </div>
+                  <button
+                    onClick={() => copyToClipboard(perm.name, `perm-${idx}-${permIdx}`)}
+                    className="opacity-0 transition-opacity group-hover/permission:opacity-100"
+                  >
+                    {copiedCode === `perm-${idx}-${permIdx}` ? (
+                      <Check className="h-3.5 w-3.5 text-green-600" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5 text-gray-400 hover:text-gray-600" />
+                    )}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// --- Architecture Overview Component ---
+function ArchitectureOverview({
+  copyToClipboard,
+  copiedCode,
+}: {
+  copyToClipboard: (text: string, id: string) => void
+  copiedCode: string | null
+}) {
+  return (
+    <div className="rounded-2xl bg-white p-6 shadow-sm md:p-8">
+      <div className="mb-6 flex items-center gap-3 border-b border-gray-100 pb-4">
+        <div className="rounded-full bg-[#004B23]/10 p-3">
+          <Layers className="h-6 w-6 text-[#004B23]" />
+        </div>
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">System Architecture</h2>
+          <p className="text-sm text-gray-500">Technical overview of the blumenOs platform stack</p>
+        </div>
+      </div>
+
+      <div className="grid gap-8 md:grid-cols-2">
+        <div className="rounded-xl border border-gray-200 p-6">
+          <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
+            <Code className="h-5 w-5 text-[#004B23]" />
+            Frontend Stack
+          </h3>
+          <ul className="space-y-3">
+            {[
+              { name: "Next.js 14", desc: "Server-side rendering & App Router" },
+              { name: "TypeScript", desc: "Type-safe development" },
+              { name: "Tailwind CSS", desc: "Utility-first styling" },
+              { name: "Redux Toolkit", desc: "State management" },
+              { name: "Radix UI", desc: "Accessible components" },
+              { name: "Framer Motion", desc: "Animations" },
+            ].map((item, idx) => (
+              <li key={idx} className="flex items-start gap-2">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 text-[#004B23]" />
+                <div>
+                  <span className="font-medium text-gray-900">{item.name}</span>
+                  <span className="text-sm text-gray-500"> - {item.desc}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="rounded-xl border border-gray-200 p-6">
+          <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
+            <Layers className="h-5 w-5 text-[#004B23]" />
+            Backend Integration
+          </h3>
+          <ul className="space-y-3">
+            {[
+              { name: "RESTful APIs", desc: "Standardized endpoints" },
+              { name: "JWT Authentication", desc: "Secure token-based auth" },
+              { name: "Axios", desc: "HTTP client with interceptors" },
+              { name: "File Processing", desc: "CSV/Excel bulk operations" },
+              { name: "Background Jobs", desc: "Async processing" },
+              { name: "Audit Logging", desc: "Complete activity tracking" },
+            ].map((item, idx) => (
+              <li key={idx} className="flex items-start gap-2">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 text-[#004B23]" />
+                <div>
+                  <span className="font-medium text-gray-900">{item.name}</span>
+                  <span className="text-sm text-gray-500"> - {item.desc}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      <div className="mt-8 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+        <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
+          <Shield className="h-5 w-5 text-[#004B23]" />
+          Security Architecture
+        </h3>
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="rounded-lg bg-white p-4 shadow-sm">
+            <h4 className="font-medium text-gray-900">Authentication</h4>
+            <p className="mt-1 text-sm text-gray-600">JWT for staff, OTP for customers with fingerprint tracking</p>
+          </div>
+          <div className="rounded-lg bg-white p-4 shadow-sm">
+            <h4 className="font-medium text-gray-900">Authorization</h4>
+            <p className="mt-1 text-sm text-gray-600">RBAC with granular permissions (resource:action)</p>
+          </div>
+          <div className="rounded-lg bg-white p-4 shadow-sm">
+            <h4 className="font-medium text-gray-900">Audit</h4>
+            <p className="mt-1 text-sm text-gray-600">
+              Complete activity logging with IP tracking and user attribution
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// --- Getting Started Component ---
+function GettingStarted() {
+  return (
+    <div className="rounded-2xl bg-white p-6 shadow-sm md:p-8">
+      <div className="mb-6 flex items-center gap-3 border-b border-gray-100 pb-4">
+        <div className="rounded-full bg-[#004B23]/10 p-3">
+          <BookOpen className="h-6 w-6 text-[#004B23]" />
+        </div>
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">Getting Started with blumenOs</h2>
+          <p className="text-sm text-gray-500">Your guide to navigating the platform</p>
+        </div>
+      </div>
+
+      <div className="grid gap-8 md:grid-cols-2">
+        <div>
+          <h3 className="mb-3 text-lg font-semibold text-gray-900">1. Authentication</h3>
+          <p className="text-gray-600">
+            The platform supports two authentication methods: JWT-based login for staff/agents and OTP-based login for
+            customers. All users must have valid credentials to access the system.
+          </p>
+          <div className="mt-4 rounded-lg bg-blue-50 p-4">
+            <p className="text-sm text-blue-800">
+              <strong>Staff Login:</strong> Use your email and password to access the admin dashboard.
+            </p>
+            <p className="mt-2 text-sm text-blue-800">
+              <strong>Customer Portal:</strong> Use your account number and registered phone number to receive an OTP.
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <h3 className="mb-3 text-lg font-semibold text-gray-900">2. Role-Based Access</h3>
+          <p className="text-gray-600">
+            Access to features is controlled by roles and permissions. Your role determines what modules and actions you
+            can access within the system.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <span className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700">Administrator</span>
+            <span className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700">Finance Officer</span>
+            <span className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700">Field Agent</span>
+            <span className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700">Customer Support</span>
+            <span className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700">Sales Representative</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-8">
+        <h3 className="mb-3 text-lg font-semibold text-gray-900">3. Core Modules</h3>
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="rounded-lg border border-gray-200 p-4">
+            <Users className="mb-2 h-5 w-5 text-[#004B23]" />
+            <h4 className="font-medium">Customer Management</h4>
+            <p className="mt-1 text-sm text-gray-500">Manage customer information, service addresses, and accounts</p>
+          </div>
+          <div className="rounded-lg border border-gray-200 p-4">
+            <Zap className="mb-2 h-5 w-5 text-[#004B23]" />
+            <h4 className="font-medium">Metering</h4>
+            <p className="mt-1 text-sm text-gray-500">Track meter installations, readings, and maintenance</p>
+          </div>
+          <div className="rounded-lg border border-gray-200 p-4">
+            <CreditCard className="mb-2 h-5 w-5 text-[#004B23]" />
+            <h4 className="font-medium">Billing & Payments</h4>
+            <p className="mt-1 text-sm text-gray-500">Generate bills, process payments, and manage collections</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-8 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 p-6">
+        <div className="flex items-start gap-4">
+          <div className="rounded-full bg-amber-100 p-3">
+            <HelpCircle className="h-6 w-6 text-amber-700" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-amber-900">Need Help?</h3>
+            <p className="mt-1 text-amber-800">
+              Check the module documentation for detailed workflows and permissions. For technical support, contact the
+              IT help desk at support@blumenos.com or call extension 1234.
+            </p>
+            <div className="mt-4 flex gap-3">
+              <a
+                href="#"
+                className="inline-flex items-center gap-1 rounded-lg bg-amber-100 px-4 py-2 text-sm font-medium text-amber-800 hover:bg-amber-200"
+              >
+                <FileText className="h-4 w-4" />
+                Documentation
+              </a>
+              <a
+                href="#"
+                className="inline-flex items-center gap-1 rounded-lg bg-white px-4 py-2 text-sm font-medium text-amber-800 shadow-sm hover:bg-gray-50"
+              >
+                <LifeBuoy className="h-4 w-4" />
+                Contact Support
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
