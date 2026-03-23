@@ -1308,10 +1308,10 @@ function SubmoduleDetails({
   copiedCode: string | null
 }) {
   const [moduleId, subName] = selectedId.split("|")
-  const module = modules.find((m) => m.id === moduleId)
-  const submodule = module?.submodules.find((s) => s.name === subName)
+  const selectedModule = modules.find((m) => m.id === moduleId)
+  const submodule = selectedModule?.submodules.find((s) => s.name === subName)
 
-  if (!module || !submodule) return null
+  if (!selectedModule || !submodule) return null
 
   return (
     <motion.div
@@ -1332,7 +1332,7 @@ function SubmoduleDetails({
 
         {/* Breadcrumb */}
         <div className="mb-4 flex items-center gap-2 text-sm text-gray-500">
-          <span className="hover:text-[#004B23]">{module.title}</span>
+          <span className="hover:text-[#004B23]">{selectedModule.title}</span>
           <ChevronRight className="h-4 w-4" />
           <span className="font-medium text-gray-900">{submodule.name}</span>
         </div>
