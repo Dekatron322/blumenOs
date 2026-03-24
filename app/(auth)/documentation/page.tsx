@@ -2305,7 +2305,7 @@ function GettingStarted() {
                 <p className="mb-6 leading-relaxed text-gray-700">
                   Our comprehensive documentation and support resources are here to help you make the most of the
                   blumenOs platform. Whether you need technical guidance, have questions about features, or require
-                  assistance with specific workflows, we've got you covered.
+                  assistance with specific workflows, we&apos;ve got you covered.
                 </p>
 
                 <div className="grid gap-4 md:grid-cols-2">
