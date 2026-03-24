@@ -17,9 +17,12 @@ import {
   Code,
   Copy,
   CreditCard,
+  Database,
   Edit,
   ExternalLink,
   FileText,
+  GitBranch,
+  Hash,
   HelpCircle,
   Home,
   Info,
@@ -33,6 +36,7 @@ import {
   Settings,
   Shield,
   Smartphone,
+  Terminal,
   UserCog,
   Users,
   Zap,
@@ -53,7 +57,7 @@ interface ModuleSection {
   }[]
 }
 
-// --- Data (same as original, but kept for completeness) ---
+// --- Complete Data (all modules from original) ---
 const platformModules: ModuleSection[] = [
   {
     id: "auth",
@@ -995,7 +999,10 @@ export default function DocumentationPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [expandedModules, setExpandedModules] = useState<string[]>([])
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null)
-  const [selectedSubmodule, setSelectedSubmodule] = useState<{ moduleId: string; subName: string } | null>(null)
+  const [selectedSubmodule, setSelectedSubmodule] = useState<{
+    moduleId: string
+    subName: string
+  } | null>(null)
   const [activeTab, setActiveTab] = useState<"modules" | "permissions" | "architecture" | "getting-started">("modules")
   const [copiedCode, setCopiedCode] = useState<string | null>(null)
 
@@ -1027,180 +1034,135 @@ export default function DocumentationPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-      {/* Top Navigation Bar */}
-      <div className="sticky top-0 z-20 border-b border-gray-200 bg-white/80 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-2">
+    <div className="min-h-screen bg-gray-50">
+      {/* Documentation Header */}
+      <header className="sticky top-0 z-50 border-b border-gray-200 bg-white">
+        <div className="mx-auto flex h-16  items-center justify-between px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-4">
             <Image src="/kadco.svg" alt="blumenOs Logo" width={120} height={40} className="h-8 w-auto" />
-            <span className="text-xl font-bold text-[#004B23]">blumenOs</span>
-          </div>
-          <div className="hidden items-center gap-6 md:flex">
-            <button
-              onClick={() => setActiveTab("modules")}
-              className={`text-sm font-medium transition-colors ${
-                activeTab === "modules" ? "text-[#004B23]" : "text-gray-600 hover:text-[#004B23]"
-              }`}
-            >
-              Modules
-            </button>
-            <button
-              onClick={() => setActiveTab("permissions")}
-              className={`text-sm font-medium transition-colors ${
-                activeTab === "permissions" ? "text-[#004B23]" : "text-gray-600 hover:text-[#004B23]"
-              }`}
-            >
-              Permissions
-            </button>
-            <button
-              onClick={() => setActiveTab("architecture")}
-              className={`text-sm font-medium transition-colors ${
-                activeTab === "architecture" ? "text-[#004B23]" : "text-gray-600 hover:text-[#004B23]"
-              }`}
-            >
-              Architecture
-            </button>
-            <button
-              onClick={() => setActiveTab("getting-started")}
-              className={`text-sm font-medium transition-colors ${
-                activeTab === "getting-started" ? "text-[#004B23]" : "text-gray-600 hover:text-[#004B23]"
-              }`}
-            >
-              Getting Started
-            </button>
-          </div>
-          <div className="flex items-center gap-2">
-            <a
-              href="#"
-              className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-all hover:border-[#004B23]/30 hover:text-[#004B23]"
-            >
-              <LifeBuoy className="h-4 w-4" />
-              Support
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Hero Section */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mb-12 rounded-2xl bg-gradient-to-r from-[#004B23] to-[#006838] p-8 text-white shadow-xl"
-        >
-          <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Documentation</h1>
-              <p className="mt-2 text-lg text-green-100">
-                Complete guide to the blumenOs electricity distribution platform
-              </p>
-              <div className="mt-4 flex gap-2">
-                <span className="inline-flex items-center rounded-full bg-white/20 px-3 py-1 text-sm">Version 2.0</span>
-                <span className="inline-flex items-center rounded-full bg-white/20 px-3 py-1 text-sm">
-                  Last updated: March 2026
-                </span>
-              </div>
+              <h1 className="text-lg font-semibold text-gray-900">blumenOs Documentation</h1>
+              <p className="text-xs text-gray-500">Platform Reference Guide</p>
             </div>
-            <div className="relative w-full max-w-md">
-              <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+          </div>
+
+          <nav className="hidden items-center gap-6 md:flex">
+            {[
+              { id: "modules", label: "Modules", icon: <Layers className="h-4 w-4" /> },
+              { id: "permissions", label: "Permissions", icon: <Shield className="h-4 w-4" /> },
+              { id: "architecture", label: "Architecture", icon: <Code className="h-4 w-4" /> },
+              { id: "getting-started", label: "Getting Started", icon: <BookOpen className="h-4 w-4" /> },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                  activeTab === tab.id
+                    ? "border border-blue-200 bg-blue-50 text-blue-700"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                }`}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search documentation..."
+                placeholder="Search docs..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full rounded-xl border-0 bg-white/10 py-3 pl-10 pr-4 text-white placeholder:text-white/60 focus:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/50"
+                className="w-64 rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
+            <button className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+              <LifeBuoy className="h-4 w-4" />
+              Support
+            </button>
           </div>
-        </motion.div>
+        </div>
+      </header>
 
-        {/* Main Content Area */}
-        <div className="grid gap-8 lg:grid-cols-12">
-          {/* Sidebar - Module Navigation (only shown on modules tab) */}
-          {activeTab === "modules" && (
-            <div className="lg:col-span-3">
-              <div className="sticky top-24 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-                    <Menu className="h-5 w-5 text-[#004B23]" />
-                    Platform Modules
-                    <span className="ml-2 text-sm font-normal text-gray-400">({filteredModules.length})</span>
-                  </h2>
-                </div>
+      <div className="flex w-full">
+        {/* Sidebar Navigation */}
+        {activeTab === "modules" && (
+          <aside className="hidden min-h-[calc(100vh-4rem)] max-w-80 border-r border-gray-200 bg-white lg:block">
+            <div className="p-4">
+              <div className="mb-6">
+                <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-gray-900">
+                  <Menu className="h-4 w-4" />
+                  Platform Modules
+                  <span className="ml-auto text-xs font-normal text-gray-500">({filteredModules.length})</span>
+                </h2>
+              </div>
 
-                <div className="space-y-2">
-                  {filteredModules.map((module, index) => (
-                    <motion.div
-                      key={module.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.01 }}
-                      className={`rounded-xl border transition-all ${
+              <nav className="space-y-1">
+                {filteredModules.map((module, index) => (
+                  <div key={module.id} className="mb-2">
+                    <button
+                      onClick={() => toggleModule(module.id)}
+                      className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                         selectedModuleId === module.id
-                          ? "border-[#004B23] bg-[#004B23]/5 shadow-md"
-                          : "border-gray-200 bg-white shadow-sm hover:shadow-md"
+                          ? "border border-blue-200 bg-blue-50 text-blue-700"
+                          : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
                       }`}
                     >
-                      <button
-                        onClick={() => toggleModule(module.id)}
-                        className="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-gray-50"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`rounded-lg p-2 ${
-                              selectedModuleId === module.id
-                                ? "bg-[#004B23] text-white"
-                                : "bg-[#004B23]/10 text-[#004B23]"
-                            }`}
-                          >
-                            {module.icon}
-                          </div>
-                          <span className="font-medium text-gray-900">{module.title}</span>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`rounded p-1 ${selectedModuleId === module.id ? "bg-blue-100" : "bg-gray-100"}`}
+                        >
+                          {React.cloneElement(module.icon as React.ReactElement, { className: "h-4 w-4" })}
                         </div>
-                        {expandedModules.includes(module.id) ? (
-                          <ChevronDown className="h-4 w-4 text-gray-400" />
-                        ) : (
-                          <ChevronRight className="h-4 w-4 text-gray-400" />
-                        )}
-                      </button>
+                        <span className="truncate">{module.title}</span>
+                      </div>
+                      {expandedModules.includes(module.id) ? (
+                        <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
+                    </button>
 
-                      <AnimatePresence>
-                        {expandedModules.includes(module.id) && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="overflow-hidden"
-                          >
-                            <div className="border-t border-gray-100 px-3 pb-3">
-                              {module.submodules.map((sub) => (
-                                <button
-                                  key={sub.path}
-                                  onClick={() => handleSubmoduleSelect(module.id, sub.name)}
-                                  className={`mt-2 block w-full rounded-md px-3 py-2 text-left text-sm transition-all ${
-                                    selectedSubmodule?.moduleId === module.id && selectedSubmodule?.subName === sub.name
-                                      ? "bg-[#004B23] text-white shadow-md"
-                                      : "text-gray-600 hover:bg-gray-50 hover:text-[#004B23]"
-                                  }`}
-                                >
-                                  {sub.name}
-                                </button>
-                              ))}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
+                    <AnimatePresence>
+                      {expandedModules.includes(module.id) && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="ml-4 mt-1 overflow-hidden"
+                        >
+                          <div className="space-y-1">
+                            {module.submodules.map((sub) => (
+                              <button
+                                key={sub.path}
+                                onClick={() => handleSubmoduleSelect(module.id, sub.name)}
+                                className={`block w-full rounded-md px-3 py-1.5 text-left text-xs transition-colors ${
+                                  selectedSubmodule?.moduleId === module.id && selectedSubmodule?.subName === sub.name
+                                    ? "bg-blue-100 font-medium text-blue-800"
+                                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                }`}
+                              >
+                                {sub.name}
+                              </button>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ))}
+              </nav>
             </div>
-          )}
+          </aside>
+        )}
 
-          {/* Main Content Area */}
-          <div className={`${activeTab === "modules" ? "lg:col-span-9" : "lg:col-span-12"}`}>
+        {/* Main Content Area */}
+        <main className="w-full min-w-0 flex-1">
+          <div className="p-6">
             <AnimatePresence mode="wait">
               {activeTab === "modules" && (
                 <motion.div
@@ -1270,25 +1232,34 @@ export default function DocumentationPage() {
               )}
             </AnimatePresence>
           </div>
-        </div>
-
-        {/* Footer */}
-        <footer className="mt-16 border-t border-gray-200 pt-8 text-center text-sm text-gray-500">
-          <p>blumenOs Platform Documentation v2.0</p>
-          <p className="mt-1">Powered by BlumenTech · Last updated: March 2026</p>
-          <div className="mt-4 flex justify-center gap-4">
-            <a href="#" className="hover:text-[#004B23]">
-              Terms
-            </a>
-            <a href="#" className="hover:text-[#004B23]">
-              Privacy
-            </a>
-            <a href="#" className="hover:text-[#004B23]">
-              Contact
-            </a>
-          </div>
-        </footer>
+        </main>
       </div>
+
+      {/* Footer */}
+      <footer className="mt-auto border-t border-gray-200 bg-white">
+        <div className="mx-auto  px-4 py-8 sm:px-6 lg:px-8">
+          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+            <div className="text-sm text-gray-500">
+              <p>blumenOs Platform Documentation v2.0</p>
+              <p className="mt-1">Powered by BlumenTech · Last updated: March 2026</p>
+            </div>
+            <div className="flex items-center gap-6 text-sm text-gray-500">
+              <a href="#" className="transition-colors hover:text-gray-700">
+                Terms
+              </a>
+              <a href="#" className="transition-colors hover:text-gray-700">
+                Privacy
+              </a>
+              <a href="#" className="transition-colors hover:text-gray-700">
+                Contact
+              </a>
+              <a href="#" className="transition-colors hover:text-gray-700">
+                API Reference
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
@@ -1318,56 +1289,81 @@ function SubmoduleDetails({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="rounded-2xl bg-white shadow-sm"
+      className="w-full"
     >
-      <div className="p-6 md:p-8">
-        {/* Back button */}
-        <button
-          onClick={onBack}
-          className="mb-4 flex items-center gap-1 text-sm text-gray-500 transition-colors hover:text-[#004B23]"
-        >
+      {/* Breadcrumb Navigation */}
+      <nav className="mb-6 flex items-center gap-2 text-sm text-gray-500">
+        <button onClick={onBack} className="flex items-center gap-1 transition-colors hover:text-gray-700">
           <ChevronLeft className="h-4 w-4" />
           Back to modules
         </button>
+        <ChevronRight className="h-4 w-4" />
+        <span className="cursor-pointer transition-colors hover:text-gray-700">{selectedModule.title}</span>
+        <ChevronRight className="h-4 w-4" />
+        <span className="font-medium text-gray-900">{submodule.name}</span>
+      </nav>
 
-        {/* Breadcrumb */}
-        <div className="mb-4 flex items-center gap-2 text-sm text-gray-500">
-          <span className="hover:text-[#004B23]">{selectedModule.title}</span>
-          <ChevronRight className="h-4 w-4" />
-          <span className="font-medium text-gray-900">{submodule.name}</span>
-        </div>
-
-        {/* Title */}
-        <h2 className="text-2xl font-bold text-gray-900">{submodule.name}</h2>
-        <p className="mt-2 leading-relaxed text-gray-600">{submodule.description}</p>
-
-        {/* Path with copy */}
-        <div className="mt-5 flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 p-4">
-          <div>
-            <span className="text-sm font-medium text-gray-700">Route: </span>
-            <code className="rounded bg-white px-2 py-1 font-mono text-sm text-[#004B23]">{submodule.path}</code>
+      {/* Module Header */}
+      <div className="mb-8 border-b border-gray-200 pb-6">
+        <div className="flex items-start gap-4">
+          <div className="rounded-lg bg-blue-50 p-3 text-blue-600">
+            {React.cloneElement(selectedModule.icon as React.ReactElement, { className: "h-6 w-6" })}
           </div>
-          <button
-            onClick={() => copyToClipboard(submodule.path, "path")}
-            className="rounded-md p-1 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-600"
-          >
-            {copiedCode === "path" ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
-          </button>
+          <div className="flex-1">
+            <h1 className="mb-2 text-3xl font-bold text-gray-900">{submodule.name}</h1>
+            <p className="text-lg leading-relaxed text-gray-600">{submodule.description}</p>
+          </div>
         </div>
+      </div>
 
-        {/* Permissions */}
-        <div className="mt-6">
-          <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-            <Shield className="h-5 w-5 text-[#004B23]" />
-            Required Permissions
-          </h3>
-          <div className="mt-2 flex flex-wrap gap-2">
+      {/* Route Information */}
+      <section className="mb-8">
+        <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-gray-900">
+          <Hash className="h-5 w-5 text-gray-400" />
+          Route Information
+        </h2>
+        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-sm font-medium text-gray-700">Endpoint: </span>
+              <code className="ml-2 rounded border border-gray-200 bg-white px-3 py-1 font-mono text-sm text-gray-900">
+                {submodule.path}
+              </code>
+            </div>
+            <button
+              onClick={() => copyToClipboard(submodule.path, "path")}
+              className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
+            >
+              {copiedCode === "path" ? (
+                <>
+                  <Check className="h-4 w-4 text-green-600" />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4" />
+                  Copy
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Required Permissions */}
+      <section className="mb-8">
+        <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-gray-900">
+          <Shield className="h-5 w-5 text-gray-400" />
+          Required Permissions
+        </h2>
+        <div className="rounded-lg border border-gray-200 bg-white p-6">
+          <div className="flex flex-wrap gap-2">
             {submodule.permissions.map((perm, idx) => (
               <div
                 key={idx}
-                className="group relative flex items-center gap-1 rounded-full bg-[#004B23]/10 px-3 py-1 font-mono text-sm text-[#004B23]"
+                className="group relative flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2"
               >
-                {perm}
+                <code className="font-mono text-sm text-gray-900">{perm}</code>
                 <button
                   onClick={() => copyToClipboard(perm, `perm-${idx}`)}
                   className="opacity-0 transition-opacity group-hover:opacity-100"
@@ -1375,69 +1371,77 @@ function SubmoduleDetails({
                   {copiedCode === `perm-${idx}` ? (
                     <Check className="h-3 w-3 text-green-600" />
                   ) : (
-                    <Copy className="h-3 w-3 text-gray-500" />
+                    <Copy className="h-3 w-3 text-gray-400" />
                   )}
                 </button>
               </div>
             ))}
           </div>
+          {submodule.permissions.length === 0 && (
+            <p className="text-sm italic text-gray-500">No special permissions required</p>
+          )}
         </div>
+      </section>
 
-        {/* Workflow */}
-        <div className="mt-6">
-          <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-            <Clock className="h-5 w-5 text-green-600" />
-            Workflow Process
-          </h3>
-          <div className="mt-3 rounded-xl border-l-4 border-green-500 bg-green-50 p-4">
+      {/* Workflow Process */}
+      <section className="mb-8">
+        <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-gray-900">
+          <GitBranch className="h-5 w-5 text-gray-400" />
+          Workflow Process
+        </h2>
+        <div className="rounded-lg border border-gray-200 bg-blue-50 p-6">
+          <div className="prose prose-sm max-w-none">
             <p className="leading-relaxed text-gray-700">{submodule.workflow}</p>
           </div>
         </div>
+      </section>
 
-        {/* Key Features */}
-        <div className="mt-6">
-          <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-            <CheckCircle2 className="h-5 w-5 text-[#004B23]" />
-            Key Features
-          </h3>
-          <ul className="mt-2 list-inside list-disc space-y-1 text-gray-600">
-            <li>Role-based access control enforcement</li>
-            <li>Audit logging for all operations</li>
-            <li>Real-time data synchronization</li>
-            <li>Responsive design for all devices</li>
-            <li>Integrated notification system</li>
-            <li>Comprehensive error handling</li>
-          </ul>
+      {/* Technical Implementation */}
+      <section className="mb-8">
+        <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-gray-900">
+          <Terminal className="h-5 w-5 text-gray-400" />
+          Technical Implementation
+        </h2>
+        <div className="rounded-lg border border-gray-200 bg-white">
+          <div className="grid divide-y divide-gray-200">
+            {[
+              { label: "State Management", value: "Redux Toolkit with slice-based architecture" },
+              { label: "API Integration", value: "RESTful endpoints with Axios interceptors" },
+              { label: "Form Handling", value: "React Hook Form with Yup validation" },
+              { label: "UI Components", value: "Radix UI primitives with Tailwind styling" },
+              { label: "Data Fetching", value: "Async thunks with loading/error states" },
+              { label: "Real-time Updates", value: "WebSocket connections for live data" },
+            ].map((item, idx) => (
+              <div key={idx} className="flex items-start gap-3 p-4">
+                <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-green-600" />
+                <div>
+                  <h3 className="font-medium text-gray-900">{item.label}</h3>
+                  <p className="mt-1 text-sm text-gray-600">{item.value}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
+      </section>
 
-        {/* Technical Details */}
-        <div className="mt-6 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 p-5">
-          <h4 className="flex items-center gap-2 font-medium text-gray-900">
-            <Smartphone className="h-4 w-4" />
-            Technical Implementation
-          </h4>
-          <ul className="mt-2 space-y-1 text-sm text-gray-600">
-            <li>
-              <strong>State Management:</strong> Redux Toolkit with slice-based architecture
-            </li>
-            <li>
-              <strong>API Integration:</strong> RESTful endpoints with Axios interceptors
-            </li>
-            <li>
-              <strong>Form Handling:</strong> React Hook Form with Yup validation
-            </li>
-            <li>
-              <strong>UI Components:</strong> Radix UI primitives with Tailwind styling
-            </li>
-            <li>
-              <strong>Data Fetching:</strong> Async thunks with loading/error states
-            </li>
-            <li>
-              <strong>Real-time Updates:</strong> WebSocket connections for live data
-            </li>
-          </ul>
+      {/* Quick Actions */}
+      <section>
+        <h2 className="mb-4 text-xl font-semibold text-gray-900">Quick Actions</h2>
+        <div className="flex flex-wrap gap-3">
+          <button className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+            <ExternalLink className="h-4 w-4" />
+            Open in New Tab
+          </button>
+          <button className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+            <FileText className="h-4 w-4" />
+            View API Docs
+          </button>
+          <button className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+            <Code className="h-4 w-4" />
+            View Source Code
+          </button>
         </div>
-      </div>
+      </section>
     </motion.div>
   )
 }
@@ -1451,58 +1455,149 @@ function ModulesOverview({
   onSelectModule: (moduleId: string) => void
 }) {
   return (
-    <div className="rounded-2xl bg-white p-6 shadow-sm md:p-8">
-      <div className="mb-6 flex items-center gap-3 border-b border-gray-100 pb-4">
-        <div className="rounded-full bg-[#004B23]/10 p-3">
-          <BookOpen className="h-6 w-6 text-[#004B23]" />
-        </div>
-        <div>
-          <h2 className="text-xl font-bold text-gray-900">Module Documentation</h2>
-          <p className="text-sm text-gray-500">Select a module from the sidebar to view detailed documentation</p>
-        </div>
-      </div>
-
-      <p className="text-gray-600">
-        The blumenOs platform is organized into functional modules, each containing related features and workflows.
-        Select any module from the sidebar to explore its submodules, permissions, and implementation details.
-      </p>
-
-      <div className="mt-8 grid gap-4 md:grid-cols-2">
-        {modules.slice(0, 12).map((module) => (
-          <div
-            key={module.id}
-            onClick={() => onSelectModule(module.id)}
-            className="group cursor-pointer rounded-xl border border-gray-200 p-4 transition-all hover:border-[#004B23]/30 hover:shadow-md"
-          >
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-[#004B23]/10 p-2 text-[#004B23] transition-colors group-hover:bg-[#004B23] group-hover:text-white">
-                {module.icon}
-              </div>
-              <h3 className="font-semibold text-gray-900 group-hover:text-[#004B23]">{module.title}</h3>
-            </div>
-            <p className="mt-2 line-clamp-2 text-sm text-gray-600">{module.description}</p>
-            <div className="mt-3 flex items-center justify-between">
-              <p className="text-xs text-gray-400">{module.submodules.length} submodules</p>
-              <span className="text-xs text-[#004B23] opacity-0 transition-opacity group-hover:opacity-100">
-                Expand →
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-8 rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 p-5">
-        <div className="flex items-start gap-3">
-          <div className="rounded-full bg-blue-100 p-2">
-            <AlertCircle className="h-5 w-5 text-blue-600" />
+    <div className="w-full">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="mb-4 flex items-center gap-4">
+          <div className="rounded-lg bg-blue-50 p-3 text-blue-600">
+            <BookOpen className="h-6 w-6" />
           </div>
           <div>
-            <h4 className="font-semibold text-blue-900">Quick Tips</h4>
-            <ul className="mt-2 space-y-1 text-sm text-blue-800">
-              <li>• Use the search bar to quickly find modules and features</li>
-              <li>• Expand modules to view all available submodules</li>
-              <li>• Each submodule includes permission requirements and workflow details</li>
+            <h1 className="text-3xl font-bold text-gray-900">Module Documentation</h1>
+            <p className="mt-1 text-lg text-gray-600">
+              Comprehensive guide to blumenOs platform modules and their functionality
+            </p>
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+          <p className="text-sm text-blue-800">
+            <strong>Getting Started:</strong> Select a module from the sidebar to explore its submodules, permissions,
+            and implementation details. Use the search bar to quickly find specific features or documentation.
+          </p>
+        </div>
+      </div>
+
+      {/* Module Categories */}
+      <div className="space-y-12">
+        {/* Core Operations */}
+        <section>
+          <h2 className="mb-6 flex items-center gap-2 text-xl font-semibold text-gray-900">
+            <div className="h-1 w-8 rounded bg-blue-600"></div>
+            Core Operations
+          </h2>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {modules.slice(0, 6).map((module) => (
+              <div
+                key={module.id}
+                onClick={() => onSelectModule(module.id)}
+                className="group cursor-pointer rounded-xl border border-gray-200 bg-white p-6 transition-all hover:border-blue-300 hover:shadow-lg"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="rounded-lg bg-gray-50 p-3 text-gray-600 transition-colors group-hover:bg-blue-50 group-hover:text-blue-600">
+                    {React.cloneElement(module.icon as React.ReactElement, { className: "h-6 w-6" })}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 transition-colors group-hover:text-blue-600">
+                      {module.title}
+                    </h3>
+                    <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-gray-600">{module.description}</p>
+                    <div className="mt-4 flex items-center justify-between">
+                      <span className="text-xs text-gray-500">
+                        {module.submodules.length} submodule{module.submodules.length !== 1 ? "s" : ""}
+                      </span>
+                      <ChevronRight className="h-4 w-4 text-gray-400 transition-transform group-hover:translate-x-1" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Business Operations */}
+        <section>
+          <h2 className="mb-6 flex items-center gap-2 text-xl font-semibold text-gray-900">
+            <div className="h-1 w-8 rounded bg-green-600"></div>
+            Business Operations
+          </h2>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {modules.slice(6, 12).map((module) => (
+              <div
+                key={module.id}
+                onClick={() => onSelectModule(module.id)}
+                className="group cursor-pointer rounded-xl border border-gray-200 bg-white p-6 transition-all hover:border-green-300 hover:shadow-lg"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="rounded-lg bg-gray-50 p-3 text-gray-600 transition-colors group-hover:bg-green-50 group-hover:text-green-600">
+                    {React.cloneElement(module.icon as React.ReactElement, { className: "h-6 w-6" })}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 transition-colors group-hover:text-green-600">
+                      {module.title}
+                    </h3>
+                    <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-gray-600">{module.description}</p>
+                    <div className="mt-4 flex items-center justify-between">
+                      <span className="text-xs text-gray-500">
+                        {module.submodules.length} submodule{module.submodules.length !== 1 ? "s" : ""}
+                      </span>
+                      <ChevronRight className="h-4 w-4 text-gray-400 transition-transform group-hover:translate-x-1" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* System Management */}
+        <section>
+          <h2 className="mb-6 flex items-center gap-2 text-xl font-semibold text-gray-900">
+            <div className="h-1 w-8 rounded bg-purple-600"></div>
+            System Management
+          </h2>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {modules.slice(12).map((module) => (
+              <div
+                key={module.id}
+                onClick={() => onSelectModule(module.id)}
+                className="group cursor-pointer rounded-xl border border-gray-200 bg-white p-6 transition-all hover:border-purple-300 hover:shadow-lg"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="rounded-lg bg-gray-50 p-3 text-gray-600 transition-colors group-hover:bg-purple-50 group-hover:text-purple-600">
+                    {React.cloneElement(module.icon as React.ReactElement, { className: "h-6 w-6" })}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 transition-colors group-hover:text-purple-600">
+                      {module.title}
+                    </h3>
+                    <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-gray-600">{module.description}</p>
+                    <div className="mt-4 flex items-center justify-between">
+                      <span className="text-xs text-gray-500">
+                        {module.submodules.length} submodule{module.submodules.length !== 1 ? "s" : ""}
+                      </span>
+                      <ChevronRight className="h-4 w-4 text-gray-400 transition-transform group-hover:translate-x-1" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      {/* Quick Tips */}
+      <div className="mt-12 rounded-xl border border-amber-200 bg-amber-50 p-6">
+        <div className="flex items-start gap-3">
+          <AlertCircle className="mt-0.5 h-5 w-5 text-amber-600" />
+          <div>
+            <h3 className="mb-2 font-semibold text-amber-900">Documentation Tips</h3>
+            <ul className="space-y-1 text-sm text-amber-800">
+              <li>• Use the sidebar navigation to browse modules by category</li>
+              <li>• Click on any module card to expand and view its submodules</li>
+              <li>• Each submodule includes detailed permissions and workflow information</li>
               <li>• Check the Permissions tab for complete access control documentation</li>
+              <li>• Use the search function to quickly find specific features</li>
             </ul>
           </div>
         </div>
@@ -1604,129 +1699,155 @@ function PermissionsReference({
   ]
 
   return (
-    <div className="rounded-2xl bg-white p-6 shadow-sm md:p-8">
-      <div className="mb-6 flex items-center gap-3 border-b border-gray-100 pb-4">
-        <div className="rounded-full bg-[#004B23]/10 p-3">
-          <Shield className="h-6 w-6 text-[#004B23]" />
+    <div className="w-full">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="mb-6 flex items-center gap-4">
+          <div className="rounded-lg bg-purple-50 p-3 text-purple-600">
+            <Shield className="h-6 w-6" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Permission Reference</h1>
+            <p className="mt-1 text-lg text-gray-600">
+              Complete guide to blumenOs platform permissions and access control
+            </p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-xl font-bold text-gray-900">Permission Reference</h2>
-          <p className="text-sm text-gray-500">Complete list of system permissions organized by module</p>
+
+        {/* Permission Pattern */}
+        <div className="mb-8 rounded-lg border border-purple-200 bg-purple-50 p-6">
+          <h2 className="mb-4 text-lg font-semibold text-purple-900">Permission Format</h2>
+          <div className="mb-4 flex items-center gap-4">
+            <code className="rounded-lg border border-purple-200 bg-white px-4 py-2 font-mono text-lg text-purple-700">
+              resource:action
+            </code>
+            <div className="text-sm text-purple-700">
+              <p className="font-medium">Resource + Action</p>
+              <p className="text-purple-600">Describes what can be accessed and how</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Types */}
+        <div className="mb-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <div className="mb-3 flex items-center gap-2">
+              <div className="rounded-lg bg-green-100 p-2">
+                <Check className="h-4 w-4 text-green-700" />
+              </div>
+              <h3 className="font-semibold text-green-700">read</h3>
+            </div>
+            <p className="text-sm text-gray-600">
+              View and access information. Users can browse data, view reports, and access dashboards without making
+              changes.
+            </p>
+            <div className="mt-3">
+              <code className="rounded bg-green-50 px-2 py-1 font-mono text-xs text-green-700">customers:read</code>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <div className="mb-3 flex items-center gap-2">
+              <div className="rounded-lg bg-blue-100 p-2">
+                <Plus className="h-4 w-4 text-blue-700" />
+              </div>
+              <h3 className="font-semibold text-blue-700">create</h3>
+            </div>
+            <p className="text-sm text-gray-600">
+              Add new records or entities. Users can create customers, generate bills, add agents, or initiate
+              transactions.
+            </p>
+            <div className="mt-3">
+              <code className="rounded bg-blue-50 px-2 py-1 font-mono text-xs text-blue-700">bills:create</code>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <div className="mb-3 flex items-center gap-2">
+              <div className="rounded-lg bg-orange-100 p-2">
+                <Edit className="h-4 w-4 text-orange-700" />
+              </div>
+              <h3 className="font-semibold text-orange-700">update</h3>
+            </div>
+            <p className="text-sm text-gray-600">
+              Modify existing records. Users can edit customer details, adjust bills, modify agent information.
+            </p>
+            <div className="mt-3">
+              <code className="rounded bg-orange-50 px-2 py-1 font-mono text-xs text-orange-700">agents:update</code>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <div className="mb-3 flex items-center gap-2">
+              <div className="rounded-lg bg-purple-100 p-2">
+                <Play className="h-4 w-4 text-purple-700" />
+              </div>
+              <h3 className="font-semibold text-purple-700">execute</h3>
+            </div>
+            <p className="text-sm text-gray-600">
+              Perform operational actions and workflows. Users can process payments, clear cash, generate tokens.
+            </p>
+            <div className="mt-3">
+              <code className="rounded bg-purple-50 px-2 py-1 font-mono text-xs text-purple-700">payments:process</code>
+            </div>
+          </div>
+        </div>
+
+        {/* Special Actions */}
+        <div className="mb-8 rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <h3 className="mb-2 font-semibold text-amber-900">Special Actions</h3>
+          <p className="mb-3 text-sm text-amber-800">Additional actions beyond standard CRUD operations:</p>
+          <div className="flex flex-wrap gap-2">
+            {["delete", "approve", "manage", "admin", "configure", "clear", "topup"].map((action) => (
+              <code
+                key={action}
+                className="rounded border border-amber-200 bg-amber-100 px-2 py-1 font-mono text-xs text-amber-700"
+              >
+                {action}
+              </code>
+            ))}
+          </div>
         </div>
       </div>
 
-      <p className="text-gray-600">
-        Permissions follow the pattern:{" "}
-        <code className="rounded bg-gray-100 px-2 py-1 font-mono text-sm">resource:action</code>
-      </p>
+      {/* Permission Groups */}
+      <div className="space-y-8">
+        <h2 className="text-2xl font-bold text-gray-900">Permission Groups</h2>
 
-      <div className="mb-8 rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 p-6">
-        <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-blue-900">
-          <Info className="h-5 w-5" />
-          Understanding Permission Types
-        </h3>
-        <p className="mb-4 text-blue-800">
-          The platform uses a Role-Based Access Control (RBAC) system where permissions follow the pattern:
-        </p>
-        <div className="mb-4 rounded-lg bg-white p-3 text-center font-mono text-sm text-blue-700">resource:action</div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-lg bg-white p-4 shadow-sm">
-            <h4 className="flex items-center gap-2 font-semibold text-green-700">
-              <Check className="h-4 w-4" />
-              read
-            </h4>
-            <p className="mt-2 text-sm text-gray-600">
-              Allows viewing and accessing information. Users with read permissions can browse data, view reports, and
-              access dashboards without making any changes.
-            </p>
-            <div className="mt-3">
-              <span className="rounded bg-green-100 px-2 py-1 font-mono text-xs text-green-700">customers:read</span>
-            </div>
-          </div>
-          <div className="rounded-lg bg-white p-4 shadow-sm">
-            <h4 className="flex items-center gap-2 font-semibold text-blue-700">
-              <Plus className="h-4 w-4" />
-              create
-            </h4>
-            <p className="mt-2 text-sm text-gray-600">
-              Allows adding new records or entities. Users with create permissions can add new customers, generate
-              bills, create agents, or initiate new transactions.
-            </p>
-            <div className="mt-3">
-              <span className="rounded bg-blue-100 px-2 py-1 font-mono text-xs text-blue-700">bills:create</span>
-            </div>
-          </div>
-          <div className="rounded-lg bg-white p-4 shadow-sm">
-            <h4 className="flex items-center gap-2 font-semibold text-orange-700">
-              <Edit className="h-4 w-4" />
-              update
-            </h4>
-            <p className="mt-2 text-sm text-gray-600">
-              Allows modifying existing records. Users with update permissions can edit customer details, adjust bills,
-              modify agent information, or change asset configurations.
-            </p>
-            <div className="mt-3">
-              <span className="rounded bg-orange-100 px-2 py-1 font-mono text-xs text-orange-700">agents:update</span>
-            </div>
-          </div>
-          <div className="rounded-lg bg-white p-4 shadow-sm">
-            <h4 className="flex items-center gap-2 font-semibold text-purple-700">
-              <Play className="h-4 w-4" />
-              execute
-            </h4>
-            <p className="mt-2 text-sm text-gray-600">
-              Allows performing operational actions and workflows. Users with execute permissions can process payments,
-              clear cash, generate tokens, or run system operations.
-            </p>
-            <div className="mt-3">
-              <span className="rounded bg-purple-100 px-2 py-1 font-mono text-xs text-purple-700">
-                payments:process
-              </span>
-            </div>
-          </div>
-        </div>
-        <div className="mt-4 rounded-lg bg-blue-100 p-3">
-          <p className="text-sm text-blue-800">
-            <strong>Note:</strong> Some special actions like <code className="rounded bg-blue-200 px-1">delete</code>,
-            <code className="rounded bg-blue-200 px-1">approve</code>,{" "}
-            <code className="rounded bg-blue-200 px-1">manage</code>, and{" "}
-            <code className="rounded bg-blue-200 px-1">admin</code> provide additional specific capabilities beyond the
-            standard CRUD operations.
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {permissionGroups.map((group, idx) => (
-          <div
-            key={idx}
-            className="rounded-xl border border-gray-200 p-4 transition-all hover:border-[#004B23]/30 hover:shadow-md"
-          >
-            <h3 className="font-semibold text-gray-900">{group.title}</h3>
-            <ul className="mt-3 space-y-2">
-              {group.permissions.map((perm, permIdx) => (
-                <li key={permIdx} className="group/permission flex items-center justify-between">
-                  <div>
-                    <code className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs text-[#004B23]">
-                      {perm.name}
-                    </code>
-                    <p className="mt-0.5 text-xs text-gray-500">{perm.description}</p>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {permissionGroups.map((group, idx) => (
+            <div key={idx} className="rounded-lg border border-gray-200 bg-white p-6">
+              <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
+                <div className="h-2 w-2 rounded-full bg-purple-600"></div>
+                {group.title}
+              </h3>
+              <div className="space-y-3">
+                {group.permissions.map((perm, permIdx) => (
+                  <div key={permIdx} className="group/permission flex items-start justify-between">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <code className="rounded border border-gray-200 bg-gray-50 px-2 py-1 font-mono text-xs text-gray-900">
+                          {perm.name}
+                        </code>
+                        <button
+                          onClick={() => copyToClipboard(perm.name, `perm-${idx}-${permIdx}`)}
+                          className="opacity-0 transition-opacity group-hover/permission:opacity-100"
+                        >
+                          {copiedCode === `perm-${idx}-${permIdx}` ? (
+                            <Check className="h-3.5 w-3.5 text-green-600" />
+                          ) : (
+                            <Copy className="h-3.5 w-3.5 text-gray-400 hover:text-gray-600" />
+                          )}
+                        </button>
+                      </div>
+                      <p className="mt-1 text-xs leading-relaxed text-gray-500">{perm.description}</p>
+                    </div>
                   </div>
-                  <button
-                    onClick={() => copyToClipboard(perm.name, `perm-${idx}-${permIdx}`)}
-                    className="opacity-0 transition-opacity group-hover/permission:opacity-100"
-                  >
-                    {copiedCode === `perm-${idx}-${permIdx}` ? (
-                      <Check className="h-3.5 w-3.5 text-green-600" />
-                    ) : (
-                      <Copy className="h-3.5 w-3.5 text-gray-400 hover:text-gray-600" />
-                    )}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -1741,90 +1862,214 @@ function ArchitectureOverview({
   copiedCode: string | null
 }) {
   return (
-    <div className="rounded-2xl bg-white p-6 shadow-sm md:p-8">
-      <div className="mb-6 flex items-center gap-3 border-b border-gray-100 pb-4">
-        <div className="rounded-full bg-[#004B23]/10 p-3">
-          <Layers className="h-6 w-6 text-[#004B23]" />
-        </div>
-        <div>
-          <h2 className="text-xl font-bold text-gray-900">System Architecture</h2>
-          <p className="text-sm text-gray-500">Technical overview of the blumenOs platform stack</p>
-        </div>
-      </div>
-
-      <div className="grid gap-8 md:grid-cols-2">
-        <div className="rounded-xl border border-gray-200 p-6">
-          <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
-            <Code className="h-5 w-5 text-[#004B23]" />
-            Frontend Stack
-          </h3>
-          <ul className="space-y-3">
-            {[
-              { name: "Next.js 14", desc: "Server-side rendering & App Router" },
-              { name: "TypeScript", desc: "Type-safe development" },
-              { name: "Tailwind CSS", desc: "Utility-first styling" },
-              { name: "Redux Toolkit", desc: "State management" },
-              { name: "Radix UI", desc: "Accessible components" },
-              { name: "Framer Motion", desc: "Animations" },
-            ].map((item, idx) => (
-              <li key={idx} className="flex items-start gap-2">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 text-[#004B23]" />
-                <div>
-                  <span className="font-medium text-gray-900">{item.name}</span>
-                  <span className="text-sm text-gray-500"> - {item.desc}</span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="rounded-xl border border-gray-200 p-6">
-          <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
-            <Layers className="h-5 w-5 text-[#004B23]" />
-            Backend Integration
-          </h3>
-          <ul className="space-y-3">
-            {[
-              { name: "RESTful APIs", desc: "Standardized endpoints" },
-              { name: "JWT Authentication", desc: "Secure token-based auth" },
-              { name: "Axios", desc: "HTTP client with interceptors" },
-              { name: "File Processing", desc: "CSV/Excel bulk operations" },
-              { name: "Background Jobs", desc: "Async processing" },
-              { name: "Audit Logging", desc: "Complete activity tracking" },
-            ].map((item, idx) => (
-              <li key={idx} className="flex items-start gap-2">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 text-[#004B23]" />
-                <div>
-                  <span className="font-medium text-gray-900">{item.name}</span>
-                  <span className="text-sm text-gray-500"> - {item.desc}</span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-
-      <div className="mt-8 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 p-6">
-        <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
-          <Shield className="h-5 w-5 text-[#004B23]" />
-          Security Architecture
-        </h3>
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-lg bg-white p-4 shadow-sm">
-            <h4 className="font-medium text-gray-900">Authentication</h4>
-            <p className="mt-1 text-sm text-gray-600">JWT for staff, OTP for customers with fingerprint tracking</p>
+    <div className="w-full">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="mb-6 flex items-center gap-4">
+          <div className="rounded-lg bg-indigo-50 p-3 text-indigo-600">
+            <Layers className="h-6 w-6" />
           </div>
-          <div className="rounded-lg bg-white p-4 shadow-sm">
-            <h4 className="font-medium text-gray-900">Authorization</h4>
-            <p className="mt-1 text-sm text-gray-600">RBAC with granular permissions (resource:action)</p>
-          </div>
-          <div className="rounded-lg bg-white p-4 shadow-sm">
-            <h4 className="font-medium text-gray-900">Audit</h4>
-            <p className="mt-1 text-sm text-gray-600">
-              Complete activity logging with IP tracking and user attribution
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">System Architecture</h1>
+            <p className="mt-1 text-lg text-gray-600">
+              Technical overview of the blumenOs platform stack and infrastructure
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Architecture Overview */}
+      <div className="space-y-12">
+        {/* Frontend Stack */}
+        <section>
+          <h2 className="mb-6 flex items-center gap-3 text-2xl font-bold text-gray-900">
+            <div className="h-1 w-8 rounded bg-indigo-600"></div>
+            Frontend Stack
+          </h2>
+          <div className="rounded-lg border border-gray-200 bg-white p-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              {[
+                {
+                  name: "Next.js 14",
+                  desc: "Server-side rendering with App Router for optimal performance and SEO",
+                  icon: <Code className="h-5 w-5" />,
+                },
+                {
+                  name: "TypeScript",
+                  desc: "Type-safe development with enhanced IDE support and error prevention",
+                  icon: <Terminal className="h-5 w-5" />,
+                },
+                {
+                  name: "Tailwind CSS",
+                  desc: "Utility-first CSS framework for rapid, consistent styling",
+                  icon: <Layers className="h-5 w-5" />,
+                },
+                {
+                  name: "Redux Toolkit",
+                  desc: "State management with slice-based architecture and dev tools",
+                  icon: <GitBranch className="h-5 w-5" />,
+                },
+                {
+                  name: "Radix UI",
+                  desc: "Accessible component primitives following WAI-ARIA standards",
+                  icon: <Shield className="h-5 w-5" />,
+                },
+                {
+                  name: "Framer Motion",
+                  desc: "Declarative animations and gesture library for smooth UX",
+                  icon: <Play className="h-5 w-5" />,
+                },
+              ].map((item, idx) => (
+                <div key={idx} className="flex items-start gap-3 rounded-lg border border-gray-100 bg-gray-50 p-4">
+                  <div className="mt-0.5 rounded-lg bg-indigo-100 p-2 text-indigo-600">{item.icon}</div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">{item.name}</h3>
+                    <p className="mt-1 text-sm text-gray-600">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Backend Integration */}
+        <section>
+          <h2 className="mb-6 flex items-center gap-3 text-2xl font-bold text-gray-900">
+            <div className="h-1 w-8 rounded bg-green-600"></div>
+            Backend Integration
+          </h2>
+          <div className="rounded-lg border border-gray-200 bg-white p-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              {[
+                {
+                  name: "RESTful APIs",
+                  desc: "Standardized REST endpoints with consistent response formats",
+                  icon: <Hash className="h-5 w-5" />,
+                },
+                {
+                  name: "JWT Authentication",
+                  desc: "Secure token-based authentication with refresh tokens",
+                  icon: <Shield className="h-5 w-5" />,
+                },
+                {
+                  name: "Axios Client",
+                  desc: "HTTP client with interceptors for request/response handling",
+                  icon: <Terminal className="h-5 w-5" />,
+                },
+                {
+                  name: "File Processing",
+                  desc: "CSV/Excel bulk operations with validation and error handling",
+                  icon: <FileText className="h-5 w-5" />,
+                },
+                {
+                  name: "Background Jobs",
+                  desc: "Async processing queues for long-running operations",
+                  icon: <Clock className="h-5 w-5" />,
+                },
+                {
+                  name: "Audit Logging",
+                  desc: "Complete activity tracking with IP and user attribution",
+                  icon: <CheckCircle2 className="h-5 w-5" />,
+                },
+              ].map((item, idx) => (
+                <div key={idx} className="flex items-start gap-3 rounded-lg border border-gray-100 bg-gray-50 p-4">
+                  <div className="mt-0.5 rounded-lg bg-green-100 p-2 text-green-600">{item.icon}</div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">{item.name}</h3>
+                    <p className="mt-1 text-sm text-gray-600">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Security Architecture */}
+        <section>
+          <h2 className="mb-6 flex items-center gap-3 text-2xl font-bold text-gray-900">
+            <div className="h-1 w-8 rounded bg-red-600"></div>
+            Security Architecture
+          </h2>
+          <div className="rounded-lg border border-gray-200 bg-white p-6">
+            <div className="grid gap-6 md:grid-cols-3">
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-6">
+                <div className="mb-4 w-fit rounded-lg bg-red-100 p-3 text-red-600">
+                  <Shield className="h-6 w-6" />
+                </div>
+                <h3 className="mb-2 font-semibold text-gray-900">Authentication</h3>
+                <p className="text-sm leading-relaxed text-gray-600">
+                  JWT-based authentication for staff/agents with secure token storage and automatic refresh. OTP-based
+                  authentication for customers with fingerprint tracking for enhanced security.
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-6">
+                <div className="mb-4 w-fit rounded-lg bg-orange-100 p-3 text-orange-600">
+                  <UserCog className="h-6 w-6" />
+                </div>
+                <h3 className="mb-2 font-semibold text-gray-900">Authorization</h3>
+                <p className="text-sm leading-relaxed text-gray-600">
+                  Role-Based Access Control (RBAC) with granular permissions following the resource:action pattern.
+                  Hierarchical role inheritance with department-based access controls.
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-6">
+                <div className="mb-4 w-fit rounded-lg bg-amber-100 p-3 text-amber-600">
+                  <CheckCircle2 className="h-6 w-6" />
+                </div>
+                <h3 className="mb-2 font-semibold text-gray-900">Audit & Compliance</h3>
+                <p className="text-sm leading-relaxed text-gray-600">
+                  Complete audit logging with IP tracking, user attribution, and immutable records. Regulatory
+                  compliance reporting with data retention policies.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Data Flow */}
+        <section>
+          <h2 className="mb-6 flex items-center gap-3 text-2xl font-bold text-gray-900">
+            <div className="h-1 w-8 rounded bg-purple-600"></div>
+            Data Flow Architecture
+          </h2>
+          <div className="rounded-lg border border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50 p-6">
+            <div className="grid gap-6 md:grid-cols-4">
+              <div className="text-center">
+                <div className="mb-3 rounded-lg border border-purple-200 bg-white p-4">
+                  <Users className="mx-auto h-8 w-8 text-purple-600" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-900">Client Layer</h3>
+                <p className="mt-1 text-xs text-gray-600">React components with state management</p>
+              </div>
+
+              <div className="text-center">
+                <div className="mb-3 rounded-lg border border-purple-200 bg-white p-4">
+                  <GitBranch className="mx-auto h-8 w-8 text-purple-600" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-900">API Gateway</h3>
+                <p className="mt-1 text-xs text-gray-600">Request routing and authentication</p>
+              </div>
+
+              <div className="text-center">
+                <div className="mb-3 rounded-lg border border-purple-200 bg-white p-4">
+                  <Layers className="mx-auto h-8 w-8 text-purple-600" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-900">Business Logic</h3>
+                <p className="mt-1 text-xs text-gray-600">Core processing and validation</p>
+              </div>
+
+              <div className="text-center">
+                <div className="mb-3 rounded-lg border border-purple-200 bg-white p-4">
+                  <Database className="mx-auto h-8 w-8 text-purple-600" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-900">Data Layer</h3>
+                <p className="mt-1 text-xs text-gray-600">Persistent storage and caching</p>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   )
@@ -1833,100 +2078,278 @@ function ArchitectureOverview({
 // --- Getting Started Component ---
 function GettingStarted() {
   return (
-    <div className="rounded-2xl bg-white p-6 shadow-sm md:p-8">
-      <div className="mb-6 flex items-center gap-3 border-b border-gray-100 pb-4">
-        <div className="rounded-full bg-[#004B23]/10 p-3">
-          <BookOpen className="h-6 w-6 text-[#004B23]" />
-        </div>
-        <div>
-          <h2 className="text-xl font-bold text-gray-900">Getting Started with blumenOs</h2>
-          <p className="text-sm text-gray-500">Your guide to navigating the platform</p>
-        </div>
-      </div>
-
-      <div className="grid gap-8 md:grid-cols-2">
-        <div>
-          <h3 className="mb-3 text-lg font-semibold text-gray-900">1. Authentication</h3>
-          <p className="text-gray-600">
-            The platform supports two authentication methods: JWT-based login for staff/agents and OTP-based login for
-            customers. All users must have valid credentials to access the system.
-          </p>
-          <div className="mt-4 rounded-lg bg-blue-50 p-4">
-            <p className="text-sm text-blue-800">
-              <strong>Staff Login:</strong> Use your email and password to access the admin dashboard.
-            </p>
-            <p className="mt-2 text-sm text-blue-800">
-              <strong>Customer Portal:</strong> Use your account number and registered phone number to receive an OTP.
-            </p>
-          </div>
-        </div>
-
-        <div>
-          <h3 className="mb-3 text-lg font-semibold text-gray-900">2. Role-Based Access</h3>
-          <p className="text-gray-600">
-            Access to features is controlled by roles and permissions. Your role determines what modules and actions you
-            can access within the system.
-          </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <span className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700">Administrator</span>
-            <span className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700">Finance Officer</span>
-            <span className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700">Field Agent</span>
-            <span className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700">Customer Support</span>
-            <span className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700">Sales Representative</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-8">
-        <h3 className="mb-3 text-lg font-semibold text-gray-900">3. Core Modules</h3>
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-lg border border-gray-200 p-4">
-            <Users className="mb-2 h-5 w-5 text-[#004B23]" />
-            <h4 className="font-medium">Customer Management</h4>
-            <p className="mt-1 text-sm text-gray-500">Manage customer information, service addresses, and accounts</p>
-          </div>
-          <div className="rounded-lg border border-gray-200 p-4">
-            <Zap className="mb-2 h-5 w-5 text-[#004B23]" />
-            <h4 className="font-medium">Metering</h4>
-            <p className="mt-1 text-sm text-gray-500">Track meter installations, readings, and maintenance</p>
-          </div>
-          <div className="rounded-lg border border-gray-200 p-4">
-            <CreditCard className="mb-2 h-5 w-5 text-[#004B23]" />
-            <h4 className="font-medium">Billing & Payments</h4>
-            <p className="mt-1 text-sm text-gray-500">Generate bills, process payments, and manage collections</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-8 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 p-6">
-        <div className="flex items-start gap-4">
-          <div className="rounded-full bg-amber-100 p-3">
-            <HelpCircle className="h-6 w-6 text-amber-700" />
+    <div className="w-full">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="mb-6 flex items-center gap-4">
+          <div className="rounded-lg bg-teal-50 p-3 text-teal-600">
+            <BookOpen className="h-6 w-6" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-amber-900">Need Help?</h3>
-            <p className="mt-1 text-amber-800">
-              Check the module documentation for detailed workflows and permissions. For technical support, contact the
-              IT help desk at support@blumenos.com or call extension 1234.
+            <h1 className="text-3xl font-bold text-gray-900">Getting Started with blumenOs</h1>
+            <p className="mt-1 text-lg text-gray-600">
+              Your comprehensive guide to navigating and using the blumenOs platform
             </p>
-            <div className="mt-4 flex gap-3">
-              <a
-                href="#"
-                className="inline-flex items-center gap-1 rounded-lg bg-amber-100 px-4 py-2 text-sm font-medium text-amber-800 hover:bg-amber-200"
-              >
-                <FileText className="h-4 w-4" />
-                Documentation
-              </a>
-              <a
-                href="#"
-                className="inline-flex items-center gap-1 rounded-lg bg-white px-4 py-2 text-sm font-medium text-amber-800 shadow-sm hover:bg-gray-50"
-              >
-                <LifeBuoy className="h-4 w-4" />
-                Contact Support
-              </a>
-            </div>
           </div>
         </div>
+      </div>
+
+      {/* Quick Start Steps */}
+      <div className="space-y-12">
+        {/* Authentication */}
+        <section>
+          <h2 className="mb-6 flex items-center gap-3 text-2xl font-bold text-gray-900">
+            <div className="h-1 w-8 rounded bg-teal-600"></div>
+            1. Authentication
+          </h2>
+          <div className="rounded-lg border border-gray-200 bg-white p-6">
+            <p className="mb-6 leading-relaxed text-gray-600">
+              The blumenOs platform supports dual authentication mechanisms tailored for different user types. Staff and
+              agents use JWT-based authentication while customers access through OTP verification.
+            </p>
+
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="rounded-lg border border-gray-200 bg-blue-50 p-6">
+                <div className="mb-4 w-fit rounded-lg bg-blue-100 p-3 text-blue-600">
+                  <Users className="h-6 w-6" />
+                </div>
+                <h3 className="mb-2 font-semibold text-gray-900">Staff & Agent Login</h3>
+                <p className="mb-4 text-sm leading-relaxed text-gray-600">
+                  Use your company email and password to access the administrative dashboard. Sessions are securely
+                  managed with JWT tokens and automatic refresh.
+                </p>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <span className="text-gray-700">Email and password authentication</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <span className="text-gray-700">Automatic session management</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <span className="text-gray-700">Role-based dashboard access</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-gray-200 bg-green-50 p-6">
+                <div className="mb-4 w-fit rounded-lg bg-green-100 p-3 text-green-600">
+                  <Smartphone className="h-6 w-6" />
+                </div>
+                <h3 className="mb-2 font-semibold text-gray-900">Customer Portal</h3>
+                <p className="mb-4 text-sm leading-relaxed text-gray-600">
+                  Access your account using your account number and registered phone number. An OTP will be sent to your
+                  phone for verification.
+                </p>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <span className="text-gray-700">Account number + phone verification</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <span className="text-gray-700">SMS OTP authentication</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <span className="text-gray-700">Self-service account management</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Role-Based Access */}
+        <section>
+          <h2 className="mb-6 flex items-center gap-3 text-2xl font-bold text-gray-900">
+            <div className="h-1 w-8 rounded bg-indigo-600"></div>
+            2. Role-Based Access Control
+          </h2>
+          <div className="rounded-lg border border-gray-200 bg-white p-6">
+            <p className="mb-6 leading-relaxed text-gray-600">
+              Access to platform features is controlled through a comprehensive role-based access control system. Your
+              assigned role determines which modules and actions you can perform.
+            </p>
+
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {[
+                {
+                  role: "Administrator",
+                  desc: "Full system access and user management",
+                  bgColor: "bg-red-100",
+                  textColor: "text-red-600",
+                },
+                {
+                  role: "Finance Officer",
+                  desc: "Billing, payments, and financial reports",
+                  bgColor: "bg-blue-100",
+                  textColor: "text-blue-600",
+                },
+                {
+                  role: "Field Agent",
+                  desc: "Customer interactions and meter readings",
+                  bgColor: "bg-green-100",
+                  textColor: "text-green-600",
+                },
+                {
+                  role: "Customer Support",
+                  desc: "Ticket management and customer service",
+                  bgColor: "bg-purple-100",
+                  textColor: "text-purple-600",
+                },
+                {
+                  role: "Sales Representative",
+                  desc: "Customer acquisition and service connections",
+                  bgColor: "bg-orange-100",
+                  textColor: "text-orange-600",
+                },
+                {
+                  role: "System Auditor",
+                  desc: "Compliance monitoring and audit trails",
+                  bgColor: "bg-gray-100",
+                  textColor: "text-gray-600",
+                },
+              ].map((item, idx) => (
+                <div key={idx} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                  <div className={`${item.bgColor} p-2 ${item.textColor} mb-3 w-fit rounded-lg`}>
+                    <UserCog className="h-5 w-5" />
+                  </div>
+                  <h3 className="mb-1 font-semibold text-gray-900">{item.role}</h3>
+                  <p className="text-sm text-gray-600">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Core Modules Overview */}
+        <section>
+          <h2 className="mb-6 flex items-center gap-3 text-2xl font-bold text-gray-900">
+            <div className="h-1 w-8 rounded bg-purple-600"></div>
+            3. Core Platform Modules
+          </h2>
+          <div className="rounded-lg border border-gray-200 bg-white p-6">
+            <p className="mb-6 leading-relaxed text-gray-600">
+              The blumenOs platform is organized into functional modules that work together to provide comprehensive
+              electricity distribution management capabilities.
+            </p>
+
+            <div className="grid gap-6 md:grid-cols-3">
+              <div className="rounded-lg border border-gray-200 bg-blue-50 p-6">
+                <div className="mb-4 w-fit rounded-lg bg-blue-100 p-3 text-blue-600">
+                  <Users className="h-6 w-6" />
+                </div>
+                <h3 className="mb-2 font-semibold text-gray-900">Customer Management</h3>
+                <p className="mb-4 text-sm leading-relaxed text-gray-600">
+                  Complete customer lifecycle management from registration through service delivery and billing.
+                </p>
+                <ul className="space-y-1 text-sm text-gray-600">
+                  <li>• Customer registration and verification</li>
+                  <li>• Service address management</li>
+                  <li>• Account categorization</li>
+                  <li>• Bulk data import/export</li>
+                </ul>
+              </div>
+
+              <div className="rounded-lg border border-gray-200 bg-green-50 p-6">
+                <div className="mb-4 w-fit rounded-lg bg-green-100 p-3 text-green-600">
+                  <Zap className="h-6 w-6" />
+                </div>
+                <h3 className="mb-2 font-semibold text-gray-900">Metering System</h3>
+                <p className="mb-4 text-sm leading-relaxed text-gray-600">
+                  Comprehensive meter management from installation through reading and maintenance.
+                </p>
+                <ul className="space-y-1 text-sm text-gray-600">
+                  <li>• Meter installation and configuration</li>
+                  <li>• Mobile meter reading with GPS</li>
+                  <li>• Consumption tracking</li>
+                  <li>• Maintenance scheduling</li>
+                </ul>
+              </div>
+
+              <div className="rounded-lg border border-gray-200 bg-purple-50 p-6">
+                <div className="mb-4 w-fit rounded-lg bg-purple-100 p-3 text-purple-600">
+                  <CreditCard className="h-6 w-6" />
+                </div>
+                <h3 className="mb-2 font-semibold text-gray-900">Billing & Payments</h3>
+                <p className="mb-4 text-sm leading-relaxed text-gray-600">
+                  End-to-end billing lifecycle from generation through collection and reconciliation.
+                </p>
+                <ul className="space-y-1 text-sm text-gray-600">
+                  <li>• Automated bill generation</li>
+                  <li>• Multi-channel payment processing</li>
+                  <li>• Debt recovery management</li>
+                  <li>• Financial reporting</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Help and Support */}
+        <section>
+          <h2 className="mb-6 flex items-center gap-3 text-2xl font-bold text-gray-900">
+            <div className="h-1 w-8 rounded bg-amber-600"></div>
+            4. Help and Support
+          </h2>
+          <div className="rounded-lg border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-6">
+            <div className="flex items-start gap-4">
+              <div className="rounded-lg bg-amber-100 p-3 text-amber-600">
+                <HelpCircle className="h-6 w-6" />
+              </div>
+              <div className="flex-1">
+                <h3 className="mb-3 font-semibold text-gray-900">Need Assistance?</h3>
+                <p className="mb-6 leading-relaxed text-gray-700">
+                  Our comprehensive documentation and support resources are here to help you make the most of the
+                  blumenOs platform. Whether you need technical guidance, have questions about features, or require
+                  assistance with specific workflows, we've got you covered.
+                </p>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="rounded-lg border border-amber-200 bg-white p-4">
+                    <h4 className="mb-2 flex items-center gap-2 font-medium text-gray-900">
+                      <FileText className="h-4 w-4 text-amber-600" />
+                      Documentation Resources
+                    </h4>
+                    <ul className="space-y-1 text-sm text-gray-600">
+                      <li>• Detailed module documentation</li>
+                      <li>• API reference guides</li>
+                      <li>• Best practices and workflows</li>
+                      <li>• Troubleshooting guides</li>
+                    </ul>
+                  </div>
+
+                  <div className="rounded-lg border border-amber-200 bg-white p-4">
+                    <h4 className="mb-2 flex items-center gap-2 font-medium text-gray-900">
+                      <LifeBuoy className="h-4 w-4 text-amber-600" />
+                      Support Channels
+                    </h4>
+                    <ul className="space-y-1 text-sm text-gray-600">
+                      <li>• Email: support@blumenos.com</li>
+                      <li>• Phone: Extension 1234</li>
+                      <li>• Live chat during business hours</li>
+                      <li>• Dedicated account managers</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex gap-3">
+                  <button className="flex items-center gap-2 rounded-lg bg-amber-100 px-4 py-2 text-sm font-medium text-amber-800 transition-colors hover:bg-amber-200">
+                    <BookOpen className="h-4 w-4" />
+                    Browse Documentation
+                  </button>
+                  <button className="flex items-center gap-2 rounded-lg border border-amber-200 bg-white px-4 py-2 text-sm font-medium text-amber-800 transition-colors hover:bg-amber-50">
+                    <LifeBuoy className="h-4 w-4" />
+                    Contact Support
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   )
