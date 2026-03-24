@@ -12,6 +12,8 @@ import {
   Calendar,
   CheckCircle,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   CreditCard,
   DollarSign,
@@ -52,6 +54,8 @@ import { fetchPayments, type PaymentsResponse } from "lib/redux/paymentSlice"
 import type { Payment } from "lib/redux/paymentSlice"
 import PaymentReceiptModal from "components/ui/Modal/payment-receipt-modal"
 import ChangeAccountNumberModal from "components/ui/Modal/change-account-number-modal"
+import TariffOverrideModal from "components/ui/Modal/tariff-override-modal"
+import VatOverrideModal from "components/ui/Modal/vat-override-modal"
 import { formatCurrency as formatCurrencyUtil } from "utils/formatCurrency"
 import { SearchModule } from "components/ui/Search/search-module"
 
@@ -60,6 +64,8 @@ import BasicInfoTab from "components/Tabs/basic-info-tab"
 import PaymentDisputesTab from "components/Tabs/payment-disputes-tab"
 import ChangeRequestsTab from "components/Tabs/change-requests-tab"
 import PostpaidBillingTab from "components/Tabs/postpaid-billing-tab"
+import TariffOverridesTab from "components/Tabs/tariff-overrides-tab"
+import VatOverridesTab from "components/Tabs/vat-overrides-tab"
 import { VscEye } from "react-icons/vsc"
 
 interface Asset {
@@ -72,7 +78,7 @@ interface Asset {
 }
 
 // Tab types
-type TabType = "basic-info" | "payments" | "change-requests" | "postpaid-billing"
+type TabType = "basic-info" | "payments" | "tariff-overrides" | "vat-overrides" | "change-requests" | "postpaid-billing"
 
 // Modern Skeleton Components
 const ProfileCardSkeleton = () => (
@@ -401,6 +407,8 @@ const CustomerDetailsPage = () => {
     | "recordPayment"
     | "meterReading"
     | "changeAccountNumber"
+    | "tariffOverride"
+    | "vatOverride"
     | null
   >(null)
   const [activeTab, setActiveTab] = useState<TabType>("basic-info")
@@ -516,6 +524,8 @@ const CustomerDetailsPage = () => {
       | "recordPayment"
       | "meterReading"
       | "changeAccountNumber"
+      | "tariffOverride"
+      | "vatOverride"
   ) => setActiveModal(modalType)
 
   const handleConfirmReminder = (message: string) => {
@@ -722,12 +732,23 @@ const CustomerDetailsPage = () => {
         return "Payments"
       case "change-requests":
         return "Change Requests"
+      case "vat-overrides":
+        return "VAT Overrides"
       case "postpaid-billing":
         return "Postpaid Billing"
       default:
         return "Basic Information"
     }
   }
+
+  const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
+    { id: "basic-info", label: "Basic Info", icon: <User className="size-4" /> },
+    { id: "payments", label: "Payments", icon: <CreditCard className="size-4" /> },
+    { id: "tariff-overrides", label: "Tariff Overrides", icon: <DollarSign className="size-4" /> },
+    { id: "vat-overrides", label: "VAT Overrides", icon: <Receipt className="size-4" /> },
+    { id: "change-requests", label: "Change Requests", icon: <FileText className="size-4" /> },
+    { id: "postpaid-billing", label: "Postpaid Billing", icon: <Receipt className="size-4" /> },
+  ]
 
   // Show loading skeleton
   if (isLoading || currentCustomerLoading) {
@@ -818,68 +839,70 @@ const CustomerDetailsPage = () => {
           return items
         }
 
-        if (current <= 3) {
-          items.push(1, 2, 3, "...", total)
-          return items
+        items.push(1)
+        const showLeftEllipsis = current > 3
+        const showRightEllipsis = current < total - 2
+
+        if (!showLeftEllipsis) {
+          items.push(2, 3)
+        } else if (!showRightEllipsis) {
+          items.push("...", total - 1)
+        } else {
+          items.push("...", current - 1, current, current + 1, "...")
         }
 
-        if (current > 3 && current < total - 2) {
-          items.push(1, "...", current, "...", total)
-          return items
+        if (!items.includes(total)) {
+          items.push(total)
         }
 
-        items.push(1, "...", total - 2, total - 1, total)
         return items
       }
 
-      const PaymentListItem = ({ payment }: { payment: any }) => (
-        <div className="border-b border-gray-100 bg-white p-4 transition-all hover:bg-gray-50">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-start gap-3">
-              <div className="flex size-10 items-center justify-center rounded-full bg-blue-100">
-                <span className="text-xs font-semibold text-blue-700">
-                  {payment.customerName
-                    .split(" ")
-                    .map((n: string) => n[0])
-                    .join("")
-                    .slice(0, 2)}
-                </span>
-              </div>
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="text-sm font-semibold text-gray-900">{payment.customerName}</h3>
-                  <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
-                    Ref: {payment.reference}
-                  </span>
-                  <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
-                    {payment.channel}
-                  </span>
-                </div>
-                <div className="mt-1 flex flex-wrap gap-3 text-xs text-gray-600">
-                  <span className="font-medium text-gray-900">{formatCurrency(payment.amount || 0)}</span>
-                  <span>•</span>
-                  <span>{formatDateTime(payment.paidAtUtc)}</span>
-                  {payment.postpaidBillPeriod && (
-                    <>
-                      <span>•</span>
-                      <span>Bill: {payment.postpaidBillPeriod}</span>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className="ml-13 flex items-center gap-2 md:ml-0">
-              <button
-                onClick={() => handleViewPaymentReceipt(payment)}
-                className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
-              >
-                <Eye className="size-3.5" />
-                View Receipt
-              </button>
-            </div>
+      if (paymentsLoading) {
+        return (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="mr-2 size-6 animate-spin text-blue-600" />
+            <span className="text-gray-600">Loading payments...</span>
           </div>
-        </div>
-      )
+        )
+      }
+
+      if (paymentsError) {
+        return (
+          <div className="flex flex-col items-center justify-center py-12">
+            <AlertCircle className="mb-4 size-12 text-red-500" />
+            <h3 className="text-lg font-semibold text-gray-900">Error Loading Payments</h3>
+            <p className="mt-1 text-sm text-gray-600">{paymentsError}</p>
+            <ButtonModule
+              variant="primary"
+              onClick={() =>
+                dispatch(
+                  fetchPayments({
+                    pageNumber: paymentsPage,
+                    pageSize: paymentsPageSize,
+                    customerId,
+                  })
+                )
+              }
+              className="mt-4"
+            >
+              Try Again
+            </ButtonModule>
+          </div>
+        )
+      }
+
+      const filteredPayments = payments.filter((payment) => {
+        if (!paymentsSearchInput) return true
+        const searchTerm = paymentsSearchInput.toLowerCase()
+        return (
+          payment.reference?.toLowerCase().includes(searchTerm) ||
+          payment.channel?.toLowerCase().includes(searchTerm) ||
+          payment.status?.toLowerCase().includes(searchTerm) ||
+          payment.amount?.toString().includes(searchTerm) ||
+          payment.paidAtUtc?.toLowerCase().includes(searchTerm)
+        )
+      })
 
       return (
         <div className="rounded-xl border border-gray-200 bg-white">
@@ -915,204 +938,161 @@ const CustomerDetailsPage = () => {
               onChange={(e) => handlePaymentsSearchChange(e.target.value)}
               onCancel={handlePaymentsCancelSearch}
               onSearch={handlePaymentsSearch}
-              placeholder="Type payment reference, channel, amount, or type..."
-              height="h-12"
-              className="!w-full rounded-lg border border-[#004B23]/25 bg-white px-2 shadow-sm [&_button]:min-h-[32px] [&_button]:px-3 [&_button]:text-xs [&_input]:text-xs"
+              placeholder="Search payments..."
+              className="w-full"
             />
           </div>
 
-          {/* Loading State */}
-          {paymentsLoading && (
-            <div className="flex items-center justify-center py-12">
-              <div className="flex flex-col items-center gap-2">
-                <Loader2 className="size-8 animate-spin text-blue-600" />
-                <p className="text-sm text-gray-500">Loading payments...</p>
-              </div>
-            </div>
-          )}
-
-          {/* Error State */}
-          {paymentsError && !paymentsLoading && (
-            <div className="flex flex-col items-center justify-center py-12">
-              <div className="text-center">
-                <AlertCircle className="mx-auto mb-3 size-8 text-red-400" />
-                <h3 className="text-sm font-medium text-gray-900">Failed to load payments</h3>
-                <p className="mt-1 text-xs text-red-600">{paymentsError}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Empty State */}
-          {!paymentsLoading && !paymentsError && payments.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-12">
-              <div className="text-center">
-                <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-gray-100">
+          {/* Payments List */}
+          <div className="divide-y divide-gray-200">
+            {filteredPayments.length === 0 ? (
+              <div className="p-8 text-center">
+                <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-gray-100">
                   <CreditCard className="size-6 text-gray-400" />
                 </div>
                 <h3 className="text-sm font-medium text-gray-900">No payments found</h3>
-                <p className="mt-1 text-xs text-gray-500">No payment records available for this customer</p>
+                <p className="mt-1 text-sm text-gray-500">
+                  {paymentsSearchInput ? "Try adjusting your search terms." : "No payment records available."}
+                </p>
+              </div>
+            ) : (
+              filteredPayments.map((payment) => (
+                <div key={payment.id} className="p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-medium text-gray-900">{payment.reference}</h4>
+                        <span
+                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                            payment.status === "Confirmed"
+                              ? "bg-green-100 text-green-800"
+                              : payment.status === "Pending"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : payment.status === "Failed" || payment.status === "Cancelled"
+                              ? "bg-red-100 text-red-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {payment.status}
+                        </span>
+                      </div>
+                      <div className="mt-1 flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="size-4" />
+                          {formatDate(payment.paidAtUtc)}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <DollarSign className="size-4" />
+                          {formatCurrency(payment.amount || 0)}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Building2 className="size-4" />
+                          {payment.channel}
+                        </span>
+                        {payment.collectorType && (
+                          <span className="flex items-center gap-1">
+                            <User className="size-4" />
+                            {payment.collectorType}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="ml-13 flex items-center gap-2 md:ml-0">
+                      <button
+                        onClick={() => handleViewPaymentReceipt(payment)}
+                        className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                      >
+                        <Eye className="size-3.5" />
+                        View Receipt
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="border-t border-gray-200 p-4">
+              <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
+                <div className="text-sm text-gray-600">
+                  Showing {payments.length} of {totalRecords} payments
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => handlePaymentsPageChange(paymentsPage - 1)}
+                    disabled={paymentsPage <= 1}
+                    className="flex size-8 items-center justify-center rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:size-9"
+                  >
+                    <ChevronLeft className="size-4" />
+                  </button>
+
+                  {/* Desktop pagination */}
+                  <div className="hidden items-center gap-1 sm:flex">
+                    {getPageItems().map((item, index) => (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          if (typeof item === "number") {
+                            handlePaymentsPageChange(item)
+                          }
+                        }}
+                        disabled={typeof item !== "number"}
+                        className={`flex size-8 items-center justify-center rounded-md text-sm font-medium transition-colors sm:size-9 ${
+                          typeof item === "number"
+                            ? paymentsPage === item
+                              ? "bg-[#004B23] text-white"
+                              : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                            : "cursor-default text-gray-400"
+                        }`}
+                      >
+                        {item}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Mobile pagination */}
+                  <div className="flex items-center gap-1 sm:hidden">
+                    {getMobilePageItems().map((item, index) => (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          if (typeof item === "number") {
+                            handlePaymentsPageChange(item)
+                          }
+                        }}
+                        disabled={typeof item !== "number"}
+                        className={`flex size-8 items-center justify-center rounded-md text-sm font-medium transition-colors ${
+                          typeof item === "number"
+                            ? paymentsPage === item
+                              ? "bg-[#004B23] text-white"
+                              : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                            : "cursor-default text-gray-400"
+                        }`}
+                      >
+                        {item}
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => handlePaymentsPageChange(paymentsPage + 1)}
+                    disabled={paymentsPage >= totalPages}
+                    className="flex size-8 items-center justify-center rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:size-9"
+                  >
+                    <ChevronRight className="size-4" />
+                  </button>
+                </div>
               </div>
             </div>
           )}
-
-          {/* Payment Table */}
-          {!paymentsLoading && !paymentsError && payments.length > 0 && (
-            <>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
-                        Payment Details
-                      </th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
-                        Reference
-                      </th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
-                        Channel
-                      </th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
-                        Amount
-                      </th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
-                        Date
-                      </th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
-                        Bill Period
-                      </th>
-                      <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 bg-white">
-                    {payments.map((payment) => (
-                      <tr key={payment.id} className="transition-colors hover:bg-gray-50">
-                        <td className="px-3 py-2">
-                          <div className="flex items-center gap-2">
-                            <div className="flex size-6 items-center justify-center rounded-full bg-blue-100">
-                              <span className="text-xs font-semibold text-blue-700">
-                                {payment.customerName
-                                  .split(" ")
-                                  .map((n: string) => n[0])
-                                  .join("")
-                                  .slice(0, 2)}
-                              </span>
-                            </div>
-                            <div>
-                              <p className="text-xs font-medium text-gray-900">{payment.customerName}</p>
-                              <p className="text-xs text-gray-500">{payment.paymentTypeName}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-3 py-2">
-                          <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-700">
-                            Ref: {payment.reference}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2">
-                          <span className="rounded-full bg-blue-50 px-1.5 py-0.5 text-xs font-medium text-blue-700">
-                            {payment.channel}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2">
-                          <div className="text-xs">
-                            <p className="font-medium text-gray-900">{formatCurrency(payment.amount || 0)}</p>
-                            {payment.units && <p className="text-xs text-gray-500">{payment.units} units</p>}
-                          </div>
-                        </td>
-                        <td className="px-3 py-2 text-xs text-gray-700">{formatDateTime(payment.paidAtUtc)}</td>
-                        <td className="px-3 py-2 text-xs text-gray-700">{payment.postpaidBillPeriod || "N/A"}</td>
-                        <td className="px-3 py-2 text-right">
-                          <button
-                            onClick={() => handleViewPaymentReceipt(payment)}
-                            className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
-                          >
-                            <Eye className="size-3" />
-                            View Receipt
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination */}
-              <div className="border-t border-gray-200 p-4">
-                <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500">Rows per page:</span>
-                    <select
-                      value={paymentsPageSize}
-                      onChange={(e) => handlePaymentsPageSizeChange(Number(e.target.value))}
-                      className="rounded-md border border-gray-300 bg-white px-2 py-1 text-xs text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    >
-                      <option value={6}>6</option>
-                      <option value={12}>12</option>
-                      <option value={18}>18</option>
-                      <option value={24}>24</option>
-                      <option value={50}>50</option>
-                    </select>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      className={`flex size-7 items-center justify-center rounded-md border ${
-                        paymentsPage === 1
-                          ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400"
-                          : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                      }`}
-                      onClick={() => handlePaymentsPageChange(paymentsPage - 1)}
-                      disabled={paymentsPage === 1}
-                    >
-                      <BiSolidLeftArrow className="size-3" />
-                    </button>
-
-                    <div className="flex items-center gap-1">
-                      {getPageItems().map((item, index) =>
-                        typeof item === "number" ? (
-                          <button
-                            key={item}
-                            className={`flex size-7 items-center justify-center rounded-md text-xs ${
-                              paymentsPage === item
-                                ? "bg-blue-600 font-medium text-white"
-                                : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                            }`}
-                            onClick={() => handlePaymentsPageChange(item)}
-                          >
-                            {item}
-                          </button>
-                        ) : (
-                          <span key={`ellipsis-${index}`} className="px-1 text-xs text-gray-500">
-                            {item}
-                          </span>
-                        )
-                      )}
-                    </div>
-
-                    <button
-                      className={`flex size-7 items-center justify-center rounded-md border ${
-                        paymentsPage === totalPages
-                          ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400"
-                          : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                      }`}
-                      onClick={() => handlePaymentsPageChange(paymentsPage + 1)}
-                      disabled={paymentsPage === totalPages}
-                    >
-                      <BiSolidRightArrow className="size-3" />
-                    </button>
-                  </div>
-
-                  <div className="text-xs text-gray-500">
-                    Page {paymentsPage} of {totalPages}
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
         </div>
       )
+    } else if (activeTab === "tariff-overrides") {
+      return <TariffOverridesTab customerId={customerId} customerName={currentCustomer.fullName} />
+    } else if (activeTab === "vat-overrides") {
+      return <VatOverridesTab customerId={customerId} customerName={currentCustomer.fullName} />
     } else if (activeTab === "change-requests") {
       return <ChangeRequestsTab customerId={customerId} />
     } else if (activeTab === "postpaid-billing") {
@@ -1287,6 +1267,16 @@ const CustomerDetailsPage = () => {
                           Add New Meter
                         </ActionButton>
                       )}
+                      {canAddNewMeter && (
+                        <ActionButton icon={Zap} onClick={() => openModal("tariffOverride")} variant="primary">
+                          Create Tariff Override
+                        </ActionButton>
+                      )}
+                      {canAddNewMeter && (
+                        <ActionButton icon={Zap} onClick={() => openModal("vatOverride")} variant="danger">
+                          Create VAT Override
+                        </ActionButton>
+                      )}
                       {canAddNewMeter && currentCustomer.meters && currentCustomer.meters.length > 0 && (
                         <ActionButton
                           icon={RefreshCw}
@@ -1360,55 +1350,25 @@ const CustomerDetailsPage = () => {
                   <div className="mb-4">
                     <div className="w-full overflow-x-auto rounded-xl border border-gray-200 bg-white p-1">
                       <div className="flex min-w-max space-x-1">
-                        <button
-                          onClick={() => setActiveTab("basic-info")}
-                          className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
-                            activeTab === "basic-info"
-                              ? "bg-[#004B23] text-white"
-                              : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                          }`}
-                        >
-                          <User className="size-4" />
-                          Basic Information
-                        </button>
-                        <button
-                          onClick={() => setActiveTab("postpaid-billing")}
-                          className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
-                            activeTab === "postpaid-billing"
-                              ? "bg-[#004B23] text-white"
-                              : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                          }`}
-                        >
-                          <Receipt className="size-4" />
-                          Postpaid Billing
-                        </button>
-                        <button
-                          onClick={() => setActiveTab("payments")}
-                          className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
-                            activeTab === "payments"
-                              ? "bg-[#004B23] text-white"
-                              : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                          }`}
-                        >
-                          <CreditCard className="size-4" />
-                          Payments
-                          {paymentsPagination.totalCount > 0 && (
-                            <span className="ml-1 inline-flex items-center justify-center rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium">
-                              {paymentsPagination.totalCount}
-                            </span>
-                          )}
-                        </button>
-                        <button
-                          onClick={() => setActiveTab("change-requests")}
-                          className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
-                            activeTab === "change-requests"
-                              ? "bg-[#004B23] text-white"
-                              : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                          }`}
-                        >
-                          <Edit3 className="size-4" />
-                          Change Requests
-                        </button>
+                        {tabs.map((tab) => (
+                          <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
+                              activeTab === tab.id
+                                ? "bg-[#004B23] text-white"
+                                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                            }`}
+                          >
+                            {tab.icon}
+                            {tab.label}
+                            {tab.id === "payments" && paymentsPagination.totalCount > 0 && (
+                              <span className="ml-1 inline-flex items-center justify-center rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium">
+                                {paymentsPagination.totalCount}
+                              </span>
+                            )}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -1504,6 +1464,28 @@ const CustomerDetailsPage = () => {
 
         {activeModal === "changeAccountNumber" && (
           <ChangeAccountNumberModal
+            isOpen={true}
+            onRequestClose={closeAllModals}
+            customerId={customerId}
+            customerName={currentCustomer.fullName}
+            accountNumber={currentCustomer.accountNumber}
+            currentCustomer={currentCustomer}
+          />
+        )}
+
+        {activeModal === "tariffOverride" && (
+          <TariffOverrideModal
+            isOpen={true}
+            onRequestClose={closeAllModals}
+            customerId={customerId}
+            customerName={currentCustomer.fullName}
+            accountNumber={currentCustomer.accountNumber}
+            currentCustomer={currentCustomer}
+          />
+        )}
+
+        {activeModal === "vatOverride" && (
+          <VatOverrideModal
             isOpen={true}
             onRequestClose={closeAllModals}
             customerId={customerId}

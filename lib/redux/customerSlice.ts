@@ -911,6 +911,82 @@ export interface ResolveDataQualityResponse {
   message: string
 }
 
+// Tariff Override Interfaces
+export interface TariffOverrideRequest {
+  tariffRateOverride: number
+  effectiveFromUtc: string
+  effectiveToUtc: string
+  reason: string
+}
+
+export interface TariffOverrideData {
+  id: number
+  customerId: number
+  tariffRateOverride: number
+  effectiveFromUtc: string
+  effectiveToUtc: string
+  isActive: boolean
+  reason: string
+  requestedByUserId: number
+  approvedByUserId: number
+  approvedAtUtc: string
+  deactivatedByUserId: number
+  deactivatedAtUtc: string
+  createdAt: string
+  lastUpdated: string
+}
+
+export interface TariffOverrideResponse {
+  isSuccess: boolean
+  message: string
+  data: TariffOverrideData
+}
+
+export interface GetAllTariffOverridesResponse {
+  isSuccess: boolean
+  message: string
+  data: TariffOverrideData[]
+}
+
+// VAT Override Interfaces
+export interface VatOverrideRequest {
+  vatRateOverride: number
+  isVatWaived: boolean
+  effectiveFromUtc: string
+  effectiveToUtc: string
+  reason: string
+}
+
+export interface VatOverrideData {
+  id: number
+  customerId: number
+  vatRateOverride: number
+  isVatWaived: boolean
+  effectiveFromUtc: string
+  effectiveToUtc: string
+  isActive: boolean
+  reason: string
+  requestedByUserId: number
+  approvedByUserId: number
+  approvedAtUtc: string
+  deactivatedByUserId: number
+  deactivatedAtUtc: string
+  createdAt: string
+  lastUpdated: string
+}
+
+export interface VatOverrideResponse {
+  isSuccess: boolean
+  message: string
+  data: VatOverrideData
+}
+
+export interface GetAllVatOverridesResponse {
+  isSuccess: boolean
+  message: string
+  data: VatOverrideData[]
+}
+
 // Customer State
 interface CustomerState {
   // Customers list state
@@ -1072,6 +1148,30 @@ interface CustomerState {
   resolveDataQualitySuccess: boolean
   resolveDataQualityResponse: ResolveDataQualityResponse | null
 
+  // Tariff Override state
+  tariffOverrideLoading: boolean
+  tariffOverrideError: string | null
+  tariffOverrideSuccess: boolean
+  tariffOverrideResponse: TariffOverrideResponse | null
+
+  // All Tariff Overrides state
+  allTariffOverrides: TariffOverrideData[]
+  allTariffOverridesLoading: boolean
+  allTariffOverridesError: string | null
+  allTariffOverridesSuccess: boolean
+
+  // VAT Override state
+  vatOverrideLoading: boolean
+  vatOverrideError: string | null
+  vatOverrideSuccess: boolean
+  vatOverrideResponse: VatOverrideResponse | null
+
+  // All VAT Overrides state
+  allVatOverrides: VatOverrideData[]
+  allVatOverridesLoading: boolean
+  allVatOverridesError: string | null
+  allVatOverridesSuccess: boolean
+
   // Search and filter state
   filters: {
     search: string
@@ -1207,6 +1307,22 @@ const initialState: CustomerState = {
   resolveDataQualityError: null,
   resolveDataQualitySuccess: false,
   resolveDataQualityResponse: null,
+  tariffOverrideLoading: false,
+  tariffOverrideError: null,
+  tariffOverrideSuccess: false,
+  tariffOverrideResponse: null,
+  allTariffOverrides: [],
+  allTariffOverridesLoading: false,
+  allTariffOverridesError: null,
+  allTariffOverridesSuccess: false,
+  vatOverrideLoading: false,
+  vatOverrideError: null,
+  vatOverrideSuccess: false,
+  vatOverrideResponse: null,
+  allVatOverrides: [],
+  allVatOverridesLoading: false,
+  allVatOverridesError: null,
+  allVatOverridesSuccess: false,
   filters: {
     search: "",
     status: "",
@@ -1832,6 +1948,102 @@ export const resolveDataQuality = createAsyncThunk(
   }
 )
 
+// Tariff Override Async Thunk
+export const createTariffOverride = createAsyncThunk(
+  "customers/createTariffOverride",
+  async ({ id, overrideData }: { id: number; overrideData: TariffOverrideRequest }, { rejectWithValue }) => {
+    try {
+      const endpoint = buildEndpointWithParams(API_ENDPOINTS.CUSTOMER.TARRIFF_OVERIDE, { id })
+      const response = await api.post<TariffOverrideResponse>(buildApiUrl(endpoint), overrideData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to create tariff override")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Tariff override data not returned after creation")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to create tariff override")
+      }
+      return rejectWithValue(error.message || "Network error during tariff override creation")
+    }
+  }
+)
+
+// Fetch All Tariff Overrides Async Thunk
+export const fetchAllTariffOverrides = createAsyncThunk(
+  "customers/fetchAllTariffOverrides",
+  async (customerId: number, { rejectWithValue }) => {
+    try {
+      const endpoint = buildEndpointWithParams(API_ENDPOINTS.CUSTOMER.GET_ALL_TARRIFF_OVERIDE, { id: customerId })
+      const response = await api.get<GetAllTariffOverridesResponse>(buildApiUrl(endpoint))
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch tariff overrides")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch tariff overrides")
+      }
+      return rejectWithValue(error.message || "Network error during tariff overrides fetch")
+    }
+  }
+)
+
+// VAT Override Async Thunk
+export const createVatOverride = createAsyncThunk(
+  "customers/createVatOverride",
+  async ({ id, overrideData }: { id: number; overrideData: VatOverrideRequest }, { rejectWithValue }) => {
+    try {
+      const endpoint = buildEndpointWithParams(API_ENDPOINTS.CUSTOMER.VAT_OVERIDE, { id })
+      const response = await api.post<VatOverrideResponse>(buildApiUrl(endpoint), overrideData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to create VAT override")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("VAT override data not returned after creation")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to create VAT override")
+      }
+      return rejectWithValue(error.message || "Network error during VAT override creation")
+    }
+  }
+)
+
+// Fetch All VAT Overrides Async Thunk
+export const fetchAllVatOverrides = createAsyncThunk(
+  "customers/fetchAllVatOverrides",
+  async (customerId: number, { rejectWithValue }) => {
+    try {
+      const endpoint = buildEndpointWithParams(API_ENDPOINTS.CUSTOMER.GET_ALL_VAT_OVERIDE, { id: customerId })
+      const response = await api.get<GetAllVatOverridesResponse>(buildApiUrl(endpoint))
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch VAT overrides")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch VAT overrides")
+      }
+      return rejectWithValue(error.message || "Network error during VAT overrides fetch")
+    }
+  }
+)
+
 // Customer slice
 const customerSlice = createSlice({
   name: "customers",
@@ -1871,6 +2083,10 @@ const customerSlice = createSlice({
       state.dataQualitySummaryError = null
       state.dataQualityError = null
       state.resolveDataQualityError = null
+      state.tariffOverrideError = null
+      state.allTariffOverridesError = null
+      state.vatOverrideError = null
+      state.allVatOverridesError = null
     },
 
     // Clear current customer
@@ -2331,6 +2547,38 @@ const customerSlice = createSlice({
       state.resolveDataQualityError = null
       state.resolveDataQualitySuccess = false
       state.resolveDataQualityResponse = null
+    },
+
+    // Clear tariff override state
+    clearTariffOverrideState: (state) => {
+      state.tariffOverrideLoading = false
+      state.tariffOverrideError = null
+      state.tariffOverrideSuccess = false
+      state.tariffOverrideResponse = null
+    },
+
+    // Clear all tariff overrides state
+    clearAllTariffOverridesState: (state) => {
+      state.allTariffOverrides = []
+      state.allTariffOverridesLoading = false
+      state.allTariffOverridesError = null
+      state.allTariffOverridesSuccess = false
+    },
+
+    // Clear VAT override state
+    clearVatOverrideState: (state) => {
+      state.vatOverrideLoading = false
+      state.vatOverrideError = null
+      state.vatOverrideSuccess = false
+      state.vatOverrideResponse = null
+    },
+
+    // Clear all VAT overrides state
+    clearAllVatOverridesState: (state) => {
+      state.allVatOverrides = []
+      state.allVatOverridesLoading = false
+      state.allVatOverridesError = null
+      state.allVatOverridesSuccess = false
     },
   },
   extraReducers: (builder) => {
@@ -2911,6 +3159,129 @@ const customerSlice = createSlice({
         state.resolveDataQualitySuccess = false
         state.resolveDataQualityResponse = null
       })
+      // Tariff override cases
+      .addCase(createTariffOverride.pending, (state) => {
+        state.tariffOverrideLoading = true
+        state.tariffOverrideError = null
+        state.tariffOverrideSuccess = false
+        state.tariffOverrideResponse = null
+      })
+      .addCase(createTariffOverride.fulfilled, (state, action: PayloadAction<TariffOverrideResponse>) => {
+        state.tariffOverrideLoading = false
+        state.tariffOverrideSuccess = true
+        state.tariffOverrideResponse = action.payload
+        state.tariffOverrideError = null
+
+        // Update customer's current tariff override if it's the same customer
+        if (state.currentCustomer && state.currentCustomer.id === action.payload.data.customerId) {
+          state.currentCustomer.currentTariffOverride = {
+            id: action.payload.data.id,
+            tariffRateOverride: action.payload.data.tariffRateOverride,
+            effectiveFromUtc: action.payload.data.effectiveFromUtc,
+            effectiveToUtc: action.payload.data.effectiveToUtc,
+            reason: action.payload.data.reason,
+          }
+        }
+
+        // Update customer in the list if it exists
+        const customerIndex = state.customers.findIndex((customer) => customer.id === action.payload.data.customerId)
+        if (customerIndex !== -1) {
+          state.customers[customerIndex]!.currentTariffOverride = {
+            id: action.payload.data.id,
+            tariffRateOverride: action.payload.data.tariffRateOverride,
+            effectiveFromUtc: action.payload.data.effectiveFromUtc,
+            effectiveToUtc: action.payload.data.effectiveToUtc,
+            reason: action.payload.data.reason,
+          }
+        }
+      })
+      .addCase(createTariffOverride.rejected, (state, action) => {
+        state.tariffOverrideLoading = false
+        state.tariffOverrideError = (action.payload as string) || "Failed to create tariff override"
+        state.tariffOverrideSuccess = false
+        state.tariffOverrideResponse = null
+      })
+      // Fetch all tariff overrides cases
+      .addCase(fetchAllTariffOverrides.pending, (state) => {
+        state.allTariffOverridesLoading = true
+        state.allTariffOverridesError = null
+        state.allTariffOverridesSuccess = false
+      })
+      .addCase(fetchAllTariffOverrides.fulfilled, (state, action: PayloadAction<TariffOverrideData[]>) => {
+        state.allTariffOverridesLoading = false
+        state.allTariffOverridesSuccess = true
+        state.allTariffOverrides = action.payload || []
+        state.allTariffOverridesError = null
+      })
+      .addCase(fetchAllTariffOverrides.rejected, (state, action) => {
+        state.allTariffOverridesLoading = false
+        state.allTariffOverridesError = (action.payload as string) || "Failed to fetch tariff overrides"
+        state.allTariffOverridesSuccess = false
+        state.allTariffOverrides = []
+      })
+      // VAT override cases
+      .addCase(createVatOverride.pending, (state) => {
+        state.vatOverrideLoading = true
+        state.vatOverrideError = null
+        state.vatOverrideSuccess = false
+        state.vatOverrideResponse = null
+      })
+      .addCase(createVatOverride.fulfilled, (state, action: PayloadAction<VatOverrideResponse>) => {
+        state.vatOverrideLoading = false
+        state.vatOverrideSuccess = true
+        state.vatOverrideResponse = action.payload
+        state.vatOverrideError = null
+
+        // Update customer's current VAT override if it's the same customer
+        if (state.currentCustomer && state.currentCustomer.id === action.payload.data.customerId) {
+          state.currentCustomer.currentVatOverride = {
+            id: action.payload.data.id,
+            vatRateOverride: action.payload.data.vatRateOverride,
+            isVatWaived: action.payload.data.isVatWaived,
+            effectiveFromUtc: action.payload.data.effectiveFromUtc,
+            effectiveToUtc: action.payload.data.effectiveToUtc,
+            reason: action.payload.data.reason,
+          }
+        }
+
+        // Update customer in the list if it exists
+        const customerIndex = state.customers.findIndex((customer) => customer.id === action.payload.data.customerId)
+        if (customerIndex !== -1) {
+          state.customers[customerIndex]!.currentVatOverride = {
+            id: action.payload.data.id,
+            vatRateOverride: action.payload.data.vatRateOverride,
+            isVatWaived: action.payload.data.isVatWaived,
+            effectiveFromUtc: action.payload.data.effectiveFromUtc,
+            effectiveToUtc: action.payload.data.effectiveToUtc,
+            reason: action.payload.data.reason,
+          }
+        }
+      })
+      .addCase(createVatOverride.rejected, (state, action) => {
+        state.vatOverrideLoading = false
+        state.vatOverrideError = (action.payload as string) || "Failed to create VAT override"
+        state.vatOverrideSuccess = false
+        state.vatOverrideResponse = null
+      })
+      // Fetch all VAT overrides cases
+      .addCase(fetchAllVatOverrides.pending, (state) => {
+        state.allVatOverridesLoading = true
+        state.allVatOverridesError = null
+        state.allVatOverridesSuccess = false
+        state.allVatOverrides = []
+      })
+      .addCase(fetchAllVatOverrides.fulfilled, (state, action: PayloadAction<VatOverrideData[]>) => {
+        state.allVatOverridesLoading = false
+        state.allVatOverridesSuccess = true
+        state.allVatOverrides = action.payload
+        state.allVatOverridesError = null
+      })
+      .addCase(fetchAllVatOverrides.rejected, (state, action) => {
+        state.allVatOverridesLoading = false
+        state.allVatOverridesError = (action.payload as string) || "Failed to fetch VAT overrides"
+        state.allVatOverridesSuccess = false
+        state.allVatOverrides = []
+      })
   },
 })
 
@@ -2954,6 +3325,10 @@ export const {
   clearDataQualitySummaryState,
   clearDataQualityState,
   clearResolveDataQualityState,
+  clearTariffOverrideState,
+  clearAllTariffOverridesState,
+  clearVatOverrideState,
+  clearAllVatOverridesState,
 } = customerSlice.actions
 
 export default customerSlice.reducer

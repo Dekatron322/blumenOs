@@ -205,6 +205,10 @@ export const API_ENDPOINTS = {
     DATA_QUALITY_SUMMARY: "/customers/data-quality/summary",
     DATA_QUALITY: "/customers/data-quality",
     RESOLVE_DATA_QUALITY: "/customers/data-quality/{id}/resolve",
+    TARRIFF_OVERIDE: "/customers/{id}/tariff-overrides",
+    GET_ALL_TARRIFF_OVERIDE: "/customers/{id}/tariff-overrides",
+    VAT_OVERIDE: "/customers/{id}/vat-overrides",
+    GET_ALL_VAT_OVERIDE: "/customers/{id}/vat-overrides",
   },
 
   CREATE_CUSTOMER: {
