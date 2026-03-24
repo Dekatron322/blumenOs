@@ -299,6 +299,17 @@ export interface StatusCodesBulkUploadResponse {
   }
 }
 
+// Customer MD Category Update Bulk Upload interfaces
+export interface CustomerMdCategoryUpdateBulkUploadRequest {
+  fileId: number
+}
+
+export interface CustomerMdCategoryUpdateBulkUploadResponse {
+  isSuccess: boolean
+  message: string
+  data: BulkUploadJob
+}
+
 // Meter Reading Bulk Upload interfaces
 export interface MeterReadingBulkUploadRequest {
   fileId: number
@@ -1107,6 +1118,12 @@ interface FileManagementState {
   statusCodesBulkUploadSuccess: boolean
   statusCodesBulkUploadResponse: StatusCodesBulkUploadResponse | null
 
+  // Customer MD Category Update Bulk Upload state
+  customerMdCategoryUpdateBulkUploadLoading: boolean
+  customerMdCategoryUpdateBulkUploadError: string | null
+  customerMdCategoryUpdateBulkUploadSuccess: boolean
+  customerMdCategoryUpdateBulkUploadResponse: CustomerMdCategoryUpdateBulkUploadResponse | null
+
   // Meter Reading Bulk Upload state
   meterReadingBulkUploadLoading: boolean
   meterReadingBulkUploadError: string | null
@@ -1398,6 +1415,12 @@ const initialState: FileManagementState = {
   statusCodesBulkUploadError: null,
   statusCodesBulkUploadSuccess: false,
   statusCodesBulkUploadResponse: null,
+
+  // Customer MD Category Update Bulk Upload state
+  customerMdCategoryUpdateBulkUploadLoading: false,
+  customerMdCategoryUpdateBulkUploadError: null,
+  customerMdCategoryUpdateBulkUploadSuccess: false,
+  customerMdCategoryUpdateBulkUploadResponse: null,
 
   // Meter Reading Bulk Upload state
   meterReadingBulkUploadLoading: false,
@@ -1818,6 +1841,23 @@ export const processStatusCodesBulkUpload = createAsyncThunk(
       return response.data
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to process status codes bulk upload")
+    }
+  }
+)
+
+export const processCustomerMdCategoryUpdateBulkUpload = createAsyncThunk(
+  "fileManagement/processCustomerMdCategoryUpdateBulkUpload",
+  async (request: CustomerMdCategoryUpdateBulkUploadRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<CustomerMdCategoryUpdateBulkUploadResponse>(
+        buildApiUrl(API_ENDPOINTS.FILE_MANAGEMENT.CUSTOMER_MD_CATEGORY_UPDATE_BULK_UPLOAD),
+        request
+      )
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to process customer MD category update bulk upload"
+      )
     }
   }
 )
@@ -3090,6 +3130,23 @@ const fileManagementSlice = createSlice({
         state.statusCodesBulkUploadLoading = false
         state.statusCodesBulkUploadError = action.payload as string
         state.statusCodesBulkUploadSuccess = false
+      })
+
+      // Customer MD Category Update Bulk Upload reducers
+      .addCase(processCustomerMdCategoryUpdateBulkUpload.pending, (state) => {
+        state.customerMdCategoryUpdateBulkUploadLoading = true
+        state.customerMdCategoryUpdateBulkUploadError = null
+        state.customerMdCategoryUpdateBulkUploadSuccess = false
+      })
+      .addCase(processCustomerMdCategoryUpdateBulkUpload.fulfilled, (state, action) => {
+        state.customerMdCategoryUpdateBulkUploadLoading = false
+        state.customerMdCategoryUpdateBulkUploadSuccess = true
+        state.customerMdCategoryUpdateBulkUploadResponse = action.payload
+      })
+      .addCase(processCustomerMdCategoryUpdateBulkUpload.rejected, (state, action) => {
+        state.customerMdCategoryUpdateBulkUploadLoading = false
+        state.customerMdCategoryUpdateBulkUploadError = action.payload as string
+        state.customerMdCategoryUpdateBulkUploadSuccess = false
       })
 
       // Meter Reading Bulk Upload reducers

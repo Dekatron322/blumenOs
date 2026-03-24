@@ -36,8 +36,9 @@ export const JOB_TYPE_LABELS = {
   35: "Feeder Band Change",
   36: "Bill Debt Recovery No Energy",
   37: "Meter Multiplier Import",
-  38: "Vending Payment Migration Import",
-  39: "Schedule Customer Tracking Import",
+  39: "Vending Payment Migration Import",
+  40: "Schedule Customer Tracking Import",
+  41: "MD Customer Categorization",
 } as const
 
 export type JobType = keyof typeof JOB_TYPE_LABELS

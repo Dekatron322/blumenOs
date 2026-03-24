@@ -266,6 +266,7 @@ export const API_ENDPOINTS = {
     DOWNLOAD_TEST_TOKEN: "/system/csv-jobs/{id}/test-token/result",
     EXISTING_CUSTOMER_BULK_UPLOAD: "/customers/bulk/import-existing",
     STATUS_CODES_BULK_UPLOAD: "/customers/bulk/status-change",
+    CUSTOMER_MD_CATEGORY_UPDATE_BULK_UPLOAD: "/customers/bulk/md-category",
     RECOMPUTE_BULK_UPLOAD: "/billing/postpaid/bills/bulk/recompute",
     METER_BULK_REASSIGN: "/meters/bulk/reassign",
     METER_CHANGE_STATUS: "/meters/bulk/status-change",

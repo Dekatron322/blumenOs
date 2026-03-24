@@ -359,17 +359,61 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
             print-color-adjust: exact !important;
           }
 
-          .print-hide-label {
-            display: none !important;
-          }
-
           .print-show-value {
-            display: block !important;
+            display: inline-block !important;
             text-align: right !important;
             font-weight: normal !important;
             justify-content: flex-end !important;
             margin-left: auto !important;
+            min-width: 60px !important;
+            padding-left: 10px !important;
+          }
+
+          /* Ensure flex containers work properly in print */
+          .flex {
+            display: flex !important;
+          }
+
+          .justify-between {
+            justify-content: space-between !important;
+          }
+
+          .items-center {
+            align-items: center !important;
+          }
+
+          /* Ensure proper spacing for flex containers */
+          .flex.justify-between {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
             width: 100% !important;
+            margin-bottom: 2pt !important;
+          }
+
+          /* Make sure spans in flex containers have proper spacing */
+          .flex.justify-between span {
+            display: inline-block !important;
+            flex: none !important;
+          }
+
+          .flex.justify-between span:first-child {
+            flex: 1 !important;
+            text-align: left !important;
+          }
+
+          .flex.justify-between span:last-child {
+            flex: 1 !important;
+            text-align: right !important;
+          }
+
+          /* Add spacing for space-y classes in print */
+          .space-y-2 > * + * {
+            margin-top: 4pt !important;
+          }
+
+          .space-y-0\.5 > * + * {
+            margin-top: 2pt !important;
           }
 
           .print-show-value > * {
@@ -422,18 +466,18 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 20, opacity: 0 }}
           transition={{ type: "spring", damping: 25 }}
-          className="a5-container relative flex h-[95vh] w-[90vw] max-w-4xl flex-col overflow-hidden rounded-lg bg-white shadow-2xl print:h-[595px] print:w-[420px] print:max-w-none print:rounded-none print:shadow-none"
+          className="a5-container relative flex h-[95vh] w-[90vw] max-w-4xl flex-col overflow-hidden rounded-lg bg-white shadow-2xl print:h-[595px] print:w-[420px] print:max-w-none print:rounded-none  print:shadow-none"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex w-full items-center justify-between border-b bg-white p-6 print:hidden">
-            <h2 className="text-xl font-bold text-gray-900">Invoice Details</h2>
+          {/* <div className="print-hide-label flex w-full items-center justify-between border-b bg-white p-6 print:hidden">
+            <h2 className="print-hide-label text-xl  font-bold text-gray-900">Invoice Details</h2>
             <button
               onClick={onRequestClose}
-              className="flex size-8 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600"
+              className="print-hide-label flex size-8 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600"
             >
               <CloseIcon />
             </button>
-          </div>
+          </div> */}
 
           <div className="relative flex-1 overflow-y-auto print:overflow-visible">
             <div className="a5-content relative z-10 p-8 print:p-4">
@@ -465,7 +509,7 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                 </div>
               ) : bill ? (
                 <>
-                  <div ref={invoiceRef} className="w-full print:p-0">
+                  <div ref={invoiceRef} className="w-full p-8 print:p-0 print:pl-4 print:pr-4">
                     {/* Header - A5 Optimized */}
                     <div className="a5-header mb-6 flex items-center justify-between print:mb-2">
                       <div className="w-24 text-center print:w-20">
@@ -493,7 +537,7 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                       <div className="print-no-border flex w-full border border-gray-300 bg-white text-[8pt] print:text-[7pt]">
                         <div className="print-no-border-r w-3/5 space-y-0.5 border-r border-gray-300">
                           <div className="print-bg-light-green print-white-text flex w-full items-center justify-between bg-[#6CAD2B] px-2 py-1 font-semibold">
-                            <p className="print-hide-label">AREA OFFICE</p>
+                            <p className="">AREA OFFICE</p>
                             <div className="flex items-center justify-center bg-white px-4 text-center print:flex-grow print:justify-end">
                               <p className="print-show-value text-black">
                                 {bill.customer?.areaOfficeName || bill.areaOfficeName || "-"}
@@ -503,37 +547,41 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
 
                           <div className="space-y-2 px-2 ">
                             <div className="flex justify-between">
-                              <span className="print-hide-label font-semibold">Bill #:</span>
+                              <span className="whitespace-none font-semibold">Bill:</span>
                               <span className="print-show-value px-2 font-semibold">{bill.billingId}</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="print-hide-label font-semibold">Bill Month:</span>
+                              <span className=" font-semibold">Bill Month:</span>
                               <span className="print-show-value px-2 font-semibold">{bill.name}</span>
                             </div>
                             <div className="mt-1 flex justify-between">
-                              <span className="print-hide-label font-semibold">Customer Account:</span>
+                              <span className=" font-semibold">Customer Account:</span>
                               <span className="print-show-value px-2 font-semibold">{bill.customerAccountNumber}</span>
                             </div>
                             <div className="mt-1 flex justify-between">
-                              <span className="print-hide-label font-semibold">Account Name:</span>
+                              <span className=" font-semibold">Account Name:</span>
                               <span className="print-show-value px-2 font-semibold">
                                 {bill.customer?.fullName || bill.customerName}
                               </span>
                             </div>
                             <div className="mt-1 flex justify-between">
-                              <span className="print-hide-label font-semibold">Address:</span>
+                              <span className=" font-semibold">Address:</span>
                               <span className="print-show-value px-2 font-semibold">
-                                {bill.customer?.address || "-"}
+                                {bill.customer?.address
+                                  ? bill.customer.address.length > 30
+                                    ? `${bill.customer.address.substring(0, 30)}...`
+                                    : bill.customer.address
+                                  : "-"}
                               </span>
                             </div>
                             <div className="mt-1 flex justify-between">
-                              <span className="print-hide-label font-semibold">Phone Number:</span>
+                              <span className=" font-semibold">Phone Number:</span>
                               <span className="print-show-value px-2 font-semibold">
                                 {bill.customer?.phoneNumber || "-"}
                               </span>
                             </div>
                             <div className=" flex justify-between">
-                              <span className="print-hide-label font-semibold">City:</span>
+                              <span className=" font-semibold">City:</span>
                               <span className="print-show-value px-2 font-semibold">{bill.customer?.city || "-"}</span>
                             </div>
                           </div>
@@ -554,39 +602,39 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
 
                           <div className="space-y-2 px-2">
                             <div className="flex justify-between">
-                              <span className="print-hide-label font-semibold">State:</span>
+                              <span className=" font-semibold">State:</span>
                               <span className="print-show-value px-2 font-semibold">{bill.customer?.state || "-"}</span>
                             </div>
                             <div className="mt-1 flex justify-between">
-                              <span className="print-hide-label font-semibold">11KV Feeder:</span>
+                              <span className=" font-semibold">11KV Feeder:</span>
                               <span className="print-show-value px-2 font-semibold">{bill.feederName}</span>
                             </div>
                             <div className="mt-1 flex justify-between">
-                              <span className="print-hide-label font-semibold">33KV Feeder:</span>
+                              <span className=" font-semibold">33KV Feeder:</span>
                               <span className="print-show-value px-2 font-semibold">
                                 {bill.distributionSubstationCode || bill.customer?.distributionSubstationCode || "-"}
                               </span>
                             </div>
                             <div className="mt-1 flex justify-between">
-                              <span className="print-hide-label font-semibold">DT Name:</span>
+                              <span className=" font-semibold">DT Name:</span>
                               <span className="print-show-value px-2 font-semibold">
                                 {bill.distributionSubstationName || "-"}
                               </span>
                             </div>
                             <div className="mt-1 flex justify-between">
-                              <span className="print-hide-label font-semibold">Sales Rep:</span>
+                              <span className=" font-semibold">Sales Rep:</span>
                               <span className="print-show-value px-2 font-semibold">
                                 {bill.customer?.salesRepUser?.fullName || "-"}
                               </span>
                             </div>
                             <div className="mt-1 flex justify-between">
-                              <span className="print-hide-label font-semibold">Meter:</span>
+                              <span className=" font-semibold">Meter:</span>
                               <span className="print-show-value px-2 font-semibold">
                                 {bill.customer?.meterNumber || "-"}
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="print-hide-label font-semibold">Multiplier:</span>
+                              <span className=" font-semibold">Multiplier:</span>
                               <span className="print-show-value px-2 font-semibold">1.0</span>
                             </div>
                           </div>
@@ -603,47 +651,47 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                       <div className="print-no-border flex w-full border border-gray-300 bg-white text-[8pt] print:text-[7pt]">
                         <div className="print-no-border-r w-3/5 space-y-0.5 border-r border-gray-300">
                           <div className="print-bg-light-green print-white-text flex w-full items-center justify-between bg-[#6CAD2B] px-2 py-1 font-semibold">
-                            <p className="print-hide-label">CHARGES</p>
-                            <p className="print-hide-label">TOTAL</p>
+                            <p className="">CHARGES</p>
+                            <p className="">TOTAL</p>
                           </div>
 
                           <div className="space-y-2 px-2 ">
                             <div className="mt-2 flex justify-between">
-                              <span className="print-hide-label font-semibold">Last Payment Date:</span>
+                              <span className=" font-semibold">Last Payment Date:</span>
                               <span className="print-show-value px-2 font-semibold">
                                 {formatShortDate(bill.lastUpdated || new Date().toISOString())}
                               </span>
                             </div>
                             <div className="mt-1 flex justify-between">
-                              <span className="print-hide-label font-semibold">Last Payment Amount:</span>
+                              <span className=" font-semibold">Last Payment Amount:</span>
                               <span className="print-show-value px-2 font-semibold">
                                 {formatCurrency(bill.totalPaid)}
                               </span>
                             </div>
                             <div className="mt-1 flex justify-between">
-                              <span className="print-hide-label font-semibold">ADC:</span>
+                              <span className=" font-semibold">ADC:</span>
                               <span className="print-show-value px-2 font-semibold">
                                 {bill.customer?.storedAverage || "-"}
                               </span>
                             </div>
                             <div className="mt-1 flex justify-between">
-                              <span className="print-hide-label font-semibold">Present Reading:</span>
+                              <span className=" font-semibold">Present Reading:</span>
                               <span className="print-show-value px-2 font-semibold">{bill.presentReadingKwh}</span>
                             </div>
                             <div className="mt-1 flex justify-between">
-                              <span className="print-hide-label font-semibold">Previous Reading:</span>
+                              <span className=" font-semibold">Previous Reading:</span>
                               <span className="print-show-value px-2 font-semibold">{bill.previousReadingKwh}</span>
                             </div>
                             <div className="mt-1 flex justify-between">
-                              <span className="print-hide-label font-semibold">Consumption:</span>
+                              <span className=" font-semibold">Consumption:</span>
                               <span className="print-show-value px-2 font-semibold">{bill.consumptionKwh}kwh</span>
                             </div>
                             <div className="mt-1 flex justify-between">
-                              <span className="print-hide-label font-semibold">Tariff Rate:</span>
+                              <span className=" font-semibold">Tariff Rate:</span>
                               <span className="print-show-value px-2 font-semibold">{bill.tariffPerKwh}</span>
                             </div>
                             <div className="mt-1 flex justify-between">
-                              <span className="print-hide-label font-semibold">Tariff Class:</span>
+                              <span className=" font-semibold">Tariff Class:</span>
                               <span className="print-show-value px-2 font-semibold">
                                 {bill.customerTariffCode || "-"}
                               </span>
@@ -656,53 +704,53 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                             className="print-white-text flex w-full items-center justify-between bg-[#008001] px-2 py-1 font-semibold print:bg-white print:text-black"
                             style={{ backgroundColor: "#008001" }}
                           >
-                            <p className="print-hide-label">CHARGES</p>
-                            <p className="print-hide-label">TOTAL</p>
+                            <p className="">CHARGES</p>
+                            <p className="">TOTAL</p>
                           </div>
 
                           <div className="space-y-2 px-2 ">
                             <div className="mt-2 flex justify-between">
-                              <span className="print-hide-label font-semibold">Status Code:</span>
+                              <span className=" font-semibold">Status Code:</span>
                               <span className="print-show-value px-2 font-semibold">{bill.customer?.statusCode}</span>
                             </div>
                             <div className="mt-1 flex justify-between">
-                              <span className="print-hide-label font-semibold">Opening Balance:</span>
+                              <span className=" font-semibold">Opening Balance:</span>
                               <span className="print-show-value px-2 font-semibold">
                                 {formatCurrency(bill.openingBalance)}
                               </span>
                             </div>
                             <div className="mt-1 flex justify-between">
-                              <span className="print-hide-label font-semibold">Adjustment:</span>
+                              <span className=" font-semibold">Adjustment:</span>
                               <span className="print-show-value px-2 font-semibold">
                                 {formatCurrency(bill.adjustedOpeningBalance)}
                               </span>
                             </div>
                             <div className="mt-1 flex justify-between">
-                              <span className="print-hide-label font-semibold">Total Payment Amt:</span>
+                              <span className=" font-semibold print:whitespace-nowrap">Total Payment Amt:</span>
                               <span className="print-show-value px-2 font-semibold">
                                 {formatCurrency(bill.currentBillAmount)}
                               </span>
                             </div>
                             <div className="mt-1 flex justify-between">
-                              <span className="print-hide-label font-semibold">Net Arrears:</span>
+                              <span className=" font-semibold">Net Arrears:</span>
                               <span className="print-show-value px-2 font-semibold">
                                 {formatCurrency(bill.netArrears)}
                               </span>
                             </div>
                             <div className="mt-1 flex justify-between">
-                              <span className="print-hide-label font-semibold">Energy Charged:</span>
+                              <span className=" font-semibold">Energy Charged:</span>
                               <span className="print-show-value px-2 font-semibold">
                                 {formatCurrency(bill.chargeBeforeVat)}
                               </span>
                             </div>
                             <div className="mt-1 flex justify-between">
-                              <span className="print-hide-label font-semibold">Fixed Charge:</span>
+                              <span className=" font-semibold">Fixed Charge:</span>
                               <span className="print-show-value px-2 font-semibold">
                                 {formatCurrency(bill.actualBillAmount)}
                               </span>
                             </div>
                             <div className="mt-1 flex justify-between">
-                              <span className="print-hide-label font-semibold">VAT:</span>
+                              <span className=" font-semibold">VAT:</span>
                               <span className="print-show-value px-2 font-semibold">
                                 {formatCurrency(bill.vatAmount)}
                               </span>
@@ -718,14 +766,14 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                         <div className="px-2 py-1.5">&nbsp;</div>
                       </div>
 
-                      <div className="w-2/5 bg-[#E1E1E1]">
+                      <div className="w-2/5 ">
                         <div
                           className="print-white-text flex w-full items-center justify-between bg-[#008001] px-2 py-1.5 font-semibold print:bg-white print:text-black"
                           style={{ backgroundColor: "#008001" }}
                         >
-                          <p className="text-[8pt] print:invisible">TOTAL DUE:</p>
-                          <div className="flex items-center justify-center bg-white px-4 py-0.5 print:-mt-5 print:flex-grow print:justify-end">
-                            <p className="print-show-value text-[8pt] font-bold text-black">
+                          <p className="text-[8pt] print:-mt-3">TOTAL DUE:</p>
+                          <div className="flex items-center justify-center bg-white px-4 py-0.5  print:flex-grow print:justify-end">
+                            <p className="print-show-value font-bold text-[8pBt] text-black print:-mt-3">
                               {formatCurrency(bill.totalDue)}
                             </p>
                           </div>
@@ -735,7 +783,7 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
 
                     {/* Payment Notice */}
                     <div className="flex">
-                      <div className="a5-small-text print-no-border mb-4 mt-1 w-[60%] border border-gray-300 p-2 text-[6pt]  print:text-[5pt]">
+                      <div className="a5-small-text print-no-border mb-2 mt-1 w-[60%] border border-gray-300 px-1 text-[6pt]  print:text-[5pt]">
                         <p className="mt-1  font-semibold print:text-[5pt]">IMPORTANT PAYMENT INFORMATION</p>
                         <p className="font-semibold print:text-[5pt]">
                           PAY ON OR BEFORE DUE DATE 11/15/2025 TO AVOID DISCONNECTION | PAY AT ANY OF OUR OFFICES OR TO
@@ -761,41 +809,45 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                         <div className="grid grid-cols-2 px-2">
                           <div className="space-y-2">
                             <div className="flex justify-between">
-                              <span className="print-hide-label font-semibold">Bill #:</span>
+                              <span className=" ">Bill #:</span>
                               <span className="print-show-value px-2 font-semibold print:text-[5pt]">
                                 {bill.billingId}
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="print-hide-label font-semibold">Bill Month:</span>
+                              <span className=" ">Bill Month:</span>
                               <span className="print-show-value px-2 font-semibold print:text-[5pt]">{bill.name}</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="print-hide-label font-semibold">Customer Account:</span>
+                              <span className=" f">Cust. Account:</span>
                               <span className="print-show-value px-2 font-semibold print:text-[5pt]">
                                 {bill.customerAccountNumber}
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="print-hide-label font-semibold">Account Name:</span>
+                              <span className=" ">Account Name:</span>
                               <span className="print-show-value px-2 text-right font-semibold print:text-[5pt]">
                                 {bill.customer?.fullName || bill.customerName}
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="print-hide-label font-semibold">Address:</span>
+                              <span className=" ">Address:</span>
                               <span className="print-show-value px-2 text-right font-semibold print:text-[5pt]">
-                                {bill.customer?.address || "-"}
+                                {bill.customer?.address
+                                  ? bill.customer.address.length > 30
+                                    ? `${bill.customer.address.substring(0, 30)}...`
+                                    : bill.customer.address
+                                  : "-"}
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="print-hide-label font-semibold">Consumption:</span>
+                              <span className="">Consumption:</span>
                               <span className="print-show-value px-2 font-semibold print:text-[5pt]">
                                 {bill.consumptionKwh}kwh
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="print-hide-label font-semibold">Opening Balance:</span>
+                              <span className="">Opening Bal:</span>
                               <span className="print-show-value px-2 font-semibold print:text-[5pt]">
                                 {formatCurrency(bill.openingBalance)}
                               </span>
@@ -804,43 +856,43 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
 
                           <div className="space-y-2 pl-2">
                             <div className="flex justify-between">
-                              <span className="print-hide-label font-semibold">Adjustment:</span>
+                              <span className=" ">Adjustment:</span>
                               <span className="print-show-value px-2 font-semibold print:text-[5pt]">
                                 {formatCurrency(bill.adjustedOpeningBalance)}
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="print-hide-label font-semibold">Total Payments:</span>
+                              <span className="print:whitespace-nowrap ">Total Payments:</span>
                               <span className="print-show-value px-2 font-semibold print:text-[5pt]">
                                 {formatCurrency(bill.currentBillAmount)}
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="print-hide-label font-semibold">Net Arrears:</span>
+                              <span className=" ">Net Arrears:</span>
                               <span className="print-show-value px-2 font-semibold print:text-[5pt]">
                                 {formatCurrency(bill.netArrears)}
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="print-hide-label font-semibold">Meter:</span>
+                              <span className="">Meter:</span>
                               <span className="print-show-value px-2 font-semibold print:text-[5pt]">
                                 {bill.customerMeterNumber || "-"}
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="print-hide-label font-semibold">Tariff:</span>
+                              <span className="">Tariff:</span>
                               <span className="print-show-value px-2 font-semibold print:text-[5pt]">
                                 {bill.customerTariffCode}
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="print-hide-label font-semibold">Rate:</span>
+                              <span className=" ">Rate:</span>
                               <span className="print-show-value px-2 font-semibold print:text-[5pt]">
                                 {formatCurrency(bill.tariffPerKwh)}
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="print-hide-label font-semibold">ADC</span>
+                              <span className="">ADC</span>
                               <span className="print-show-value px-2 font-semibold print:text-[5pt]">
                                 {bill.customerAverageDailyConsumption || "-"}
                               </span>
@@ -851,43 +903,45 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
 
                       <div className="w-1/3">
                         <div
-                          className="print-white-text flex w-full items-center justify-between bg-[#008001] px-2 py-1 font-semibold print:bg-white print:text-black"
+                          className="print-white-text flex w-full flex-row items-center justify-between bg-[#008001] px-2 py-1 font-semibold print:flex-nowrap print:bg-white print:text-black"
                           style={{ backgroundColor: "#008001" }}
                         >
-                          <p className="print-hide-label">SERVICE CENTER:</p>
-                          <div className="flex items-center justify-center bg-white px-4 py-0.5 print:flex-grow print:justify-end">
-                            <p className="print-show-value text-black">{bill.customer?.serviceCenterName || "-"}</p>
+                          <p className="print:inline-block print:whitespace-nowrap">SERVICE CENTER:</p>
+                          <div className="flex items-center justify-center bg-white px-4 py-0.5 print:inline-block print:flex-grow print:justify-end">
+                            <p className="print-show-value text-black print:inline-block print:whitespace-nowrap">
+                              {bill.customer?.serviceCenterName || "-"}
+                            </p>
                           </div>
                         </div>
 
                         <div className="space-y-2 px-2 ">
-                          <div className="flex justify-between">
-                            <span className="print-hide-label font-semibold">Present Reading:</span>
-                            <span className="print-show-value px-2 font-semibold print:text-[5pt]">
+                          <div className="flex flex-row flex-nowrap items-center justify-between">
+                            <span className="print:inline-block print:whitespace-nowrap">Present Reading:</span>
+                            <span className="print-show-value px-2 font-semibold print:inline-block print:whitespace-nowrap print:text-[5pt]">
                               {bill.presentReadingKwh}
                             </span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="print-hide-label font-semibold">Previous Reading:</span>
-                            <span className="print-show-value px-2 font-semibold print:text-[5pt]">
+                          <div className="flex flex-row flex-nowrap items-center justify-between">
+                            <span className="print:inline-block print:whitespace-nowrap">Prev Reading:</span>
+                            <span className="print-show-value px-2 font-semibold print:inline-block print:whitespace-nowrap print:text-[5pt]">
                               {bill.previousReadingKwh}
                             </span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="print-hide-label font-semibold">Fixed Charge:</span>
-                            <span className="print-show-value px-2 font-semibold print:text-[5pt]">
+                          <div className="flex flex-row flex-nowrap items-center justify-between">
+                            <span className="print:inline-block print:whitespace-nowrap">Fixed Charge:</span>
+                            <span className="print-show-value px-2 font-semibold print:inline-block print:whitespace-nowrap print:text-[5pt]">
                               {formatCurrency(bill.actualBillAmount)}
                             </span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="print-hide-label font-semibold">Current Bill:</span>
-                            <span className="print-show-value px-2 font-semibold print:text-[5pt]">
+                          <div className="flex flex-row flex-nowrap items-center justify-between">
+                            <span className="print:inline-block print:whitespace-nowrap">Current Bill:</span>
+                            <span className="print-show-value px-2 font-semibold print:inline-block print:whitespace-nowrap print:text-[5pt]">
                               {formatCurrency(bill.currentBillAmount)}
                             </span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="print-hide-label font-semibold">VAT:</span>
-                            <span className="print-show-value px-2 font-semibold print:text-[5pt]">
+                          <div className="flex flex-row flex-nowrap items-center justify-between">
+                            <span className="print:inline-block print:whitespace-nowrap">VAT:</span>
+                            <span className="print-show-value px-2 font-semibold print:inline-block print:whitespace-nowrap print:text-[5pt]">
                               {bill.vatAmount}
                             </span>
                           </div>
@@ -901,12 +955,12 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                         <div className="px-2 py-1">&nbsp;</div>
                       </div>
 
-                      <div className="w-1/3 bg-[#E1E1E1]">
+                      <div className="w-1/3 print:-mt-5">
                         <div
                           className="print-white-text flex w-full items-center justify-between bg-[#008001]  px-6 py-1 font-semibold print:-m-3 print:bg-white print:text-black"
                           style={{ backgroundColor: "#008001" }}
                         >
-                          <p className="text-[8pt] print:invisible">FINAL AMOUNT:</p>
+                          <p className="text-[8pt] print:whitespace-nowrap print:text-[8px]">FINAL AMOUNT:</p>
                           <div className="flex items-center justify-center bg-white  print:flex-grow print:justify-end">
                             <p className="print-show-value text-[8pt] font-bold text-black">
                               {formatCurrency(bill.totalDue)}

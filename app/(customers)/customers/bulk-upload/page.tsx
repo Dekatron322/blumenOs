@@ -15,6 +15,7 @@ import {
   processCustomerBulkUpload,
   processCustomerFeederUpdateBulkUpload,
   processCustomerInfoUpdateBulkUpload,
+  processCustomerMdCategoryUpdateBulkUpload,
   processCustomerSetupBulkUpload,
   processCustomerSrdtUpdateBulkUpload,
   processCustomerStatusChangeBulkUpload,
@@ -912,6 +913,13 @@ const FileManagementPage = () => {
         "CUST003,600,2026-02",
       ],
     },
+    {
+      name: "MD Customer Categorization",
+      value: getJobTypeValue("MD Customer Categorization")!,
+      description: "Bulk update customer MD categorization for classification and reporting",
+      requiredColumns: ["CustomerAccountNo", "IsPrivate"],
+      sampleData: ["CustomerAccountNo,IsPrivate", "CUST001,true", "CUST002,false", "CUST003,true"],
+    },
   ]
 
   // Helper function to get bulkInsertType based on upload type
@@ -937,6 +945,8 @@ const FileManagementPage = () => {
         return "meter-reading-stored-average"
       case 24:
         return "postpaid-estimated-consumption"
+      case 41:
+        return "customers-md-category"
       default:
         return "customers"
     }
@@ -965,6 +975,8 @@ const FileManagementPage = () => {
         return "meter-reading-stored-average-bulk"
       case 24:
         return "postpaid-estimated-consumption-bulk"
+      case 41:
+        return "customers-md-category-bulk"
       default:
         return "customers-bulk-import"
     }
@@ -1440,6 +1452,9 @@ const FileManagementPage = () => {
                 } else if (selectedUploadType === 24) {
                   // Customer Estimated Consumption
                   bulkResult = await dispatch(processPostpaidEstimatedConsumptionBulkUpload({ fileId })).unwrap()
+                } else if (selectedUploadType === 41) {
+                  // Customer MD Category Update
+                  bulkResult = await dispatch(processCustomerMdCategoryUpdateBulkUpload({ fileId })).unwrap()
                 } else {
                   // Regular Customer Import and other types
                   bulkResult = await dispatch(processCustomerBulkUpload({ fileId })).unwrap()
@@ -1579,7 +1594,10 @@ const FileManagementPage = () => {
       console.error("Failed to download template:", error)
 
       // Check if the error contains CSV data (sometimes the API returns data but throws an error)
-      if (error.message && error.message.includes("CustomerName,TariffCode")) {
+      if (
+        error.message &&
+        (error.message.includes("CustomerName,TariffCode") || error.message.includes("CustomerAccountNo"))
+      ) {
         console.log("Found CSV data in error message, attempting to download...")
 
         try {
@@ -1604,6 +1622,29 @@ const FileManagementPage = () => {
         } catch (downloadError) {
           console.error("Failed to download from error data:", downloadError)
         }
+      }
+
+      // Generate a basic template locally for MD Customer Categorization if API fails
+      if (selectedUploadType === 41) {
+        console.log("Generating basic template for MD Customer Categorization...")
+
+        const templateData = "CustomerAccountNo,IsPrivate\nCUST001,true\nCUST002,false\nCUST003,true"
+        const blob = new Blob([templateData], { type: "text/csv;charset=utf-8;" })
+        const url = URL.createObjectURL(blob)
+
+        const link = document.createElement("a")
+        link.href = url
+        link.download = `template-md-customer-categorization.csv`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
+
+        notify("success", "Template Generated", {
+          description: "Basic template has been generated and downloaded",
+          duration: 3000,
+        })
+        return
       }
 
       notify("error", "Download Failed", {
