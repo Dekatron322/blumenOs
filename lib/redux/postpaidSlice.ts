@@ -1171,6 +1171,78 @@ export interface BillingScheduleRunResponse {
   data: BillingScheduleRunData
 }
 
+// Customer Contract Adjustment Interfaces
+export interface CustomerContractAdjustmentRequest {
+  customerId: number
+  amount: number
+  startDate: string
+  endDate: string
+  description: string
+}
+
+export interface CustomerContractAdjustmentData {
+  id: number
+  customerId: number
+  customerName: string
+  customerAccountNumber: string
+  amount: number
+  startPeriod: string
+  endPeriod: string
+  autoApprove: boolean
+  isActive: boolean
+  reference: string
+  description: string
+  lastAppliedPeriod: string
+  lastAppliedAtUtc: string
+  createdAt: string
+  lastUpdated: string
+}
+
+export interface CustomerContractAdjustmentResponse {
+  isSuccess: boolean
+  message: string
+  data: CustomerContractAdjustmentData
+}
+
+// GET Customer Contract Adjustment List Interfaces
+export interface CustomerContractAdjustmentListItem {
+  id: number
+  customerId: number
+  customerName: string
+  customerAccountNumber: string
+  amount: number
+  startPeriod: string
+  endPeriod: string
+  autoApprove: boolean
+  isActive: boolean
+  reference: string
+  description: string
+  lastAppliedPeriod: string
+  lastAppliedAtUtc: string
+  createdAt: string
+  lastUpdated: string
+}
+
+export interface CustomerContractAdjustmentListRequestParams {
+  pageNumber: number
+  pageSize: number
+  customerId?: number
+  isActive?: boolean
+  autoApprove?: boolean
+}
+
+export interface CustomerContractAdjustmentListResponse {
+  isSuccess: boolean
+  message: string
+  data: CustomerContractAdjustmentListItem[]
+  totalCount: number
+  totalPages: number
+  currentPage: number
+  pageSize: number
+  hasNext: boolean
+  hasPrevious: boolean
+}
+
 // Bill Preview Interfaces
 export interface BillPreviewNavigation {
   previousBillId: number
@@ -1505,6 +1577,27 @@ interface PostpaidBillingState {
   billPreviewError: string | null
   billPreviewSuccess: boolean
 
+  // Customer Contract Adjustment state
+  customerContractAdjustmentLoading: boolean
+  customerContractAdjustmentError: string | null
+  customerContractAdjustmentSuccess: boolean
+  customerContractAdjustmentMessage: string | null
+  customerContractAdjustmentData: CustomerContractAdjustmentData | null
+
+  // Customer Contract Adjustment List state
+  customerContractAdjustments: CustomerContractAdjustmentListItem[]
+  customerContractAdjustmentsLoading: boolean
+  customerContractAdjustmentsError: string | null
+  customerContractAdjustmentsSuccess: boolean
+  customerContractAdjustmentsPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
+
   // Search/filter state
   filters: {
     period?: string
@@ -1746,6 +1839,23 @@ const initialState: PostpaidBillingState = {
   billPreviewLoading: false,
   billPreviewError: null,
   billPreviewSuccess: false,
+  customerContractAdjustmentLoading: false,
+  customerContractAdjustmentError: null,
+  customerContractAdjustmentSuccess: false,
+  customerContractAdjustmentMessage: null,
+  customerContractAdjustmentData: null,
+  customerContractAdjustments: [],
+  customerContractAdjustmentsLoading: false,
+  customerContractAdjustmentsError: null,
+  customerContractAdjustmentsSuccess: false,
+  customerContractAdjustmentsPagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 1,
+    pageSize: 10,
+    hasNext: false,
+    hasPrevious: false,
+  },
   filters: {},
   billingJobsFilters: {},
 }
@@ -2938,6 +3048,72 @@ export const fetchBillPreview = createAsyncThunk<BillPreviewData, BillPreviewReq
   }
 )
 
+// Customer Contract Adjustment Async Thunk
+export const createCustomerContractAdjustment = createAsyncThunk<
+  CustomerContractAdjustmentData,
+  CustomerContractAdjustmentRequest,
+  { rejectValue: string }
+>(
+  "postpaidBilling/createCustomerContractAdjustment",
+  async (request: CustomerContractAdjustmentRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<CustomerContractAdjustmentResponse>(
+        buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.CUSTOMER_CONTRACT_ADJUSTMENT),
+        request
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to create customer contract adjustment")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("No customer contract adjustment data received")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to create customer contract adjustment")
+      }
+      return rejectWithValue(error.message || "Network error during customer contract adjustment creation")
+    }
+  }
+)
+
+// Fetch Customer Contract Adjustments List Async Thunk
+export const fetchCustomerContractAdjustments = createAsyncThunk(
+  "postpaidBilling/fetchCustomerContractAdjustments",
+  async (params: CustomerContractAdjustmentListRequestParams, { rejectWithValue }) => {
+    try {
+      const { pageNumber, pageSize, customerId, isActive, autoApprove } = params
+
+      const response = await api.get<CustomerContractAdjustmentListResponse>(
+        buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.GET_CUSTOMER_CONTRACT_ADJUSTMENT),
+        {
+          params: {
+            PageNumber: pageNumber,
+            PageSize: pageSize,
+            ...(customerId !== undefined && { CustomerId: customerId }),
+            ...(isActive !== undefined && { IsActive: isActive }),
+            ...(autoApprove !== undefined && { AutoApprove: autoApprove }),
+          },
+        }
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch customer contract adjustments")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch customer contract adjustments")
+      }
+      return rejectWithValue(error.message || "Network error during customer contract adjustments fetch")
+    }
+  }
+)
+
 // Postpaid billing slice
 const postpaidSlice = createSlice({
   name: "postpaidBilling",
@@ -3314,6 +3490,31 @@ const postpaidSlice = createSlice({
       state.billPreviewLoading = false
       state.billPreviewError = null
       state.billPreviewSuccess = false
+    },
+
+    // Clear customer contract adjustment status
+    clearCustomerContractAdjustmentStatus: (state) => {
+      state.customerContractAdjustmentData = null
+      state.customerContractAdjustmentLoading = false
+      state.customerContractAdjustmentError = null
+      state.customerContractAdjustmentSuccess = false
+      state.customerContractAdjustmentMessage = null
+    },
+
+    // Clear customer contract adjustments list status
+    clearCustomerContractAdjustmentsStatus: (state) => {
+      state.customerContractAdjustments = []
+      state.customerContractAdjustmentsLoading = false
+      state.customerContractAdjustmentsError = null
+      state.customerContractAdjustmentsSuccess = false
+      state.customerContractAdjustmentsPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
     },
 
     // Reset billing state
@@ -4487,6 +4688,62 @@ const postpaidSlice = createSlice({
         state.billPreviewSuccess = false
         state.billPreview = null
       })
+      // Create customer contract adjustment cases
+      .addCase(createCustomerContractAdjustment.pending, (state) => {
+        state.customerContractAdjustmentLoading = true
+        state.customerContractAdjustmentError = null
+        state.customerContractAdjustmentSuccess = false
+        state.customerContractAdjustmentMessage = null
+        state.customerContractAdjustmentData = null
+      })
+      .addCase(
+        createCustomerContractAdjustment.fulfilled,
+        (state, action: PayloadAction<CustomerContractAdjustmentData>) => {
+          state.customerContractAdjustmentLoading = false
+          state.customerContractAdjustmentSuccess = true
+          state.customerContractAdjustmentData = action.payload
+          state.customerContractAdjustmentError = null
+          state.customerContractAdjustmentMessage = "Customer contract adjustment created successfully"
+        }
+      )
+      .addCase(createCustomerContractAdjustment.rejected, (state, action) => {
+        state.customerContractAdjustmentLoading = false
+        state.customerContractAdjustmentError =
+          (action.payload as string) || "Failed to create customer contract adjustment"
+        state.customerContractAdjustmentSuccess = false
+        state.customerContractAdjustmentData = null
+        state.customerContractAdjustmentMessage = null
+      })
+      // Fetch customer contract adjustments list cases
+      .addCase(fetchCustomerContractAdjustments.pending, (state) => {
+        state.customerContractAdjustmentsLoading = true
+        state.customerContractAdjustmentsError = null
+        state.customerContractAdjustmentsSuccess = false
+      })
+      .addCase(
+        fetchCustomerContractAdjustments.fulfilled,
+        (state, action: PayloadAction<CustomerContractAdjustmentListResponse>) => {
+          state.customerContractAdjustmentsLoading = false
+          state.customerContractAdjustmentsSuccess = true
+          state.customerContractAdjustments = action.payload.data
+          state.customerContractAdjustmentsError = null
+          state.customerContractAdjustmentsPagination = {
+            totalCount: action.payload.totalCount,
+            totalPages: action.payload.totalPages,
+            currentPage: action.payload.currentPage,
+            pageSize: action.payload.pageSize,
+            hasNext: action.payload.hasNext,
+            hasPrevious: action.payload.hasPrevious,
+          }
+        }
+      )
+      .addCase(fetchCustomerContractAdjustments.rejected, (state, action) => {
+        state.customerContractAdjustmentsLoading = false
+        state.customerContractAdjustmentsError =
+          (action.payload as string) || "Failed to fetch customer contract adjustments"
+        state.customerContractAdjustmentsSuccess = false
+        state.customerContractAdjustments = []
+      })
   },
 })
 
@@ -4528,6 +4785,8 @@ export const {
   clearBillingScheduleProgressStatus,
   clearBillingScheduleRunsStatus,
   clearBillPreviewStatus,
+  clearCustomerContractAdjustmentStatus,
+  clearCustomerContractAdjustmentsStatus,
   resetBillingState,
   setPagination,
   setBillingJobsPagination,

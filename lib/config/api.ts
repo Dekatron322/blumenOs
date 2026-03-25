@@ -334,6 +334,8 @@ export const API_ENDPOINTS = {
     EXPORT_AR: "/billing/schedules/runs/{runId}/ar/csv",
     DOWNLOAD_PDF: "/billing/schedules/runs/{runId}/print/downloads",
     GET_BILL_PREVIEW: "/billing/schedules/runs/{runId}/bill-preview",
+    CUSTOMER_CONTRACT_ADJUSTMENT: "/billing/postpaid/bills/adjustment-contracts",
+    GET_CUSTOMER_CONTRACT_ADJUSTMENT: "/billing/postpaid/bills/adjustment-contracts",
   },
 
   BILLING_PERIODS: {

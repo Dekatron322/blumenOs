@@ -56,6 +56,7 @@ import PaymentReceiptModal from "components/ui/Modal/payment-receipt-modal"
 import ChangeAccountNumberModal from "components/ui/Modal/change-account-number-modal"
 import TariffOverrideModal from "components/ui/Modal/tariff-override-modal"
 import VatOverrideModal from "components/ui/Modal/vat-override-modal"
+import ContractAdjustmentModal from "components/ui/Modal/contract-adjustment-modal"
 import { formatCurrency as formatCurrencyUtil } from "utils/formatCurrency"
 import { SearchModule } from "components/ui/Search/search-module"
 
@@ -66,6 +67,7 @@ import ChangeRequestsTab from "components/Tabs/change-requests-tab"
 import PostpaidBillingTab from "components/Tabs/postpaid-billing-tab"
 import TariffOverridesTab from "components/Tabs/tariff-overrides-tab"
 import VatOverridesTab from "components/Tabs/vat-overrides-tab"
+import ContractAdjustmentsTab from "components/Tabs/contract-adjustments-tab"
 import { VscEye } from "react-icons/vsc"
 
 interface Asset {
@@ -78,7 +80,14 @@ interface Asset {
 }
 
 // Tab types
-type TabType = "basic-info" | "payments" | "tariff-overrides" | "vat-overrides" | "change-requests" | "postpaid-billing"
+type TabType =
+  | "basic-info"
+  | "payments"
+  | "tariff-overrides"
+  | "vat-overrides"
+  | "contract-adjustments"
+  | "change-requests"
+  | "postpaid-billing"
 
 // Modern Skeleton Components
 const ProfileCardSkeleton = () => (
@@ -409,6 +418,7 @@ const CustomerDetailsPage = () => {
     | "changeAccountNumber"
     | "tariffOverride"
     | "vatOverride"
+    | "contractAdjustment"
     | null
   >(null)
   const [activeTab, setActiveTab] = useState<TabType>("basic-info")
@@ -526,6 +536,7 @@ const CustomerDetailsPage = () => {
       | "changeAccountNumber"
       | "tariffOverride"
       | "vatOverride"
+      | "contractAdjustment"
   ) => setActiveModal(modalType)
 
   const handleConfirmReminder = (message: string) => {
@@ -746,6 +757,7 @@ const CustomerDetailsPage = () => {
     { id: "payments", label: "Payments", icon: <CreditCard className="size-4" /> },
     { id: "tariff-overrides", label: "Tariff Overrides", icon: <DollarSign className="size-4" /> },
     { id: "vat-overrides", label: "VAT Overrides", icon: <Receipt className="size-4" /> },
+    { id: "contract-adjustments", label: "Contract Adjustments", icon: <FileText className="size-4" /> },
     { id: "change-requests", label: "Change Requests", icon: <FileText className="size-4" /> },
     { id: "postpaid-billing", label: "Postpaid Billing", icon: <Receipt className="size-4" /> },
   ]
@@ -1093,6 +1105,8 @@ const CustomerDetailsPage = () => {
       return <TariffOverridesTab customerId={customerId} customerName={currentCustomer.fullName} />
     } else if (activeTab === "vat-overrides") {
       return <VatOverridesTab customerId={customerId} customerName={currentCustomer.fullName} />
+    } else if (activeTab === "contract-adjustments") {
+      return <ContractAdjustmentsTab customerId={customerId} customerName={currentCustomer.fullName} />
     } else if (activeTab === "change-requests") {
       return <ChangeRequestsTab customerId={customerId} />
     } else if (activeTab === "postpaid-billing") {
@@ -1277,6 +1291,11 @@ const CustomerDetailsPage = () => {
                           Create VAT Override
                         </ActionButton>
                       )}
+                      {!currentCustomer?.isPPM && (
+                        <ActionButton icon={FileText} onClick={() => openModal("contractAdjustment")} variant="default">
+                          Contract Adjustment
+                        </ActionButton>
+                      )}
                       {canAddNewMeter && currentCustomer.meters && currentCustomer.meters.length > 0 && (
                         <ActionButton
                           icon={RefreshCw}
@@ -1286,6 +1305,7 @@ const CustomerDetailsPage = () => {
                           Replace Meter
                         </ActionButton>
                       )}
+
                       {canUpdate && (
                         <ActionButton
                           icon={Power}
@@ -1492,6 +1512,16 @@ const CustomerDetailsPage = () => {
             customerName={currentCustomer.fullName}
             accountNumber={currentCustomer.accountNumber}
             currentCustomer={currentCustomer}
+          />
+        )}
+
+        {activeModal === "contractAdjustment" && (
+          <ContractAdjustmentModal
+            isOpen={true}
+            onClose={closeAllModals}
+            customerId={customerId}
+            customerName={currentCustomer.fullName}
+            customerAccountNumber={currentCustomer.accountNumber}
           />
         )}
       </AnimatePresence>
