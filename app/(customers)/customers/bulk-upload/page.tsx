@@ -946,7 +946,7 @@ const FileManagementPage = () => {
       case 24:
         return "postpaid-estimated-consumption"
       case 41:
-        return "customers-md-category"
+        return "customer-md-category"
       default:
         return "customers"
     }
